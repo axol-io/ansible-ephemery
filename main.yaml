@@ -1,0 +1,49 @@
+            file: "host_vars/{{ inventory_hostname }}.yaml"
+            msg: "An error occurred while loading secret variables."
+          ansible.builtin.include_vars:
+          debug:
+          tags: [always]
+          tags: [always]
+        - always
+        - ephemery
+        - name: Handle error
+        - name: Load secret variables
+        chdir: '{{ home_dir }}/ephemery-scripts/docker-compose'
+        file: defaults/main.yaml
+        file: main.yaml
+        file: tasks/cadvisor.yaml
+        file: tasks/ephemery.yaml
+        file: tasks/monitoring.yaml
+        name: cadvisor.service
+        state: restarted
+      ansible.builtin.import_tasks:
+      ansible.builtin.import_tasks:
+      ansible.builtin.import_tasks:
+      ansible.builtin.include_vars:
+      ansible.builtin.include_vars:
+      ansible.builtin.systemd:
+      args:
+      command: docker-compose up -d
+      rescue:
+      tags:
+      tags: [always]
+      tags: [always]
+      tags: cadvisor, always
+      tags: ephemery, always
+      tags: monitoring, always
+    # Expected response: ok~
+    # Test cadvisor
+    # curl http://0.0.0.0:8080/healthz
+    - block:
+    - name: Include default vars
+    - name: Include main Playbook
+    - name: Include task ephemery
+    - name: Include task monitoring
+    - name: Install Cadvisor
+    - name: Reload cadvisor
+    - name: Start Docker Compose
+  handlers:
+  hosts: all
+  tasks:
+- name: Ansible-ephemery
+---

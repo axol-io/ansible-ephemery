@@ -1,0 +1,148 @@
+---
+- name: Ensure home directory for root exists with correct permissions
+  ansible.builtin.file:
+    path: "{{ home_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create directory structure for default monitoring stack
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  with_items:
+    - "{{ home_dir }}/config/prometheus"
+    - "{{ home_dir }}/config/grafana"
+    - "{{ home_dir }}/config/grafana/agent"
+    - "{{ home_dir }}/config/grafana/provisioning"
+    - "{{ home_dir }}/config/grafana/provisioning/datasources"
+
+- name: Task Copy helper scripts
+  become_user: root
+  become: true
+  ansible.builtin.template:
+    src: templates/datasources.yaml.j2
+    dest: "{{ home_dir }}/config/grafana/provisioning/datasources/datasource.yaml"
+    force: true
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  with_items:
+    - datasources.yaml.j2
+
+- name: Task copy grafana-agent.yaml
+  become_user: root
+  become: true
+  ansible.builtin.template:
+    src: templates/grafana-agent.yaml.j2
+    dest: "{{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
+    force: true
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  with_items:
+    - templates/grafana-agent.yaml.j2
+  register: graf_cfg
+
+- name: Task copy prometheus.yaml
+  become_user: root
+  become: true
+  ansible.builtin.template:
+    src: templates/prometheus.yaml.j2
+    dest: "{{ home_dir }}/config/prometheus/prometheus.yaml"
+    force: true
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  with_items:
+    - templates/prometheus.yaml.j2
+  register: prom_cfg
+
+- name: Monitoring config changed
+  ansible.builtin.set_fact:
+    cfg_changed: "{{ prom_cfg.changed | bool or graf_cfg.changed | bool }}"
+
+- name: 📊 Start node exporter
+  become_user: root
+  become: true
+  community.docker.docker_container:
+    name: "{{ node_exporter_name }}"
+    image: prom/node-exporter:latest
+    state: started
+    pull: true
+    restart_policy: unless-stopped
+    restart: "{{ cfg_changed }}"
+    networks:
+      - name: "{{ network }}-validator-net"
+    networks_cli_compatible: true
+    privileged: true
+    ports:
+      - "127.0.0.1:{{ node_exporter_port }}:{{ node_exporter_port }}"
+
+- name: 📊 Start grafana agent
+  become_user: root
+  become: true
+  community.docker.docker_container:
+    name: Grafana-Agent
+    image: grafana/agent:latest
+    state: started
+    pull: true
+    restart_policy: unless-stopped
+    restart: "{{ cfg_changed }}"
+    networks:
+      - name: "{{ network }}-validator-net"
+    networks_cli_compatible: true
+    privileged: true
+    ports:
+      - "127.0.0.1:{{ grafana_agent_http_port }}:{{ grafana_agent_http_port }}"
+    volumes:
+      - "{{ home_dir }}/config/grafana/agent:{{ home_dir }}/config/grafana/agent"
+      - "{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:{{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
+    command:
+      - "--config.file={{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
+      - "--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}"
+
+- name: 📊 Start prometheus container
+  become_user: root
+  become: true
+  community.docker.docker_container:
+    name: Prometheus
+    image: prom/prometheus:latest
+    state: started
+    pull: true
+    restart_policy: unless-stopped
+    restart: "{{ cfg_changed }}"
+    networks:
+      - name: "{{ network }}-validator-net"
+    networks_cli_compatible: true
+    privileged: true
+    ports:
+      - "{{ prometheus_port }}:{{ prometheus_port }}"
+    volumes:
+      - "{{ home_dir }}/config/prometheus:{{ home_dir }}/config/prometheus"
+      - "{{ home_dir }}/config/prometheus/prometheus.yaml:{{ home_dir }}/config/prometheus/prometheus.yaml"
+
+- name: 📊 Start grafana dashboard container
+  become_user: root
+  become: true
+  community.docker.docker_container:
+    name: Grafana
+    image: grafana/grafana:latest
+    state: started
+    pull: true
+    restart_policy: unless-stopped
+    restart: "{{ cfg_changed }}"
+    networks:
+      - name: "{{ network }}-validator-net"
+    networks_cli_compatible: true
+    privileged: true
+    ports:
+      - "{{ grafana_port }}:{{ grafana_port }}"
+    env:
+      GF_SECURITY_ADMIN_PASSWORD: "{{ GRAFANA_ADMIN_PASSWORD }}"
+    volumes:
+      - "{{ home_dir }}/config/grafana/provisioning/datasources/datasource.yaml:{{ home_dir }}/config/grafana/provisioning/datasources/datasource.yaml"

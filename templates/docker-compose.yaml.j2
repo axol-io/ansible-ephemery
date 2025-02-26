@@ -1,0 +1,89 @@
+version: '3'
+services:
+  cl:
+    container_name: "{{ network }}-{{ cl }}"
+    image: "{{ cl_image }}"
+    restart: unless-stopped
+    networks:
+      - validator-net
+    deploy:
+      resources:
+        limits:
+          memory: "{{ ephemery_docker_memory_limit }}"
+    command: >
+      "lighthouse bn --testnet-dir /data/config"
+      "--datadir /data/{{ host_cl_data_mount }}"
+      --staking
+      --metrics
+      --port 9010
+      --http-address 0.0.0.0
+      --metrics-address 0.0.0.0
+      --execution-endpoint http://localhost:8551
+      "--execution-jwt={{ jwtsecret }}"
+      "--boot-nodes ${BOOTNODE_ENR_LIST}"
+    environment:
+      MNEMONIC: "{{ MNEMONIC }}"
+      VALIDATOR_NAME: "{{ VALIDATOR_NAME }}"
+      WALLET_ADDRESS: "{{ WALLET_ADDRESS }}"
+      WALLET_PRIVATE_KEY: "{{ WALLET_PRIVATE_KEY }}"
+      KEYSTORE_PASSWORD: "{{ KEYSTORE_PASSWORD }}"
+      SERVICE_SCHEME: http
+    volumes:
+      - "{{ home_dir }}/config/{{ config }}:/data/config/{{ config }}"
+      - "./{{ host_cl_data_mount }}:/data/{{ host_cl_data_mount }}"
+      - "./{{ host_keys_mount }}:/data/keys"
+
+  el:
+    container_name: "{{ network }}-{{ el }}"
+    image: "{{ el_image }}"
+    restart: unless-stopped
+    networks:
+      - validator-net
+    deploy:
+      resources:
+        limits:
+          memory: "{{ ephemery_docker_memory_limit }}"
+    command: >
+      --datadir /data/{{ host_el_data_mount }}
+      --config /data/{{ el_config }}"
+    environment:
+      MNEMONIC: "{{ MNEMONIC }}"
+      VALIDATOR_NAME: "{{ VALIDATOR_NAME }}"
+      WALLET_ADDRESS: "{{ WALLET_ADDRESS }}"
+      WALLET_PRIVATE_KEY: "{{ WALLET_PRIVATE_KEY }}"
+      KEYSTORE_PASSWORD: "{{ KEYSTORE_PASSWORD }}"
+      SERVICE_SCHEME: http
+    volumes:
+      - "{{ home_dir }}/config/{{ config }}:/data/config/{{ config }}"
+      - "./{{ host_el_data_mount }}:/data/{{ host_el_data_mount }}"
+
+  reset:
+    container_name: resetter
+    image: debian
+    build:
+      context: ./retention
+      dockerfile: ./Dockerfile
+    image: reset-scripts
+    volumes:
+      - "./{{ home_dir }}/config/{{ config }}:/data/config/{{ config }}"
+      - "./{{ host_cl_data_mount }}:/data/{{ host_cl_data_mount }}"
+      - "./{{ host_keys_mount }}:/data/keys"
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    depends_on:
+      - cl
+      - el
+
+networks:
+  validator-net:
+    name: "{{ network }}-validator-net"
+
+volumes:
+  config:
+    driver: local
+  host_cl_data_mount:
+    driver: local
+  host_el_data_mount:
+    driver: local
+  host_keys_mount:
+    driver: local

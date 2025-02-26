@@ -1,0 +1,21 @@
+# Host files
+host_vars/*
+inventory.*
+
+# Example files
+!host_vars/example-inventory.ini
+!host_vars/example-hostname.yaml
+
+# Ansible files
+.DS_Store
+.ansible/
+ansible.cfg
+
+# Prefer files
+/files/validator_keys/*
+/files/validator_keys.tar.gz
+/files/geth-data/*
+/files/lighthouse-data/*
+/files/ephemery-data/*
+/files/ephemery-testnet/*
+/files/ephemery-testnet.tar.gz

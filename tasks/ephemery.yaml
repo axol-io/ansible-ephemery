@@ -1,0 +1,48 @@
+---
+- name: 🌟 Clone ephemery-scripts repository
+  ansible.builtin.git:
+    repo: "https://github.com/ephemery-testnet/ephemery-scripts"
+    dest: "{{ home_dir }}/ephemery-scripts"
+    version: "master"
+    force: yes
+
+- name: 🪄 Configure Docker Compose for default (Geth-Lighthouse)
+  ansible.builtin.template:
+    src: templates/docker-compose.yaml.j2
+    dest: "{{ home_dir }}/ephemery-scripts/docker-compose/docker-compose.yaml"
+    force: true
+
+- name: 🔑 Add user to Docker group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+
+- name: Health check script
+  ansible.builtin.template:
+    src: templates/scripts/health_check.sh.j2
+    dest: "{{ home_dir }}/ephemery-scripts/scripts/"
+    force: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: 📊 Start Grafana agent
+  community.docker.docker_container:
+    name: grafana-agent
+    image: grafana/agent:latest
+    state: started
+    pull: true
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ network }}-validator-net"
+    networks_cli_compatible: true
+    privileged: true
+    ports:
+      - "127.0.0.1:{{ grafana_agent_http_port }}:{{ grafana_agent_http_port }}"
+    volumes:
+      - "{{ home_dir }}/config/grafana/agent:{{ home_dir }}/config/grafana/agent"
+      - "{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:{{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
+    command:
+      - "--config.file={{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
+      - "--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}"

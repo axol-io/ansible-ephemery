@@ -1,0 +1,48 @@
+---
+- name: 🏖️ Create cozy axolotl home directory 🏖️
+  ansible.builtin.command: 
+    cmd: mkdir -p {{ home_dir }}
+  args:
+    creates: "{{ home_dir }}"
+
+- name: 📦 Install Docker prerequisites
+  ansible.builtin.apt:
+    name: 
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+    state: present
+
+- name: 🔑 Add Docker GPG apt key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: 📦 Install Docker
+  ansible.builtin.apt:
+    name: 
+      - docker.io
+      - docker-compose
+      - gnupg-agent
+    state: present
+
+- name: 📦 Install Grafana Agent
+  ansible.builtin.community.docker.docker_container:
+    name: grafana-agent
+    image: grafana/agent:latest
+    ports:
+      - "{{ grafana_agent_http_port }}:{{ grafana_agent_http_port }}"
+    volumes:
+      - "{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:/etc/grafana-agent/config.yaml"
+    command: >
+      sh -c "grafana-agent --config.file={{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
+
+- name: 📦 Install git, default-jre, make, gcc
+  ansible.builtin.apt:
+    name: 
+      - git
+      - default-jre
+      - make
+      - gcc
+    state: present

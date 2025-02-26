@@ -1,0 +1,27 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:{{ prometheus_port }}
+    isDefault: true
+    editable: true
+  - name: Node Exporter
+    type: prometheus
+    access: proxy
+    url: http://node-exporter:{{ node_exporter_port }}
+    isDefault: false
+    editable: true
+  - name: Grafana Agent
+    type: prometheus
+    access: proxy
+    url: http://grafana-agent:{{ grafana_agent_http_port }}
+    isDefault: false
+    editable: true
+  - name: cAdvisor
+    type: prometheus
+    access: proxy
+    url: http://cadvisor:{{ cadvisor_port }}
+    isDefault: false
+    editable: true

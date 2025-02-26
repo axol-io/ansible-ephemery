@@ -1,0 +1,4 @@
+ansible-lint
+check-yaml
+file-contents-sorter
+pre-commit

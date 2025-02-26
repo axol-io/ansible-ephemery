@@ -1,0 +1,5 @@
+---
+- name: 🔄 Reload cadvisor
+  systemd:
+    name: cadvisor.service
+    state: restarted

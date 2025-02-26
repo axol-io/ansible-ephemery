@@ -1,0 +1,58 @@
+apiVersion: 1
+orgId: 1
+folder: eth-docker
+name: eth-docker
+interval: 5m
+rules:
+  - uid: c4c5849a-640a-43e5-9908-fb7f403f9e75
+    title: Container OOM
+    for: 0s
+    severity: critical
+    summary: A container ran out of memory and was killed by Linux
+    condition: C
+    annotations:
+      execErrState: OK
+      noDataState: OK
+    data:
+      - refId: A
+        expr: increase(node_vmstat_oom_kill[2m])
+        intervalMs: 1000
+        maxDataPoints: 43200
+        datasourceUid: PBFA97CFB590B2093
+        model:
+          type: query
+          conditions:
+            - type: __expr__
+              mode: replaceNN
+              replaceWithValue: 0
+              uid: __expr__
+              expression: A
+              from: 600
+              to: 0
+              reducer: max
+              type: reduce
+            - type: __expr__
+              mode: replaceNN
+              replaceWithValue: 0
+              uid: __expr__
+              expression: B
+              from: 600
+              to: 0
+              reducer: max
+              type: reduce
+            - type: __expr__
+              mode: replaceNN
+              replaceWithValue: 0
+              uid: __expr__
+              expression: C
+              from: 600
+              to: 0
+              reducer: max
+              type: threshold
+        settings:
+          legendFormat: __auto
+          instant: true
+          range: false
+          relativeTimeRange:
+            from: 600
+            to: 0

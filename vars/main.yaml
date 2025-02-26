@@ -1,0 +1,44 @@
+  validator_keys: files/validator-keys/
+  vc_conf: files/geth-conf.example
+#
+#
+# ##############################################################################################
+# ##############################################################################################
+# CHOOSE YOUR FIGHTERS: for the ephemery testnet -- resetter built-in
+# Cadvisor Vars
+# Grafana Agent Vars
+# Node Exporter Vars
+# Repository Vars
+# Set docker container memory limit to 90% of available machine memory
+# Watchdog Vars
+# geth_image: 'pk910/ephemery-geth:latest'
+# host / docker mounts
+# lighthouse_image: 'pk910/ephemery-lighthouse:latest'
+# nimbus_image: 'pk910/ephemery-nimbus:latest'
+# prometheus ports
+# reth_image: 'pk910/ephemery-reth:latest'
+# validator client specific config and keys
+---
+branch: "master"
+cadvisor_enabled: true
+cadvisor_port: 8080
+cl: "lighthouse"
+cl_image: "sigp/lighthouse:latest"
+config: "{{ files.vc_conf }}"
+el: "geth"
+el_image: "ethereum/client-go:latest"
+ephemery_docker_memory_limit: "{{ (ansible_memory_mb.real.total * 0.90) | round | int }}M"
+files:
+grafana_agent_http_port: 12345
+host_cl_data_mount: "{{ cl }}-data"
+host_el_data_mount: "{{ el }}-data"
+host_keys_mount: "{{ files.validator_keys }}"
+network: "ephemery"
+node_exporter_name: "node-exporter"
+node_exporter_port: 9100
+prometheus_port: 17690
+repository_url: "https://github.com/ephemery-testnet/ephemery-scripts.git"
+watchdog_frequency: 10
+watchdog_image: "jer117/watchdog-container:v0.0.3-story-geth"
+watchdog_protocol_mem_limit: 90
+watchdog_storage_warning: 85
