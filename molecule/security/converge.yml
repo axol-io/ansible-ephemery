@@ -1,0 +1,24 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Include ansible-ephemery role with security enhancements
+      include_role:
+        name: ansible-ephemery
+      vars:
+        # Override variables for security testing
+        home_dir: /root
+        firewall_enabled: true
+        firewall_default_policy: "deny"
+        # Enable secure JWT generation for testing
+        jwt_secret_secure_generation: true
+        # Restrict network access for testing
+        firewall_allowed_tcp_ports:
+          - 22    # SSH
+          - 80    # HTTP
+          - 443   # HTTPS
+          - 9000  # Consensus P2P
+          - 30303 # Execution P2P
+        firewall_allowed_udp_ports:
+          - 30303 # Ethereum P2P (UDP)
+          - 9000  # Consensus P2P (UDP)

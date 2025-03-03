@@ -1,0 +1,27 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Include ansible-ephemery role with backup enabled
+      include_role:
+        name: ansible-ephemery
+      vars:
+        # Override variables for backup testing
+        home_dir: /root
+        # Enable backup functionality
+        backup_enabled: true
+        # Backup settings
+        backup_frequency: "daily"
+        backup_retention_days: 7
+        ephemery_backup_dir: "/root/ephemery/backups"
+
+    # Create some fake data for backup testing
+    - name: Create test data for backup
+      copy:
+        content: "Test data for backup {{ ansible_date_time.iso8601 }}"
+        dest: "/root/ephemery/data/el/testdata.txt"
+
+    # Run backup script manually to test functionality
+    - name: Execute backup script for testing
+      command: /root/ephemery/scripts/backup.sh
+      changed_when: true

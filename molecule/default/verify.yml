@@ -1,0 +1,41 @@
+---
+- name: Verify basic functionality
+  hosts: all
+  become: true
+  tasks:
+    - name: Verify ephemery directories exist
+      stat:
+        path: "{{ item }}"
+      register: dir_check
+      failed_when: not dir_check.stat.exists or not dir_check.stat.isdir
+      loop:
+        - "{{ ephemery_base_dir }}"
+        - "{{ ephemery_data_dir }}"
+        - "{{ ephemery_logs_dir }}"
+        - "{{ ephemery_scripts_dir }}"
+        - "{{ ephemery_backup_dir }}"
+
+    - name: Verify JWT secret exists
+      stat:
+        path: "{{ jwt_secret_path }}"
+      register: jwt_check
+      failed_when: not jwt_check.stat.exists
+
+    - name: Check Docker network exists
+      command: docker network inspect {{ network }}-validator-net
+      register: network_check
+      changed_when: false
+      failed_when: network_check.rc != 0
+
+    - name: Verify Docker is running
+      service:
+        name: docker
+        state: started
+      register: docker_running
+      failed_when: not docker_running.status.ActiveState == "active"
+
+    - name: Check if health check script exists
+      stat:
+        path: "{{ ephemery_scripts_dir }}/health_check.sh"
+      register: health_script
+      failed_when: not health_script.stat.exists or not health_script.stat.executable

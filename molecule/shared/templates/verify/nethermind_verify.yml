@@ -1,0 +1,42 @@
+---
+# Nethermind-specific verification tasks
+
+# Check if nethermind container is running
+- name: Check if nethermind container is running
+  command: docker ps -q --filter "name=ephemery-nethermind"
+  register: nethermind_container
+  failed_when: nethermind_container.stdout == ""
+
+# Check if nethermind is listening on the expected ports
+- name: Check if nethermind HTTP API is accessible
+  uri:
+    url: "http://localhost:8545"
+    method: POST
+    body_format: json
+    body: '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
+    status_code: 200
+  register: nethermind_api
+  retries: 3
+  delay: 5
+  until: nethermind_api.status == 200
+  ignore_errors: true
+
+# Check nethermind metrics endpoint
+- name: Check if nethermind metrics endpoint is accessible
+  uri:
+    url: "http://localhost:9545/metrics"
+    method: GET
+    status_code: 200
+  register: nethermind_metrics
+  retries: 3
+  delay: 5
+  until: nethermind_metrics.status == 200
+  ignore_errors: true
+
+# Check nethermind logs for errors
+- name: Check nethermind logs
+  command: docker logs ephemery-nethermind
+  register: nethermind_logs
+  changed_when: false
+  failed_when: "'ERROR' in nethermind_logs.stdout or 'FATAL' in nethermind_logs.stdout"
+  ignore_errors: true

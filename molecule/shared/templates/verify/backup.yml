@@ -1,0 +1,45 @@
+---
+# Backup verification tasks to be included in backup scenarios
+# Usage: - include_tasks: ../../shared/templates/verify/backup.yaml
+
+- name: Check that backup directory exists
+  stat:
+    path: "{{ ephemery_backup_dir }}"
+  register: backup_dir
+  when: backup_enabled | bool
+
+- name: Assert backup directory exists
+  assert:
+    that: backup_dir.stat.exists and backup_dir.stat.isdir
+    fail_msg: "Backup directory does not exist at {{ ephemery_backup_dir }}"
+    success_msg: "Backup directory exists at {{ ephemery_backup_dir }}"
+  when: backup_enabled | bool
+
+- name: Check backup cron job is installed
+  shell: crontab -l | grep -c "{{ ephemery_scripts_dir }}/backup"
+  register: backup_cron
+  failed_when: false
+  changed_when: false
+  when: backup_enabled | bool
+
+- name: Assert backup cron job is installed
+  assert:
+    that: backup_cron.rc == 0 and backup_cron.stdout | int > 0
+    fail_msg: "Backup cron job is not installed"
+    success_msg: "Backup cron job is installed"
+  when: backup_enabled | bool
+
+- name: Check backup script exists
+  stat:
+    path: "{{ ephemery_scripts_dir }}/backup.sh"
+  register: backup_script
+  when: backup_enabled | bool
+
+- name: Assert backup script exists and is executable
+  assert:
+    that:
+      - backup_script.stat.exists
+      - backup_script.stat.executable
+    fail_msg: "Backup script does not exist or is not executable"
+    success_msg: "Backup script exists and is executable"
+  when: backup_enabled | bool

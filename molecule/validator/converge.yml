@@ -1,0 +1,14 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Include ansible-ephemery role with validator enabled
+      include_role:
+        name: ansible-ephemery
+      vars:
+        # Override variables for testing validators
+        home_dir: /root
+        validator_enabled: true
+        # Validator-specific test variables
+        validator_memory_limit: "1024M"
+        validator_client: "{{ cl }}"

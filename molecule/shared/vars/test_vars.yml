@@ -1,0 +1,54 @@
+---
+# Shared variables for molecule tests
+
+# Base directories
+ephemery_base_dir: "/root/ephemery"
+ephemery_data_dir: "{{ ephemery_base_dir }}/data"
+ephemery_logs_dir: "{{ ephemery_base_dir }}/logs"
+ephemery_backups_dir: "{{ ephemery_base_dir }}/backups"
+
+# Common packages needed across scenarios
+common_packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - python3-pip
+  - software-properties-common
+  - docker.io
+  - jq
+
+# Default client selections
+default_execution_client: geth
+default_consensus_client: lighthouse
+
+# Supported clients
+execution_clients:
+  - geth
+  - besu
+  - nethermind
+  - reth
+  - erigon
+
+consensus_clients:
+  - lighthouse
+  - teku
+  - prysm
+  - lodestar
+
+# Network settings
+docker_network_name: ephemery-validator-net
+jwt_secret_path: "{{ ephemery_base_dir }}/jwt.hex"
+
+# Docker image versions - pinned for stability
+docker_images:
+  geth: ethereum/client-go:v1.12.0
+  besu: hyperledger/besu:23.4.1
+  nethermind: nethermind/nethermind:1.20.0
+  reth: paradigmxyz/reth:v0.1.0-alpha.6
+  erigon: thorax/erigon:v2.49.3
+  lighthouse: sigp/lighthouse:v4.3.0
+  teku: consensys/teku:23.5.0
+  prysm: gcr.io/prysmaticlabs/prysm/beacon-chain:v4.0.4
+  lodestar: chainsafe/lodestar:v1.9.1

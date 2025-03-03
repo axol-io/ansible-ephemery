@@ -1,0 +1,31 @@
+---
+# This is a molecule configuration file, not an Ansible playbook
+# noqa: playbook-syntax
+# Base molecule configuration to be imported by other scenarios
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms: &base_platforms
+  - name: &platform_name ethereum-node
+    image: ubuntu:22.04
+    pre_build_image: true
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: "/lib/systemd/systemd"
+provisioner: &base_provisioner
+  name: ansible
+  env:
+    ANSIBLE_FORCE_COLOR: "true"
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+      callback_whitelist: profile_tasks, timer
+  inventory:
+    links:
+      group_vars: ../../molecule/shared/group_vars/
+      host_vars: ../../molecule/shared/host_vars/
+verifier: &base_verifier
+  name: ansible

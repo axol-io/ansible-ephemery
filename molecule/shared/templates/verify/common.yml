@@ -1,0 +1,60 @@
+---
+# Common verification tasks to be included in scenario verify.yml files
+# Usage: - include_tasks: ../../shared/templates/verify/common.yaml
+
+- name: Gather service facts
+  service_facts:
+
+- name: Check Docker service is running
+  assert:
+    that:
+      - ansible_facts.services['docker.service'].state == 'running'
+    fail_msg: "Docker service is not running"
+    success_msg: "Docker service is running"
+
+- name: Check that required Docker containers are running
+  shell: docker ps --format '{% raw %}{{.Names}}{% endraw %}'
+  register: docker_containers
+  changed_when: false
+
+- name: Ensure Execution Client container is running
+  assert:
+    that:
+      - (network ~ '_' ~ el) in docker_containers.stdout
+    fail_msg: "Execution client container ({{ network }}_{{ el }}) is not running"
+    success_msg: "Execution client container ({{ network }}_{{ el }}) is running"
+
+- name: Ensure Consensus Client container is running
+  assert:
+    that:
+      - (network ~ '_' ~ cl) in docker_containers.stdout
+    fail_msg: "Consensus client container ({{ network }}_{{ cl }}) is not running"
+    success_msg: "Consensus client container ({{ network }}_{{ cl }}) is running"
+
+- name: Check required directories exist
+  stat:
+    path: "{{ item }}"
+  loop:
+    - "{{ ephemery_base_dir }}"
+    - "{{ ephemery_data_dir }}"
+    - "{{ ephemery_logs_dir }}"
+    - "{{ ephemery_scripts_dir }}"
+  register: dir_stats
+
+- name: Assert required directories exist
+  assert:
+    that: item.stat.exists and item.stat.isdir
+    fail_msg: "Required directory {{ item.item }} does not exist"
+    success_msg: "Required directory {{ item.item }} exists"
+  loop: "{{ dir_stats.results }}"
+
+- name: Check JWT secret file exists
+  stat:
+    path: "{{ jwt_secret_path }}"
+  register: jwt_secret_file
+
+- name: Assert JWT secret file exists
+  assert:
+    that: jwt_secret_file.stat.exists
+    fail_msg: "JWT secret file does not exist at {{ jwt_secret_path }}"
+    success_msg: "JWT secret file exists at {{ jwt_secret_path }}"

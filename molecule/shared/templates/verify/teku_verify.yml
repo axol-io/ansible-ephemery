@@ -1,0 +1,48 @@
+---
+# Teku-specific verification tasks
+
+# Check if teku beacon container is running
+- name: Check if teku container is running
+  command: docker ps -q --filter "name=ephemery-teku"
+  register: teku_container
+  failed_when: teku_container.stdout == ""
+
+# Check if teku is listening on the expected ports
+- name: Check if teku beacon API is accessible
+  uri:
+    url: "http://localhost:5052/eth/v1/node/identity"
+    method: GET
+    status_code: 200
+  register: teku_beacon_api
+  retries: 3
+  delay: 5
+  until: teku_beacon_api.status == 200
+  ignore_errors: true
+
+# Check teku metrics endpoint
+- name: Check if teku metrics endpoint is accessible
+  uri:
+    url: "http://localhost:8008/metrics"
+    method: GET
+    status_code: 200
+  register: teku_metrics
+  retries: 3
+  delay: 5
+  until: teku_metrics.status == 200
+  ignore_errors: true
+
+# Check teku logs for errors
+- name: Check teku logs
+  command: docker logs ephemery-teku
+  register: teku_logs
+  changed_when: false
+  failed_when: "'ERROR' in teku_logs.stdout or 'FATAL' in teku_logs.stdout"
+  ignore_errors: true
+
+# Check validator status (if split from beacon)
+- name: Check if separate teku validator container is running
+  command: docker ps -q --filter "name=ephemery-teku-validator"
+  register: teku_validator_container
+  when: validator_enabled | default(false) | bool and teku_split_process | default(false) | bool
+  failed_when: teku_validator_container.stdout == "" and (validator_enabled | default(false) | bool) and (teku_split_process | default(false) | bool)
+  ignore_errors: true

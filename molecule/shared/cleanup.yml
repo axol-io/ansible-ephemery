@@ -1,0 +1,49 @@
+---
+# Common cleanup tasks to be included in scenario playbooks
+# Example usage: - import_playbook: ../../shared/cleanup.yml
+
+- name: Comprehensive Ephemery Cleanup
+  hosts: all
+  become: true
+  vars:
+    network: "{{ network | default('ephemery') }}"
+    ephemery_base_dir: "{{ ephemery_base_dir | default('/home/ubuntu/ephemery') }}"
+    cleanup_level: "{{ cleanup_level | default('full') }}"  # Options: containers, data, full
+  tasks:
+    - name: Stop and remove Ephemery containers
+      shell: |
+        docker ps -a --filter name={{ network }} --format '{% raw %}{{.Names}}{% endraw %}' | xargs -r docker stop
+        docker ps -a --filter name={{ network }} --format '{% raw %}{{.Names}}{% endraw %}' | xargs -r docker rm
+      changed_when: true
+      ignore_errors: true
+      tags: [containers, always]
+
+    - name: Stop and remove all Docker containers (if full cleanup requested)
+      shell: |
+        docker ps -aq | xargs -r docker stop
+        docker ps -aq | xargs -r docker rm
+      changed_when: true
+      ignore_errors: true
+      when: cleanup_level == 'full'
+      tags: [containers, full]
+
+    - name: Remove Ephemery Docker networks
+      shell: |
+        docker network ls --filter name={{ network }} -q | xargs -r docker network rm
+      changed_when: true
+      ignore_errors: true
+      tags: [containers, always]
+
+    - name: Remove Ephemery data directory
+      file:
+        path: "{{ ephemery_base_dir }}/data"
+        state: absent
+      when: cleanup_level in ['data', 'full']
+      tags: [data]
+
+    - name: Remove Ephemery logs directory
+      file:
+        path: "{{ ephemery_base_dir }}/logs"
+        state: absent
+      when: cleanup_level in ['data', 'full']
+      tags: [data]

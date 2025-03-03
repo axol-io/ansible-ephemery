@@ -1,0 +1,38 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: ethereum-clients
+    image: ubuntu:22.04
+    pre_build_image: true
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: "/lib/systemd/systemd"
+    memory: 8G  # Need more memory for multiple clients
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      ethereum-clients:
+        el: nethermind
+        cl: teku
+        network: ephemery
+        ephemery_base_dir: "/home/ubuntu/ephemery"
+        ephemery_data_dir: "/home/ubuntu/ephemery/data"
+        ephemery_logs_dir: "/home/ubuntu/ephemery/logs"
+        ephemery_scripts_dir: "/home/ubuntu/ephemery/scripts"
+        ephemery_backup_dir: "/home/ubuntu/ephemery/backups"
+        jwt_secret_path: "/home/ubuntu/ephemery/jwtsecret"
+        # Client-specific settings
+        validator_enabled: false
+        backup_enabled: false
+        firewall_enabled: false
+        # Memory limits
+        el_memory_limit: "3072M"
+        cl_memory_limit: "3072M"
+verifier:
+  name: ansible

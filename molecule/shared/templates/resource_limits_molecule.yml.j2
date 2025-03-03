@@ -1,0 +1,39 @@
+---
+# {{ scenario_name | default('resource-limits') }} scenario configuration
+# This file was generated from a template. Manual changes may be overwritten.
+
+# Import base configuration
+{% include '../../shared/base_molecule.yml' %}
+
+# Resource limits scenario-specific overrides
+platforms:
+  - name: ephemery-{{ scenario_name | default('resource-limits') }}
+    # Customize resource limits
+    {% if custom_platform is defined %}
+    {% for key, value in custom_platform.items() %}
+    {{ key }}: {{ value }}
+    {% endfor %}
+    {% endif %}
+
+provisioner:
+  <<: *base_provisioner
+  inventory:
+    group_vars:
+      all:
+        # Client resource settings
+        el_memory_limit: {{ el_memory | default('2048M') }}
+        cl_memory_limit: {{ cl_memory | default('2048M') }}
+        el_cpu_limit: {{ el_cpu | default('1.0') }}
+        cl_cpu_limit: {{ cl_cpu | default('1.0') }}
+        # Client selections (defaults)
+        el: {{ el_client | default('geth') }}
+        cl: {{ cl_client | default('lighthouse') }}
+        # Other resource limits
+        {% if additional_limits is defined %}
+        {% for key, value in additional_limits.items() %}
+        {{ key }}: {{ value }}
+        {% endfor %}
+        {% endif %}
+
+verifier:
+  <<: *base_verifier

@@ -1,0 +1,25 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Include ansible-ephemery role with monitoring enabled
+      include_role:
+        name: ansible-ephemery
+      vars:
+        # Override variables for monitoring testing
+        home_dir: /root
+        # Enable monitoring components
+        prometheus_enabled: true
+        grafana_enabled: true
+        cadvisor_enabled: true
+        node_exporter_enabled: true
+        # Monitor service ports
+        prometheus_port: 9090
+        grafana_port: 3000
+        grafana_agent_http_port: 12345
+        cadvisor_port: 8080
+        node_exporter_port: 9100
+        # Grafana admin credentials
+        grafana_admin_password: "admin_password_test"
+        # Ensure networks are created for testing
+        monitoring_network: "ephemery-validator-net"

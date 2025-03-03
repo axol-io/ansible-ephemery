@@ -1,0 +1,60 @@
+---
+- name: Verify backup functionality
+  hosts: all
+  become: true
+  vars:
+    backup_enabled: true
+  tasks:
+    # Include common verification tasks
+    - name: Include common verification tasks
+      include_tasks: ../shared/templates/verify/common.yaml
+
+    # Include backup-specific verification tasks
+    - name: Include backup-specific verification tasks
+      include_tasks: ../shared/templates/verify/backup.yaml
+
+    # Additional backup-specific verification tasks
+    - name: Run backup script
+      command: "{{ ephemery_scripts_dir }}/backup.sh"
+      register: backup_run
+      changed_when: false
+      when: backup_enabled | bool
+
+    - name: Assert backup script runs successfully
+      assert:
+        that: backup_run.rc == 0
+        fail_msg: "Backup script failed to run"
+        success_msg: "Backup script ran successfully"
+      when: backup_enabled | bool and backup_run is defined
+
+    - name: Check if backup file was created
+      shell: find {{ ephemery_backup_dir }} -name "ephemery_backup_*.tar.gz" -type f -mmin -5
+      register: recent_backups
+      changed_when: false
+      when: backup_enabled | bool and backup_run is defined and backup_run.rc == 0
+
+    - name: Assert backup file was created
+      assert:
+        that: recent_backups.stdout != ""
+        fail_msg: "No recent backup files were created"
+        success_msg: "Backup files were created successfully"
+      when: backup_enabled | bool and recent_backups is defined
+
+    - name: Verify backup file permissions (if any backups found)
+      stat:
+        path: "{{ recent_backups.stdout_lines[0] }}"
+      register: backup_file_perms
+      when: backup_enabled | bool and recent_backups is defined and recent_backups.stdout != ""
+
+    - name: Assert backup file has correct permissions
+      assert:
+        that: backup_file_perms.stat.mode == '0600'
+        fail_msg: "Backup file has incorrect permissions: {{ backup_file_perms.stat.mode }}"
+        success_msg: "Backup file has correct permissions"
+      when: backup_enabled | bool and backup_file_perms is defined
+
+    - name: Check backup cron job
+      command: crontab -l
+      register: cron_jobs
+      changed_when: false
+      failed_when: backup_enabled and "Ephemery backup" not in cron_jobs.stdout

@@ -1,0 +1,90 @@
+---
+- name: Verify resource limits
+  hosts: all
+  become: true
+  tasks:
+    - name: Get execution client container name
+      command: docker ps --filter name={{ network }}-{{ el }} --format '{% raw %}{{.Names}}{% endraw %}'
+      register: el_container
+      changed_when: false
+
+    - name: Get consensus client container name
+      command: docker ps --filter name={{ network }}-{{ cl }} --format '{% raw %}{{.Names}}{% endraw %}'
+      register: cl_container
+      changed_when: false
+
+    - name: Check execution client memory limits
+      shell: docker inspect {{ el_container.stdout }} --format='{% raw %}{{.HostConfig.Memory}}{% endraw %}'
+      register: el_memory
+      changed_when: false
+      failed_when: el_memory.stdout | int == 0
+      when: el_container.stdout != ""
+
+    - name: Check consensus client memory limits
+      shell: docker inspect {{ cl_container.stdout }} --format='{% raw %}{{.HostConfig.Memory}}{% endraw %}'
+      register: cl_memory
+      changed_when: false
+      failed_when: cl_memory.stdout | int == 0
+      when: cl_container.stdout != ""
+
+    - name: Verify execution client memory matches configuration
+      assert:
+        that:
+          - el_memory.stdout | int == (ephemery_docker_memory_limit[:-1] | int * 1024 * 1024 * el_memory_percentage)
+        fail_msg: "Execution client memory limit doesn't match configuration"
+      when: el_container.stdout != "" and el_memory is defined
+
+    - name: Verify consensus client memory matches configuration
+      assert:
+        that:
+          - cl_memory.stdout | int == (ephemery_docker_memory_limit[:-1] | int * 1024 * 1024 * cl_memory_percentage)
+        fail_msg: "Consensus client memory limit doesn't match configuration"
+      when: cl_container.stdout != "" and cl_memory is defined
+
+    - name: Check CPU limits for execution client
+      shell: docker inspect {{ el_container.stdout }} --format='{% raw %}{{.HostConfig.NanoCpus}}{% endraw %}'
+      register: el_cpu
+      changed_when: false
+      when: el_container.stdout != ""
+
+    - name: Check CPU limits for consensus client
+      shell: docker inspect {{ cl_container.stdout }} --format='{% raw %}{{.HostConfig.NanoCpus}}{% endraw %}'
+      register: cl_cpu
+      changed_when: false
+      when: cl_container.stdout != ""
+
+    # Adding useful memory usage checks from verify.yml
+    - name: Verify memory usage is within limits for execution client
+      shell: |
+        docker stats {{ el_container.stdout }} --no-stream --format "{% raw %}{{.MemUsage}}{% endraw %}" | awk '{print $1}'
+      register: el_memory_usage
+      changed_when: false
+      # This is a soft check since actual memory usage depends on load
+      failed_when: false
+      when: el_container.stdout != ""
+
+    - name: Verify memory usage is within limits for consensus client
+      shell: |
+        docker stats {{ cl_container.stdout }} --no-stream --format "{% raw %}{{.MemUsage}}{% endraw %}" | awk '{print $1}'
+      register: cl_memory_usage
+      changed_when: false
+      # This is a soft check since actual memory usage depends on load
+      failed_when: false
+      when: cl_container.stdout != ""
+
+    - name: Display memory usage information
+      debug:
+        msg:
+          - "Execution client memory limit: {{ (el_memory.stdout | int // 1000000) }}MB"
+          - "Consensus client memory limit: {{ (cl_memory.stdout | int // 1000000) }}MB"
+          - "Execution client current usage: {{ el_memory_usage.stdout | default('N/A') }}"
+          - "Consensus client current usage: {{ cl_memory_usage.stdout | default('N/A') }}"
+      when: el_memory is defined and cl_memory is defined
+
+    - name: Verify memory allocation ratio
+      assert:
+        that:
+          - (el_memory.stdout | int) > (cl_memory.stdout | int)
+          - (el_memory.stdout | float) / ((el_memory.stdout | float) + (cl_memory.stdout | float)) | round(1) == el_memory_percentage
+        fail_msg: "Memory allocation ratio is not correct (should be {{ el_memory_percentage * 100 }}%/{{ cl_memory_percentage * 100 }}%)"
+      when: el_memory is defined and cl_memory is defined

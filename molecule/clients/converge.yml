@@ -1,0 +1,27 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Include ansible-ephemery role with Nethermind and Teku clients
+      include_role:
+        name: ansible-ephemery
+      vars:
+        # Override variables for client testing
+        home_dir: /root
+        # Specify Nethermind and Teku as the client combination
+        el: nethermind
+        cl: teku
+        # Client memory settings
+        el_memory_limit: "3072M"
+        cl_memory_limit: "3072M"
+
+    # Wait for clients to initialize
+    - name: Wait for clients to initialize
+      pause:
+        seconds: 30
+
+    # Check client availability
+    - name: Check if clients are running
+      command: docker ps --filter name=ephemery --format '{% raw %}{{.Names}}{% endraw %}'
+      register: client_containers
+      changed_when: false

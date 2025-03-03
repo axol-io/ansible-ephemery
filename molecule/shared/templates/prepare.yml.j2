@@ -1,0 +1,41 @@
+---
+# {{ scenario_name | default('Default') }} scenario prepare playbook
+# This file was generated from a template. Manual changes may be overwritten.
+
+# Import common preparation tasks
+- import_playbook: ../../shared/prepare.yml
+
+# Scenario-specific preparation
+- name: Scenario-specific preparation
+  hosts: all
+  become: true
+  tasks:
+    # Include scenario-specific preparation tasks if they exist
+    - name: Include scenario-specific preparation
+      include_tasks: "{{ lookup('first_found', params) }}"
+      vars:
+        params:
+          files:
+            - "prepare_tasks.yml"
+          paths:
+            - "./"
+            - "tasks/"
+          skip: true
+      ignore_errors: yes
+
+    {% if prepare_tasks is defined %}
+    # Inline preparation tasks
+    {% for task in prepare_tasks %}
+    - name: "{{ task.name | default('Preparation task') }}"
+      {{ task.module | default('command') }}:
+        {% for key, value in task.params.items() %}
+        {{ key }}: {{ value }}
+        {% endfor %}
+      {% if task.register is defined %}
+      register: {{ task.register }}
+      {% endif %}
+      {% if task.when is defined %}
+      when: {{ task.when }}
+      {% endif %}
+    {% endfor %}
+    {% endif %}

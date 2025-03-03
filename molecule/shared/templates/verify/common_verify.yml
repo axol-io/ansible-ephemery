@@ -1,0 +1,35 @@
+---
+# Common verification tasks for all scenarios
+
+# Check if Docker is running
+- name: Check Docker service is running
+  service:
+    name: docker
+  register: docker_service
+  failed_when: not docker_service.status.ActiveState == "active"
+
+# Check if required directories exist
+- name: Verify required directories exist
+  stat:
+    path: "{{ item }}"
+  register: dir_check
+  failed_when: not dir_check.stat.exists or not dir_check.stat.isdir
+  loop:
+    - "{{ ephemery_base_dir | default('/root/ephemery') }}"
+    - "{{ ephemery_base_dir | default('/root/ephemery') }}/data"
+    - "{{ ephemery_base_dir | default('/root/ephemery') }}/logs"
+
+# Check for systemd service files
+- name: Check for systemd service files
+  stat:
+    path: "/etc/systemd/system/{{ item }}.service"
+  loop:
+    - "ephemery-execution"
+    - "ephemery-consensus"
+  register: service_check
+  failed_when: not service_check.stat.exists
+  ignore_errors: true
+  when:
+    - inventory_hostname == "ethereum-node"
+    - (item == "ephemery-execution" and el is defined) or
+      (item == "ephemery-consensus" and cl is defined)

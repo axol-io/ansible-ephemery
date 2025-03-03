@@ -1,0 +1,32 @@
+---
+- name: Verify validator functionality
+  hosts: all
+  become: true
+  vars:
+    validator_enabled: true
+  tasks:
+    # Include common verification tasks
+    - name: Include common verification tasks
+      include_tasks: ../shared/templates/verify/common.yaml
+
+    # Include validator-specific verification tasks
+    - name: Include validator-specific verification tasks
+      include_tasks: ../shared/templates/verify/validator.yaml
+
+    # Additional validator-specific verification tasks
+    - name: Verify validator API is responding
+      uri:
+        url: http://localhost:5064/metrics
+        method: GET
+        status_code: 200
+      register: validator_metrics
+      failed_when: false
+      changed_when: false
+      when: validator_enabled | bool
+
+    - name: Assert validator API is responding if enabled
+      assert:
+        that: validator_metrics.status == 200
+        fail_msg: "Validator API is not responding at http://localhost:5064/metrics"
+        success_msg: "Validator API is responding correctly"
+      when: validator_enabled | bool and validator_metrics.status is defined

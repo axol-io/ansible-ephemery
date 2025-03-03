@@ -1,0 +1,64 @@
+version: 1
+rules:
+  # Ansible-specific rules
+  - name: "Ansible Role Structure"
+    description: "Enforce standard Ansible role directory structure"
+    pattern: "^(defaults|tasks|handlers|meta|vars|templates|files)/.*$"
+    severity: "warning"
+    message: "Files should be organized according to Ansible role structure"
+
+  - name: "Ansible YAML Files"
+    description: "Ensure Ansible YAML files use .yaml extension except in molecule directory"
+    pattern: ".*\\.ya?ml$"
+    match: ".*\\.yaml$"
+    not_pattern: "^molecule/.*\\.yml$"
+    severity: "error"
+    message: "Use .yaml extension instead of .yml for consistency (except in molecule directory)"
+
+  - name: "Ansible Variable Naming"
+    description: "Enforce snake_case for Ansible variables"
+    pattern: "^\\s*([a-z][a-z0-9_]*):\\s"
+    severity: "warning"
+    message: "Ansible variables should use snake_case naming convention"
+
+  # Ephemery-specific rules
+  - name: "Ephemery Client Configuration"
+    description: "Check for valid Ephemery client configurations"
+    pattern: "^\\s*(el|cl):\\s*\"(geth|besu|nethermind|reth|erigon|lighthouse|teku|prysm|lodestar)\"\\s*$"
+    severity: "warning"
+    message: "Use supported Ephemery client values"
+
+  # Security rules
+  - name: "JWT Secret Management"
+    description: "Ensure JWT secrets are properly handled"
+    pattern: "jwt_secret|password|token|key"
+    not_pattern: "vault_encrypt|ansible_vault"
+    severity: "error"
+    message: "Sensitive information should be encrypted with Ansible Vault"
+
+  # Docker-related rules
+  - name: "Docker Image Tags"
+    description: "Ensure Docker images use specific version tags"
+    pattern: "image:\\s*\"[^:]+:latest\""
+    severity: "warning"
+    message: "Avoid using 'latest' tag for Docker images; specify a version"
+
+  # YAML formatting rules
+  - name: "YAML Indentation"
+    description: "Enforce 2-space indentation in YAML files"
+    pattern: "^(  )*[^ ]"
+    severity: "warning"
+    message: "Use 2-space indentation in YAML files"
+
+  - name: "YAML Line Length"
+    description: "Limit line length in YAML files"
+    pattern: ".{100,}"
+    severity: "warning"
+    message: "Keep lines under 100 characters for readability"
+
+  # Documentation rules
+  - name: "Task Documentation"
+    description: "Ensure tasks have name attributes"
+    pattern: "^\\s*-\\s*name:"
+    severity: "warning"
+    message: "All tasks should have descriptive names"

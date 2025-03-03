@@ -1,0 +1,10 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Include ephemery role
+      include_role:
+        name: ansible-ephemery
+      vars:
+        execution_client: geth
+        consensus_client: prysm

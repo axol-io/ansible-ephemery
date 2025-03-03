@@ -1,0 +1,40 @@
+---
+# Backup scenario configuration
+# Imports base configuration from shared/base_molecule.yml
+
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: ethereum-node
+    image: ubuntu:22.04
+    pre_build_image: true
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: "/lib/systemd/systemd"
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_FORCE_COLOR: "true"
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+      callback_whitelist: profile_tasks, timer
+  inventory:
+    host_vars:
+      ethereum-node:
+        # Only specify values that differ from shared host_vars
+        el: geth
+        cl: lighthouse
+        validator_enabled: false
+        backup_enabled: true
+        firewall_enabled: false
+        # Backup specific settings with namespaced variables
+        backup_frequency: "daily"
+        backup_retention_days: 7
+        backup_compression_level: 6  # Override default
+verifier:
+  name: ansible

@@ -1,0 +1,22 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: ephemery-geth-prysm
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      all:
+        el: geth
+        cl: prysm
+verifier:
+  name: ansible

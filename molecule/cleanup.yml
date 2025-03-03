@@ -1,0 +1,114 @@
+---
+- name: Comprehensive Ephemery Cleanup
+  hosts: all
+  become: true
+  vars:
+    network: "{{ network | default('ephemery') }}"
+    ephemery_base_dir: "{{ ephemery_base_dir | default('/home/ubuntu/ephemery') }}"
+    cleanup_level: "{{ cleanup_level | default('full') }}"  # Options: containers, data, full
+  tasks:
+    - name: Stop and remove Ephemery containers
+      shell: |
+        docker ps -a --filter name={{ network }} --format '{% raw %}{{.Names}}{% endraw %}' | xargs -r docker stop
+        docker ps -a --filter name={{ network }} --format '{% raw %}{{.Names}}{% endraw %}' | xargs -r docker rm
+      changed_when: true
+      ignore_errors: true
+      tags: [containers, always]
+
+    - name: Stop and remove all Docker containers (if full cleanup requested)
+      shell: |
+        docker ps -aq | xargs -r docker stop
+        docker ps -aq | xargs -r docker rm
+      changed_when: true
+      ignore_errors: true
+      when: cleanup_level == 'full'
+      tags: [containers, full]
+
+    - name: Remove Ephemery Docker networks
+      shell: |
+        docker network ls --filter name={{ network }} -q | xargs -r docker network rm
+      changed_when: true
+      ignore_errors: true
+      tags: [containers, always]
+
+    - name: Stop and disable systemd services
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - "cadvisor.service"
+        - "node-exporter.service"
+        - "grafana-agent.service"
+      ignore_errors: true
+      tags: [services]
+
+    - name: Remove ephemery data directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ephemery_base_dir }}/data"
+        - "{{ ephemery_base_dir }}/logs"
+        - "{{ ephemery_base_dir }}/backups"
+        - "{{ ephemery_base_dir }}/secrets"
+      when: cleanup_level in ['data', 'full']
+      ignore_errors: true
+      tags: [data]
+
+    - name: Remove entire ephemery directory structure
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ephemery_base_dir }}"
+        - "/root/ephemery"
+        - "/home/ubuntu/ephemery"
+      when: cleanup_level == 'full'
+      ignore_errors: true
+      tags: [full]
+
+    - name: Remove Docker volumes
+      shell: |
+        docker volume ls --filter name={{ network }} -q | xargs -r docker volume rm
+      changed_when: true
+      ignore_errors: true
+      tags: [containers, data]
+
+    - name: Remove all Docker volumes (if full cleanup requested)
+      shell: |
+        docker volume ls -q | xargs -r docker volume rm
+      changed_when: true
+      ignore_errors: true
+      when: cleanup_level == 'full'
+      tags: [full]
+
+    - name: Clean up temporary files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/backup_test"
+        - "/tmp/ephemery_*"
+        - "/tmp/jwtsecret"
+      ignore_errors: true
+      tags: [always]
+
+    - name: Remove monitoring data
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/var/lib/prometheus"
+        - "/var/lib/grafana"
+      when: cleanup_level == 'full'
+      ignore_errors: true
+      tags: [full]
+
+    - name: Prune Docker system
+      shell: |
+        docker system prune -af
+      changed_when: true
+      ignore_errors: true
+      when: cleanup_level == 'full'
+      tags: [full]

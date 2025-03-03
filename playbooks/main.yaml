@@ -1,0 +1,93 @@
+---
+- name: Deploy Ephemery Ethereum Node
+  hosts: all
+  become: true
+  vars_files:
+    - "{{ playbook_dir }}/../defaults/main.yaml"
+    - "{{ playbook_dir }}/../vars/main.yaml"
+  tasks:
+    - block:
+        - name: Load host-specific variables
+          ansible.builtin.include_vars:
+            file: "{{ playbook_dir }}/../host_vars/{{ inventory_hostname }}.yaml"
+          tags: [always]
+          ignore_errors: true
+      rescue:
+        - name: Handle missing host vars
+          debug:
+            msg: "Host vars file not found for {{ inventory_hostname }}, using defaults only."
+          tags: [always]
+
+    - block:
+        - name: Load secrets (if available)
+          ansible.builtin.include_vars:
+            file: "{{ playbook_dir }}/../host_vars/secrets.yaml"
+          tags: [always, secrets]
+      rescue:
+        - name: Handle missing secrets
+          debug:
+            msg: "Secrets file not found. Using any secrets defined in host vars."
+          tags: [always]
+
+    - name: Include JWT secret tasks
+      ansible.builtin.import_tasks:
+        file: "{{ playbook_dir }}/../tasks/jwt-secret.yaml"
+      tags:
+        - jwt
+        - security
+        - always
+
+    - name: Configure firewall
+      ansible.builtin.import_tasks:
+        file: "{{ playbook_dir }}/../tasks/firewall.yaml"
+      when: firewall_enabled | default(true) | bool
+      tags:
+        - firewall
+        - security
+
+    - name: Include ephemery tasks
+      ansible.builtin.import_tasks:
+        file: "{{ playbook_dir }}/../tasks/ephemery.yaml"
+      tags:
+        - ephemery
+        - always
+
+    - name: Setup validator if enabled
+      ansible.builtin.import_tasks:
+        file: "{{ playbook_dir }}/../tasks/validator.yaml"
+      when: validator_enabled | default(false) | bool
+      tags:
+        - validator
+
+    - name: Include monitoring tasks
+      ansible.builtin.import_tasks:
+        file: "{{ playbook_dir }}/../tasks/monitoring.yaml"
+      when: monitoring_enabled | default(false) | bool
+      tags:
+        - monitoring
+        - always
+
+    - name: Install Cadvisor
+      ansible.builtin.import_tasks:
+        file: "{{ playbook_dir }}/../tasks/cadvisor.yaml"
+      when: cadvisor_enabled | default(true) | bool
+      tags:
+        - cadvisor
+        - monitoring
+
+    - name: Setup automatic backups
+      ansible.builtin.import_tasks:
+        file: "{{ playbook_dir }}/../tasks/backup.yaml"
+      when: backup_enabled | default(true) | bool
+      tags:
+        - backup
+
+    # Test cadvisor
+    # Expected response: ok~
+    # curl http://0.0.0.0:8080/healthz
+
+  handlers:
+    - name: Reload cadvisor
+      ansible.builtin.systemd:
+        name: cadvisor.service
+        state: restarted

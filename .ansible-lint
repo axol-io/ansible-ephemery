@@ -1,0 +1,18 @@
+---
+# .ansible-lint configuration
+
+# Exclude molecule configuration files from playbook syntax checking
+exclude_paths:
+  - molecule/shared/base_molecule.yaml
+  - molecule/shared/common_vars.yaml
+  - molecule/*/molecule.yml
+  - molecule/*/molecule.yaml
+
+# Skip specific rules
+skip_list:
+  - yaml[truthy]  # Allow yes/no in addition to true/false
+  - no-changed-when  # Allow commands without changed_when
+  - command-instead-of-module  # Allow shell/command when needed
+
+# Use more specific rule identifiers
+use_default_rules: true

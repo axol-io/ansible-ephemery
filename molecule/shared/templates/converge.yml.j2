@@ -1,0 +1,45 @@
+---
+# {{ scenario_name | default('Default') }} scenario converge playbook
+# This file was generated from a template. Manual changes may be overwritten.
+
+- name: Converge
+  hosts: all
+  tasks:
+    # Include scenario-specific pre-tasks if they exist
+    - name: Include scenario pre-tasks
+      include_tasks: "{{ lookup('first_found', params) }}"
+      vars:
+        params:
+          files:
+            - "pre_tasks.yml"
+          paths:
+            - "./"
+            - "tasks/"
+          skip: true
+      ignore_errors: yes
+
+    # Include main role
+    - name: Include ansible-ephemery role
+      include_role:
+        name: ansible-ephemery
+      vars:
+        # Override variables for testing
+        home_dir: "{{ home_dir | default('/root') }}"
+        {% if role_vars is defined %}
+        {% for key, value in role_vars.items() %}
+        {{ key }}: {{ value }}
+        {% endfor %}
+        {% endif %}
+
+    # Include scenario-specific post-tasks if they exist
+    - name: Include scenario post-tasks
+      include_tasks: "{{ lookup('first_found', params) }}"
+      vars:
+        params:
+          files:
+            - "post_tasks.yml"
+          paths:
+            - "./"
+            - "tasks/"
+          skip: true
+      ignore_errors: yes

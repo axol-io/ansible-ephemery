@@ -1,13 +1,13 @@
 ---
 - name: 🏖️ Create cozy axolotl home directory 🏖️
-  ansible.builtin.command: 
+  ansible.builtin.command:
     cmd: mkdir -p {{ home_dir }}
   args:
     creates: "{{ home_dir }}"
 
 - name: 📦 Install Docker prerequisites
   ansible.builtin.apt:
-    name: 
+    name:
       - apt-transport-https
       - ca-certificates
       - curl
@@ -21,7 +21,7 @@
 
 - name: 📦 Install Docker
   ansible.builtin.apt:
-    name: 
+    name:
       - docker.io
       - docker-compose
       - gnupg-agent
@@ -40,7 +40,7 @@
 
 - name: 📦 Install git, default-jre, make, gcc
   ansible.builtin.apt:
-    name: 
+    name:
       - git
       - default-jre
       - make

@@ -1,0 +1,34 @@
+---
+# Template for client-specific molecule scenarios
+# Replace EL_CLIENT and CL_CLIENT with the actual client names
+
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: ethereum-node
+    image: ubuntu:22.04
+    pre_build_image: true
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: "/lib/systemd/systemd"
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      ethereum-node:
+        # Client-specific configuration
+        el: EL_CLIENT
+        cl: CL_CLIENT
+        # Other variables inherited from shared host_vars
+  playbooks:
+    prepare: ../../shared/prepare.yaml
+    converge: converge.yaml
+    cleanup: ../../shared/cleanup.yaml
+verifier:
+  name: ansible
+  playbooks:
+    verify: ../../clients/verify.yaml  # Use shared client verification

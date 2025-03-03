@@ -1,0 +1,45 @@
+# Ansible specific
+.ansible/
+ansible-*.log
+
+# Version control
+.git/
+.gitmodules
+
+# Editor and IDE files
+# .vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Temporary and cache files
+*.tmp
+*.temp
+*.cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build and package files
+*.tar.gz
+*.zip
+*.rpm
+*.deb
+
+# Data directories (from .gitignore)
+/files/validator_keys/
+/files/validator_keys.tar.gz
+/files/geth-data/
+/files/lighthouse-data/
+/files/ephemery-data/
+/files/ephemery-testnet/
+/files/ephemery-testnet.tar.gz
+
+# Host files (from .gitignore)
+host_vars/*
+!host_vars/example-*

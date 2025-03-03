@@ -1,6 +1,10 @@
 # Host files
 host_vars/*
 inventory.*
+secrets.*
+!inventory.yaml.example
+!secrets.yaml.example
+!host_vars/example-*
 
 # Example files
 !host_vars/example-inventory.ini

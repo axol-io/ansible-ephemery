@@ -1,0 +1,11 @@
+---
+# Standard converge playbook for molecule scenarios
+# This can be used without modification in most scenarios
+
+- name: Converge
+  hosts: all
+  become: true
+  tasks:
+    - name: "Include ansible-ephemery role"
+      include_role:
+        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"

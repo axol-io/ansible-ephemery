@@ -1,0 +1,40 @@
+---
+# {{ el_client | default('geth') }}-{{ cl_client | default('lighthouse') }} client combination scenario configuration
+# This file was generated from a template. Manual changes may be overwritten.
+
+# Import base configuration
+{% include '../../shared/base_molecule.yml' %}
+
+# Client-specific platform settings
+platforms:
+  - name: ephemery-{{ el_client | default('geth') }}-{{ cl_client | default('lighthouse') }}
+    # Override base platform settings
+    {% if custom_platform is defined %}
+    {% for key, value in custom_platform.items() %}
+    {{ key }}: {{ value }}
+    {% endfor %}
+    {% endif %}
+
+provisioner:
+  <<: *base_provisioner
+  inventory:
+    group_vars:
+      all:
+        # Client selections
+        el: {{ el_client | default('geth') }}
+        cl: {{ cl_client | default('lighthouse') }}
+        # Client resource settings
+        el_memory_limit: {{ el_memory | default('3072M') }}
+        cl_memory_limit: {{ cl_memory | default('3072M') }}
+        # Other default settings
+        {% if additional_vars is defined %}
+        {% for key, value in additional_vars.items() %}
+        {{ key }}: {{ value }}
+        {% endfor %}
+        {% endif %}
+
+verifier:
+  <<: *base_verifier
+
+# Inherit converge.yml and verify.yml from parent directory
+# unless they're explicitly defined for this combination

@@ -1,0 +1,52 @@
+#!/bin/bash
+# Ephemery automatic backup script
+# This script creates a compressed backup of important Ethereum client data
+
+# Exit on any error
+set -e
+
+# Variables
+BACKUP_DIR="{{ ephemery_backup_dir }}"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_FILE="${BACKUP_DIR}/ephemery_backup_${TIMESTAMP}.tar.gz"
+
+# Create backup directory if it doesn't exist
+mkdir -p "${BACKUP_DIR}"
+
+# Log start of backup
+echo "Starting backup at $(date)"
+
+# List of directories to backup
+# Note: Exclude large chaindata to keep backups manageable
+# We're mostly backing up configuration and key data
+DIRS_TO_BACKUP=(
+  "{{ ephemery_base_dir }}/jwtsecret"
+  "{{ home_dir }}/config/grafana"
+  "{{ home_dir }}/config/prometheus"
+)
+
+{% if validator_enabled|default(false) %}
+# Add validator secrets to backup
+DIRS_TO_BACKUP+=("{{ ephemery_base_dir }}/secrets/validator")
+{% endif %}
+
+# Create the backup
+tar -czf "${BACKUP_FILE}" ${DIRS_TO_BACKUP[@]} 2>/dev/null || {
+  echo "Error creating backup"
+  exit 1
+}
+
+# Set secure permissions on backup file
+chmod 600 "${BACKUP_FILE}"
+
+# Calculate backup size
+BACKUP_SIZE=$(du -h "${BACKUP_FILE}" | cut -f1)
+
+# Log completion
+echo "Backup completed at $(date)"
+echo "Backup saved to: ${BACKUP_FILE} (${BACKUP_SIZE})"
+
+# Clean up old backups (keeping last {{ backup_retention_days }} days)
+find "${BACKUP_DIR}" -type f -name "ephemery_backup_*.tar.gz" -mtime +{{ backup_retention_days }} -delete
+
+exit 0

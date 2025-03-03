@@ -1,14 +1,19 @@
-ansible==2.9.13
+# Development-only dependencies
+# For production dependencies, see requirements.txt
 
-# Ansible
-ansible-lint==5.0.12
+# Testing tools
 covdefaults
 coverage
-docker==4.4.4
-pre-commit
 pytest
 pytest-env
-pyyaml==5.4.1
 
-# Python
-requests==2.25.1
+# Development tools
+pre-commit
+black
+flake8
+mypy
+isort
+
+# The following are pinned versions for development
+# These override the versions in requirements.txt when installed
+pyyaml==5.4.1

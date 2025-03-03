@@ -1,0 +1,48 @@
+---
+# Lodestar-specific verification tasks
+
+# Check if lodestar beacon container is running
+- name: Check if lodestar beacon container is running
+  command: docker ps -q --filter "name=ephemery-lodestar-beacon"
+  register: lodestar_beacon_container
+  failed_when: lodestar_beacon_container.stdout == ""
+
+# Check if lodestar beacon is listening on the expected ports
+- name: Check if lodestar beacon API is accessible
+  uri:
+    url: "http://localhost:9596/eth/v1/node/identity"
+    method: GET
+    status_code: 200
+  register: lodestar_beacon_api
+  retries: 3
+  delay: 5
+  until: lodestar_beacon_api.status == 200
+  ignore_errors: true
+
+# Check lodestar metrics endpoint
+- name: Check if lodestar metrics endpoint is accessible
+  uri:
+    url: "http://localhost:8008/metrics"
+    method: GET
+    status_code: 200
+  register: lodestar_metrics
+  retries: 3
+  delay: 5
+  until: lodestar_metrics.status == 200
+  ignore_errors: true
+
+# Check lodestar logs for errors
+- name: Check lodestar beacon logs
+  command: docker logs ephemery-lodestar-beacon
+  register: lodestar_logs
+  changed_when: false
+  failed_when: "'error' in lodestar_logs.stdout or 'fatal' in lodestar_logs.stdout"
+  ignore_errors: true
+
+# Check validator status (if enabled)
+- name: Check if lodestar validator container is running
+  command: docker ps -q --filter "name=ephemery-lodestar-validator"
+  register: lodestar_validator_container
+  when: validator_enabled | default(false) | bool
+  failed_when: lodestar_validator_container.stdout == "" and (validator_enabled | default(false) | bool)
+  ignore_errors: true

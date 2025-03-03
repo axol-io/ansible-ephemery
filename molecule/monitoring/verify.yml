@@ -1,0 +1,61 @@
+---
+- name: Verify monitoring setup
+  hosts: all
+  become: true
+  tasks:
+    - name: Check if Prometheus container is running
+      command: docker ps --filter name=Prometheus --format '{% raw %}{{.Names}}{% endraw %}'
+      register: prometheus_container
+      changed_when: false
+      failed_when: prometheus_container.stdout == ""
+
+    - name: Check if Grafana container is running
+      command: docker ps --filter name=Grafana --format '{% raw %}{{.Names}}{% endraw %}'
+      register: grafana_container
+      changed_when: false
+      failed_when: grafana_container.stdout == ""
+
+    - name: Check if Grafana Agent container is running
+      command: docker ps --filter name=Grafana-Agent --format '{% raw %}{{.Names}}{% endraw %}'
+      register: agent_container
+      changed_when: false
+      failed_when: agent_container.stdout == ""
+
+    - name: Verify Prometheus is accessible
+      uri:
+        url: http://localhost:{{ prometheus_port }}/-/healthy
+        status_code: 200
+      register: prometheus_health
+      failed_when: prometheus_health.status != 200
+      changed_when: false
+
+    - name: Verify Grafana is accessible
+      uri:
+        url: http://localhost:{{ grafana_port }}/api/health
+        status_code: 200
+      register: grafana_health
+      failed_when: grafana_health.status != 200
+      changed_when: false
+
+    - name: Check if Ethereum client targets are configured in Prometheus
+      uri:
+        url: http://localhost:{{ prometheus_port }}/api/v1/targets
+        return_content: true
+      register: prometheus_targets
+      failed_when: false
+      changed_when: false
+
+    - name: Verify Ethereum client targets exist
+      assert:
+        that:
+          - prometheus_targets.json.data.activeTargets | selectattr('labels.job', 'search', 'ethereum') | list | length > 0
+        fail_msg: "No Ethereum client targets found in Prometheus"
+      when: prometheus_targets.status == 200
+
+    - name: Check if Docker metrics are being collected
+      uri:
+        url: http://localhost:{{ prometheus_port }}/api/v1/query?query=container_cpu_usage_seconds_total
+        return_content: true
+      register: container_metrics
+      failed_when: container_metrics.status != 200 or container_metrics.json.data.result | length == 0
+      changed_when: false

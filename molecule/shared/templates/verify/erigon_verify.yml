@@ -1,0 +1,42 @@
+---
+# Erigon-specific verification tasks
+
+# Check if erigon container is running
+- name: Check if erigon container is running
+  command: docker ps -q --filter "name=ephemery-erigon"
+  register: erigon_container
+  failed_when: erigon_container.stdout == ""
+
+# Check if erigon is listening on the expected ports
+- name: Check if erigon HTTP API is accessible
+  uri:
+    url: "http://localhost:8545"
+    method: POST
+    body_format: json
+    body: '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
+    status_code: 200
+  register: erigon_api
+  retries: 3
+  delay: 5
+  until: erigon_api.status == 200
+  ignore_errors: true
+
+# Check erigon metrics endpoint
+- name: Check if erigon metrics endpoint is accessible
+  uri:
+    url: "http://localhost:9545/metrics"
+    method: GET
+    status_code: 200
+  register: erigon_metrics
+  retries: 3
+  delay: 5
+  until: erigon_metrics.status == 200
+  ignore_errors: true
+
+# Check erigon logs for errors
+- name: Check erigon logs
+  command: docker logs ephemery-erigon
+  register: erigon_logs
+  changed_when: false
+  failed_when: "'ERROR' in erigon_logs.stdout or 'FATAL' in erigon_logs.stdout"
+  ignore_errors: true

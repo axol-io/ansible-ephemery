@@ -71,7 +71,7 @@
   become: true
   community.docker.docker_container:
     name: "{{ node_exporter_name }}"
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.6.1
     state: started
     pull: true
     restart_policy: unless-stopped
@@ -88,7 +88,7 @@
   become: true
   community.docker.docker_container:
     name: Grafana-Agent
-    image: grafana/agent:latest
+    image: grafana/agent:v0.37.3
     state: started
     pull: true
     restart_policy: unless-stopped
@@ -111,7 +111,7 @@
   become: true
   community.docker.docker_container:
     name: Prometheus
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.47.2
     state: started
     pull: true
     restart_policy: unless-stopped
@@ -131,7 +131,7 @@
   become: true
   community.docker.docker_container:
     name: Grafana
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.2.3
     state: started
     pull: true
     restart_policy: unless-stopped
@@ -143,6 +143,6 @@
     ports:
       - "{{ grafana_port }}:{{ grafana_port }}"
     env:
-      GF_SECURITY_ADMIN_PASSWORD: "{{ GRAFANA_ADMIN_PASSWORD }}"
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
     volumes:
       - "{{ home_dir }}/config/grafana/provisioning/datasources/datasource.yaml:{{ home_dir }}/config/grafana/provisioning/datasources/datasource.yaml"

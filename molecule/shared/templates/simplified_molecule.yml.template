@@ -1,0 +1,33 @@
+---
+# Simplified molecule.yaml that inherits from base_molecule.yaml
+# This reduces duplication across scenarios
+
+# Import shared base configuration
+# Note: Molecule doesn't have direct inheritance, so this is just a guide
+# for manual simplification
+
+# Only include what differs from base_molecule.yaml
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: ethereum-node
+    # Only override platform settings if they differ from base
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      ethereum-node:
+        # Only include variables that differ from shared/host_vars/ethereum-node/main.yaml
+  playbooks:
+    # Reference shared playbooks where possible
+    prepare: ../../shared/prepare.yaml
+    cleanup: ../../shared/cleanup.yaml
+    # Only use scenario-specific playbooks when they contain unique logic
+    converge: converge.yaml
+verifier:
+  name: ansible
+  playbooks:
+    # Use shared verify.yaml where possible, or scenario-specific if needed
+    verify: verify.yaml

@@ -1,45 +1,143 @@
 ---
-- name: 🌟 Clone ephemery-scripts repository
-  ansible.builtin.git:
-    repo: "https://github.com/ephemery-testnet/ephemery-scripts"
-    dest: "{{ home_dir }}/ephemery-scripts"
-    version: "master"
-    force: yes
+- name: 🌟 Ensure ephemery directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  loop:
+    - "{{ home_dir }}/ephemery"
+    - "{{ home_dir }}/ephemery/data/el"
+    - "{{ home_dir }}/ephemery/data/cl"
+    - "{{ home_dir }}/ephemery/scripts"
+    - "{{ home_dir }}/ephemery/logs"
 
-- name: 🪄 Configure Docker Compose for default (Geth-Lighthouse)
-  ansible.builtin.template:
-    src: templates/docker-compose.yaml.j2
-    dest: "{{ home_dir }}/ephemery-scripts/docker-compose/docker-compose.yaml"
-    force: true
+- name: 🔑 Include JWT secret management task
+  ansible.builtin.import_tasks:
+    file: jwt-secret.yaml
+  tags: [jwt, security, always]
 
 - name: 🔑 Add user to Docker group
   ansible.builtin.user:
     name: "{{ ansible_user }}"
     groups: docker
-    append: yes
+    append: true
 
-- name: Health check script
+- name: 📝 Create health check script
   ansible.builtin.template:
     src: templates/scripts/health_check.sh.j2
-    dest: "{{ home_dir }}/ephemery-scripts/scripts/"
+    dest: "{{ home_dir }}/ephemery/scripts/health_check.sh"
     force: true
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: "0755"
 
-- name: 📊 Start Grafana agent
+- name: ⏱️ Setup cron job for health check
+  ansible.builtin.cron:
+    name: "Ephemery health check"
+    minute: "*/5"
+    job: "{{ home_dir }}/ephemery/scripts/health_check.sh"
+    user: "{{ ansible_user }}"
+
+# Include client-specific configuration
+- name: 🚀 Include client-specific configuration
+  ansible.builtin.include_tasks:
+    file: "clients/{{ el }}-{{ cl }}/main.yaml"
+  when:
+    - el in ['geth', 'besu', 'nethermind', 'reth', 'erigon']
+    - cl in ['lighthouse', 'teku', 'prysm', 'lodestar']
+
+# Fallback to generic configuration if specific client combination is not available
+- name: 🚀 Check if client-specific configuration exists
+  ansible.builtin.stat:
+    path: "tasks/clients/{{ el }}-{{ cl }}/main.yaml"
+  register: client_config
+  when:
+    - el in ['geth', 'besu', 'nethermind', 'reth', 'erigon']
+    - cl in ['lighthouse', 'teku', 'prysm', 'lodestar']
+
+- name: 🚀 Start Execution Client with generic configuration
   community.docker.docker_container:
-    name: grafana-agent
-    image: grafana/agent:latest
+    name: "{{ network }}-{{ el }}"
+    image: "pk910/ephemery-{{ el }}:latest"
     state: started
     pull: true
     restart_policy: unless-stopped
-    networks:
-      - name: "{{ network }}-validator-net"
-    networks_cli_compatible: true
+    network_mode: host
+    memory: "{{ el_memory_limit }}"
+    volumes:
+      - "{{ home_dir }}/ephemery/jwtsecret:/execution-auth.jwt:ro"
+      - "{{ home_dir }}/ephemery/data/el:/data"
+    command: >
+      --datadir=/data
+      --http
+      --http.addr=0.0.0.0
+      --http.port=8545
+      --authrpc.addr=0.0.0.0
+      --authrpc.port=8551
+      --authrpc.vhosts=*
+      --authrpc.jwtsecret=/execution-auth.jwt
+  when: not client_config.stat.exists|default(false)
+
+- name: 🚀 Start Consensus Client with generic configuration
+  community.docker.docker_container:
+    name: "{{ network }}-{{ cl }}"
+    image: "pk910/ephemery-{{ cl }}:latest"
+    state: started
+    pull: true
+    restart_policy: unless-stopped
+    network_mode: host
+    memory: "{{ cl_memory_limit }}"
+    volumes:
+      - "{{ home_dir }}/ephemery/jwtsecret:/execution-auth.jwt:ro"
+      - "{{ home_dir }}/ephemery/data/cl:/data"
+    command: >
+      {% if cl == 'lighthouse' %}
+      lighthouse bn
+      --datadir=/data
+      --http
+      --http-address=0.0.0.0
+      --http-port=5052
+      --execution-endpoint=http://127.0.0.1:8551
+      --execution-jwt=/execution-auth.jwt
+      {% elif cl == 'teku' %}
+      teku
+      --data-path=/data
+      --rest-api-enabled=true
+      --rest-api-interface=0.0.0.0
+      --rest-api-port=5051
+      --ee-endpoint=http://127.0.0.1:8551
+      --ee-jwt-secret-file=/execution-auth.jwt
+      {% elif cl == 'prysm' %}
+      beacon-chain
+      --datadir=/data
+      --rpc-host=0.0.0.0
+      --rpc-port=4000
+      --execution-endpoint=http://127.0.0.1:8551
+      --jwt-secret=/execution-auth.jwt
+      {% elif cl == 'lodestar' %}
+      lodestar beacon
+      --dataDir=/data
+      --rest
+      --rest.address=0.0.0.0
+      --rest.port=5052
+      --execution.urls=http://127.0.0.1:8551
+      --jwt-secret=/execution-auth.jwt
+      {% else %}
+      --datadir=/data
+      {% endif %}
+  when: not client_config.stat.exists|default(false)
+
+- name: 📊 Start Grafana agent
+  community.docker.docker_container:
+    name: grafana-agent
+    image: grafana/agent:v0.37.3
+    state: started
+    pull: true
+    restart_policy: unless-stopped
+    network_mode: host
     privileged: true
-    ports:
-      - "127.0.0.1:{{ grafana_agent_http_port }}:{{ grafana_agent_http_port }}"
     volumes:
       - "{{ home_dir }}/config/grafana/agent:{{ home_dir }}/config/grafana/agent"
       - "{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:{{ home_dir }}/config/grafana/agent/grafana-agent.yaml"

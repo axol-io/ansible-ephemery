@@ -1,0 +1,53 @@
+---
+- name: Verify Nethermind + Teku client combination
+  hosts: all
+  become: true
+  vars:
+    el: nethermind
+    cl: teku
+  tasks:
+    - name: Check if Nethermind container is running
+      command: docker ps --filter name={{ network }}-{{ el }} --format '{% raw %}{{.Names}}{% endraw %}'
+      register: nethermind_container
+      changed_when: false
+      failed_when: nethermind_container.stdout == ""
+
+    - name: Check if Teku container is running
+      command: docker ps --filter name={{ network }}-{{ cl }} --format '{% raw %}{{.Names}}{% endraw %}'
+      register: teku_container
+      changed_when: false
+      failed_when: teku_container.stdout == ""
+
+    - name: Verify Nethermind API is responding
+      uri:
+        url: http://localhost:8545
+        method: POST
+        body_format: json
+        body: '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}'
+        status_code: 200
+        return_content: true
+      register: nethermind_response
+      failed_when: "'nethermind' not in nethermind_response.content|lower"
+      changed_when: false
+
+    - name: Verify Teku API is responding
+      uri:
+        url: http://localhost:5051/eth/v1/node/identity
+        method: GET
+        status_code: 200
+        return_content: true
+      register: teku_response
+      failed_when: teku_response.status != 200
+      changed_when: false
+
+    - name: Verify JWT authentication is working between clients
+      uri:
+        url: http://localhost:8545
+        method: POST
+        body_format: json
+        body: '{"jsonrpc":"2.0","method":"engine_getPayloadV1","params":["0x1"],"id":1}'
+        status_code: [200, 403, 405]  # 403/405 is expected if not authorized, 200 if authorized but invalid params
+        return_content: true
+      register: jwt_test
+      failed_when: jwt_test.status == 401  # 401 would indicate JWT is not configured
+      changed_when: false

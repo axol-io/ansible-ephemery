@@ -9,7 +9,7 @@
 - name: Install cadvisor
   community.docker.docker_container:
     name: cadvisor
-    image: google/cadvisor:latest
+    image: google/cadvisor:v0.47.0
     state: "{{ 'started' if cadvisor_enabled else 'absent' }}"
     restart_policy: unless-stopped
     privileged: true
@@ -21,7 +21,7 @@
       - "/sys:/sys:ro"
       - "/var/run:/var/run:ro"
       - "{{ home_dir }}/cadvisor:/rootfs:ro"
-    command: 
+    command:
       - "--port={{ cadvisor_port }}"
       - "--docker_only=true"
       - "--enable_metrics=process,memory,network,oom_event,disk"

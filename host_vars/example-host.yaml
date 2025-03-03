@@ -1,0 +1,44 @@
+---
+# Example host configuration file
+# Rename this file to match your hostname
+
+# Network configuration
+network: "ephemery"
+
+# Client selection
+el: "geth"              # Execution client: geth, besu, nethermind, reth, erigon
+cl: "lighthouse"        # Consensus client: lighthouse, teku, prysm, lodestar
+validator_enabled: true # Set to true to enable validator
+
+# Host-specific directory paths (override defaults if needed)
+home_dir: "/home/ubuntu"  # Home directory path for this host
+
+# Connection settings
+ansible_host: "192.168.1.101"  # IP address of this host
+ansible_user: "ubuntu"         # SSH user for this host
+# ansible_ssh_private_key_file: "~/.ssh/id_rsa"  # Optional: SSH key file
+
+# Feature flags
+monitoring_enabled: true    # Enable monitoring stack
+cadvisor_enabled: true      # Enable container monitoring
+backup_enabled: true        # Enable automatic backups
+
+# Service ports (override defaults if needed)
+node_exporter_port: 9100
+prometheus_port: 17690
+grafana_agent_http_port: 17691
+grafana_port: 3000
+
+# Client-specific configurations
+# Uncomment and customize as needed
+# el_memory_limit: "4G"     # Memory limit for execution client
+# cl_memory_limit: "4G"     # Memory limit for consensus client
+# validator_memory_limit: "1G"  # Memory limit for validator
+
+# Secrets (should be vault-encrypted in production)
+# Use ansible-vault encrypt_string for each of these values
+grafana_admin_password: "example_password"
+telegram_bot_token: "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+telegram_chat_id: "123456789"
+jwtsecret: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+validator_keystore_password: "example_validator_password"

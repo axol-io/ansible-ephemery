@@ -22,9 +22,70 @@ prometheus:
         - job_name: "grafana-agent"
           static_configs:
             - targets: ["localhost:{{ grafana_agent_http_port }}"]
+        # Add monitoring for Ethereum clients
+        - job_name: "ethereum-execution-client"
+          metrics_path: /metrics
+          static_configs:
+            - targets: ["localhost:8545"] # Execution client metrics
+          relabel_configs:
+            - source_labels: [__address__]
+              target_label: instance
+              replacement: "{{ el }}"
+        - job_name: "ethereum-consensus-client"
+          metrics_path: /metrics
+          static_configs:
+            - targets: ["localhost:5052"] # Consensus client metrics
+          relabel_configs:
+            - source_labels: [__address__]
+              target_label: instance
+              replacement: "{{ cl }}"
+        {% if validator_enabled|default(false) %}
+        - job_name: "ethereum-validator"
+          metrics_path: /metrics
+          static_configs:
+            - targets: ["localhost:5064"] # Validator metrics
+          relabel_configs:
+            - source_labels: [__address__]
+              target_label: instance
+              replacement: "validator"
+        {% endif %}
+        # Docker container monitoring
+        - job_name: 'docker'
+          docker_sd_configs:
+            - host: unix:///var/run/docker.sock
+              refresh_interval: 15s
+          relabel_configs:
+            - source_labels: ['__meta_docker_container_name']
+              regex: '/(.*)'
+              target_label: 'container'
 
 integrations:
   node_exporter:
     enabled: true
   prometheus_remote_write:
     - url: "http://localhost:{{ prometheus_port }}/api/v1/write"
+
+  # Add Docker integration
+  docker_integration:
+    enabled: true
+    host: "unix:///var/run/docker.sock"
+    collection_interval: 15s
+
+logs:
+  configs:
+  - name: docker-logs
+    positions:
+      filename: /tmp/positions.yaml
+    scrape_configs:
+      - job_name: docker
+        docker_sd_configs:
+          - host: unix:///var/run/docker.sock
+            refresh_interval: 15s
+        relabel_configs:
+          - source_labels: ['__meta_docker_container_name']
+            regex: '/(.*)'
+            target_label: 'container'
+          - source_labels: ['__meta_docker_container_log_stream']
+            target_label: 'stream'
+    clients:
+      - url: http://localhost:{{ prometheus_port }}/loki/api/v1/push
