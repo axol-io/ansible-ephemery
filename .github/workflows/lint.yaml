@@ -24,6 +24,14 @@ jobs:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-py3.11-${{ hashFiles('.pre-commit-config.yaml') }}
 
+      - name: Install ansible and dependencies
+        run: |
+          pip install ansible-core ansible-lint
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          chmod +x scripts/install-collections.sh
+          ./scripts/install-collections.sh
+
       - name: Install pre-commit
         run: pip3 install pre-commit
 

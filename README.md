@@ -73,6 +73,24 @@ For details, see [docs/TESTING.md](docs/TESTING.md).
 
 Contributions welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Development
+
+To set up a development environment:
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/ansible-ephemery.git
+cd ansible-ephemery
+
+# Run the setup script
+./scripts/setup-dev-env.sh
+
+# To run linting manually
+ansible-lint
+# Or run all pre-commit hooks
+pre-commit run --all-files
+```
+
 ## Resources
 
 - [Ephemery resources](https://github.com/ephemery-testnet/ephemery-resources)

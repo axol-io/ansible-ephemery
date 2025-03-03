@@ -23,3 +23,6 @@ ansible.cfg
 /files/ephemery-data/*
 /files/ephemery-testnet/*
 /files/ephemery-testnet.tar.gz
+
+# Local collections
+/collections/

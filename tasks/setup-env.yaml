@@ -28,7 +28,7 @@
     state: present
 
 - name: 📦 Install Grafana Agent
-  ansible.builtin.community.docker.docker_container:
+  community.docker.docker_container:
     name: grafana-agent
     image: grafana/agent:latest
     ports:
