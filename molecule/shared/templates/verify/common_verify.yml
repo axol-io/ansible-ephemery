@@ -30,6 +30,6 @@
   failed_when: not service_check.stat.exists
   ignore_errors: true
   when:
-    - inventory_hostname == "ethereum-node"
-    - (item == "ephemery-execution" and el is defined) or
-      (item == "ephemery-consensus" and cl is defined)
+    - inventory_hostname == '{{ node_name | default("ethereum-node") }}'
+    - (item == 'ephemery-execution' and el is defined) or
+      (item == 'ephemery-consensus' and cl is defined)

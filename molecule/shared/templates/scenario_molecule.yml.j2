@@ -10,8 +10,8 @@ driver:
 
 platforms:
   - name: {{ node_name | default('ethereum-node') }}
-    image: ${MOLECULE_DISTRO:-ubuntu:22.04}
-    command: ${MOLECULE_COMMAND:-""}
+    image: '{{ molecule_distro | default("ubuntu:22.04") }}'
+    command: '{{ molecule_command | default("") }}'
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
@@ -25,10 +25,10 @@ platforms:
 provisioner:
   name: ansible
   playbooks:
-    converge: ${MOLECULE_PLAYBOOK:-converge.yml}
+    converge: '{{ molecule_playbook | default("converge.yml") }}'
   inventory:
     host_vars:
-      {{ node_name | default('ethereum-node') }}:
+      '{{ node_name | default("ethereum-node") }}':
         {% if custom_vars is defined %}
         {% for key, value in custom_vars.items() %}
         {{ key }}: {{ value }}
@@ -38,10 +38,10 @@ provisioner:
 verifier:
   name: ansible
   playbooks:
-    verify: verify.yml
+    verify: '{{ molecule_verify | default("verify.yml") }}'
 
 scenario:
-  name: {{ scenario_name | default('default') }}
+  name: '{{ scenario_name | default("default") }}'
   test_sequence:
     - dependency
     - lint

@@ -22,12 +22,12 @@ platforms: &base_platforms
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       # Docker socket path updated by script based on environment
       - /var/run/docker.sock:/var/run/docker.sock
-    command: "/lib/systemd/systemd"
+    command: '/lib/systemd/systemd'
     # cgroupns_mode: host will be added for macOS by the script
 provisioner: &base_provisioner
   name: ansible
   env:
-    ANSIBLE_FORCE_COLOR: "true"
+    ANSIBLE_FORCE_COLOR: true
   config_options:
     defaults:
       interpreter_python: auto_silent

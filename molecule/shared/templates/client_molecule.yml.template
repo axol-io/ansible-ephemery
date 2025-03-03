@@ -14,7 +14,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - /var/run/docker.sock:/var/run/docker.sock
-    command: "/lib/systemd/systemd"
+    command: '/lib/systemd/systemd'
 provisioner:
   name: ansible
   inventory:

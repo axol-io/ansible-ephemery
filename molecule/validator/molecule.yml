@@ -11,7 +11,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - /var/run/docker.sock:/var/run/docker.sock
-    command: "/lib/systemd/systemd"
+    command: /lib/systemd/systemd
 provisioner:
   name: ansible
   inventory:
@@ -20,12 +20,12 @@ provisioner:
         el: geth
         cl: lighthouse
         network: ephemery
-        ephemery_base_dir: "/home/ubuntu/ephemery"
-        ephemery_data_dir: "/home/ubuntu/ephemery/data"
-        ephemery_logs_dir: "/home/ubuntu/ephemery/logs"
-        ephemery_scripts_dir: "/home/ubuntu/ephemery/scripts"
-        ephemery_backup_dir: "/home/ubuntu/ephemery/backups"
-        jwt_secret_path: "/home/ubuntu/ephemery/jwtsecret"
+        ephemery_base_dir: /home/ubuntu/ephemery
+        ephemery_data_dir: /home/ubuntu/ephemery/data
+        ephemery_logs_dir: /home/ubuntu/ephemery/logs
+        ephemery_scripts_dir: /home/ubuntu/ephemery/scripts
+        ephemery_backup_dir: /home/ubuntu/ephemery/backups
+        jwt_secret_path: /home/ubuntu/ephemery/jwtsecret
         validator_enabled: true  # Enable validator for this scenario
         backup_enabled: false
         firewall_enabled: true
@@ -33,8 +33,8 @@ provisioner:
         grafana_port: 3000
         grafana_agent_http_port: 12345
         cadvisor_port: 8080
-        el_memory_limit: "2048M"
-        cl_memory_limit: "2048M"
-        validator_memory_limit: "1024M"
+        el_memory_limit: 2048M
+        cl_memory_limit: 2048M
+        validator_memory_limit: 1024M
 verifier:
   name: ansible

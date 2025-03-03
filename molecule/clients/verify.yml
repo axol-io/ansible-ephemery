@@ -45,7 +45,7 @@
           http://localhost:8551
       register: jwt_check
       changed_when: false
-      failed_when: '"Unauthorized" not in jwt_check.stdout'  # Should fail without JWT
+      failed_when: 'Unauthorized not in jwt_check.stdout'  # Should fail without JWT
 
     - name: Check client memory limits
       ansible.builtin.shell: |

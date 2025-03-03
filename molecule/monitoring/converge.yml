@@ -20,6 +20,6 @@
         cadvisor_port: 8080
         node_exporter_port: 9100
         # Grafana admin credentials
-        grafana_admin_password: "admin_password_test"
+        grafana_admin_password: admin_password_test
         # Ensure networks are created for testing
-        monitoring_network: "ephemery-validator-net"
+        monitoring_network: ephemery-validator-net

@@ -8,57 +8,57 @@
   tasks:
     # Common verification tasks that should run for all scenarios
     - name: Import common verification tasks
-      include_tasks: "{{ lookup('first_found', params) }}"
+      include_tasks: '{{ lookup("first_found", params) }}'
       vars:
         params:
           files:
-            - "../../shared/templates/verify/common_verify.yml"
+            - '../../shared/templates/verify/common_verify.yml'
           paths:
-            - "./"
+            - './'
           skip: false
 
     # Import client-specific verifications if defined
     - name: Import client-specific verification tasks
-      include_tasks: "{{ lookup('first_found', params) }}"
+      include_tasks: '{{ lookup("first_found", params) }}'
       vars:
         params:
           files:
-            - "../../shared/templates/verify/{{ el }}_verify.yml"
+            - '../../shared/templates/verify/{{ el }}_verify.yml'
           paths:
-            - "./"
+            - './'
           skip: true
       when: el is defined
       ignore_errors: yes
 
     - name: Import consensus client verification tasks
-      include_tasks: "{{ lookup('first_found', params) }}"
+      include_tasks: '{{ lookup("first_found", params) }}'
       vars:
         params:
           files:
-            - "../../shared/templates/verify/{{ cl }}_verify.yml"
+            - '../../shared/templates/verify/{{ cl }}_verify.yml'
           paths:
-            - "./"
+            - './'
           skip: true
       when: cl is defined
       ignore_errors: yes
 
     # Scenario-specific verification
     - name: Include scenario-specific verification
-      include_tasks: "{{ lookup('first_found', params) }}"
+      include_tasks: '{{ lookup("first_found", params) }}'
       vars:
         params:
           files:
-            - "verify_tasks.yml"
+            - 'verify_tasks.yml'
           paths:
-            - "./"
-            - "tasks/"
+            - './'
+            - 'tasks/'
           skip: true
       ignore_errors: yes
 
     {% if verify_tasks is defined %}
     # Inline verification tasks
     {% for task in verify_tasks %}
-    - name: "{{ task.name | default('Verification task') }}"
+    - name: '{{ task.name | default("Verification task") }}'
       {{ task.module | default('command') }}:
         {% for key, value in task.params.items() %}
         {{ key }}: {{ value }}

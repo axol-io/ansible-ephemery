@@ -7,14 +7,14 @@
   tasks:
     # Include scenario-specific pre-tasks if they exist
     - name: Include scenario pre-tasks
-      include_tasks: "{{ lookup('first_found', params) }}"
+      include_tasks: '{{ lookup("first_found", params) }}'
       vars:
         params:
           files:
-            - "pre_tasks.yml"
+            - 'pre_tasks.yml'
           paths:
-            - "./"
-            - "tasks/"
+            - './'
+            - 'tasks/'
           skip: true
       ignore_errors: yes
 
@@ -24,7 +24,7 @@
         name: ansible-ephemery
       vars:
         # Override variables for testing
-        home_dir: "{{ home_dir | default('/root') }}"
+        home_dir: '{{ home_dir | default("/root") }}'
         {% if role_vars is defined %}
         {% for key, value in role_vars.items() %}
         {{ key }}: {{ value }}
@@ -33,13 +33,13 @@
 
     # Include scenario-specific post-tasks if they exist
     - name: Include scenario post-tasks
-      include_tasks: "{{ lookup('first_found', params) }}"
+      include_tasks: '{{ lookup("first_found", params) }}'
       vars:
         params:
           files:
-            - "post_tasks.yml"
+            - 'post_tasks.yml'
           paths:
-            - "./"
-            - "tasks/"
+            - './'
+            - 'tasks/'
           skip: true
       ignore_errors: yes

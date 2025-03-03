@@ -1,18 +1,3 @@
 ---
-- name: Verify Besu + Teku client combination
-  hosts: all
-  become: true
-  vars:
-    el: besu
-    cl: teku
-  tasks:
-    - name: Check if Besu container is running
-      ansible.builtin.command: docker ps --filter name={{ network }}-{{ el }} --format '{% raw %}{{.Names}}{% endraw %}'
-      register: besu_container
-      changed_when: false
-      failed_when: besu_container.stdout == ""
-
-    - name: Check if Teku container is running
-      ansible.builtin.command: docker ps --filter name={{ network }}-{{ cl }} --format '{% raw %}{{.Names}}{% endraw %}'
-      register: teku_container
-      changed_when: false
+# This file inherits from ../verify.yml
+- import_playbook: ../verify.yml

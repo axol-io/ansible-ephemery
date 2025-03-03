@@ -4,18 +4,18 @@
   hosts: all
   become: true
   vars_files:
-    - "{{ playbook_dir }}/../defaults/main.yaml"
-    - "{{ playbook_dir }}/../vars/main.yaml"
+    - defaults/main.yaml
+    - vars/main.yaml
   tasks:
     - name: Load host-specific variables
       ansible.builtin.include_vars:
-        file: "{{ playbook_dir }}/../host_vars/{{ inventory_hostname }}.yaml"
+        file: '{{ playbook_dir }}/../host_vars/{{ inventory_hostname }}.yaml'
       ignore_errors: true
       tags: [always]
 
     - name: Pull latest execution client Docker image
       community.docker.docker_image:
-        name: "{{ client_images[el] }}"
+        name: '{{ client_images[el] }}'
         source: pull
         force_source: true
       tags:
@@ -25,7 +25,7 @@
 
     - name: Pull latest consensus client Docker image
       community.docker.docker_image:
-        name: "{{ client_images[cl] }}"
+        name: '{{ client_images[cl] }}'
         source: pull
         force_source: true
       tags:
@@ -35,7 +35,7 @@
 
     - name: Pull latest validator client Docker image (if enabled)
       community.docker.docker_image:
-        name: "{{ client_images.validator }}"
+        name: '{{ client_images.validator }}'
         source: pull
         force_source: true
       when: validator_enabled | default(false) | bool

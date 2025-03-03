@@ -10,5 +10,5 @@
         home_dir: /root
         validator_enabled: true
         # Validator-specific test variables
-        validator_memory_limit: "1024M"
-        validator_client: "{{ cl }}"
+        validator_memory_limit: 1024M
+        validator_client: '{{ cl }}'

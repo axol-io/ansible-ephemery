@@ -3,14 +3,14 @@
 
 # Check if reth container is running
 - name: Check if reth container is running
-  command: docker ps -q --filter "name=ephemery-reth"
+  command: docker ps -q --filter 'name=ephemery-reth'
   register: reth_container
-  failed_when: reth_container.stdout == ""
+  failed_when: reth_container.stdout == ''
 
 # Check if reth is listening on the expected ports
 - name: Check if reth HTTP API is accessible
   uri:
-    url: "http://localhost:8545"
+    url: http://localhost:8545
     method: POST
     body_format: json
     body: '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
@@ -24,7 +24,7 @@
 # Check reth metrics endpoint
 - name: Check if reth metrics endpoint is accessible
   uri:
-    url: "http://localhost:9545/metrics"
+    url: http://localhost:9545/metrics
     method: GET
     status_code: 200
   register: reth_metrics
@@ -38,5 +38,5 @@
   command: docker logs ephemery-reth
   register: reth_logs
   changed_when: false
-  failed_when: "'ERROR' in reth_logs.stdout or 'FATAL' in reth_logs.stdout"
+  failed_when: '"ERROR" in reth_logs.stdout or "FATAL" in reth_logs.stdout'
   ignore_errors: true

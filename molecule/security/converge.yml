@@ -9,7 +9,7 @@
         # Override variables for security testing
         home_dir: /root
         firewall_enabled: true
-        firewall_default_policy: "deny"
+        firewall_default_policy: deny
         # Enable secure JWT generation for testing
         jwt_secret_secure_generation: true
         # Restrict network access for testing

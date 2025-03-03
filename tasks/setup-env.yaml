@@ -3,7 +3,7 @@
   ansible.builtin.command:
     cmd: mkdir -p {{ home_dir }}
   args:
-    creates: "{{ home_dir }}"
+    creates: '{{ home_dir }}'
 
 - name: 📦 Install Docker prerequisites
   ansible.builtin.apt:
@@ -32,9 +32,9 @@
     name: grafana-agent
     image: grafana/agent:latest
     ports:
-      - "{{ grafana_agent_http_port }}:{{ grafana_agent_http_port }}"
+      - '{{ grafana_agent_http_port }}:{{ grafana_agent_http_port }}'
     volumes:
-      - "{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:/etc/grafana-agent/config.yaml"
+      - '{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:/etc/grafana-agent/config.yaml'
     command: >
       sh -c "grafana-agent --config.file={{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
 

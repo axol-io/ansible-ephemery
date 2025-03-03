@@ -11,7 +11,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - /var/run/docker.sock:/var/run/docker.sock
-    command: "/lib/systemd/systemd"
+    command: '/lib/systemd/systemd'
     exposed_ports:
       - 9090  # Prometheus
       - 3000  # Grafana
@@ -24,12 +24,12 @@ provisioner:
         el: geth
         cl: lighthouse
         network: ephemery
-        ephemery_base_dir: "/home/ubuntu/ephemery"
-        ephemery_data_dir: "/home/ubuntu/ephemery/data"
-        ephemery_logs_dir: "/home/ubuntu/ephemery/logs"
-        ephemery_scripts_dir: "/home/ubuntu/ephemery/scripts"
-        ephemery_backup_dir: "/home/ubuntu/ephemery/backups"
-        jwt_secret_path: "/home/ubuntu/ephemery/jwtsecret"
+        ephemery_base_dir: /home/ubuntu/ephemery
+        ephemery_data_dir: /home/ubuntu/ephemery/data
+        ephemery_logs_dir: /home/ubuntu/ephemery/logs
+        ephemery_scripts_dir: /home/ubuntu/ephemery/scripts
+        ephemery_backup_dir: /home/ubuntu/ephemery/backups
+        jwt_secret_path: /home/ubuntu/ephemery/jwtsecret
         # Monitoring specific settings
         validator_enabled: false
         backup_enabled: false
@@ -41,8 +41,8 @@ provisioner:
         cadvisor_port: 8080
         cadvisor_enabled: true
         # Add Grafana admin password
-        grafana_admin_password: "admin_password_test"
+        grafana_admin_password: admin_password_test
         node_exporter_port: 9100
-        node_exporter_name: "node-exporter"
+        node_exporter_name: node-exporter
 verifier:
   name: ansible

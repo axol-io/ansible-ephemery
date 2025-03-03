@@ -11,21 +11,21 @@
   assert:
     that:
       - (network ~ '_' ~ cl ~ '_validator') in docker_containers.stdout
-    fail_msg: "Validator container ({{ network }}_{{ cl }}_validator) is not running"
-    success_msg: "Validator container ({{ network }}_{{ cl }}_validator) is running"
+    fail_msg: 'Validator container ({{ network }}_{{ cl }}_validator) is not running'
+    success_msg: 'Validator container ({{ network }}_{{ cl }}_validator) is running'
   when: validator_enabled | bool
 
 - name: Check validator keys directory exists
   stat:
-    path: "{{ ephemery_data_dir }}/{{ cl }}/validator_keys"
+    path: '{{ ephemery_data_dir }}/{{ cl }}/validator_keys'
   register: validator_keys_dir
   when: validator_enabled | bool
 
 - name: Assert validator keys directory exists
   assert:
     that: validator_keys_dir.stat.exists and validator_keys_dir.stat.isdir
-    fail_msg: "Validator keys directory does not exist"
-    success_msg: "Validator keys directory exists"
+    fail_msg: 'Validator keys directory does not exist'
+    success_msg: 'Validator keys directory exists'
   when: validator_enabled | bool
 
 - name: Check validator container has correct memory limit
@@ -38,6 +38,6 @@
   assert:
     that:
       - validator_memory.stdout | int >= (validator_memory_limit | regex_replace('M$', '') | int * 1000000)
-    fail_msg: "Validator container memory limit is incorrect"
-    success_msg: "Validator container has correct memory limit"
-  when: validator_enabled | bool and validator_memory_limit is defined and validator_memory.stdout != "0"
+    fail_msg: 'Validator container memory limit is incorrect'
+    success_msg: 'Validator container has correct memory limit'
+  when: validator_enabled | bool and validator_memory_limit is defined and validator_memory.stdout != '0'

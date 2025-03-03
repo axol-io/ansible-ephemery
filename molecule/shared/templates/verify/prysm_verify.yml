@@ -3,14 +3,14 @@
 
 # Check if prysm beacon container is running
 - name: Check if prysm beacon container is running
-  command: docker ps -q --filter "name=ephemery-prysm-beacon"
+  command: docker ps -q --filter 'name=ephemery-prysm-beacon'
   register: prysm_beacon_container
-  failed_when: prysm_beacon_container.stdout == ""
+  failed_when: prysm_beacon_container.stdout == ''
 
 # Check if prysm beacon is listening on the expected ports
 - name: Check if prysm beacon API is accessible
   uri:
-    url: "http://localhost:3500/eth/v1/node/identity"
+    url: http://localhost:3500/eth/v1/node/identity
     method: GET
     status_code: 200
   register: prysm_beacon_api
@@ -22,7 +22,7 @@
 # Check prysm metrics endpoint
 - name: Check if prysm metrics endpoint is accessible
   uri:
-    url: "http://localhost:8080/metrics"
+    url: http://localhost:8080/metrics
     method: GET
     status_code: 200
   register: prysm_metrics
@@ -36,13 +36,13 @@
   command: docker logs ephemery-prysm-beacon
   register: prysm_logs
   changed_when: false
-  failed_when: "'level=error' in prysm_logs.stdout or 'level=fatal' in prysm_logs.stdout"
+  failed_when: '"level=error" in prysm_logs.stdout or "level=fatal" in prysm_logs.stdout'
   ignore_errors: true
 
 # Check validator status (if enabled)
 - name: Check if prysm validator container is running
-  command: docker ps -q --filter "name=ephemery-prysm-validator"
+  command: docker ps -q --filter 'name=ephemery-prysm-validator'
   register: prysm_validator_container
   when: validator_enabled | default(false) | bool
-  failed_when: prysm_validator_container.stdout == "" and (validator_enabled | default(false) | bool)
+  failed_when: prysm_validator_container.stdout == '' and (validator_enabled | default(false) | bool)
   ignore_errors: true

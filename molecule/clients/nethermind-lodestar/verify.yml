@@ -1,2 +1,3 @@
 ---
-# This file is empty to inherit from parent directory
+# This file inherits from ../verify.yml
+- import_playbook: ../verify.yml

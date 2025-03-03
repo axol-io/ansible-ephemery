@@ -10,7 +10,7 @@
 # Check if geth is listening on the expected ports
 - name: Check if geth HTTP API is accessible
   uri:
-    url: "http://localhost:8545"
+    url: http://localhost:8545
     method: POST
     body_format: json
     body: '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
@@ -27,6 +27,6 @@
   register: geth_logs
   changed_when: false
   failed_when:
-    - "'ERROR' in geth_logs.stdout"
-    - "'FATAL' in geth_logs.stdout"
+    - '"ERROR" in geth_logs.stdout'
+    - '"FATAL" in geth_logs.stdout'
   ignore_errors: true

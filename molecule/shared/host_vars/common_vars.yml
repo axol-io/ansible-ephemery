@@ -4,12 +4,12 @@
 
 # Base paths
 network: ephemery
-ephemery_base_dir: "/home/ubuntu/ephemery"
-ephemery_data_dir: "/home/ubuntu/ephemery/data"
-ephemery_logs_dir: "/home/ubuntu/ephemery/logs"
-ephemery_scripts_dir: "/home/ubuntu/ephemery/scripts"
-ephemery_backup_dir: "/home/ubuntu/ephemery/backups"
-jwt_secret_path: "/home/ubuntu/ephemery/jwtsecret"
+ephemery_base_dir: /home/ubuntu/ephemery
+ephemery_data_dir: /home/ubuntu/ephemery/data
+ephemery_logs_dir: /home/ubuntu/ephemery/logs
+ephemery_scripts_dir: /home/ubuntu/ephemery/scripts
+ephemery_backup_dir: /home/ubuntu/ephemery/backups
+jwt_secret_path: /home/ubuntu/ephemery/jwtsecret
 
 # Default feature flags
 validator_enabled: false
@@ -23,22 +23,22 @@ monitoring_grafana_agent_http_port: 12345
 monitoring_cadvisor_port: 8080
 
 # Default resource limits
-resource_el_memory_limit: "2048M"
-resource_cl_memory_limit: "2048M"
-resource_validator_memory_limit: "1024M"
+resource_el_memory_limit: 2048M
+resource_cl_memory_limit: 2048M
+resource_validator_memory_limit: 1024M
 
 # Default clients
 el: geth
 cl: lighthouse
 
 # Backup configuration
-backup_frequency: "daily"
+backup_frequency: daily
 backup_retention_days: 7
 backup_compression_level: 9
 
 # Validator configuration
-validator_graffiti: "ephemery"
-validator_suggested_fee_recipient: "0x0000000000000000000000000000000000000000"
+validator_graffiti: ephemery
+validator_suggested_fee_recipient: 0x0000000000000000000000000000000000000000
 
 # Security configuration
 security_ssh_port: 22

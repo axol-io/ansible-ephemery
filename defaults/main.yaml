@@ -4,20 +4,20 @@
 # These values can be overridden in host_vars files
 
 # Network and directory configuration
-network: "ephemery"
-home_dir: "{{ ansible_env.HOME }}"
-ephemery_base_dir: "{{ home_dir }}/ephemery"
-ephemery_data_dir: "{{ ephemery_base_dir }}/data"
-ephemery_logs_dir: "{{ ephemery_base_dir }}/logs"
-ephemery_scripts_dir: "{{ ephemery_base_dir }}/scripts"
-ephemery_backup_dir: "{{ ephemery_base_dir }}/backups"
+network: ephemery
+home_dir: '{{ ansible_env.HOME }}'
+ephemery_base_dir: '{{ home_dir }}/ephemery'
+ephemery_data_dir: '{{ ephemery_base_dir }}/data'
+ephemery_logs_dir: '{{ ephemery_base_dir }}/logs'
+ephemery_scripts_dir: '{{ ephemery_base_dir }}/scripts'
+ephemery_backup_dir: '{{ ephemery_base_dir }}/backups'
 
 # Default client selection
-el: "geth"             # Execution client: geth, besu, nethermind, reth, erigon
-cl: "lighthouse"       # Consensus client: lighthouse, teku, prysm, lodestar
+el: geth             # Execution client: geth, besu, nethermind, reth, erigon
+cl: lighthouse       # Consensus client: lighthouse, teku, prysm, lodestar
 
 # JWT Secret configuration
-jwt_secret_path: "{{ ephemery_base_dir }}/jwtsecret"
+jwt_secret_path: '{{ ephemery_base_dir }}/jwtsecret'
 jwt_secret_secure_generation: true
 
 # Resource management for Docker containers
@@ -42,7 +42,7 @@ validator_memory_limit: |-
 monitoring_enabled: false
 cadvisor_enabled: true
 cadvisor_port: 8080
-node_exporter_name: "node-exporter"
+node_exporter_name: node-exporter
 node_exporter_port: 9100
 prometheus_port: 17690
 grafana_port: 3000
@@ -50,7 +50,7 @@ grafana_agent_http_port: 12345
 
 # Backup configuration
 backup_enabled: true
-backup_frequency: "daily"  # Options: hourly, daily, weekly
+backup_frequency: daily  # Options: hourly, daily, weekly
 backup_retention_days: 7
 
 # Validator configuration
@@ -64,7 +64,7 @@ watchdog_storage_warning: 85
 # Security configuration
 # Firewall settings
 firewall_enabled: true
-firewall_default_policy: "deny"
+firewall_default_policy: deny
 firewall_allowed_tcp_ports:
   # Basic system
   - 22    # SSH
@@ -72,11 +72,11 @@ firewall_allowed_tcp_ports:
   - 443   # HTTPS
 
   # Monitoring
-  - "{{ grafana_port }}"         # Grafana
-  - "{{ grafana_agent_http_port }}" # Grafana Agent
-  - "{{ prometheus_port }}"      # Prometheus
-  - "{{ node_exporter_port }}"   # Node Exporter
-  - "{{ cadvisor_port }}"        # Cadvisor
+  - '{{ grafana_port }}'         # Grafana
+  - '{{ grafana_agent_http_port }}' # Grafana Agent
+  - '{{ prometheus_port }}'      # Prometheus
+  - '{{ node_exporter_port }}'   # Node Exporter
+  - '{{ cadvisor_port }}'        # Cadvisor
 
   # Execution clients (common ports)
   - 30303 # Ethereum P2P (TCP)

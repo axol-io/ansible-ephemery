@@ -7,10 +7,10 @@ dependency:
 driver:
   name: docker
   options:
-    docker_host: "unix:///Users/droo/.docker/run/docker.sock"
+    docker_host: unix:///Users/droo/.docker/run/docker.sock
     # Alternate options if the above doesn't work:
-    # docker_host: "tcp://localhost:2375"
-    # docker_host: "unix:///Users/droo/Library/Containers/com.docker.docker/Data/docker-cli.sock"
+    # docker_host: tcp://localhost:2375
+    # docker_host: unix:///Users/droo/Library/Containers/com.docker.docker/Data/docker-cli.sock
 platforms:
   - name: ethereum-node
     image: geerlingguy/docker-ubuntu2204-ansible:latest
@@ -20,7 +20,7 @@ platforms:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
       # Use the Docker socket path that we verified works
       - /Users/droo/.docker/run/docker.sock:/var/run/docker.sock
-    command: "/lib/systemd/systemd"
+    command: '/lib/systemd/systemd'
     cgroupns_mode: host
 provisioner:
   name: ansible
