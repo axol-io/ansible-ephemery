@@ -39,10 +39,10 @@ jobs:
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure --color always
         env:
-          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections:~/.ansible/collections:/usr/share/ansible/collections
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
       - name: Run ansible-lint directly
         if: always()  # Run even if pre-commit fails
         run: ansible-lint
         env:
-          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections:~/.ansible/collections:/usr/share/ansible/collections
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections

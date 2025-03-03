@@ -1,4 +1,3 @@
 code-scanning:
   - changed-files:
       - any-glob-to-any-file: 'code-scanning/**/*'
-

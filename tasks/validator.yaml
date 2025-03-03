@@ -39,7 +39,7 @@
 - name: 🚀 Start Validator client
   community.docker.docker_container:
     name: '{{ network }}-validator-{{ cl }}'
-    image: 'pk910/ephemery-{{ cl }}-validator:latest'
+    image: 'pk910/ephemery-{{ cl }}-validator:v1.0.0'
     state: started
     pull: true
     restart_policy: unless-stopped

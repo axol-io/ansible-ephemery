@@ -60,7 +60,7 @@
 - name: 🚀 Start Execution Client with generic configuration
   community.docker.docker_container:
     name: '{{ network }}-{{ el }}'
-    image: 'pk910/ephemery-{{ el }}:latest'
+    image: 'pk910/ephemery-{{ el }}:v1.0.0'
     state: started
     pull: true
     restart_policy: unless-stopped
@@ -83,7 +83,7 @@
 - name: 🚀 Start Consensus Client with generic configuration
   community.docker.docker_container:
     name: '{{ network }}-{{ cl }}'
-    image: 'pk910/ephemery-{{ cl }}:latest'
+    image: 'pk910/ephemery-{{ cl }}:v1.0.0'
     state: started
     pull: true
     restart_policy: unless-stopped

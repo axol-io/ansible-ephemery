@@ -30,7 +30,7 @@
 - name: 📦 Install Grafana Agent
   community.docker.docker_container:
     name: grafana-agent
-    image: grafana/agent:latest
+    image: grafana/agent:v0.40.2
     ports:
       - '{{ grafana_agent_http_port }}:{{ grafana_agent_http_port }}'
     volumes:
