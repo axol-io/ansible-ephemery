@@ -1,0 +1,14 @@
+---
+# Main playbook for Ephemery setup
+- name: Include required collections
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Display collections
+      ansible.builtin.debug:
+        msg: Required collections have been included
+      tags: always
+
+# Import other playbooks
+- import_playbook: playbooks/update.yaml

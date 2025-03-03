@@ -1,4 +1,9 @@
 ---
+# Required collections:
+# - ansible.posix
+# - community.general
+# - community.docker
+
 - name: Check if firewall is enabled
   ansible.builtin.set_fact:
     firewall_skip: '{{ not firewall_enabled | default(false) }}'
