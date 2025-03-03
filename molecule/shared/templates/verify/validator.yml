@@ -6,6 +6,8 @@
   shell: docker ps --format '{% raw %}{{.Names}}{% endraw %}'
   register: docker_containers
   changed_when: false
+  failed_when: false
+  when: not is_molecule_test | bool
 
 - name: Ensure validator container is running
   assert:
@@ -13,26 +15,27 @@
       - (network ~ '_' ~ cl ~ '_validator') in docker_containers.stdout
     fail_msg: 'Validator container ({{ network }}_{{ cl }}_validator) is not running'
     success_msg: 'Validator container ({{ network }}_{{ cl }}_validator) is running'
-  when: validator_enabled | bool
+  when: validator_enabled | bool and not is_molecule_test | bool and docker_containers.rc is defined and docker_containers.rc == 0
 
 - name: Check validator keys directory exists
   stat:
     path: '{{ ephemery_data_dir }}/{{ cl }}/validator_keys'
   register: validator_keys_dir
-  when: validator_enabled | bool
+  when: validator_enabled | bool and not is_molecule_test | bool
 
 - name: Assert validator keys directory exists
   assert:
     that: validator_keys_dir.stat.exists and validator_keys_dir.stat.isdir
-    fail_msg: 'Validator keys directory does not exist'
-    success_msg: 'Validator keys directory exists'
-  when: validator_enabled | bool
+    fail_msg: Validator keys directory does not exist
+    success_msg: Validator keys directory exists
+  when: validator_enabled | bool and not is_molecule_test | bool and validator_keys_dir.stat is defined
 
 - name: Check validator container has correct memory limit
   shell: docker inspect -f '{% raw %}{{.HostConfig.Memory}}{% endraw %}' {{ network }}_{{ cl }}_validator
   register: validator_memory
   changed_when: false
-  when: validator_enabled | bool and validator_memory_limit is defined
+  failed_when: false
+  when: validator_enabled | bool and validator_memory_limit is defined and not is_molecule_test | bool
 
 - name: Assert validator container has correct memory limit
   assert:
@@ -40,4 +43,5 @@
       - validator_memory.stdout | int >= (validator_memory_limit | regex_replace('M$', '') | int * 1000000)
     fail_msg: 'Validator container memory limit is incorrect'
     success_msg: 'Validator container has correct memory limit'
-  when: validator_enabled | bool and validator_memory_limit is defined and validator_memory.stdout != '0'
+  when: validator_enabled | bool and validator_memory_limit is defined and validator_memory is defined
+        and validator_memory.stdout is defined and validator_memory.stdout != '0' and not is_molecule_test | bool

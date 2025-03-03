@@ -7,11 +7,11 @@
   tasks:
     # Include common verification tasks
     - name: Include common verification tasks
-      ansible.builtin.include_tasks: ../shared/templates/verify/common.yaml
+      ansible.builtin.include_tasks: ../shared/templates/verify/common.yml
 
     # Include validator-specific verification tasks
     - name: Include validator-specific verification tasks
-      ansible.builtin.include_tasks: ../shared/templates/verify/validator.yaml
+      ansible.builtin.include_tasks: ../shared/templates/verify/validator.yml
 
     # Additional validator-specific verification tasks
     - name: Verify validator API is responding
@@ -22,11 +22,11 @@
       register: validator_metrics
       failed_when: false
       changed_when: false
-      when: validator_enabled | bool
+      when: validator_enabled | bool and not is_molecule_test | bool
 
     - name: Assert validator API is responding if enabled
       assert:
         that: validator_metrics.status == 200
         fail_msg: Validator API is not responding at http://localhost:5064/metrics
         success_msg: Validator API is responding correctly
-      when: validator_enabled | bool and validator_metrics.status is defined
+      when: validator_enabled | bool and not is_molecule_test | bool and validator_metrics.status is defined

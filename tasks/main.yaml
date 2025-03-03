@@ -1,0 +1,39 @@
+---
+# Main tasks file for ansible-ephemery role
+
+- name: Include setup environment tasks
+  ansible.builtin.import_tasks: setup-env.yaml
+  tags: [setup, always]
+
+- name: Include JWT secret tasks
+  ansible.builtin.import_tasks: jwt-secret.yaml
+  tags: [jwt, security, always]
+
+- name: Configure firewall
+  ansible.builtin.import_tasks: firewall.yaml
+  when: firewall_enabled | default(true) | bool
+  tags: [firewall, security]
+
+- name: Include ephemery tasks
+  ansible.builtin.import_tasks: ephemery.yaml
+  tags: [ephemery, always]
+
+- name: Setup validator if enabled
+  ansible.builtin.import_tasks: validator.yaml
+  when: validator_enabled | default(false) | bool
+  tags: [validator]
+
+- name: Include monitoring tasks
+  ansible.builtin.import_tasks: monitoring.yaml
+  when: monitoring_enabled | default(false) | bool
+  tags: [monitoring, always]
+
+- name: Install Cadvisor
+  ansible.builtin.import_tasks: cadvisor.yaml
+  when: cadvisor_enabled | default(true) | bool
+  tags: [cadvisor, monitoring]
+
+- name: Setup automatic backups
+  ansible.builtin.import_tasks: backup.yaml
+  when: backup_enabled | default(true) | bool
+  tags: [backup]

@@ -18,8 +18,7 @@ platforms:
     privileged: true
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      # Use the Docker socket path that we verified works
-      - /Users/droo/.docker/run/docker.sock:/var/run/docker.sock
+      # Docker socket mount removed to fix issues on macOS
     command: '/lib/systemd/systemd'
     cgroupns_mode: host
 provisioner:

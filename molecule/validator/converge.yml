@@ -4,7 +4,7 @@
   tasks:
     - name: Include ansible-ephemery role with validator enabled
       include_role:
-        name: ansible-ephemery
+        name: ../../
       vars:
         # Override variables for testing validators
         home_dir: /root
