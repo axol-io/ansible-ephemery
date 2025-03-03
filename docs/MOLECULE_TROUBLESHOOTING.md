@@ -141,6 +141,96 @@ macOS has multiple Docker contexts and the default may not work with Molecule.
    export DOCKER_HOST=unix:///Users/<username>/.docker/run/docker.sock
    ```
 
+### Solution: Use Our macOS Helper Script
+
+We've created a dedicated script to handle all macOS-specific Docker issues:
+
+```bash
+# Run a specific scenario on macOS
+./scripts/run-molecule-tests-macos.sh default
+
+# Run client combination scenario on macOS
+./scripts/run-molecule-tests-macos.sh geth-lighthouse
+```
+
+This script:
+
+- Automatically detects the correct Docker socket path on macOS
+- Updates the molecule.yml configuration with the correct path
+- Sets the necessary environment variables
+- Handles the different `sed` syntax in macOS
+- Restores original configuration after testing
+
+## Ansible Conditional Issues
+
+### Problem: Unquoted service names in conditionals
+
+Error message:
+
+```bash
+The conditional check 'docker.service in ansible_facts.services' failed. The error was: error while evaluating conditional (docker.service in ansible_facts.services): 'docker' is undefined
+```
+
+**Solution**: Always use quotes for string literals in conditionals:
+
+```yaml
+# Incorrect
+when: docker.service in ansible_facts.services
+
+# Correct
+when: "'docker.service' in ansible_facts.services"
+```
+
+### Problem: Missing existence checks for dictionary keys
+
+Error message:
+
+```bash
+The error appears to be in '...': line XX, column 3, but may be elsewhere in the file depending on the exact syntax problem.
+```
+
+**Solution**: Always check if a dictionary exists before accessing its keys:
+
+```yaml
+# Incorrect
+when: "'docker.service' in ansible_facts.services"
+
+# Correct
+when: ansible_facts.services is defined and "'docker.service' in ansible_facts.services"
+```
+
+### Problem: Unquoted default values
+
+Error message:
+
+```bash
+The error appears to be in '...': line XX, column 3, but may be elsewhere in the file depending on the exact syntax problem.
+```
+
+**Solution**: Always quote string values in default() filters:
+
+```yaml
+# Incorrect
+ephemery_base_dir | default(/home/ubuntu/ephemery)
+
+# Correct
+ephemery_base_dir | default("/home/ubuntu/ephemery")
+```
+
+### Solution: Use Our Verification Script
+
+We've created a script to check for common Ansible conditional issues:
+
+```bash
+./scripts/verify-ansible-conditionals.sh
+```
+
+This script checks for:
+
+- Unquoted service names in conditionals
+- Missing existence checks for dictionary keys
+- Unquoted default values
+
 ## Github Actions Issues
 
 ### Problem: systemd not available in container

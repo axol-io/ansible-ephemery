@@ -38,7 +38,24 @@ molecule converge -s geth-lighthouse
 
 # Run only verify step
 molecule verify -s geth-lighthouse
+
+# MacOS specific - Run tests on macOS with Docker Desktop
+./scripts/run-molecule-tests-macos.sh default
 ```
+
+### macOS Compatibility
+
+For macOS users with Docker Desktop, we provide a helper script to handle Docker socket connections:
+
+```bash
+# Run a specific scenario on macOS
+./scripts/run-molecule-tests-macos.sh default
+
+# Run client combination scenario on macOS
+./scripts/run-molecule-tests-macos.sh geth-lighthouse
+```
+
+This script dynamically detects the Docker socket path and configures Molecule to use it correctly, avoiding common connectivity issues on macOS.
 
 ### Creating Scenarios
 
@@ -99,6 +116,33 @@ Each scenario contains:
 3. Clean up after testing
 4. Standardize verification
 5. Parameterize tests
+6. Use the macOS helper script on Apple computers
+
+## Common Issues and Solutions
+
+### Docker Connectivity Issues on macOS
+
+If you encounter Docker connection errors on macOS, use the helper script:
+
+```bash
+./scripts/run-molecule-tests-macos.sh <scenario>
+```
+
+### Ansible Conditional Errors
+
+When writing verification tasks:
+
+- Always quote string literals in conditionals: `when: "'docker.service' in ansible_facts.services"`
+- Add existence checks for dictionary keys: `when: ansible_facts.services is defined and ...`
+- Always quote default values: `ephemery_base_dir | default("/home/ubuntu/ephemery")`
+
+### Validation Script
+
+Run our conditional verification script to check for common issues:
+
+```bash
+./scripts/verify-ansible-conditionals.sh
+```
 
 ## Troubleshooting
 

@@ -72,6 +72,7 @@ node-clients:
 Use the supported client values for Execution Layer (EL) and Consensus Layer (CL) clients:
 
 ### Execution Layer Clients
+
 - geth
 - besu
 - nethermind
@@ -79,6 +80,7 @@ Use the supported client values for Execution Layer (EL) and Consensus Layer (CL
 - erigon
 
 ### Consensus Layer Clients
+
 - lighthouse
 - teku
 - prysm

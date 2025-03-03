@@ -21,7 +21,7 @@ The ansible-ephemery project uses [Molecule](https://molecule.readthedocs.io/) f
 
 Tests are organized into scenarios within the `molecule/` directory:
 
-```
+```bash
 molecule/
 ├── [client-scenarios]/   # Client combination scenarios
 ├── clients/              # Client combination templates
@@ -45,6 +45,26 @@ molecule/shared/scripts/demo_scenario.sh --execution geth --consensus prysm
 # Keep the scenario after testing
 molecule/shared/scripts/demo_scenario.sh -e nethermind -c lodestar --keep
 ```
+
+### macOS Compatibility
+
+For macOS users with Docker Desktop, we provide a dedicated helper script to resolve common Docker connectivity issues:
+
+```bash
+# Run a specific scenario on macOS
+./scripts/run-molecule-tests-macos.sh default
+
+# Run client combination scenario on macOS
+./scripts/run-molecule-tests-macos.sh geth-lighthouse
+```
+
+This script:
+
+- Automatically detects the correct Docker socket path on macOS
+- Updates the molecule.yml configuration with the correct path
+- Sets the necessary environment variables
+- Handles the different `sed` syntax in macOS
+- Restores original configuration after testing
 
 ### Creating and Running Specific Scenarios
 
@@ -149,6 +169,7 @@ Each scenario includes verification tests that check:
 Our tests are integrated with the CI/CD pipeline. For details, see [CI_CD_UPDATES.md](CI_CD_UPDATES.md).
 
 The CI pipeline runs:
+
 - Basic tests on every PR
 - Client matrix tests on merge to main
 - Full test suite on a scheduled basis
@@ -174,9 +195,56 @@ To add custom verification tests:
 
 ### Common Issues
 
+#### Docker Connectivity on macOS
+
+```bash
+Error while fetching server API version: ('Connection aborted.', FileNotFoundError(2, 'No such file or directory'))
+```
+
+**Solution**: Use our macOS helper script instead of running molecule directly:
+
+```bash
+./scripts/run-molecule-tests-macos.sh <scenario-name>
+```
+
+#### Ansible Conditional Errors
+
+```bash
+The conditional check 'docker.service in ansible_facts.services' failed. The error was: error while evaluating conditional (docker.service in ansible_facts.services): 'docker' is undefined
+```
+
+**Solution**: Always use quotes for string literals in conditionals and check for definition:
+
+```yaml
+# Incorrect
+when: docker.service in ansible_facts.services
+
+# Correct
+when: "'docker.service' in ansible_facts.services"
+
+# Even better
+when: ansible_facts.services is defined and "'docker.service' in ansible_facts.services"
+```
+
+#### Missing Quotes in Default Values
+
+```bash
+The error appears to be in '...': line XX, column 3, but may be elsewhere in the file depending on the exact syntax problem.
+```
+
+**Solution**: Always quote string values in default() filters:
+
+```yaml
+# Incorrect
+ephemery_base_dir | default(/home/ubuntu/ephemery)
+
+# Correct
+ephemery_base_dir | default("/home/ubuntu/ephemery")
+```
+
 #### Docker Not Running
 
-```
+```bash
 Error while fetching server API version: ('Connection aborted.', FileNotFoundError(2, 'No such file or directory'))
 ```
 
@@ -184,7 +252,7 @@ Solution: Start Docker Desktop or the Docker daemon.
 
 #### Missing Molecule.yml
 
-```
+```bash
 CRITICAL 'molecule/scenario-name/molecule.yml' glob failed. Exiting.
 ```
 
@@ -207,6 +275,58 @@ For Python version issues, ensure you're using Python 3.11+.
 3. **Parameterize Tests**: Use variables rather than hardcoding values
 4. **Test All Client Combinations**: Ensure all supported client combinations are tested
 5. **Verify All Key Functionality**: Include verification for all critical functionality
+6. **Proper Conditionals**: Always use quotes for string literals in conditionals
+7. **Check Dictionary Keys**: Always check if a dictionary key exists before accessing it
+8. **Quote Default Values**: Always use quotes for string values in default() filters
+9. **Use Helper Scripts**: Use platform-specific helper scripts (like our macOS script)
+10. **Pre-commit Validation**: Run `./scripts/verify-ansible-conditionals.sh` to check for common issues
+
+## Verification Task Best Practices
+
+When writing verification tasks, follow these guidelines to avoid common pitfalls:
+
+### String Literals in Conditionals
+
+```yaml
+# Good
+when: "'docker.service' in ansible_facts.services"
+
+# Bad
+when: docker.service in ansible_facts.services
+```
+
+### Existence Checks
+
+```yaml
+# Good
+when: ansible_facts.services is defined and "'docker.service' in ansible_facts.services"
+
+# Bad
+when: "'docker.service' in ansible_facts.services"
+```
+
+### Default Values
+
+```yaml
+# Good
+ephemery_base_dir | default("/home/ubuntu/ephemery")
+
+# Bad
+ephemery_base_dir | default(/home/ubuntu/ephemery)
+```
+
+### Consistent Formatting
+
+```yaml
+# Good
+when: >
+  ansible_facts.services is defined and
+  "'docker.service' in ansible_facts.services" and
+  docker_containers.rc == 0
+
+# Bad
+when: ansible_facts.services is defined and "'docker.service' in ansible_facts.services" and docker_containers.rc == 0
+```
 
 ## Future Enhancements
 

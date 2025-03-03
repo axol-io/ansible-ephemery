@@ -4,7 +4,7 @@ This document outlines the organization of the Ansible Ephemery repository.
 
 ## Directory Structure
 
-```
+```bash
 ansible-ephemery/
 ├── ansible.cfg               # Ansible configuration
 ├── defaults/                 # Default variables
@@ -104,15 +104,18 @@ Variables precedence (lowest to highest):
 The `molecule/` directory contains:
 
 ### Test Scenarios
+
 - `default/` - Basic functionality
 - `[client-scenarios]/` - Client combinations
 - `backup/`, `monitoring/`, etc. - Component tests
 
 ### Shared Resources
+
 - `shared/scripts/` - Test automation
 - `shared/templates/` - Test generation templates
 
 ### Running Tests
+
 - `demo_scenario.sh` for quick tests
 - `generate_scenario.sh` for creating scenarios
 - `molecule test -s scenario_name` for targeted testing

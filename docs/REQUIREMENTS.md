@@ -67,6 +67,7 @@ Ephemery client wrapper images require:
 ## Version Pinning
 
 All dependencies are pinned to specific versions to ensure:
+
 - Reproducible environments
 - Consistent functionality
 - Security patching through regular updates

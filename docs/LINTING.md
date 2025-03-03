@@ -31,11 +31,13 @@ Two scripts are provided to automatically fix common issues:
 For molecule test files and task files with long lines, manually break up lines:
 
 Before:
+
 ```yaml
 - name: This is a very long task name that exceeds the 80 character limit and needs to be reformatted
 ```
 
 After:
+
 ```yaml
 - name: >-
     This is a very long task name that exceeds the 80 character limit
@@ -43,11 +45,13 @@ After:
 ```
 
 For Ansible expressions:
+
 ```yaml
 long_expression: "{{ (ansible_memory_mb.real.total * 0.90 * some_percentage) | round | int }}M"
 ```
 
 Can be changed to:
+
 ```yaml
 long_expression: |-
   "{{ (ansible_memory_mb.real.total * 0.90 * some_percentage) | round | int }}M"

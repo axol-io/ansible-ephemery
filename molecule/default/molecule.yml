@@ -7,10 +7,8 @@ dependency:
 driver:
   name: docker
   options:
-    docker_host: unix:///Users/droo/.docker/run/docker.sock
-    # Alternate options if the above doesn't work:
-    # docker_host: tcp://localhost:2375
-    # docker_host: unix:///Users/droo/Library/Containers/com.docker.docker/Data/docker-cli.sock
+    # Docker socket connection options - the script will replace this
+    docker_host: ${DOCKER_HOST:-unix:///var/run/docker.sock}
 platforms:
   - name: ethereum-node
     image: geerlingguy/docker-ubuntu2204-ansible:latest
@@ -18,7 +16,6 @@ platforms:
     privileged: true
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      # Docker socket mount removed to fix issues on macOS
     command: '/lib/systemd/systemd'
     cgroupns_mode: host
 provisioner:

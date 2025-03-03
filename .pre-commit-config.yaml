@@ -29,6 +29,13 @@ repos:
         pass_filenames: false
         types: [yaml]
         description: Checks that YAML files use the correct extension (.yaml except in molecule/ directory)
+      - id: verify-ansible-conditionals
+        name: Verify Ansible Conditionals
+        entry: ./scripts/verify-ansible-conditionals.sh
+        language: script
+        pass_filenames: false
+        stages: [pre-commit]
+        description: Checks for common issues in Ansible conditionals and variable handling
       - id: install-ansible-collections
         name: Install Ansible Collections
         entry: ./scripts/install-collections.sh
