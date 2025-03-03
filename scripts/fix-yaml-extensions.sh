@@ -75,8 +75,27 @@ if [[ $REVERSE -eq 1 ]]; then
 
   echo "Conversion complete!"
 else
-  echo "This mode is for fixing other extensions, but we're only focusing on molecule/ directory for now."
-  echo "Use --reverse to fix .yaml extensions in molecule/ directory."
+  echo "Converting .yml to .yaml outside molecule/ and collections/ directories"
+
+  # Find all .yml files outside molecule directory and collections directory
+  while IFS= read -r file; do
+    if [[ ! "$file" =~ ^./molecule/ && ! "$file" =~ ^./collections/ && ! "$file" =~ ^./.github/ ]]; then
+      new_file="${file%.yml}.yaml"
+
+      if [[ $DRY_RUN -eq 1 ]]; then
+        print_action "RENAME" "$file -> $new_file"
+      else
+        mv "$file" "$new_file"
+        print_action "RENAME" "$file -> $new_file"
+      fi
+    else
+      if [[ $DRY_RUN -eq 1 ]]; then
+        print_action "SKIP" "$file (in excluded directory)"
+      fi
+    fi
+  done < <(find . -type f -name "*.yml" | sort)
+
+  echo "Conversion complete!"
 fi
 
 # Update references in files if needed

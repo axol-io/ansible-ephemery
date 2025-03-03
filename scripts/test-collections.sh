@@ -32,7 +32,7 @@ cat > "$TEMP_PLAYBOOK" << 'EOF'
       check_mode: true
       when: false
       register: firewalld_test
-      
+
     - name: Test community.general module
       community.general.ufw:
         port: 22
@@ -40,7 +40,7 @@ cat > "$TEMP_PLAYBOOK" << 'EOF'
       check_mode: true
       when: false
       register: ufw_test
-        
+
     - name: Print results
       ansible.builtin.debug:
         msg: "All collection modules loaded successfully"
@@ -53,4 +53,4 @@ ansible-playbook "$TEMP_PLAYBOOK" --syntax-check
 # Clean up
 rm -rf "$TEMP_DIR"
 
-echo "✅ All collections loaded successfully!" 
+echo "✅ All collections loaded successfully!"

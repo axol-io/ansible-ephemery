@@ -20,17 +20,6 @@ repos:
       - id: yamllint
         args: [-c, .yamllint]
 
-  - repo: https://github.com/ansible-community/ansible-lint.git
-    rev: v6.17.2
-    hooks:
-      - id: ansible-lint
-        files: \.(yaml|yml)$
-        additional_dependencies:
-          - ansible-core>=2.12.0
-          - ansible-compat>=4.1.0
-        require_serial: true
-        entry: bash -c 'ANSIBLE_COLLECTIONS_PATH="$(git rev-parse --show-toplevel)/collections:$ANSIBLE_COLLECTIONS_PATH" ansible-lint'
-
   - repo: local
     hooks:
       - id: check-yaml-extensions
@@ -48,6 +37,15 @@ repos:
         always_run: true
         stages: [pre-commit]
         description: Ensures that required Ansible collections are installed before linting
+      - id: ansible-lint
+        name: Ansible Lint
+        description: Run ansible-lint on Ansible files
+        entry: bash -c 'ANSIBLE_COLLECTIONS_PATH="$(git rev-parse --show-toplevel)/collections:$ANSIBLE_COLLECTIONS_PATH" ansible-lint'
+        language: system
+        files: \.(yaml|yml)$
+        additional_dependencies: []
+        require_serial: true
+        pass_filenames: false
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0

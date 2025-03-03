@@ -6,8 +6,8 @@ echo "Checking YAML file extensions for consistency..."
 echo "Rule: Use .yaml extension except in molecule/ directory"
 echo ""
 
-# Check for .yml files outside the molecule directory
-yml_files=$(find . -name "*.yml" -not -path "./molecule/*" -not -path "./.github/*" | sort)
+# Check for .yml files outside the molecule directory and collections directory
+yml_files=$(find . -name "*.yml" -not -path "./molecule/*" -not -path "./.github/*" -not -path "./collections/*" | sort)
 
 if [ -n "$yml_files" ]; then
     echo "Found .yml files outside the molecule directory:"

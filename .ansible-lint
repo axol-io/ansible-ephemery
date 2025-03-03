@@ -3,6 +3,13 @@
 
 # Exclude molecule configuration files from playbook syntax checking
 exclude_paths:
+  - .git/
+  - .github/
+  - .cursor/
+  - .vscode/
+  - .ansible/
+  - collections/
+  - /molecule/**
   - molecule/shared/base_molecule.yml
   - molecule/shared/common_vars.yml
   - molecule/*/molecule.yml
