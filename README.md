@@ -69,6 +69,7 @@ The `docs/` directory contains detailed documentation:
 - [CI/CD](docs/CI_CD.md) - CI/CD pipeline information
 - [Variable Structure](docs/VARIABLE_STRUCTURE.md) - Variable organization
 - [Client Combinations](docs/CLIENT_COMBINATIONS.md) - Detailed information about supported client combinations
+- [YAML Linting](docs/LINTING.md) - Guidelines for handling YAML linting issues
 
 ## Variable Organization
 
