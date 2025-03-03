@@ -9,22 +9,22 @@ ephemery:
       hosts:
         ephemery-node1:
           ansible_host: 192.168.1.101
-          el: "geth"
-          cl: "lighthouse"
+          el: geth
+          cl: lighthouse
 
     nethermind_teku:
       hosts:
         ephemery-node2:
           ansible_host: 192.168.1.102
-          el: "nethermind"
-          cl: "teku"
+          el: nethermind
+          cl: teku
 
     reth_prysm:
       hosts:
         ephemery-node3:
           ansible_host: 192.168.1.103
-          el: "reth"
-          cl: "prysm"
+          el: reth
+          cl: prysm
           validator_enabled: true
 
 # Group nodes by type
