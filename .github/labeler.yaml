@@ -1,4 +1,4 @@
----
-"code-scanning":
+code-scanning:
   - changed-files:
-      - any-glob-to-any-file: "code-scanning/**/*"
+      - any-glob-to-any-file: 'code-scanning/**/*'
+

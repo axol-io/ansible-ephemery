@@ -71,7 +71,6 @@ fi
 
 # Generate the scenario name
 SCENARIO_NAME="${EL_CLIENT}-${CL_CLIENT}"
-SCENARIO_DIR="$PROJECT_DIR/molecule/$SCENARIO_NAME"
 
 echo "==> Creating test scenario: $SCENARIO_NAME"
 "$GENERATE_SCRIPT" --type clients --execution "$EL_CLIENT" --consensus "$CL_CLIENT"

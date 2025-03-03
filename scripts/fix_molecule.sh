@@ -26,10 +26,9 @@ done
 
 # Update references within files
 echo -e "\nUpdating references within files..."
-for file in $(find molecule -type f -name "*.yml"); do
-  echo "Checking $file"
-  # Use perl instead of sed for better cross-platform compatibility
-  perl -i -pe 's/(verify|converge|prepare|molecule|cleanup)\.yaml/\1.yml/g' "$file"
-done
+find molecule -type f -name "*.yml" -exec sh -c '
+  echo "Checking $1"
+  perl -i -pe '\''s/(verify|converge|prepare|molecule|cleanup)\.yaml/\1.yml/g'\'' "$1"
+' sh {} \;
 
 echo -e "\nDone! Try running 'molecule test' now."

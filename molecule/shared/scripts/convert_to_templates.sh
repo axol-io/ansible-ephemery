@@ -39,7 +39,8 @@ error() {
 # Function to convert a scenario
 convert_scenario() {
   local scenario_dir="$1"
-  local scenario_name=$(basename "$scenario_dir")
+  local scenario_name
+  scenario_name=$(basename "$scenario_dir")
 
   # Skip if it's shared or doesn't exist
   if [[ "$scenario_name" == "shared" ]] || [[ ! -d "$scenario_dir" ]]; then
@@ -68,7 +69,8 @@ convert_scenario() {
 
   # Try to extract client information from scenario name if it's in clients directory
   if [[ "$scenario_dir" == *"clients/"* ]]; then
-    local client_scenario_name=$(basename "$scenario_dir")
+    local client_scenario_name
+    client_scenario_name=$(basename "$scenario_dir")
     if [[ "$client_scenario_name" == *"-"* ]]; then
       el_client=$(echo "$client_scenario_name" | cut -d'-' -f1)
       cl_client=$(echo "$client_scenario_name" | cut -d'-' -f2)
