@@ -9,7 +9,7 @@
         # Override variables for resource testing
         home_dir: /root
         # Set memory limits
-        ephemery_docker_memory_limit: "3.6G"  # 90% of 4G
+        ephemery_docker_memory_limit: '3.6G'  # 90% of 4G
         el_memory_percentage: 0.6  # 60% for execution client
         cl_memory_percentage: 0.4  # 40% for consensus client
 

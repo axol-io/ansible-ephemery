@@ -2,10 +2,10 @@
 # Shared variables for molecule tests
 
 # Base directories
-ephemery_base_dir: "/root/ephemery"
-ephemery_data_dir: "{{ ephemery_base_dir }}/data"
-ephemery_logs_dir: "{{ ephemery_base_dir }}/logs"
-ephemery_backups_dir: "{{ ephemery_base_dir }}/backups"
+ephemery_base_dir: /root/ephemery
+ephemery_data_dir: '{{ ephemery_base_dir }}/data'
+ephemery_logs_dir: '{{ ephemery_base_dir }}/logs'
+ephemery_backups_dir: '{{ ephemery_base_dir }}/backups'
 
 # Common packages needed across scenarios
 common_packages:
@@ -39,7 +39,7 @@ consensus_clients:
 
 # Network settings
 docker_network_name: ephemery-validator-net
-jwt_secret_path: "{{ ephemery_base_dir }}/jwt.hex"
+jwt_secret_path: '{{ ephemery_base_dir }}/jwt.hex'
 
 # Docker image versions - pinned for stability
 docker_images:
