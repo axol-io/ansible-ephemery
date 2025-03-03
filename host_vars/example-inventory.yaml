@@ -43,7 +43,7 @@ monitoring:
 # Assign variables by node type
 all:
   vars:
-    ansible_user: ubuntu
+    ansible_user: root
     ansible_become: true
 
   children:

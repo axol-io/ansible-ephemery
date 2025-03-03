@@ -4,8 +4,8 @@
   hosts: all
   become: true
   vars_files:
-    - defaults/main.yaml
-    - vars/main.yaml
+    - "{{ playbook_dir }}/../defaults/main.yaml"
+    - "{{ playbook_dir }}/../vars/main.yaml"
   tasks:
     - name: Load host-specific variables
       ansible.builtin.include_vars:

@@ -1,0 +1,19 @@
+---
+# Nethermind-specific configuration tasks
+
+- name: Set Nethermind-specific variables
+  ansible.builtin.set_fact:
+    nethermind_data_dir: "{{ ephemery_data_dir }}/{{ el_client_name }}"
+    nethermind_network_id: 3151908
+    nethermind_http_port: "{{ el_client_port }}"
+    nethermind_p2p_port: "{{ el_p2p_port }}"
+    nethermind_metrics_port: "{{ el_metrics_port }}"
+    nethermind_authrpc_port: 8551
+
+- name: Create Nethermind data directory
+  ansible.builtin.file:
+    path: "{{ nethermind_data_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"

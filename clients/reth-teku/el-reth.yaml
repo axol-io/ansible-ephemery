@@ -1,0 +1,19 @@
+---
+# Reth-specific configuration tasks
+
+- name: Set Reth-specific variables
+  ansible.builtin.set_fact:
+    reth_data_dir: "{{ ephemery_data_dir }}/{{ el_client_name }}"
+    reth_network_id: 3151908
+    reth_http_port: "{{ el_client_port }}"
+    reth_p2p_port: "{{ el_p2p_port }}"
+    reth_metrics_port: "{{ el_metrics_port }}"
+    reth_authrpc_port: 8551
+
+- name: Create Reth data directory
+  ansible.builtin.file:
+    path: "{{ reth_data_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"

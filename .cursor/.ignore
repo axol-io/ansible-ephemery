@@ -41,5 +41,5 @@ __pycache__/
 /files/ephemery-testnet.tar.gz
 
 # Host files (from .gitignore)
-host_vars/*
+# host_vars/*
 !host_vars/example-*

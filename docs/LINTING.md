@@ -16,14 +16,18 @@ The repository uses pre-commit hooks and yamllint to enforce code quality. Commo
 
 ## Automated Fixes
 
-Two scripts are provided to automatically fix common issues:
+A consolidated script is provided to automatically fix common issues:
 
 ```bash
-# Fix document start markers, truthy values, and trailing whitespace
-./scripts/fix_yaml_lint.sh
+# Check for linting issues
+./scripts/yaml-lint-fixer.sh --check
 
-# Fix long lines in defaults/main.yaml
-./scripts/fix_line_length.sh
+# Fix all YAML linting issues (document start markers, truthy values, line length, quotes)
+./scripts/yaml-lint-fixer.sh --fix-all
+
+# Fix specific issues
+./scripts/yaml-lint-fixer.sh --fix-truthy    # Fix only truthy values
+./scripts/yaml-lint-fixer.sh --fix-line-length  # Fix line length issues
 ```
 
 ## Manually Fixing Line Length Issues

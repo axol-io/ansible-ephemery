@@ -1,0 +1,17 @@
+---
+# Prysm-specific configuration tasks
+
+- name: Set Prysm-specific variables
+  ansible.builtin.set_fact:
+    prysm_data_dir: '{{ ephemery_data_dir }}/{{ cl_client_name }}'
+    prysm_http_port: '{{ cl_client_port }}'
+    prysm_p2p_port: '{{ cl_p2p_port }}'
+    prysm_metrics_port: '{{ cl_metrics_port }}'
+
+- name: Create Prysm data directory
+  ansible.builtin.file:
+    path: '{{ prysm_data_dir }}'
+    state: directory
+    mode: '0755'
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'

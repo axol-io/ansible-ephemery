@@ -1,0 +1,19 @@
+---
+# Erigon-specific configuration tasks
+
+- name: Set Erigon-specific variables
+  ansible.builtin.set_fact:
+    erigon_data_dir: "{{ ephemery_data_dir }}/{{ el_client_name }}"
+    erigon_network_id: 3151908
+    erigon_http_port: "{{ el_client_port }}"
+    erigon_p2p_port: "{{ el_p2p_port }}"
+    erigon_metrics_port: "{{ el_metrics_port }}"
+    erigon_authrpc_port: 8551
+
+- name: Create Erigon data directory
+  ansible.builtin.file:
+    path: "{{ erigon_data_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"

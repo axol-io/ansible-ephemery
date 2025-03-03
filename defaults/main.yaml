@@ -16,6 +16,19 @@ ephemery_backup_dir: '{{ ephemery_base_dir }}/backups'
 el: geth             # Execution client: geth, besu, nethermind, reth, erigon
 cl: lighthouse       # Consensus client: lighthouse, teku, prysm, lodestar
 
+# Client extra options
+el_extra_opts: ''    # Extra options for execution client
+cl_extra_opts: ''    # Extra options for consensus client
+
+# Checkpoint sync URLs for Ephemery network
+# Note: Not needed when using pk910/ephemery-lighthouse image as it includes built-in configuration
+# Kept for reference or when using standard client images
+# Available options:
+# - https://checkpointz.bordel.wtf/
+# - https://checkpoint-sync.ephemery.ethpandaops.io/
+# - https://ephemery.beaconstate.ethstaker.cc/
+ephemery_checkpoint_sync_url: 'https://checkpoint-sync.ephemery.ethpandaops.io/'
+
 # JWT Secret configuration
 jwt_secret_path: '{{ ephemery_base_dir }}/jwtsecret'
 jwt_secret_secure_generation: true
@@ -31,12 +44,9 @@ cl_memory_percentage: 0.4  # 40% for consensus client
 validator_memory_percentage: 0.1  # 10% for validator (if enabled)
 
 # Calculated memory limits
-el_memory_limit: |-
-  "{{ ((ansible_memory_mb.real.total * 0.90 * el_memory_percentage) | round | int) }}M"
-cl_memory_limit: |-
-  "{{ ((ansible_memory_mb.real.total * 0.90 * cl_memory_percentage) | round | int) }}M"
-validator_memory_limit: |-
-  "{{ ((ansible_memory_mb.real.total * 0.90 * validator_memory_percentage) | round | int) }}M"
+el_memory_limit: "{{ ((ansible_memory_mb.real.total * 0.90 * el_memory_percentage) | round | int) }}M"
+cl_memory_limit: "{{ ((ansible_memory_mb.real.total * 0.90 * cl_memory_percentage) | round | int) }}M"
+validator_memory_limit: "{{ ((ansible_memory_mb.real.total * 0.90 * validator_memory_percentage) | round | int) }}M"
 
 # Monitoring configuration
 monitoring_enabled: false

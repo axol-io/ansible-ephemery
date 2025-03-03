@@ -10,6 +10,7 @@ branch: master
 # Default Docker image references
 client_images:
   # Execution clients
+  # Note: For Ephemery network, consider using pk910/ephemery-geth instead
   geth: ethereum/client-go:v1.15.4
   besu: hyperledger/besu:24.7.2
   nethermind: nethermind/nethermind:1.27.1
@@ -17,6 +18,7 @@ client_images:
   erigon: thorax/erigon:v2.59.0
 
   # Consensus clients
+  # Note: For Ephemery network, consider using pk910/ephemery-lighthouse instead
   lighthouse: sigp/lighthouse:v5.3.0
   teku: consensys/teku:24.10.0
   prysm: prysmaticlabs/prysm-beacon-chain:v5.0.1

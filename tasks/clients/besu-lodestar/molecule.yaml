@@ -1,0 +1,78 @@
+---
+- name: Check if client combination is selected
+  ansible.builtin.set_fact:
+    client_skip: '{{ not (el == "besu" and cl == "lodestar") }}'
+
+- name: 🌟 Ensure client directories exist
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: directory
+    mode: '0755'
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+  loop:
+    - '{{ ephemery_data_dir }}/el'
+    - '{{ ephemery_data_dir }}/cl'
+    - '{{ ephemery_logs_dir }}'
+  when: not client_skip
+
+- name: 🔑 Ensure JWT secret exists
+  ansible.builtin.import_tasks:
+    file: tasks/jwt-secret.yaml
+  when: not client_skip
+
+- name: 🚀 Start Besu (Execution Client)
+  community.docker.docker_container:
+    name: '{{ network }}-besu'
+    image: 'pk910/ephemery-besu:23.10.0'
+    state: started
+    pull: true
+    restart_policy: unless-stopped
+    network_mode: host
+    memory: '{{ el_memory_limit }}'
+    volumes:
+      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
+      - '{{ ephemery_data_dir }}/el:/data'
+    command: >
+      --data-path=/data
+      --rpc-http-enabled=true
+      --rpc-http-host=0.0.0.0
+      --rpc-http-port=8545
+      --rpc-http-cors-origins="*"
+      --rpc-ws-enabled=true
+      --rpc-ws-host=0.0.0.0
+      --rpc-ws-port=8546
+      --host-allowlist="*"
+      --engine-rpc-enabled=true
+      --engine-host-allowlist="*"
+      --engine-jwt-secret=/execution-auth.jwt
+      --engine-rpc-port=8551
+      --metrics-enabled=true
+      --metrics-host=0.0.0.0
+      --metrics-port=9545
+  when: not client_skip
+
+- name: 🚀 Start Lodestar (Consensus Client)
+  community.docker.docker_container:
+    name: '{{ network }}-lodestar'
+    image: 'pk910/ephemery-lodestar:v1.13.0'
+    state: started
+    pull: true
+    restart_policy: unless-stopped
+    network_mode: host
+    memory: '{{ cl_memory_limit }}'
+    volumes:
+      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
+      - '{{ ephemery_data_dir }}/cl:/data'
+    command: >
+      beacon
+      --dataDir=/data
+      --ephemery-network
+      --execution.urls=http://127.0.0.1:8551
+      --jwt-secret=/execution-auth.jwt
+      --rest.address=0.0.0.0
+      --rest.port=5052
+      --metrics.enabled=true
+      --metrics.address=0.0.0.0
+      --metrics.port=9000
+  when: not client_skip

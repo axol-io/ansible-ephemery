@@ -23,7 +23,7 @@ This document provides detailed information about the supported client combinati
 
 | Execution Client | Consensus Client | Notes |
 |------------------|------------------|-------|
-| Geth | Lighthouse | Default combination, well-tested |
+| Geth | Lighthouse | Default combination, well-tested, uses Ephemery-specific images |
 | Geth | Teku | Higher memory requirements for Teku |
 | Geth | Prysm | Requires additional port configurations |
 | Geth | Lodestar | Lightweight combination, good for testing |
@@ -44,6 +44,17 @@ This document provides detailed information about the supported client combinati
 | Erigon | Prysm | Experimental combination |
 | Erigon | Lodestar | Experimental combination |
 
+## Ephemery-Specific Images
+
+For optimal performance with the Ephemery testnet, this role automatically uses specialized Docker images for certain client combinations:
+
+| Client Type | Standard Selection | Ephemery-Specific Image | Notes |
+|-------------|-------------------|-------------------------|-------|
+| Execution   | `el: "geth"`      | `pk910/ephemery-geth`   | Pre-configured for Ephemery network |
+| Consensus   | `cl: "lighthouse"`| `pk910/ephemery-lighthouse` | Includes built-in testnet configuration |
+
+These specialized images are automatically used when you select the corresponding client in your configuration. For more details, see [Ephemery-Specific Configuration](EPHEMERY_SPECIFIC.md).
+
 ## Client-Specific Configuration
 
 ### Geth-specific Configuration
@@ -55,6 +66,8 @@ el: "geth"
 geth_cache: 1024  # Cache size in MB
 geth_maxpeers: 50 # Maximum number of peers
 ```
+
+When `el: "geth"` is selected, the role automatically uses the `pk910/ephemery-geth` image which is pre-configured for the Ephemery network. This image includes a wrapper script that handles Ephemery-specific initialization and network resets.
 
 ### Besu-specific Configuration
 
@@ -82,6 +95,8 @@ cl: "lighthouse"
 # Optional Lighthouse-specific settings:
 lighthouse_target_peers: 60
 ```
+
+When `cl: "lighthouse"` is selected, the role automatically uses the `pk910/ephemery-lighthouse` image which is pre-configured for the Ephemery network. This image includes the necessary testnet configuration and handles network resets automatically.
 
 ### Teku-specific Configuration
 

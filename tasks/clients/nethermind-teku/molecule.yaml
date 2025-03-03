@@ -24,7 +24,7 @@
 - name: 🚀 Start Nethermind (Execution Client)
   community.docker.docker_container:
     name: '{{ network }}-nethermind'
-    image: 'pk910/ephemery-nethermind:latest'
+    image: 'pk910/ephemery-nethermind:v1.25.2'
     state: started
     pull: true
     restart_policy: unless-stopped
@@ -49,7 +49,7 @@
 - name: 🚀 Start Teku (Consensus Client)
   community.docker.docker_container:
     name: '{{ network }}-teku'
-    image: 'pk910/ephemery-teku:latest'
+    image: 'pk910/ephemery-teku:24.1.0'
     state: started
     pull: true
     restart_policy: unless-stopped

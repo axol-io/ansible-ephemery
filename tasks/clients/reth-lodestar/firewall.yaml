@@ -1,0 +1,14 @@
+---
+# Firewall rules for Reth (execution client) and Lodestar (consensus client) combination
+firewall_allowed_tcp_ports:
+  - 22    # SSH
+  - 80    # HTTP
+  - 443   # HTTPS
+  - 30303 # Reth P2P
+  - 8551  # Reth Engine API
+  - 9000  # Lodestar P2P
+  - 5052  # Lodestar metrics
+
+firewall_allowed_udp_ports:
+  - 30303 # Reth P2P
+  - 9000  # Lodestar P2P

@@ -76,9 +76,7 @@
     pull: true
     restart_policy: unless-stopped
     restart: '{{ cfg_changed }}'
-    networks:
-      - name: '{{ network }}-validator-net'
-    networks_cli_compatible: true
+    network_mode: host
     privileged: true
     ports:
       - '127.0.0.1:{{ node_exporter_port }}:{{ node_exporter_port }}'

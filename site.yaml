@@ -1,14 +1,63 @@
 ---
-# Main playbook for Ephemery setup
+# Main playbook for Ephemery node deployment
+
 - name: Include required collections
   hosts: localhost
-  connection: local
   gather_facts: false
   tasks:
     - name: Display collections
       ansible.builtin.debug:
-        msg: Required collections have been included
-      tags: always
+        msg: "Required collections have been included"
 
-# Import other playbooks
-- import_playbook: playbooks/update.yaml
+- name: Update Ephemery Nodes
+  hosts: all
+  become: true
+  gather_facts: true
+  vars_files:
+    - defaults/main.yaml
+    - vars/main.yaml
+  tasks:
+    - name: Load host-specific variables
+      ansible.builtin.include_vars:
+        file: "host_vars/{{ inventory_hostname }}.yaml"
+
+    - name: Pull latest execution client Docker image
+      community.docker.docker_image:
+        name: "{{ client_images[el] }}"
+        source: pull
+        force_source: false
+      when: el is defined
+
+    - name: Pull latest consensus client Docker image
+      community.docker.docker_image:
+        name: "{{ client_images[cl] }}"
+        source: pull
+        force_source: false
+      when: cl is defined
+
+    - name: Pull latest validator client Docker image (if enabled)
+      community.docker.docker_image:
+        name: "{{ client_images.validator }}"
+        source: pull
+        force_source: false
+      when: validator_enabled | default(false) | bool
+
+- name: Deploy Ephemery Nodes
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    jwt_secret_secure_generation: false
+  pre_tasks:
+    - name: Remove existing Grafana Agent container if it exists
+      community.docker.docker_container:
+        name: grafana-agent
+        state: absent
+        force_kill: true
+      ignore_errors: true
+  vars_files:
+    - defaults/main.yaml
+    - vars/main.yaml
+  tasks:
+    - name: Import main tasks
+      ansible.builtin.import_tasks: tasks/main.yaml

@@ -57,77 +57,129 @@
     - el in ['geth', 'besu', 'nethermind', 'reth', 'erigon']
     - cl in ['lighthouse', 'teku', 'prysm', 'lodestar']
 
-- name: 🚀 Start Execution Client with generic configuration
+- name: 🚀 Check if Execution Client container exists
+  community.docker.docker_container_info:
+    name: '{{ network }}-{{ el }}'
+  register: el_container_info
+  ignore_errors: true
+
+- name: 🚀 Remove existing Execution Client container if it exists
   community.docker.docker_container:
     name: '{{ network }}-{{ el }}'
-    image: 'pk910/ephemery-{{ el }}:v1.0.0'
+    state: absent
+    force_kill: true
+  when: el_container_info.exists
+
+- name: 🚀 Start Execution Client with generic configuration
+  become: true
+  community.docker.docker_container:
+    name: '{{ network }}-{{ el }}'
+    image: '{% if el == "geth" %}pk910/ephemery-geth{% else %}{{ client_images[el] }}{% endif %}'
     state: started
-    pull: true
     restart_policy: unless-stopped
     network_mode: host
-    memory: '{{ el_memory_limit }}'
+    memory: "{{ el_memory_limit }}"
+    memory_swap: "{{ el_memory_limit }}"
     volumes:
-      - '{{ ephemery_base_dir }}/jwtsecret:/execution-auth.jwt:ro'
-      - '{{ ephemery_base_dir }}/data/el:/data'
+      - '{{ ephemery_base_dir }}/data/{{ el }}:/data'
+      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
     command: >
+      {% if el == "geth" %}
+      ./wrapper.sh
+      {% else %}
       --datadir=/data
-      --http
-      --http.addr=0.0.0.0
-      --http.port=8545
       --authrpc.addr=0.0.0.0
       --authrpc.port=8551
       --authrpc.vhosts=*
       --authrpc.jwtsecret=/execution-auth.jwt
-  when: not client_config.stat.exists| default(false)
+      --http
+      --http.addr=0.0.0.0
+      --http.port=8545
+      --http.vhosts=*
+      --http.api=eth,net,web3,engine
+      --ws
+      --ws.addr=0.0.0.0
+      --ws.port=8546
+      --ws.api=eth,net,web3
+      --ws.origins=*
+      --syncmode=snap
+      --metrics
+      --metrics.addr=0.0.0.0
+      --metrics.port=6060
+      {{ el_extra_opts }}
+      {% endif %}
+  when: el == "geth" or el == "besu" or el == "nethermind" or el == "reth" or el == "erigon"
 
-- name: 🚀 Start Consensus Client with generic configuration
+- name: 🚀 Check if Consensus Client container exists
+  community.docker.docker_container_info:
+    name: '{{ network }}-{{ cl }}'
+  register: cl_container_info
+  ignore_errors: true
+
+- name: 🚀 Remove existing Consensus Client container if it exists
   community.docker.docker_container:
     name: '{{ network }}-{{ cl }}'
-    image: 'pk910/ephemery-{{ cl }}:v1.0.0'
+    state: absent
+    force_kill: true
+  when: cl_container_info.exists
+
+- name: 🚀 Start Consensus Client with generic configuration
+  become: true
+  community.docker.docker_container:
+    name: "{{ network }}-{{ cl }}"
+    image: "{% if cl == 'lighthouse' %}pk910/ephemery-lighthouse{% else %}{{ client_images[cl] }}{% endif %}"
     state: started
-    pull: true
     restart_policy: unless-stopped
     network_mode: host
-    memory: '{{ cl_memory_limit }}'
+    memory: "{{ cl_memory_limit }}"
+    memory_swap: "{{ cl_memory_limit }}"
     volumes:
-      - '{{ ephemery_base_dir }}/jwtsecret:/execution-auth.jwt:ro'
-      - '{{ ephemery_base_dir }}/data/cl:/data'
+      - '{{ ephemery_base_dir }}/data/beacon:/data'
+      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
     command: >
-      {% if cl == 'lighthouse' %}
-      lighthouse bn
+      {% if cl == "lighthouse" %}
+      lighthouse beacon_node
       --datadir=/data
       --http
       --http-address=0.0.0.0
       --http-port=5052
-      --execution-endpoint=http://127.0.0.1:8551
+      --execution-endpoint=http://localhost:8551
       --execution-jwt=/execution-auth.jwt
-      {% elif cl == 'teku' %}
-      teku
+      --testnet-dir=/ephemery_config
+      {{ cl_extra_opts }}
+      {% elif cl == "teku" %}
       --data-path=/data
       --rest-api-enabled=true
       --rest-api-interface=0.0.0.0
-      --rest-api-port=5051
+      --rest-api-port=5052
+      --metrics-enabled=true
+      --metrics-interface=0.0.0.0
+      --metrics-port=5054
       --ee-endpoint=http://127.0.0.1:8551
       --ee-jwt-secret-file=/execution-auth.jwt
-      {% elif cl == 'prysm' %}
-      beacon-chain
+      {{ cl_extra_opts }}
+      {% elif cl == "prysm" %}
       --datadir=/data
       --rpc-host=0.0.0.0
-      --rpc-port=4000
+      --rpc-port=5052
+      --monitoring-host=0.0.0.0
+      --monitoring-port=5054
       --execution-endpoint=http://127.0.0.1:8551
       --jwt-secret=/execution-auth.jwt
-      {% elif cl == 'lodestar' %}
-      lodestar beacon
+      {{ cl_extra_opts }}
+      {% elif cl == "lodestar" %}
       --dataDir=/data
       --rest
       --rest.address=0.0.0.0
       --rest.port=5052
+      --metrics
+      --metrics.address=0.0.0.0
+      --metrics.port=5054
       --execution.urls=http://127.0.0.1:8551
       --jwt-secret=/execution-auth.jwt
-      {% else %}
-      --datadir=/data
+      {{ cl_extra_opts }}
       {% endif %}
-  when: not client_config.stat.exists| default(false)
+  when: cl in ["lighthouse", "teku", "prysm", "lodestar"]
 
 - name: 📊 Start Grafana agent
   community.docker.docker_container:
