@@ -13,7 +13,6 @@ secrets.*
 # Ansible files
 .DS_Store
 .ansible/
-ansible.cfg
 
 # Prefer files
 /files/validator_keys/*
