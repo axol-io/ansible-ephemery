@@ -1,14 +1,16 @@
 ---
 # This is a variables file, not an Ansible playbook
 # noqa: playbook-syntax
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/vars.json
+# ansible-lint: ignore=playbook-syntax
 # Common variables shared across molecule scenarios
 network: ephemery
-ephemery_base_dir: "/home/ubuntu/ephemery"
-ephemery_data_dir: "/home/ubuntu/ephemery/data"
-ephemery_logs_dir: "/home/ubuntu/ephemery/logs"
-ephemery_scripts_dir: "/home/ubuntu/ephemery/scripts"
-ephemery_backup_dir: "/home/ubuntu/ephemery/backups"
-jwt_secret_path: "/home/ubuntu/ephemery/jwtsecret"
+ephemery_base_dir: '{{ ephemery_base_dir | default("/home/ubuntu/ephemery") }}'
+ephemery_data_dir: '{{ ephemery_base_dir }}/data'
+ephemery_logs_dir: '{{ ephemery_base_dir }}/logs'
+ephemery_scripts_dir: '{{ ephemery_base_dir }}/scripts'
+ephemery_backup_dir: '{{ ephemery_base_dir }}/backups'
+jwt_secret_path: '{{ ephemery_base_dir }}/jwtsecret'
 validator_enabled: false
 backup_enabled: true
 firewall_enabled: true
@@ -16,5 +18,5 @@ prometheus_port: 9090
 grafana_port: 3000
 grafana_agent_http_port: 12345
 cadvisor_port: 8080
-el_memory_limit: "2048M"
-cl_memory_limit: "2048M"
+el_memory_limit: 2048M
+cl_memory_limit: 2048M

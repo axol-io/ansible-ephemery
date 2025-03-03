@@ -49,7 +49,7 @@
       assert:
         that:
           - prometheus_targets.json.data.activeTargets | selectattr('labels.job', 'search', 'ethereum') | list | length > 0
-        fail_msg: "No Ethereum client targets found in Prometheus"
+        fail_msg: No Ethereum client targets found in Prometheus
       when: prometheus_targets.status == 200
 
     - name: Check if Docker metrics are being collected

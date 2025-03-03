@@ -4,44 +4,44 @@
 # They are primarily used for internal configuration and references
 
 # Repository information
-repository_url: "https://github.com/ephemery-testnet/ephemery-scripts.git"
-branch: "master"
+repository_url: https://github.com/ephemery-testnet/ephemery-scripts.git
+branch: master
 
 # Default Docker image references
 client_images:
   # Execution clients
-  geth: "ethereum/client-go:latest"
-  besu: "hyperledger/besu:latest"
-  nethermind: "nethermind/nethermind:latest"
-  reth: "paradigmxyz/reth:latest"
-  erigon: "thorax/erigon:latest"
+  geth: ethereum/client-go:latest
+  besu: hyperledger/besu:latest
+  nethermind: nethermind/nethermind:latest
+  reth: paradigmxyz/reth:latest
+  erigon: thorax/erigon:latest
 
   # Consensus clients
-  lighthouse: "sigp/lighthouse:latest"
-  teku: "consensys/teku:latest"
-  prysm: "prysmaticlabs/prysm-beacon-chain:latest"
-  lodestar: "chainsafe/lodestar:latest"
+  lighthouse: sigp/lighthouse:latest
+  teku: consensys/teku:latest
+  prysm: prysmaticlabs/prysm-beacon-chain:latest
+  lodestar: chainsafe/lodestar:latest
 
   # Other
-  validator: "sigp/lighthouse:latest"  # Default validator image
-  watchdog: "jer117/watchdog-container:v0.0.3-story-geth"
+  validator: sigp/lighthouse:latest  # Default validator image
+  watchdog: jer117/watchdog-container:v0.0.3-story-geth
 
 # File paths for reference
 files:
-  validator_keys: "files/validator-keys/"
+  validator_keys: files/validator-keys/
   default_configs:
-    geth: "files/geth-conf.example"
-    besu: "files/besu-conf.example"
-    nethermind: "files/nethermind-conf.example"
-    reth: "files/reth-conf.example"
-    lighthouse: "files/lighthouse-conf.example"
-    teku: "files/teku-conf.example"
-    prysm: "files/prysm-conf.example"
+    geth: files/geth-conf.example
+    besu: files/besu-conf.example
+    nethermind: files/nethermind-conf.example
+    reth: files/reth-conf.example
+    lighthouse: files/lighthouse-conf.example
+    teku: files/teku-conf.example
+    prysm: files/prysm-conf.example
 
 # Docker volume mounting config
-host_el_data_mount: "{{ el }}-data"
-host_cl_data_mount: "{{ cl }}-data"
-host_keys_mount: "{{ files.validator_keys }}"
+host_el_data_mount: '{{ el }}-data'
+host_cl_data_mount: '{{ cl }}-data'
+host_keys_mount: '{{ files.validator_keys }}'
 
 #
 #
@@ -65,17 +65,17 @@ host_keys_mount: "{{ files.validator_keys }}"
 # Default variable values for the Ephemery role
 
 # Docker compose version to install
-docker_compose_version: "2.25.0"
+docker_compose_version: 2.25.0
 
 # Home directory for the deployment
-home_dir: "/opt/ephemery"
+home_dir: /opt/ephemery
 
 # Docker network configuration
 docker_network_name: ephemery
 docker_network_subnet: 172.20.0.0/24
 
 # JWT secret file path
-jwt_secret_path: "{{ home_dir }}/jwt/jwtsecret"
+jwt_secret_path: '{{ home_dir }}/jwt/jwtsecret'
 jwt_secret_secure_generation: true  # Use more secure random generation
 
 # Client configurations

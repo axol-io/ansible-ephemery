@@ -19,15 +19,13 @@
       failed_when: teku_container.stdout == ""
 
     - name: Verify Nethermind API is responding
-      uri:
-        url: http://localhost:8545
-        method: POST
-        body_format: json
-        body: '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}'
-        status_code: 200
+      ansible.builtin.uri:
+        url: http://127.0.0.1:7000/health
         return_content: true
       register: nethermind_response
-      failed_when: "'nethermind' not in nethermind_response.content|lower"
+      failed_when: >
+        nethermind_response.status != 200 or
+        "nethermind" not in nethermind_response.content | lower
       changed_when: false
 
     - name: Verify Teku API is responding

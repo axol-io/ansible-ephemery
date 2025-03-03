@@ -16,16 +16,16 @@
           - el is defined
           - cl is defined
           - jwt_secret_path is defined
-        fail_msg: "Missing required variables"
-        success_msg: "All required variables are defined"
+        fail_msg: Missing required variables
+        success_msg: All required variables are defined
 
     - name: Validate client selections
       ansible.builtin.assert:
         that:
-          - el in ['geth', 'besu', 'nethermind', 'reth', 'erigon']
-          - cl in ['lighthouse', 'teku', 'prysm', 'lodestar']
-        fail_msg: "Invalid client selection"
-        success_msg: "Client selections are valid"
+          - el in [geth, besu, nethermind, reth, erigon]
+          - cl in [lighthouse, teku, prysm, lodestar]
+        fail_msg: Invalid client selection
+        success_msg: Client selections are valid
 
     - name: Validate percentage allocations
       ansible.builtin.assert:
@@ -36,5 +36,5 @@
           - (el_memory_percentage | float) +
             (cl_memory_percentage | float) +
             (validator_memory_percentage | float) <= 1.0
-        fail_msg: "Memory percentage allocations should add up to <= 1.0"
-        success_msg: "Memory percentage allocations are valid"
+        fail_msg: Memory percentage allocations should add up to <= 1.0
+        success_msg: Memory percentage allocations are valid

@@ -12,10 +12,11 @@ Usage:
 """
 
 import os
-import sys
-import yaml
 import re
+import sys
 from pathlib import Path
+
+import yaml
 
 # Define project root
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -33,6 +34,7 @@ VARIABLE_MAPPING = {
     "validator_memory_limit": "resource_validator_memory_limit",
 }
 
+
 def get_scenarios():
     """Get all scenario directories"""
     scenarios = []
@@ -41,15 +43,18 @@ def get_scenarios():
             scenarios.append(item)
     return scenarios
 
+
 def update_scenario_molecule_yaml(scenario):
     """Update molecule.yaml for a scenario"""
     # Check for both .yaml and .yml extensions
-    for ext in ['.yaml', '.yml']:
+    for ext in [".yaml", ".yml"]:
         molecule_file = MOLECULE_DIR / scenario / f"molecule{ext}"
         if molecule_file.exists():
             break
     else:
-        print(f"Warning: molecule configuration for {scenario} doesn't exist, skipping...")
+        print(
+            f"Warning: molecule configuration for {scenario} doesn't exist, skipping..."
+        )
         return
 
     print(f"Updating {molecule_file}...")
@@ -60,20 +65,31 @@ def update_scenario_molecule_yaml(scenario):
 
     # Add import comment if not present
     if "# Imports base configuration" not in content:
-        content = re.sub(r"^---\n", "---\n# " + scenario.title() + " scenario configuration\n# Imports base configuration from shared/base_molecule.yaml\n\n", content)
+        content = re.sub(
+            r"^---\n",
+            "---\n# "
+            + scenario.title()
+            + " scenario configuration\n# Imports base configuration from shared/base_molecule.yaml\n\n",
+            content,
+        )
 
     # Update variable references
     for old_var, new_var in VARIABLE_MAPPING.items():
         content = re.sub(f"(\\s+){old_var}:", f"\\1{new_var}:", content)
 
     # Remove playbooks property from verifier section
-    content = re.sub(r"verifier:\s+name:\s+ansible\s+playbooks:\s+verify:\s+verify\.ya?ml", "verifier:\n  name: ansible", content)
+    content = re.sub(
+        r"verifier:\s+name:\s+ansible\s+playbooks:\s+verify:\s+verify\.ya?ml",
+        "verifier:\n  name: ansible",
+        content,
+    )
 
     # Write updated content
     with open(molecule_file, "w") as f:
         f.write(content)
 
     print(f"Updated {molecule_file}")
+
 
 def update_scenario_verify_yaml(scenario):
     """Update verify.yaml for a scenario to use common templates"""
@@ -119,14 +135,19 @@ def update_scenario_verify_yaml(scenario):
         updated_content = re.sub(f"(\\s+){old_var}:", f"\\1{new_var}:", updated_content)
 
     # Update boolean conditions
-    updated_content = re.sub(r"(\s+when:\s+)(\w+)(\s+and)", r"\1\2 | bool\3", updated_content)
-    updated_content = re.sub(r"(\s+when:\s+)(\w+)($)", r"\1\2 | bool\3", updated_content)
+    updated_content = re.sub(
+        r"(\s+when:\s+)(\w+)(\s+and)", r"\1\2 | bool\3", updated_content
+    )
+    updated_content = re.sub(
+        r"(\s+when:\s+)(\w+)($)", r"\1\2 | bool\3", updated_content
+    )
 
     # Write updated content
     with open(verify_file, "w") as f:
         f.write(updated_content)
 
     print(f"Updated {verify_file}")
+
 
 def rename_molecule_files():
     """Rename all molecule.yaml files to molecule.yml"""
@@ -138,6 +159,7 @@ def rename_molecule_files():
             yaml_file.rename(yml_file)
             print(f"Renamed {yaml_file} to {yml_file}")
 
+
 def make_script_executable():
     """Make this script and generate_scenario.py executable"""
     os.chmod(__file__, 0o755)
@@ -146,6 +168,7 @@ def make_script_executable():
     if generate_script.exists():
         os.chmod(generate_script, 0o755)
         print(f"Made {generate_script} executable")
+
 
 def main():
     # Make scripts executable
@@ -163,6 +186,7 @@ def main():
         print(f"\nUpdating {scenario} scenario...")
         update_scenario_molecule_yaml(scenario)
         update_scenario_verify_yaml(scenario)
+
 
 if __name__ == "__main__":
     main()

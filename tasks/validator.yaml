@@ -1,30 +1,30 @@
 ---
 - name: Check if validator is enabled
   ansible.builtin.set_fact:
-    validator_skip: "{{ not validator_enabled | default(false) }}"
+    validator_skip: '{{ not validator_enabled | default(false) }}'
 
 - name: 🌟 Ensure validator directories exist
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: '{{ item }}'
     state: directory
     mode: '0755'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
   loop:
-    - "{{ home_dir }}/ephemery/data/validator"
-    - "{{ home_dir }}/ephemery/secrets/validator"
+    - '{{ ephemery_base_dir }}/data/validator'
+    - '{{ ephemery_base_dir }}/secrets/validator'
   when: not validator_skip
 
 - name: 🔑 Generate validator keys
   ansible.builtin.shell: |
-    if [ ! -f {{ home_dir }}/ephemery/secrets/validator/keys_generated ]; then
+    if [ ! -f '{{ ephemery_base_dir }}/secrets/validator/keys_generated' ]; then
       # This is a placeholder command - in a real implementation,
       # you would use an appropriate tool to generate validator keys
       # For example: ./deposit --language=english --num_validators=1 generate-keys
-      echo "Keys generated on $(date)" > {{ home_dir }}/ephemery/secrets/validator/keys_generated
+      echo "Keys generated on $(date)" > '{{ ephemery_base_dir }}/secrets/validator/keys_generated'
     fi
   args:
-    creates: "{{ home_dir }}/ephemery/secrets/validator/keys_generated"
+    creates: '{{ ephemery_base_dir }}/secrets/validator/keys_generated'
   when: not validator_skip
 
 # Set client-specific API endpoints
@@ -38,17 +38,17 @@
 
 - name: 🚀 Start Validator client
   community.docker.docker_container:
-    name: "{{ network }}-validator-{{ cl }}"
-    image: "pk910/ephemery-{{ cl }}-validator:latest"
+    name: '{{ network }}-validator-{{ cl }}'
+    image: 'pk910/ephemery-{{ cl }}-validator:latest'
     state: started
     pull: true
     restart_policy: unless-stopped
     network_mode: host
-    memory: "{{ validator_memory_limit }}"
+    memory: '{{ validator_memory_limit }}'
     volumes:
-      - "{{ home_dir }}/ephemery/data/validator:/data"
-      - "{{ home_dir }}/ephemery/secrets/validator:/secrets:ro"
+      - '{{ ephemery_base_dir }}/data/validator:/data'
+      - '{{ ephemery_base_dir }}/secrets/validator:/secrets:ro'
     env:
-      VALIDATOR_CLIENT: "{{ cl }}"
-      BEACON_NODE_API: "{{ beacon_api_endpoint }}"
+      VALIDATOR_CLIENT: '{{ cl }}'
+      BEACON_NODE_API: '{{ beacon_api_endpoint }}'
   when: not validator_skip

@@ -15,7 +15,7 @@ ansible-ephemery/
 │   ├── cadvisor.yaml         # Container monitoring
 │   ├── ephemery.yaml         # Core Ephemery functions
 │   ├── firewall.yaml         # Network security
-│   ├── jwt_secret.yaml       # Authentication secrets
+│   ├── jwt-secret.yaml       # Authentication secrets
 │   ├── monitoring.yaml       # Metrics collection
 │   ├── setup-env.yaml        # Environment preparation
 │   └── validator.yaml        # Validator configuration

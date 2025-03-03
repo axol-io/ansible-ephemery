@@ -27,6 +27,6 @@
     - name: Assert validator API is responding if enabled
       assert:
         that: validator_metrics.status == 200
-        fail_msg: "Validator API is not responding at http://localhost:5064/metrics"
-        success_msg: "Validator API is responding correctly"
+        fail_msg: Validator API is not responding at http://localhost:5064/metrics
+        success_msg: Validator API is responding correctly
       when: validator_enabled | bool and validator_metrics.status is defined

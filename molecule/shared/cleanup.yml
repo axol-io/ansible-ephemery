@@ -6,9 +6,9 @@
   hosts: all
   become: true
   vars:
-    network: "{{ network | default('ephemery') }}"
-    ephemery_base_dir: "{{ ephemery_base_dir | default('/home/ubuntu/ephemery') }}"
-    cleanup_level: "{{ cleanup_level | default('full') }}"  # Options: containers, data, full
+    network: '{{ network | default("ephemery") }}'
+    ephemery_base_dir: '{{ ephemery_base_dir | default("/home/ubuntu/ephemery") }}'
+    cleanup_level: '{{ cleanup_level | default("full") }}'  # Options: containers, data, full
   tasks:
     - name: Stop and remove Ephemery containers
       ansible.builtin.shell: |
@@ -36,14 +36,14 @@
 
     - name: Remove Ephemery data directory
       file:
-        path: "{{ ephemery_base_dir }}/data"
+        path: '{{ ephemery_base_dir }}/data'
         state: absent
       when: cleanup_level in ['data', 'full']
       tags: [data]
 
     - name: Remove Ephemery logs directory
       file:
-        path: "{{ ephemery_base_dir }}/logs"
+        path: '{{ ephemery_base_dir }}/logs'
         state: absent
       when: cleanup_level in ['data', 'full']
       tags: [data]

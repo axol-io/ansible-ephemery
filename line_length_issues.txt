@@ -127,4 +127,3 @@
 
 ./molecule/backup/verify.yml:31:109 -       ansible.builtin.shell: find {{ ephemery_backup_dir }} -name "ephemery_backup_*.tar.gz" -type f -mmin -5
   - Consider breaking command into multiple lines using YAML folded style (>)
-

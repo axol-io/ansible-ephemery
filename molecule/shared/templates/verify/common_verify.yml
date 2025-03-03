@@ -11,21 +11,21 @@
 # Check if required directories exist
 - name: Verify required directories exist
   stat:
-    path: "{{ item }}"
+    path: '{{ item }}'
   register: dir_check
   failed_when: not dir_check.stat.exists or not dir_check.stat.isdir
   loop:
-    - "{{ ephemery_base_dir | default('/root/ephemery') }}"
-    - "{{ ephemery_base_dir | default('/root/ephemery') }}/data"
-    - "{{ ephemery_base_dir | default('/root/ephemery') }}/logs"
+    - '{{ ephemery_base_dir | default("/root/ephemery") }}'
+    - '{{ ephemery_base_dir | default("/root/ephemery") }}/data'
+    - '{{ ephemery_base_dir | default("/root/ephemery") }}/logs'
 
 # Check for systemd service files
 - name: Check for systemd service files
   stat:
-    path: "/etc/systemd/system/{{ item }}.service"
+    path: '/etc/systemd/system/{{ item }}.service'
   loop:
-    - "ephemery-execution"
-    - "ephemery-consensus"
+    - 'ephemery-execution'  # Execution client service
+    - 'ephemery-consensus'  # Consensus client service
   register: service_check
   failed_when: not service_check.stat.exists
   ignore_errors: true

@@ -31,15 +31,15 @@
       assert:
         that:
           - el_memory.stdout | int == (ephemery_docker_memory_limit[:-1] | int * 1024 * 1024 * el_memory_percentage)
-        fail_msg: "Execution client memory limit doesn't match configuration"
-      when: el_container.stdout != "" and el_memory is defined
+        fail_msg: Execution client memory limit does not match configuration
+      when: el_container.stdout != '' and el_memory is defined
 
     - name: Verify consensus client memory matches configuration
       assert:
         that:
           - cl_memory.stdout | int == (ephemery_docker_memory_limit[:-1] | int * 1024 * 1024 * cl_memory_percentage)
-        fail_msg: "Consensus client memory limit doesn't match configuration"
-      when: cl_container.stdout != "" and cl_memory is defined
+        fail_msg: Consensus client memory limit does not match configuration
+      when: cl_container.stdout != '' and cl_memory is defined
 
     - name: Check CPU limits for execution client
       ansible.builtin.shell: docker inspect {{ el_container.stdout }} --format='{% raw %}{{.HostConfig.NanoCpus}}{% endraw %}'
@@ -75,10 +75,10 @@
     - name: Display memory usage information
       debug:
         msg:
-          - "Execution client memory limit: {{ (el_memory.stdout | int // 1000000) }}MB"
-          - "Consensus client memory limit: {{ (cl_memory.stdout | int // 1000000) }}MB"
-          - "Execution client current usage: {{ el_memory_usage.stdout | default('N/A') }}"
-          - "Consensus client current usage: {{ cl_memory_usage.stdout | default('N/A') }}"
+          - Execution client memory limit: '{{ (el_memory.stdout | int // 1000000) }}MB'
+          - Consensus client memory limit: '{{ (cl_memory.stdout | int // 1000000) }}MB'
+          - Execution client current usage: '{{ el_memory_usage.stdout | default("N/A") }}'
+          - Consensus client current usage: '{{ cl_memory_usage.stdout | default("N/A") }}'
       when: el_memory is defined and cl_memory is defined
 
     - name: Verify memory allocation ratio
@@ -86,5 +86,5 @@
         that:
           - (el_memory.stdout | int) > (cl_memory.stdout | int)
           - (el_memory.stdout | float) / ((el_memory.stdout | float) + (cl_memory.stdout | float)) | round(1) == el_memory_percentage
-        fail_msg: "Memory allocation ratio is not correct (should be {{ el_memory_percentage * 100 }}%/{{ cl_memory_percentage * 100 }}%)"
+        fail_msg: Memory allocation ratio is not correct (should be '{{ el_memory_percentage * 100 }}'%/'{{ cl_memory_percentage * 100 }}'%)
       when: el_memory is defined and cl_memory is defined

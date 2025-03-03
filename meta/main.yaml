@@ -1,16 +1,17 @@
 ---
 galaxy_info:
-  author: "DROO AMOR"
-  company: "axol.io"
+  author: DROO AMOR
+  company: axol.io
   description: Playbook to set up and configure Ephemery Node. Includes Grafana Agent, Node Exporter, and Prometheus.
-  license: "MIT"
-  min_ansible_version: "2.10"
-  namespace: "axol"
+  license: MIT
+  min_ansible_version: '2.10'
+  namespace: axol
+  role_name: ephemery
   platforms:
-    - name: "Ubuntu"
+    - name: Ubuntu
       versions:
-        - "jammy"
-        - "noble"
+        - jammy
+        - noble
   galaxy_tags:
     - ephemery
     - ethereum

@@ -1,6 +1,8 @@
 ---
 # This is a molecule configuration file, not an Ansible playbook
 # noqa: playbook-syntax
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/molecule.json
+# ansible-lint: ignore=playbook-syntax
 # Base molecule configuration to be imported by other scenarios
 dependency:
   name: galaxy

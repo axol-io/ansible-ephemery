@@ -5,7 +5,7 @@
   tasks:
     - name: Check JWT secret file permissions
       stat:
-        path: "{{ jwt_secret_path }}"
+        path: '{{ jwt_secret_path }}'
       register: jwt_file
       failed_when:
         - not jwt_file.stat.exists
@@ -15,14 +15,14 @@
       ansible.builtin.command: ufw status
       register: firewall_status
       changed_when: false
-      failed_when: firewall_enabled and "inactive" in firewall_status.stdout
+      failed_when: firewall_enabled and 'inactive' in firewall_status.stdout
       ignore_errors: true  # May fail on non-Ubuntu systems
 
     - name: Check alternative firewall (firewalld)
       ansible.builtin.command: firewall-cmd --state
       register: firewalld_status
       changed_when: false
-      failed_when: firewall_enabled and "running" not in firewalld_status.stdout
+      failed_when: firewall_enabled and 'running' not in firewalld_status.stdout
       ignore_errors: true  # May fail on non-RedHat systems
 
     - name: Verify required ports are open in UFW
@@ -31,8 +31,8 @@
       changed_when: false
       failed_when: >
         firewall_enabled and
-        ("{{ item }}/tcp" not in ufw_ports.stdout)
-      loop: "{{ firewall_allowed_tcp_ports }}"
+        ('{{ item }}/tcp' not in ufw_ports.stdout)
+      loop: '{{ firewall_allowed_tcp_ports }}'
       ignore_errors: true  # May fail on non-Ubuntu systems
 
     - name: Verify Docker socket permissions
@@ -48,8 +48,8 @@
       register: open_ports
       changed_when: false
       failed_when: >
-        "0.0.0.0:{{ item }}" in open_ports.stdout or
-        ":::{{ item }}" in open_ports.stdout
+        '0.0.0.0:{{ item }}' in open_ports.stdout or
+        ':::{{ item }}' in open_ports.stdout
       loop:
         - 8545  # Should only listen on localhost
         - 8551  # Engine API should be restricted

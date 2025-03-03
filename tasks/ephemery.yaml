@@ -1,17 +1,17 @@
 ---
 - name: 🌟 Ensure ephemery directories exist
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: '{{ item }}'
     state: directory
     mode: '0755'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
   loop:
-    - "{{ home_dir }}/ephemery"
-    - "{{ home_dir }}/ephemery/data/el"
-    - "{{ home_dir }}/ephemery/data/cl"
-    - "{{ home_dir }}/ephemery/scripts"
-    - "{{ home_dir }}/ephemery/logs"
+    - '{{ ephemery_base_dir }}'
+    - '{{ ephemery_base_dir }}/data/el'
+    - '{{ ephemery_base_dir }}/data/cl'
+    - '{{ ephemery_base_dir }}/scripts'
+    - '{{ ephemery_base_dir }}/logs'
 
 - name: 🔑 Include JWT secret management task
   ansible.builtin.import_tasks:
@@ -20,30 +20,30 @@
 
 - name: 🔑 Add user to Docker group
   ansible.builtin.user:
-    name: "{{ ansible_user }}"
+    name: '{{ ansible_user }}'
     groups: docker
     append: true
 
 - name: 📝 Create health check script
   ansible.builtin.template:
     src: templates/scripts/health_check.sh.j2
-    dest: "{{ home_dir }}/ephemery/scripts/health_check.sh"
+    dest: '{{ ephemery_scripts_dir }}/health_check.sh'
     force: true
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: "0755"
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+    mode: '0755'
 
 - name: ⏱️ Setup cron job for health check
   ansible.builtin.cron:
-    name: "Ephemery health check"
-    minute: "*/5"
-    job: "{{ home_dir }}/ephemery/scripts/health_check.sh"
-    user: "{{ ansible_user }}"
+    name: Ephemery health check
+    minute: '*/5'
+    job: '{{ ephemery_scripts_dir }}/health_check.sh'
+    user: '{{ ansible_user }}'
 
 # Include client-specific configuration
 - name: 🚀 Include client-specific configuration
   ansible.builtin.include_tasks:
-    file: "clients/{{ el }}-{{ cl }}/main.yaml"
+    file: clients/{{ el }}-{{ cl }}/main.yaml
   when:
     - el in ['geth', 'besu', 'nethermind', 'reth', 'erigon']
     - cl in ['lighthouse', 'teku', 'prysm', 'lodestar']
@@ -51,7 +51,7 @@
 # Fallback to generic configuration if specific client combination is not available
 - name: 🚀 Check if client-specific configuration exists
   ansible.builtin.stat:
-    path: "tasks/clients/{{ el }}-{{ cl }}/main.yaml"
+    path: tasks/clients/{{ el }}-{{ cl }}/main.yaml
   register: client_config
   when:
     - el in ['geth', 'besu', 'nethermind', 'reth', 'erigon']
@@ -59,16 +59,16 @@
 
 - name: 🚀 Start Execution Client with generic configuration
   community.docker.docker_container:
-    name: "{{ network }}-{{ el }}"
-    image: "pk910/ephemery-{{ el }}:latest"
+    name: '{{ network }}-{{ el }}'
+    image: 'pk910/ephemery-{{ el }}:latest'
     state: started
     pull: true
     restart_policy: unless-stopped
     network_mode: host
-    memory: "{{ el_memory_limit }}"
+    memory: '{{ el_memory_limit }}'
     volumes:
-      - "{{ home_dir }}/ephemery/jwtsecret:/execution-auth.jwt:ro"
-      - "{{ home_dir }}/ephemery/data/el:/data"
+      - '{{ ephemery_base_dir }}/jwtsecret:/execution-auth.jwt:ro'
+      - '{{ ephemery_base_dir }}/data/el:/data'
     command: >
       --datadir=/data
       --http
@@ -82,16 +82,16 @@
 
 - name: 🚀 Start Consensus Client with generic configuration
   community.docker.docker_container:
-    name: "{{ network }}-{{ cl }}"
-    image: "pk910/ephemery-{{ cl }}:latest"
+    name: '{{ network }}-{{ cl }}'
+    image: 'pk910/ephemery-{{ cl }}:latest'
     state: started
     pull: true
     restart_policy: unless-stopped
     network_mode: host
-    memory: "{{ cl_memory_limit }}"
+    memory: '{{ cl_memory_limit }}'
     volumes:
-      - "{{ home_dir }}/ephemery/jwtsecret:/execution-auth.jwt:ro"
-      - "{{ home_dir }}/ephemery/data/cl:/data"
+      - '{{ ephemery_base_dir }}/jwtsecret:/execution-auth.jwt:ro'
+      - '{{ ephemery_base_dir }}/data/cl:/data'
     command: >
       {% if cl == 'lighthouse' %}
       lighthouse bn
@@ -139,8 +139,8 @@
     network_mode: host
     privileged: true
     volumes:
-      - "{{ home_dir }}/config/grafana/agent:{{ home_dir }}/config/grafana/agent"
-      - "{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:{{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
+      - '{{ ephemery_base_dir }}/config/grafana/agent:{{ ephemery_base_dir }}/config/grafana/agent'
+      - '{{ ephemery_base_dir }}/config/grafana/agent/grafana-agent.yaml:{{ ephemery_base_dir }}/config/grafana/agent/grafana-agent.yaml'
     command:
-      - "--config.file={{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
-      - "--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}"
+      - '--config.file={{ ephemery_base_dir }}/config/grafana/agent/grafana-agent.yaml'
+      - '--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}'

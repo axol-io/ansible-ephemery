@@ -11,15 +11,15 @@
         # Enable backup functionality
         backup_enabled: true
         # Backup settings
-        backup_frequency: "daily"
+        backup_frequency: daily
         backup_retention_days: 7
-        ephemery_backup_dir: "/root/ephemery/backups"
+        ephemery_backup_dir: /root/ephemery/backups
 
     # Create some fake data for backup testing
     - name: Create test data for backup
       copy:
-        content: "Test data for backup {{ ansible_date_time.iso8601 }}"
-        dest: "/root/ephemery/data/el/testdata.txt"
+        content: Test data for backup '{{ ansible_date_time.iso8601 }}'
+        dest: /root/ephemery/data/el/testdata.txt
 
     # Run backup script manually to test functionality
     - name: Execute backup script for testing

@@ -22,18 +22,18 @@ TOTAL_ISSUES=0
 for file in $YAML_FILES; do
   LINE_NUM=0
   ISSUES=0
-  
+
   while IFS= read -r line; do
     LINE_NUM=$((LINE_NUM + 1))
     LINE_LENGTH=${#line}
-    
+
     if [ "$LINE_LENGTH" -gt "$MAX_LENGTH" ]; then
       ISSUES=$((ISSUES + 1))
       TOTAL_ISSUES=$((TOTAL_ISSUES + 1))
-      
+
       # Add to report file
       echo "$file:$LINE_NUM:$LINE_LENGTH - $line" >> "$REPORT_FILE"
-      
+
       # Suggest fixes
       if [[ "$line" == *command:* || "$line" == *shell:* || "$line" == *docker* ]]; then
         echo "  - Consider breaking command into multiple lines using YAML folded style (>)" >> "$REPORT_FILE"
@@ -42,11 +42,11 @@ for file in $YAML_FILES; do
       elif [[ "$line" == *with_items:* || "$line" == *loop:* ]]; then
         echo "  - Consider breaking list into multiple lines" >> "$REPORT_FILE"
       fi
-      
+
       echo "" >> "$REPORT_FILE"
     fi
   done < "$file"
-  
+
   if [ "$ISSUES" -gt 0 ]; then
     echo "Found $ISSUES long lines in $file"
   fi
@@ -80,4 +80,4 @@ echo "      - 'item3'"
 echo "      - 'item4'"
 echo "      - 'item5'"
 echo "      - 'item6'"
-echo "      - 'item7'" 
+echo "      - 'item7'"

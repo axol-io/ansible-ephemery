@@ -12,8 +12,8 @@
         el: nethermind
         cl: teku
         # Client memory settings
-        el_memory_limit: "3072M"
-        cl_memory_limit: "3072M"
+        el_memory_limit: 3072M
+        cl_memory_limit: 3072M
 
     # Wait for clients to initialize
     - name: Wait for clients to initialize

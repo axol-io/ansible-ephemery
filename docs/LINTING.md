@@ -101,4 +101,4 @@ Run a specific hook:
 
 ```bash
 pre-commit run yamllint --all-files
-``` 
+```
