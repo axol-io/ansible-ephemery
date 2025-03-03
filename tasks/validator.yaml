@@ -1,7 +1,7 @@
 ---
 - name: Check if validator is enabled
   ansible.builtin.set_fact:
-    validator_skip: "{{ not validator_enabled|default(false) }}"
+    validator_skip: "{{ not validator_enabled | default(false) }}"
 
 - name: 🌟 Ensure validator directories exist
   ansible.builtin.file:

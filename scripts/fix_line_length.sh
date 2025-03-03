@@ -24,4 +24,4 @@ sed -i '' 's/validator_memory_limit: "{{ ((ansible_memory_mb.real.total \* 0.90 
   "{{ ((ansible_memory_mb.real.total * 0.90 * validator_memory_percentage) | round | int) }}M"/' defaults/main.yaml
 
 echo "Line length fixes applied. Original file backed up to defaults/main.yaml.bak"
-echo "You may need to manually review and fix other files with line length issues." 
+echo "You may need to manually review and fix other files with line length issues."

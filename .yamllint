@@ -1,0 +1,93 @@
+---
+# yamllint configuration for ansible-ephemery
+# Based on the coding standards in docs/CODING_STANDARDS.md
+# Updated to match ansible-lint requirements
+
+extends: default
+
+rules:
+  # 2-space indentation
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Line length
+  line-length:
+    max: 100
+    level: warning
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+
+  # Enforce document start marker
+  document-start:
+    present: true
+
+  # Enforce truthy values
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no']
+    check-keys: false
+
+  # Enforce consistent key naming
+  key-duplicates: enable
+
+  # Enforce consistent empty lines
+  empty-lines:
+    max: 1
+    max-start: 0
+    max-end: 0
+
+  # Enforce consistent quotes
+  quoted-strings:
+    quote-type: single
+    required: only-when-needed
+
+  # Enforce consistent braces
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0
+
+  # Enforce consistent brackets
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0
+
+  # Enforce consistent commas
+  commas:
+    max-spaces-before: 0
+    min-spaces-after: 1
+    max-spaces-after: 1
+
+  # Enforce consistent colons
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
+
+  # Enforce consistent comments
+  comments:
+    require-starting-space: true
+    min-spaces-from-content: 1
+
+  # Required by ansible-lint
+  comments-indentation: false
+
+  # Enforce consistent new lines
+  new-line-at-end-of-file: enable
+  new-lines:
+    type: unix
+
+  # Octal values (required by ansible-lint)
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+
+# Special exceptions
+ignore: |
+  .github/
+  molecule/*/molecule.yml
+  molecule/*/molecule.yml.bak
+  molecule/shared/base_molecule.yml

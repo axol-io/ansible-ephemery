@@ -1,5 +1,5 @@
 ---
-# Pre-commit hooks configuration for ansible-ephemery
+# Pre-commit configuration for ansible-ephemery
 # See https://pre-commit.com for more information
 
 repos:
@@ -11,30 +11,46 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
       - id: check-merge-conflict
-      - id: check-executables-have-shebangs
-      - id: check-shebang-scripts-are-executable
+      - id: mixed-line-ending
+        args: ['--fix=lf']
 
-  - repo: https://github.com/ansible-community/ansible-lint
-    rev: v6.16.2
-    hooks:
-      - id: ansible-lint
-
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.30.0
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.32.0
     hooks:
       - id: yamllint
-        args:
-          - --format
-          - parsable
-          - --strict
+        args: ['-c', '.yamllint']
 
-  # Custom hooks for enforcing Ansible Ephemery naming conventions
+  - repo: https://github.com/ansible-community/ansible-lint.git
+    rev: v6.17.2
+    hooks:
+      - id: ansible-lint
+        files: \.(yaml|yml)$
+
   - repo: local
     hooks:
-      - id: enforce-task-naming
-        name: Enforce task file naming conventions
-        description: "Ensures task files use hyphens instead of underscores"
-        entry: "python -c 'import sys, os, re; failed = False; filenames = sys.argv[1:]; [print(f\"ERROR: Task file {f} uses underscores instead of hyphens\") or (failed := True) for f in filenames if re.search(r\"tasks/.*_.*\\.yaml$\", f)]; sys.exit(1 if failed else 0)'"
-        language: system
-        files: 'tasks/.*_.*\.yaml$'
-        exclude: '\.git/'
+      - id: check-yaml-extensions
+        name: Check YAML file extensions
+        entry: ./scripts/check-yaml-extensions.sh
+        language: script
+        pass_filenames: false
+        types: [yaml]
+        description: Checks that YAML files use the correct extension (.yaml except in molecule/ directory)
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort (python)
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.5
+    hooks:
+      - id: shellcheck
+        args: ["--severity=warning"]

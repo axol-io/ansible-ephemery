@@ -4,72 +4,55 @@ title: Molecule Testing for Ansible-Ephemery
 
 # Molecule Testing Framework for Ansible-Ephemery
 
-This directory contains the Molecule testing infrastructure for the ansible-ephemery role. It provides a structured approach to testing various client combinations and configurations.
+This directory contains the Molecule testing infrastructure for the ansible-ephemery role.
 
 ## Directory Structure
 
-```
+```plaintext
 molecule/
-├── [client-scenarios]/      # Client combination scenarios (e.g., geth-prysm)
-├── clients/                 # Client combination test templates
-├── default/                 # Main scenario with default clients
-├── backup/                  # Backup functionality testing
-├── monitoring/              # Monitoring functionality testing
-├── resource-limits/         # Resource limitation testing
-├── security/                # Security configuration testing
-├── validator/               # Validator node testing
-├── shared/                  # Shared resources across scenarios
-│   ├── scripts/             # Utility scripts
-│   │   ├── generate_scenario.sh  # Script for generating new scenarios
-│   │   └── demo_scenario.sh      # Script for demo scenarios (create, test, clean up)
-│   └── templates/           # Templates for scenario generation
-├── README.md                # This file
-├── requirements.yml         # Dependencies for tests
-├── run-tests.sh             # Wrapper script for running tests
-└── cleanup.yml              # Cleanup playbook
+├── [client-scenarios]/   # Client combination scenarios
+├── clients/              # Client combination templates
+├── default/              # Main scenario with default clients
+├── backup/               # Backup functionality testing
+├── monitoring/           # Monitoring functionality testing
+├── resource-limits/      # Resource limitation testing
+├── security/             # Security configuration testing
+├── validator/            # Validator node testing
+├── shared/               # Shared resources across scenarios
+│   ├── scripts/          # Utility scripts
+│   │   ├── generate_scenario.sh  # Scenario generator
+│   │   └── demo_scenario.sh      # Demo scenario runner
+│   └── templates/        # Templates for scenario generation
+├── README.md             # This file
+└── requirements.yml      # Dependencies for tests
 ```
 
 ## Quick Start
 
 ### Running a Demo Test
 
-To quickly demonstrate a working scenario without cluttering your environment:
-
 ```bash
-# Create a scenario, run tests, and clean up automatically
+# Create, test, and clean up automatically
 molecule/shared/scripts/demo_scenario.sh --execution geth --consensus prysm
 
-# Create and test a scenario, but keep it after testing
+# Keep the scenario after testing
 molecule/shared/scripts/demo_scenario.sh -e nethermind -c lodestar --keep
 ```
 
 ### Creating a Scenario
 
-You can create test scenarios for different client combinations or custom configurations:
-
 ```bash
 # Create a client combination scenario
 molecule/shared/scripts/generate_scenario.sh --type clients --execution geth --consensus lighthouse
 
-# Create a temporary scenario that can be easily cleaned up
+# Create a temporary scenario
 molecule/shared/scripts/generate_scenario.sh --type clients --execution nethermind --consensus lodestar --temp
 
 # Create a custom scenario
 molecule/shared/scripts/generate_scenario.sh --type custom --name high-memory --var memory=8192M --var cpu=2.0
 ```
 
-### Cleaning Up Scenarios
-
-To clean up a scenario after testing:
-
-```bash
-# Clean up a previously created scenario
-molecule/shared/scripts/generate_scenario.sh --cleanup geth-lighthouse
-```
-
 ### Running Tests
-
-To run tests on a specific scenario:
 
 ```bash
 # Run the full test sequence
@@ -86,7 +69,7 @@ molecule verify -s geth-lighthouse
 
 ### Client Combination Scenarios
 
-These scenarios test specific execution and consensus client combinations:
+Test specific execution and consensus client combinations:
 
 ```bash
 # Create a client combination scenario
@@ -94,13 +77,13 @@ molecule/shared/scripts/generate_scenario.sh --type clients --execution geth --c
 ```
 
 Each client scenario includes:
-- Configuration for the specific client combination
+- Client-specific configuration
 - Client-specific verification tests
-- Resource allocation appropriate for the client pair
+- Appropriate resource allocation
 
 ### Custom Scenarios
 
-These scenarios test specific configurations or features:
+Test specific configurations or features:
 
 ```bash
 # Create a custom scenario
@@ -114,11 +97,9 @@ Custom scenarios can test:
 - Monitoring setups
 - Validator configurations
 
-## Advanced Usage
+## Temporary Scenarios
 
-### Temporary Scenarios
-
-For demonstration or quick testing, create temporary scenarios that can be easily cleaned up:
+For quick testing, create temporary scenarios:
 
 ```bash
 # Create a temporary scenario
@@ -126,18 +107,6 @@ molecule/shared/scripts/generate_scenario.sh --type clients --execution geth --c
 
 # Clean up when finished
 molecule/shared/scripts/generate_scenario.sh --cleanup geth-prysm
-```
-
-### Demo Script
-
-The demo script provides a convenient way to create, test, and clean up a scenario in one command:
-
-```bash
-# Run the full process: create, test, clean up
-molecule/shared/scripts/demo_scenario.sh --execution geth --consensus prysm
-
-# Run the process but keep the scenario afterward
-molecule/shared/scripts/demo_scenario.sh -e nethermind -c lodestar --keep
 ```
 
 ## Scenario Structure
@@ -150,61 +119,36 @@ Each scenario directory contains:
 
 ## Best Practices
 
-1. **Keep scenarios minimal**: Only include what's different from the default configuration.
-2. **Use temporary scenarios** for quick tests and demos to avoid cluttering your workspace.
-3. **Clean up after testing** to maintain a clean testing environment.
-4. **Standardize verification** to ensure consistent testing across scenarios.
-5. **Parameterize tests** to test various configurations without duplicating code.
+1. **Keep scenarios minimal**: Only include what differs from the default
+2. **Use temporary scenarios** for quick tests to avoid clutter
+3. **Clean up after testing** to maintain a clean environment
+4. **Standardize verification** for consistent testing
+5. **Parameterize tests** to reduce code duplication
 
 ## Troubleshooting
 
-### Common Issues
-
-#### Molecule Can't Find Scenario
-
-```
-CRITICAL 'molecule/scenario-name/molecule.yml' glob failed. Exiting.
-```
-
-Ensure the scenario directory exists and is correctly structured.
-
-#### Docker Connection Issues
-
-```
-Error while fetching server API version: ('Connection aborted.', FileNotFoundError(2, 'No such file or directory'))
-```
-
-Make sure Docker is running before executing Molecule tests.
-
-#### Python Environment Issues
-
-If you encounter Python module errors, ensure all dependencies are installed:
-
-```bash
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-```
+See [MOLECULE_TROUBLESHOOTING.md](../docs/MOLECULE_TROUBLESHOOTING.md) for detailed guidance.
 
 ## Test Coverage
 
 Our test framework covers:
 
-1. **Client Compatibility**: Testing various execution and consensus client combinations
-2. **Resource Management**: Testing with different resource limits
-3. **Security**: Testing with various security configurations
+1. **Client Compatibility**: Testing client combinations
+2. **Resource Management**: Testing resource limits
+3. **Security**: Testing security configurations
 4. **Backup & Recovery**: Testing backup functionality
 5. **Monitoring**: Testing monitoring implementations
 6. **Validator**: Testing validator node configurations
 
-For detailed information about the verification tests performed in each scenario, see [VERIFICATION_TESTS.md](VERIFICATION_TESTS.md).
-
 ## CI/CD Integration
 
-Molecule tests are integrated with our CI/CD pipeline to ensure consistent testing on all changes:
+Tests are integrated with our CI/CD pipeline:
 
 1. **Pull Request Testing**: Basic scenarios run on all PRs
 2. **Scheduled Testing**: Comprehensive testing runs on a schedule
 3. **Release Testing**: All scenarios tested before releases
+
+For detailed information about testing, see [TESTING.md](../docs/TESTING.md).
 
 ## Contributing New Scenarios
 

@@ -12,21 +12,21 @@
         - jwt_file.stat.mode != '0600'  # Should be readable only by owner
 
     - name: Check if firewall is enabled
-      command: ufw status
+      ansible.builtin.command: ufw status
       register: firewall_status
       changed_when: false
       failed_when: firewall_enabled and "inactive" in firewall_status.stdout
       ignore_errors: true  # May fail on non-Ubuntu systems
 
     - name: Check alternative firewall (firewalld)
-      command: firewall-cmd --state
+      ansible.builtin.command: firewall-cmd --state
       register: firewalld_status
       changed_when: false
       failed_when: firewall_enabled and "running" not in firewalld_status.stdout
       ignore_errors: true  # May fail on non-RedHat systems
 
     - name: Verify required ports are open in UFW
-      command: ufw status
+      ansible.builtin.command: ufw status
       register: ufw_ports
       changed_when: false
       failed_when: >
@@ -44,7 +44,7 @@
         - docker_sock.stat.mode not in ['0660', '0666']  # Should be group readable
 
     - name: Check for exposed sensitive ports
-      command: ss -tulpn
+      ansible.builtin.command: ss -tulpn
       register: open_ports
       changed_when: false
       failed_when: >

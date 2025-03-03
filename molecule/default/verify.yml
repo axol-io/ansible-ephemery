@@ -22,7 +22,7 @@
       failed_when: not jwt_check.stat.exists
 
     - name: Check Docker network exists
-      command: docker network inspect {{ network }}-validator-net
+      ansible.builtin.command: docker network inspect {{ network }}-validator-net
       register: network_check
       changed_when: false
       failed_when: network_check.rc != 0

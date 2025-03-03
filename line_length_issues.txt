@@ -1,0 +1,130 @@
+# YAML Line Length Issues - Mon Mar  3 18:55:23 CET 2025
+# Lines longer than 100 characters
+# Format: FILE:LINE_NUMBER:LENGTH - CONTENT
+
+./tasks/backup.yaml:59:110 -     job: "find {{ ephemery_backup_dir }} -type f -name '*.tar.gz' -mtime +{{ backup_retention_days }} -delete"
+
+./tasks/ephemery.yaml:143:119 -       - "{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:{{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
+
+./tasks/jwt-secret.yaml:42:109 -       echo "{{ '0x' + lookup('password', '/dev/null chars=hexdigits length=64') }}" > templates/jwt_secret.j2
+
+./tasks/monitoring.yaml:104:119 -       - "{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:{{ home_dir }}/config/grafana/agent/grafana-agent.yaml"
+
+./tasks/monitoring.yaml:127:107 -       - "{{ home_dir }}/config/prometheus/prometheus.yaml:{{ home_dir }}/config/prometheus/prometheus.yaml"
+
+./tasks/monitoring.yaml:148:151 -       - "{{ home_dir }}/config/grafana/provisioning/datasources/datasource.yaml:{{ home_dir }}/config/grafana/provisioning/datasources/datasource.yaml"
+
+./meta/main.yaml:5:117 -   description: Playbook to set up and configure Ephemery Node. Includes Grafana Agent, Node Exporter, and Prometheus.
+
+./defaults/alert/disk_space.yaml:12:112 -     summary: Disk space low on {{ $labels.mountpoint }} for {{ $labels.instance }}, {{ $values.B }} percent free
+
+./defaults/alert/crit_disk_space.yaml:12:123 -     summary: Disk space critically low on {{ $labels.mountpoint }} for {{ $labels.instance }}, {{ $values.B }} percent free
+
+./defaults/alert/memory.yaml:12:116 -     summary: Memory usage is dangerously high at {{ humanizePercentage $values.B.Value }} for {{ $labels.instance }}
+
+./host_vars/103.214.23.174.yaml:9:163 - MNEMONIC: "slight fat dust trip mouse visa worth gauge siege disease series black cruel clever pull december cash special blur ivory concert possible inmate laugh"
+
+./molecule/clients/nethermind-teku/verify.yml:10:120 -       ansible.builtin.command: docker ps --filter name={{ network }}-{{ el }} --format '{% raw %}{{.Names}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/clients/nethermind-teku/verify.yml:16:120 -       ansible.builtin.command: docker ps --filter name={{ network }}-{{ cl }} --format '{% raw %}{{.Names}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/clients/nethermind-teku/verify.yml:49:115 -         status_code: [200, 403, 405]  # 403/405 is expected if not authorized, 200 if authorized but invalid params
+
+./molecule/clients/verify.yml:7:117 -       ansible.builtin.command: docker ps --filter name=ephemery-nethermind --format '{% raw %}{{.Names}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/clients/verify.yml:13:111 -       ansible.builtin.command: docker ps --filter name=ephemery-teku --format '{% raw %}{{.Names}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/clients/verify.yml:26:103 -       failed_when: nethermind_health.status != 200 or 'Nethermind' not in nethermind_health.json.result
+
+./molecule/clients/converge.yml:25:106 -       ansible.builtin.command: docker ps --filter name=ephemery --format '{% raw %}{{.Names}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/clients/besu-teku/verify.yml:10:124 -       ansible.builtin.command: docker ps --filter name={{ network }}-{{ el }} --format '{{% raw %}}{{.Names}}{{% endraw %}}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/clients/besu-teku/verify.yml:16:124 -       ansible.builtin.command: docker ps --filter name={{ network }}-{{ cl }} --format '{{% raw %}}{{.Names}}{{% endraw %}}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/shared/cleanup.yml:15:114 -         docker ps -a --filter name={{ network }} --format '{% raw %}{{.Names}}{% endraw %}' | xargs -r docker stop
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/shared/cleanup.yml:16:112 -         docker ps -a --filter name={{ network }} --format '{% raw %}{{.Names}}{% endraw %}' | xargs -r docker rm
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/shared/templates/verify/teku_verify.yml:47:149 -   failed_when: teku_validator_container.stdout == "" and (validator_enabled | default(false) | bool) and (teku_split_process | default(false) | bool)
+
+./molecule/shared/templates/verify/prysm_verify.yml:47:101 -   failed_when: prysm_validator_container.stdout == "" and (validator_enabled | default(false) | bool)
+
+./molecule/shared/templates/verify/validator.yml:32:105 -   shell: docker inspect -f '{% raw %}{{.HostConfig.Memory}}{% endraw %}' {{ network }}_{{ cl }}_validator
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/shared/templates/verify/validator.yml:40:107 -       - validator_memory.stdout | int >= (validator_memory_limit | regex_replace('M$', '') | int * 1000000)
+
+./molecule/shared/templates/verify/validator.yml:43:105 -   when: validator_enabled | bool and validator_memory_limit is defined and validator_memory.stdout != "0"
+
+./molecule/shared/templates/verify/lodestar_verify.yml:47:104 -   failed_when: lodestar_validator_container.stdout == "" and (validator_enabled | default(false) | bool)
+
+./molecule/shared/templates/verify/lighthouse_verify.yml:47:106 -   failed_when: lighthouse_validator_container.stdout == "" and (validator_enabled | default(false) | bool)
+
+./molecule/resource-limits/verify.yml:7:120 -       ansible.builtin.command: docker ps --filter name={{ network }}-{{ el }} --format '{% raw %}{{.Names}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/resource-limits/verify.yml:12:120 -       ansible.builtin.command: docker ps --filter name={{ network }}-{{ cl }} --format '{% raw %}{{.Names}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/resource-limits/verify.yml:17:124 -       ansible.builtin.shell: docker inspect {{ el_container.stdout }} --format='{% raw %}{{.HostConfig.Memory}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/resource-limits/verify.yml:24:124 -       ansible.builtin.shell: docker inspect {{ cl_container.stdout }} --format='{% raw %}{{.HostConfig.Memory}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/resource-limits/verify.yml:33:116 -           - el_memory.stdout | int == (ephemery_docker_memory_limit[:-1] | int * 1024 * 1024 * el_memory_percentage)
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/resource-limits/verify.yml:40:116 -           - cl_memory.stdout | int == (ephemery_docker_memory_limit[:-1] | int * 1024 * 1024 * cl_memory_percentage)
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/resource-limits/verify.yml:45:126 -       ansible.builtin.shell: docker inspect {{ el_container.stdout }} --format='{% raw %}{{.HostConfig.NanoCpus}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/resource-limits/verify.yml:51:126 -       ansible.builtin.shell: docker inspect {{ cl_container.stdout }} --format='{% raw %}{{.HostConfig.NanoCpus}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/resource-limits/verify.yml:59:123 -         docker stats {{ el_container.stdout }} --no-stream --format "{% raw %}{{.MemUsage}}{% endraw %}" | awk '{print $1}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/resource-limits/verify.yml:68:123 -         docker stats {{ cl_container.stdout }} --no-stream --format "{% raw %}{{.MemUsage}}{% endraw %}" | awk '{print $1}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/resource-limits/verify.yml:88:133 -           - (el_memory.stdout | float) / ((el_memory.stdout | float) + (cl_memory.stdout | float)) | round(1) == el_memory_percentage
+
+./molecule/resource-limits/verify.yml:89:138 -         fail_msg: "Memory allocation ratio is not correct (should be {{ el_memory_percentage * 100 }}%/{{ cl_memory_percentage * 100 }}%)"
+
+./molecule/cleanup.yml:12:114 -         docker ps -a --filter name={{ network }} --format '{% raw %}{{.Names}}{% endraw %}' | xargs -r docker stop
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/cleanup.yml:13:112 -         docker ps -a --filter name={{ network }} --format '{% raw %}{{.Names}}{% endraw %}' | xargs -r docker rm
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/monitoring/verify.yml:7:108 -       ansible.builtin.command: docker ps --filter name=Prometheus --format '{% raw %}{{.Names}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/monitoring/verify.yml:13:105 -       ansible.builtin.command: docker ps --filter name=Grafana --format '{% raw %}{{.Names}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/monitoring/verify.yml:19:111 -       ansible.builtin.command: docker ps --filter name=Grafana-Agent --format '{% raw %}{{.Names}}{% endraw %}'
+  - Consider breaking command into multiple lines using YAML folded style (>)
+
+./molecule/monitoring/verify.yml:51:123 -           - prometheus_targets.json.data.activeTargets | selectattr('labels.job', 'search', 'ethereum') | list | length > 0
+
+./molecule/monitoring/verify.yml:57:104 -         url: http://localhost:{{ prometheus_port }}/api/v1/query?query=container_cpu_usage_seconds_total
+
+./molecule/monitoring/verify.yml:60:102 -       failed_when: container_metrics.status != 200 or container_metrics.json.data.result | length == 0
+
+./molecule/backup/verify.yml:31:109 -       ansible.builtin.shell: find {{ ephemery_backup_dir }} -name "ephemery_backup_*.tar.gz" -type f -mmin -5
+  - Consider breaking command into multiple lines using YAML folded style (>)
+

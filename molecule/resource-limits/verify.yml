@@ -4,24 +4,24 @@
   become: true
   tasks:
     - name: Get execution client container name
-      command: docker ps --filter name={{ network }}-{{ el }} --format '{% raw %}{{.Names}}{% endraw %}'
+      ansible.builtin.command: docker ps --filter name={{ network }}-{{ el }} --format '{% raw %}{{.Names}}{% endraw %}'
       register: el_container
       changed_when: false
 
     - name: Get consensus client container name
-      command: docker ps --filter name={{ network }}-{{ cl }} --format '{% raw %}{{.Names}}{% endraw %}'
+      ansible.builtin.command: docker ps --filter name={{ network }}-{{ cl }} --format '{% raw %}{{.Names}}{% endraw %}'
       register: cl_container
       changed_when: false
 
     - name: Check execution client memory limits
-      shell: docker inspect {{ el_container.stdout }} --format='{% raw %}{{.HostConfig.Memory}}{% endraw %}'
+      ansible.builtin.shell: docker inspect {{ el_container.stdout }} --format='{% raw %}{{.HostConfig.Memory}}{% endraw %}'
       register: el_memory
       changed_when: false
       failed_when: el_memory.stdout | int == 0
       when: el_container.stdout != ""
 
     - name: Check consensus client memory limits
-      shell: docker inspect {{ cl_container.stdout }} --format='{% raw %}{{.HostConfig.Memory}}{% endraw %}'
+      ansible.builtin.shell: docker inspect {{ cl_container.stdout }} --format='{% raw %}{{.HostConfig.Memory}}{% endraw %}'
       register: cl_memory
       changed_when: false
       failed_when: cl_memory.stdout | int == 0
@@ -42,20 +42,20 @@
       when: cl_container.stdout != "" and cl_memory is defined
 
     - name: Check CPU limits for execution client
-      shell: docker inspect {{ el_container.stdout }} --format='{% raw %}{{.HostConfig.NanoCpus}}{% endraw %}'
+      ansible.builtin.shell: docker inspect {{ el_container.stdout }} --format='{% raw %}{{.HostConfig.NanoCpus}}{% endraw %}'
       register: el_cpu
       changed_when: false
       when: el_container.stdout != ""
 
     - name: Check CPU limits for consensus client
-      shell: docker inspect {{ cl_container.stdout }} --format='{% raw %}{{.HostConfig.NanoCpus}}{% endraw %}'
+      ansible.builtin.shell: docker inspect {{ cl_container.stdout }} --format='{% raw %}{{.HostConfig.NanoCpus}}{% endraw %}'
       register: cl_cpu
       changed_when: false
       when: cl_container.stdout != ""
 
     # Adding useful memory usage checks from verify.yml
     - name: Verify memory usage is within limits for execution client
-      shell: |
+      ansible.builtin.shell: |
         docker stats {{ el_container.stdout }} --no-stream --format "{% raw %}{{.MemUsage}}{% endraw %}" | awk '{print $1}'
       register: el_memory_usage
       changed_when: false
@@ -64,7 +64,7 @@
       when: el_container.stdout != ""
 
     - name: Verify memory usage is within limits for consensus client
-      shell: |
+      ansible.builtin.shell: |
         docker stats {{ cl_container.stdout }} --no-stream --format "{% raw %}{{.MemUsage}}{% endraw %}" | awk '{print $1}'
       register: cl_memory_usage
       changed_when: false

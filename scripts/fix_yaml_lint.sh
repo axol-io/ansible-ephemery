@@ -18,7 +18,7 @@ for file in $yaml_files; do
   if [[ "$file" == *".git"* ]]; then
     continue
   fi
-  
+
   # Check if file starts with --- and add if missing
   if ! grep -q "^---" "$file"; then
     echo "Adding document start marker to $file"
@@ -32,13 +32,13 @@ for file in $yaml_files; do
   if [[ "$file" == *".git"* ]]; then
     continue
   fi
-  
+
   echo "Normalizing truthy values in $file"
   # Replace yes/Yes/YES with true
   sed -i '' 's/: yes$/: true/g' "$file"
   sed -i '' 's/: Yes$/: true/g' "$file"
   sed -i '' 's/: YES$/: true/g' "$file"
-  
+
   # Replace no/No/NO with false
   sed -i '' 's/: no$/: false/g' "$file"
   sed -i '' 's/: No$/: false/g' "$file"
@@ -51,11 +51,11 @@ for file in $yaml_files; do
   if [[ "$file" == *".git"* ]]; then
     continue
   fi
-  
+
   echo "Removing trailing whitespace in $file"
   sed -i '' 's/[[:space:]]*$//' "$file"
 done
 
 echo "YAML linting fixes completed!"
 echo "Note: This script addresses common issues but manual review may still be needed."
-echo "For line length issues, consider breaking long lines manually." 
+echo "For line length issues, consider breaking long lines manually."

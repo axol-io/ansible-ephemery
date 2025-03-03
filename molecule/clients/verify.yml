@@ -4,13 +4,13 @@
   become: true
   tasks:
     - name: Check if Nethermind container is running
-      command: docker ps --filter name=ephemery-nethermind --format '{% raw %}{{.Names}}{% endraw %}'
+      ansible.builtin.command: docker ps --filter name=ephemery-nethermind --format '{% raw %}{{.Names}}{% endraw %}'
       register: nethermind_container
       changed_when: false
       failed_when: nethermind_container.stdout == ""
 
     - name: Check if Teku container is running
-      command: docker ps --filter name=ephemery-teku --format '{% raw %}{{.Names}}{% endraw %}'
+      ansible.builtin.command: docker ps --filter name=ephemery-teku --format '{% raw %}{{.Names}}{% endraw %}'
       register: teku_container
       changed_when: false
       failed_when: teku_container.stdout == ""
@@ -38,7 +38,7 @@
       ignore_errors: true  # Sometimes takes longer to start
 
     - name: Verify JWT authentication is working
-      shell: |
+      ansible.builtin.shell: |
         curl -s -X POST \
           -H "Content-Type: application/json" \
           --data '{"jsonrpc":"2.0","method":"engine_getPayloadV1","params":[],"id":1}' \
@@ -48,21 +48,21 @@
       failed_when: '"Unauthorized" not in jwt_check.stdout'  # Should fail without JWT
 
     - name: Check client memory limits
-      shell: |
+      ansible.builtin.shell: |
         docker inspect ephemery-nethermind --format='{% raw %}{{.HostConfig.Memory}}{% endraw %}'
       register: nethermind_memory
       changed_when: false
       failed_when: nethermind_memory.stdout | int < 3000000000  # Should be close to 3GB
 
     - name: Check Teku memory limits
-      shell: |
+      ansible.builtin.shell: |
         docker inspect ephemery-teku --format='{% raw %}{{.HostConfig.Memory}}{% endraw %}'
       register: teku_memory
       changed_when: false
       failed_when: teku_memory.stdout | int < 3000000000  # Should be close to 3GB
 
     - name: Verify client logs for errors
-      shell: |
+      ansible.builtin.shell: |
         docker logs ephemery-nethermind 2>&1 | grep -i "error\|exception\|fatal" | wc -l
       register: error_count
       changed_when: false

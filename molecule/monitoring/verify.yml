@@ -4,19 +4,19 @@
   become: true
   tasks:
     - name: Check if Prometheus container is running
-      command: docker ps --filter name=Prometheus --format '{% raw %}{{.Names}}{% endraw %}'
+      ansible.builtin.command: docker ps --filter name=Prometheus --format '{% raw %}{{.Names}}{% endraw %}'
       register: prometheus_container
       changed_when: false
       failed_when: prometheus_container.stdout == ""
 
     - name: Check if Grafana container is running
-      command: docker ps --filter name=Grafana --format '{% raw %}{{.Names}}{% endraw %}'
+      ansible.builtin.command: docker ps --filter name=Grafana --format '{% raw %}{{.Names}}{% endraw %}'
       register: grafana_container
       changed_when: false
       failed_when: grafana_container.stdout == ""
 
     - name: Check if Grafana Agent container is running
-      command: docker ps --filter name=Grafana-Agent --format '{% raw %}{{.Names}}{% endraw %}'
+      ansible.builtin.command: docker ps --filter name=Grafana-Agent --format '{% raw %}{{.Names}}{% endraw %}'
       register: agent_container
       changed_when: false
       failed_when: agent_container.stdout == ""

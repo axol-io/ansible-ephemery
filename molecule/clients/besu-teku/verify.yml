@@ -7,12 +7,12 @@
     cl: teku
   tasks:
     - name: Check if Besu container is running
-      command: docker ps --filter name={{ network }}-{{ el }} --format '{{% raw %}}{{.Names}}{{% endraw %}}'
+      ansible.builtin.command: docker ps --filter name={{ network }}-{{ el }} --format '{{% raw %}}{{.Names}}{{% endraw %}}'
       register: besu_container
       changed_when: false
       failed_when: besu_container.stdout == ""
 
     - name: Check if Teku container is running
-      command: docker ps --filter name={{ network }}-{{ cl }} --format '{{% raw %}}{{.Names}}{{% endraw %}}'
+      ansible.builtin.command: docker ps --filter name={{ network }}-{{ cl }} --format '{{% raw %}}{{.Names}}{{% endraw %}}'
       register: teku_container
       changed_when: false

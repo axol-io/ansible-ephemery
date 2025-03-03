@@ -6,15 +6,22 @@ dependency:
   name: galaxy
 driver:
   name: docker
+  options:
+    docker_host: "unix:///Users/droo/.docker/run/docker.sock"
+    # Alternate options if the above doesn't work:
+    # docker_host: "tcp://localhost:2375"
+    # docker_host: "unix:///Users/droo/Library/Containers/com.docker.docker/Data/docker-cli.sock"
 platforms:
   - name: ethereum-node
-    image: ubuntu:22.04
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
     pre_build_image: true
     privileged: true
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      # Use the Docker socket path that we verified works
+      - /Users/droo/.docker/run/docker.sock:/var/run/docker.sock
     command: "/lib/systemd/systemd"
+    cgroupns_mode: host
 provisioner:
   name: ansible
   inventory:

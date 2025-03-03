@@ -9,7 +9,7 @@
     - block:
         - name: Load host-specific variables
           ansible.builtin.include_vars:
-            file: "{{ playbook_dir }}/../host_vars/{{ inventory_hostname }}.yaml"
+            ansible.builtin.file: "{{ playbook_dir }}/../host_vars/{{ inventory_hostname }}.yaml"
           tags: [always]
           ignore_errors: true
       rescue:
@@ -21,7 +21,7 @@
     - block:
         - name: Load secrets (if available)
           ansible.builtin.include_vars:
-            file: "{{ playbook_dir }}/../host_vars/secrets.yaml"
+            ansible.builtin.file: "{{ playbook_dir }}/../host_vars/secrets.yaml"
           tags: [always, secrets]
       rescue:
         - name: Handle missing secrets
@@ -30,54 +30,47 @@
           tags: [always]
 
     - name: Include JWT secret tasks
-      ansible.builtin.import_tasks:
-        file: "{{ playbook_dir }}/../tasks/jwt-secret.yaml"
+      ansible.builtin.import_tasks: "{{ playbook_dir }}/../tasks/jwt-secret.yaml"
       tags:
         - jwt
         - security
         - always
 
     - name: Configure firewall
-      ansible.builtin.import_tasks:
-        file: "{{ playbook_dir }}/../tasks/firewall.yaml"
+      ansible.builtin.import_tasks: "{{ playbook_dir }}/../tasks/firewall.yaml"
       when: firewall_enabled | default(true) | bool
       tags:
         - firewall
         - security
 
     - name: Include ephemery tasks
-      ansible.builtin.import_tasks:
-        file: "{{ playbook_dir }}/../tasks/ephemery.yaml"
+      ansible.builtin.import_tasks: "{{ playbook_dir }}/../tasks/ephemery.yaml"
       tags:
         - ephemery
         - always
 
     - name: Setup validator if enabled
-      ansible.builtin.import_tasks:
-        file: "{{ playbook_dir }}/../tasks/validator.yaml"
+      ansible.builtin.import_tasks: "{{ playbook_dir }}/../tasks/validator.yaml"
       when: validator_enabled | default(false) | bool
       tags:
         - validator
 
     - name: Include monitoring tasks
-      ansible.builtin.import_tasks:
-        file: "{{ playbook_dir }}/../tasks/monitoring.yaml"
+      ansible.builtin.import_tasks: "{{ playbook_dir }}/../tasks/monitoring.yaml"
       when: monitoring_enabled | default(false) | bool
       tags:
         - monitoring
         - always
 
     - name: Install Cadvisor
-      ansible.builtin.import_tasks:
-        file: "{{ playbook_dir }}/../tasks/cadvisor.yaml"
+      ansible.builtin.import_tasks: "{{ playbook_dir }}/../tasks/cadvisor.yaml"
       when: cadvisor_enabled | default(true) | bool
       tags:
         - cadvisor
         - monitoring
 
     - name: Setup automatic backups
-      ansible.builtin.import_tasks:
-        file: "{{ playbook_dir }}/../tasks/backup.yaml"
+      ansible.builtin.import_tasks: "{{ playbook_dir }}/../tasks/backup.yaml"
       when: backup_enabled | default(true) | bool
       tags:
         - backup

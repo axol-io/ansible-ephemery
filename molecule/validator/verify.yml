@@ -7,11 +7,11 @@
   tasks:
     # Include common verification tasks
     - name: Include common verification tasks
-      include_tasks: ../shared/templates/verify/common.yaml
+      ansible.builtin.include_tasks: ../shared/templates/verify/common.yaml
 
     # Include validator-specific verification tasks
     - name: Include validator-specific verification tasks
-      include_tasks: ../shared/templates/verify/validator.yaml
+      ansible.builtin.include_tasks: ../shared/templates/verify/validator.yaml
 
     # Additional validator-specific verification tasks
     - name: Verify validator API is responding

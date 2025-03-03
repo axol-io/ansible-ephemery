@@ -1,77 +1,73 @@
 # Testing Framework
 
-This document provides detailed information about the testing framework used in the ansible-ephemery project.
+This document provides information about the testing framework used in the ansible-ephemery project.
 
 ## Overview
 
-The ansible-ephemery project uses [Molecule](https://molecule.readthedocs.io/) for testing Ansible roles. Our testing framework is designed to:
+The ansible-ephemery project uses [Molecule](https://molecule.readthedocs.io/) for testing. The framework:
 
-1. Verify functionality across different client combinations
-2. Test specific features like backup, monitoring, and security
-3. Validate resource constraints and performance parameters
-4. Ensure consistent behavior across different environments
+1. Verifies functionality across different client combinations
+2. Tests specific features (backup, monitoring, security)
+3. Validates resource constraints and performance
+4. Ensures consistent behavior across environments
 
 ## Prerequisites
 
-To run the tests, you need:
-
 - Python 3.11+ (recommended)
-- Docker running on your local machine
+- Docker running on the local machine
 - Required Python packages (install with `pip install -r requirements.txt -r requirements-dev.txt`)
 
 ## Test Organization
 
-Our tests are organized into scenarios within the `molecule/` directory:
+Tests are organized into scenarios within the `molecule/` directory:
 
 ```
 molecule/
-├── [client-scenarios]/   # Generated client combination scenarios
-├── clients/             # Client combination templates
-├── default/             # Default scenario testing basic functionality
-├── backup/              # Tests for backup functionality
-├── monitoring/          # Tests for monitoring functionality
-├── resource-limits/     # Tests for resource limitation
-├── security/            # Tests for security configurations
-├── validator/           # Tests for validator functionality
-└── shared/              # Shared resources for all scenarios
+├── [client-scenarios]/   # Client combination scenarios
+├── clients/              # Client combination templates
+├── default/              # Default scenario
+├── backup/               # Backup functionality tests
+├── monitoring/           # Monitoring functionality tests
+├── resource-limits/      # Resource limitation tests
+├── security/             # Security configuration tests
+├── validator/            # Validator functionality tests
+└── shared/               # Shared resources
 ```
 
 ## Running Tests
 
-### Quick Demo Testing
-
-For a quick demonstration of the testing framework, use the demo script:
+### Quick Demo
 
 ```bash
-# Create a scenario, run tests, and clean up automatically
+# Create, test, and clean up automatically
 molecule/shared/scripts/demo_scenario.sh --execution geth --consensus prysm
 
-# Create and test a scenario, but keep it after testing
+# Keep the scenario after testing
 molecule/shared/scripts/demo_scenario.sh -e nethermind -c lodestar --keep
 ```
 
 ### Creating and Running Specific Scenarios
 
-To create a specific test scenario:
+To create a test scenario:
 
 ```bash
-# Create a client combination scenario
+# Client combination scenario
 molecule/shared/scripts/generate_scenario.sh --type clients --execution geth --consensus lighthouse
 
-# Create a custom scenario
+# Custom scenario
 molecule/shared/scripts/generate_scenario.sh --type custom --name high-memory --var memory=8192M --var cpu=2.0
 ```
 
-To run a specific scenario:
+To run a scenario:
 
 ```bash
-# Run the full test sequence
+# Run full test sequence
 molecule test -s geth-lighthouse
 
-# Run only the converge step (for development)
+# Run only converge step
 molecule converge -s geth-lighthouse
 
-# Run only the verify step
+# Run only verify step
 molecule verify -s geth-lighthouse
 ```
 
@@ -80,7 +76,7 @@ molecule verify -s geth-lighthouse
 For testing without cluttering your workspace:
 
 ```bash
-# Create a temporary scenario
+# Create temporary scenario
 molecule/shared/scripts/generate_scenario.sh --type clients --execution geth --consensus prysm --temp
 
 # Clean up when finished
@@ -89,11 +85,11 @@ molecule/shared/scripts/generate_scenario.sh --cleanup geth-prysm
 
 ## Test Lifecycle
 
-Each Molecule test goes through the following phases:
+Each Molecule test progresses through these phases:
 
 1. **Dependency**: Pull required dependencies
 2. **Create**: Create test infrastructure (Docker containers)
-3. **Prepare**: Prepare the infrastructure for testing
+3. **Prepare**: Prepare infrastructure for testing
 4. **Converge**: Apply the Ansible role
 5. **Verify**: Run verification tests
 6. **Cleanup**: Clean up test resources

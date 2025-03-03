@@ -22,6 +22,6 @@
 
     # Check client availability
     - name: Check if clients are running
-      command: docker ps --filter name=ephemery --format '{% raw %}{{.Names}}{% endraw %}'
+      ansible.builtin.command: docker ps --filter name=ephemery --format '{% raw %}{{.Names}}{% endraw %}'
       register: client_containers
       changed_when: false

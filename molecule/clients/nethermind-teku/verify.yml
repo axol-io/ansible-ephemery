@@ -7,13 +7,13 @@
     cl: teku
   tasks:
     - name: Check if Nethermind container is running
-      command: docker ps --filter name={{ network }}-{{ el }} --format '{% raw %}{{.Names}}{% endraw %}'
+      ansible.builtin.command: docker ps --filter name={{ network }}-{{ el }} --format '{% raw %}{{.Names}}{% endraw %}'
       register: nethermind_container
       changed_when: false
       failed_when: nethermind_container.stdout == ""
 
     - name: Check if Teku container is running
-      command: docker ps --filter name={{ network }}-{{ cl }} --format '{% raw %}{{.Names}}{% endraw %}'
+      ansible.builtin.command: docker ps --filter name={{ network }}-{{ cl }} --format '{% raw %}{{.Names}}{% endraw %}'
       register: teku_container
       changed_when: false
       failed_when: teku_container.stdout == ""

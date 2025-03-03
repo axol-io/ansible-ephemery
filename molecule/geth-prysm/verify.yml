@@ -3,13 +3,13 @@
   hosts: all
   tasks:
     - name: Check if execution client is running
-      command: systemctl status ephemery-geth
+      ansible.builtin.command: systemctl status ephemery-geth
       register: el_status
       changed_when: false
       failed_when: el_status.rc != 0
 
     - name: Check if consensus client is running
-      command: systemctl status ephemery-prysm
+      ansible.builtin.command: systemctl status ephemery-prysm
       register: cl_status
       changed_when: false
       failed_when: cl_status.rc != 0

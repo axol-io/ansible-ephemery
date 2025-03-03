@@ -1,34 +1,34 @@
 ---
 - name: Create directory structure for cadvisor
-  file:
-    path: "{{ home_dir }}/cadvisor"
+  ansible.builtin.file:
+    path: '{{ home_dir }}/cadvisor'
     state: directory
-    owner: "{{ ansible_user }}"
-    mode: "0755"
+    owner: '{{ ansible_user }}'
+    mode: '0755'
 
 - name: Install cadvisor
   community.docker.docker_container:
     name: cadvisor
     image: google/cadvisor:v0.47.0
-    state: "{{ 'started' if cadvisor_enabled else 'absent' }}"
+    state: '{{ "started" if cadvisor_enabled else "absent" }}'
     restart_policy: unless-stopped
     privileged: true
     ports:
-      - "{{ cadvisor_port }}:{{ cadvisor_port }}"
+      - '{{ cadvisor_port }}:{{ cadvisor_port }}'
     volumes:
-      - "/dev/disk/:/dev/disk:ro"
-      - "/dev/kmsg"
-      - "/sys:/sys:ro"
-      - "/var/run:/var/run:ro"
-      - "{{ home_dir }}/cadvisor:/rootfs:ro"
+      - /dev/disk/:/dev/disk:ro
+      - /dev/kmsg
+      - /sys:/sys:ro
+      - /var/run:/var/run:ro
+      - '{{ home_dir }}/cadvisor:/rootfs:ro'
     command:
-      - "--port={{ cadvisor_port }}"
-      - "--docker_only=true"
-      - "--enable_metrics=process,memory,network,oom_event,disk"
-      - "--store_container_labels=false"
-      - "--v=2"
+      - --port={{ cadvisor_port }}
+      - --docker_only=true
+      - --enable_metrics=process,memory,network,oom_event,disk
+      - --store_container_labels=false
+      - --v=2
     networks_cli_compatible: true
     networks:
-      - name: "{{ network }}-validator-net"
+      - name: '{{ network }}-validator-net'
   become: true
-  become_user: "{{ ansible_user }}"
+  become_user: '{{ ansible_user }}'

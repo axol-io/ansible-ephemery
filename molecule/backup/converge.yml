@@ -23,5 +23,5 @@
 
     # Run backup script manually to test functionality
     - name: Execute backup script for testing
-      command: /root/ephemery/scripts/backup.sh
+      ansible.builtin.command: /root/ephemery/scripts/backup.sh
       changed_when: true

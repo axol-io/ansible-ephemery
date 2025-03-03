@@ -78,7 +78,7 @@
       --authrpc.port=8551
       --authrpc.vhosts=*
       --authrpc.jwtsecret=/execution-auth.jwt
-  when: not client_config.stat.exists|default(false)
+  when: not client_config.stat.exists| default(false)
 
 - name: 🚀 Start Consensus Client with generic configuration
   community.docker.docker_container:
@@ -127,7 +127,7 @@
       {% else %}
       --datadir=/data
       {% endif %}
-  when: not client_config.stat.exists|default(false)
+  when: not client_config.stat.exists| default(false)
 
 - name: 📊 Start Grafana agent
   community.docker.docker_container:

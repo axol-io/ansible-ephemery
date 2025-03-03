@@ -2,6 +2,11 @@
 - name: Prepare
   hosts: all
   tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+
     - name: Install required packages
       apt:
         name:
@@ -12,8 +17,17 @@
           - python3-pip
           - docker.io
           - jq
+          - iptables  # Required for Docker in some environments
         state: present
-        update_cache: true
+        update_cache: false
+
+    - name: Ensure pip is installed
+      pip:
+        name:
+          - pip
+          - setuptools
+          - docker
+        state: latest
 
     - name: Ensure Docker service is running
       service:

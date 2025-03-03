@@ -7,15 +7,15 @@
   tasks:
     # Include common verification tasks
     - name: Include common verification tasks
-      include_tasks: ../shared/templates/verify/common.yaml
+      ansible.builtin.include_tasks: ../shared/templates/verify/common.yaml
 
     # Include backup-specific verification tasks
     - name: Include backup-specific verification tasks
-      include_tasks: ../shared/templates/verify/backup.yaml
+      ansible.builtin.include_tasks: ../shared/templates/verify/backup.yaml
 
     # Additional backup-specific verification tasks
     - name: Run backup script
-      command: "{{ ephemery_scripts_dir }}/backup.sh"
+      ansible.builtin.command: "{{ ephemery_scripts_dir }}/backup.sh"
       register: backup_run
       changed_when: false
       when: backup_enabled | bool
@@ -28,7 +28,7 @@
       when: backup_enabled | bool and backup_run is defined
 
     - name: Check if backup file was created
-      shell: find {{ ephemery_backup_dir }} -name "ephemery_backup_*.tar.gz" -type f -mmin -5
+      ansible.builtin.shell: find {{ ephemery_backup_dir }} -name "ephemery_backup_*.tar.gz" -type f -mmin -5
       register: recent_backups
       changed_when: false
       when: backup_enabled | bool and backup_run is defined and backup_run.rc == 0
@@ -54,7 +54,7 @@
       when: backup_enabled | bool and backup_file_perms is defined
 
     - name: Check backup cron job
-      command: crontab -l
+      ansible.builtin.command: crontab -l
       register: cron_jobs
       changed_when: false
       failed_when: backup_enabled and "Ephemery backup" not in cron_jobs.stdout
