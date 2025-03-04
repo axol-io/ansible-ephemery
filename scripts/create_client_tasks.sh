@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Script to generate tasks for all client combinations in tasks/clients directory
 
 # Define clients
@@ -18,17 +18,22 @@ LODESTAR_VERSION="v1.13.0"
 
 # Create tasks for a given client combination
 create_client_tasks() {
-  local el=$1
-  local cl=$2
-  local dir="tasks/clients/${el}-${cl}"
+  el="$1"
+  cl="$2"
+  dir="tasks/clients/${el}-${cl}"
 
   # Capitalize first letter of client names for comments
-  el_cap="$(echo ${el:0:1} | tr '[:lower:]' '[:upper:]')${el:1}"
-  cl_cap="$(echo ${cl:0:1} | tr '[:lower:]' '[:upper:]')${cl:1}"
+  first_char=$(echo "$el" | cut -c1 | tr '[:lower:]' '[:upper:]')
+  rest_chars=$(echo "$el" | cut -c2-)
+  el_cap="${first_char}${rest_chars}"
+
+  first_char=$(echo "$cl" | cut -c1 | tr '[:lower:]' '[:upper:]')
+  rest_chars=$(echo "$cl" | cut -c2-)
+  cl_cap="${first_char}${rest_chars}"
 
   # Get versions based on client
-  local el_version
-  local cl_version
+  el_version=""
+  cl_version=""
 
   case "$el" in
     geth) el_version=$GETH_VERSION ;;
@@ -45,7 +50,7 @@ create_client_tasks() {
     lodestar) cl_version=$LODESTAR_VERSION ;;
   esac
 
-  echo "Creating tasks for $dir"
+  echo "Creating tasks for $dir (EL: $el v$el_version, CL: $cl v$cl_version)"
 
   # Create directory if it doesn't exist
   mkdir -p "$dir"
