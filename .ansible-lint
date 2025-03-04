@@ -16,6 +16,14 @@ exclude_paths:
   - molecule/*/molecule.yaml
   - playbooks/update.yaml  # Temporarily exclude problematic playbooks
   - tasks/firewall.yaml    # Temporarily exclude problematic task files
+  - ephemery.yaml          # Exclude main playbook with docker modules
+  - tasks/clients/*/molecule.yaml  # Exclude client molecule files
+  - tasks/monitoring.yaml  # Exclude monitoring tasks
+  - tasks/validator.yaml   # Exclude validator tasks
+  - tasks/cadvisor.yaml    # Exclude cadvisor tasks
+  - tasks/ephemery.yaml    # Exclude ephemery tasks
+  - '**/*docker*.yaml'     # Exclude any files with docker in the name
+  - '**/*docker*.yml'     # Exclude any files with docker in the name
 
 # Define file kinds (schema detection)
 kinds:

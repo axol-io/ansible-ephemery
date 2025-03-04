@@ -38,6 +38,12 @@ fi
 echo "Installing Ansible collections from requirements.yaml to $COLLECTIONS_DIR..."
 ANSIBLE_COLLECTIONS_PATH="$COLLECTIONS_DIR" ansible-galaxy collection install -r "$REPO_ROOT/requirements.yaml" -f
 
+# Ensure community.docker is installed (try direct install if requirements.yaml failed)
+if ! ls -la "$COLLECTIONS_DIR/ansible_collections/community/docker/" &>/dev/null; then
+    echo "community.docker not found after requirements.yaml install, trying direct install..."
+    ANSIBLE_COLLECTIONS_PATH="$COLLECTIONS_DIR" ansible-galaxy collection install community.docker:4.4.0 -f
+fi
+
 echo "Collections installed successfully at $COLLECTIONS_DIR"
 
 # Verify installations

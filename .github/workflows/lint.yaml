@@ -10,6 +10,8 @@ jobs:
   pre-commit:
     name: pre-commit
     runs-on: ubuntu-latest
+    env:
+      ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     steps:
       - uses: actions/checkout@v4
@@ -30,19 +32,36 @@ jobs:
           pip install ansible-lint
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-          chmod +x scripts/install-collections.sh
-          ./scripts/install-collections.sh
+
+      - name: Install and verify Ansible collections
+        run: |
+          mkdir -p ${{ github.workspace }}/collections
+          echo "ANSIBLE_COLLECTIONS_PATH=${{ github.workspace }}/collections" >> $GITHUB_ENV
+          ansible-galaxy collection install -r requirements.yaml -p ${{ github.workspace }}/collections --force
+
+          # Verify community.docker collection was installed correctly
+          if ls -la "${{ github.workspace }}/collections/ansible_collections/community/docker/" 2>/dev/null; then
+            echo "✅ community.docker installed successfully"
+          else
+            echo "❌ community.docker NOT installed - trying alternate method"
+            ansible-galaxy collection install community.docker:4.4.0 -p ${{ github.workspace }}/collections
+          fi
+
+          # List collections for debugging
+          find ${{ github.workspace }}/collections -type d -name "docker" | grep -v '__pycache__'
 
       - name: Install pre-commit
         run: pip3 install pre-commit
 
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure --color always
-        env:
-          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
       - name: Run ansible-lint directly
         if: always()  # Run even if pre-commit fails
-        run: ansible-lint
-        env:
-          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+        run: |
+          # Debug info
+          echo "Using ANSIBLE_COLLECTIONS_PATH: $ANSIBLE_COLLECTIONS_PATH"
+          ls -la $ANSIBLE_COLLECTIONS_PATH/ansible_collections/community || echo "community dir not found"
+
+          # Run ansible-lint with configuration file
+          ansible-lint --config-file .ansible-lint

@@ -47,7 +47,7 @@ repos:
       - id: ansible-lint
         name: Ansible Lint
         description: Run ansible-lint on Ansible files
-        entry: bash -c 'ANSIBLE_COLLECTIONS_PATH="$(git rev-parse --show-toplevel)/collections:$ANSIBLE_COLLECTIONS_PATH" ansible-lint'
+        entry: bash -c 'ANSIBLE_COLLECTIONS_PATH="$(git rev-parse --show-toplevel)/collections:$ANSIBLE_COLLECTIONS_PATH" ansible-lint --config-file .ansible-lint'
         language: system
         files: \.(yaml|yml)$
         additional_dependencies: []
