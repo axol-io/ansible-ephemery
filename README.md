@@ -39,8 +39,9 @@ ansible-galaxy collection install -r requirements.yaml
 pip install -r requirements.txt
 
 # Configure inventory
-cp inventory.yaml.example inventory.yaml
+cp example-inventory.yaml inventory.yaml
 # Edit inventory.yaml with your target hosts and configuration
+# .gitignore is setup to help prevent leaking secrets
 
 # Run the playbook
 ansible-playbook -i inventory.yaml ephemery.yaml
@@ -53,7 +54,7 @@ The playbook provides extensive configuration options:
 ### Basic Configuration
 
 ```yaml
-# Client selection
+# Example Client selection
 el: "geth"             # Execution client
 cl: "lighthouse"       # Consensus client
 
@@ -89,7 +90,7 @@ validator_memory_percentage: 0.1  # 10% for validator (if enabled)
 
 ### Validator Configuration
 
-The playbook supports two methods for setting up validators:
+The playbook supports multiple methods for setting up validators:
 
 #### 1. Automatic Key Generation
 
@@ -100,9 +101,25 @@ By default, if you enable the validator without specifying keys, the playbook wi
 validator_enabled: true
 ```
 
-#### 2. Using Existing Validator Keys
+#### 2. Using Compressed Validator Keys (Recommended)
 
-To use your own pre-generated validator keys:
+For efficient deployment, you can use compressed archives of your validator keys:
+
+```yaml
+# In host_vars/your-node.yaml
+validator_enabled: true
+```
+
+Then place your compressed keys in *one* of these locations:
+
+- `files/validator_keys/validator_keys.zip`
+- `files/validator_keys/validator_keys.tar.gz`
+
+This approach is significantly faster and more efficient for large numbers of validators.
+
+#### 3. Using Individual Validator Key Files
+
+For more granular control, you can use individual key files:
 
 ```yaml
 # In host_vars/your-node.yaml
@@ -195,6 +212,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - [CI/CD](docs/CI_CD.md)
 - [Client Combinations](docs/CLIENT_COMBINATIONS.md)
 - [Coding Standards](docs/CODING_STANDARDS.md)
+- [Validator Setup](docs/VALIDATOR_SETUP.md)
 
 ## Additional Resources
 

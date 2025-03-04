@@ -6,10 +6,13 @@ This guide explains how to set up and configure validators for the Ephemery test
 
 Validators are a crucial component of the Ethereum consensus mechanism. In the Ephemery testnet, validators function similarly to mainnet validators but operate in a more experimental, temporary environment.
 
-The playbook provides two main approaches for setting up validators:
+The playbook provides three main approaches for setting up validators:
 
 1. Automatic key generation (default)
-2. Using pre-generated validator keys (custom)
+2. Using compressed validator keys (recommended for many validators)
+3. Using individual pre-generated validator key files
+
+All methods include built-in protections against slashing by ensuring validators are properly stopped before key deployments.
 
 ## Validator Configuration Options
 
@@ -26,9 +29,39 @@ validator_enabled: true
 
 If you don't specify custom keys, the playbook will automatically generate validator keys for you. This is suitable for testing and development purposes.
 
-### Using Custom Validator Keys
+### Using Compressed Validator Keys (Recommended)
 
-To use your own pre-generated validator keys:
+For efficient deployment of many validators, you can use compressed archives:
+
+1. **Create a zip or tar.gz archive** of your validator keys
+   - You can compress all your `keystore-m_*.json` files into a single archive
+   - Either format is supported: `.zip` or `.tar.gz`
+
+2. **Place the archive in the ansible project**:
+   - `files/validator_keys/validator_keys.zip` (preferred format)
+   - `files/validator_keys/validator_keys.tar.gz` (alternative format)
+
+3. **Configure your host vars file**:
+
+   ```yaml
+   # In host_vars/your-node.yaml
+   validator_enabled: true
+   validator_keys_password_file: '/path/to/your/password/file.txt'  # Text file with passwords
+   validator_fee_recipient: 0x0000000000000000000000000000000000000000  # Optional
+   validator_graffiti: my-validator-name  # Optional
+   ```
+
+The playbook will:
+
+1. Stop any running validator **to prevent slashing**
+2. Transfer the single compressed file (much faster than many individual files)
+3. Extract the keys securely on the target node
+4. Apply proper permissions
+5. Restart the validator with the new keys
+
+### Using Individual Validator Key Files
+
+For more granular control, you can use individual key files:
 
 ```yaml
 # In host_vars/your-node.yaml
@@ -49,17 +82,31 @@ When using custom keys, ensure:
 2. Your password file contains the password to decrypt these keystores
 3. All paths are accessible to Ansible
 
+## Anti-Slashing Protection
+
+The playbook includes several safeguards to prevent slashing:
+
+1. **Safe Deployment Process**:
+   - Running validators are automatically stopped before any key manipulation
+   - Keys are completely replaced rather than incrementally updated
+   - Proper permissions are maintained throughout the process
+
+2. **Safe Extraction for Compressed Keys**:
+   - Keys are first extracted to a temporary location
+   - Only after successful extraction are they moved to the final location
+   - The original key directory is completely replaced to prevent duplicates
+
 ## File Structure
 
-When using custom validator keys, the following directory structure will be created on the node:
+When using validator keys, the following directory structure will be created on the node:
 
-```
-/root/ephemery/
+```bash
+/opt/ephemery/
 ├── data/
 │   └── validator/  # Validator client data
 ├── secrets/
 │   └── validator/
-│       ├── keys/          # Your keystore files will be copied here
+│       ├── keys/          # Your keystore files will be copied/extracted here
 │       └── passwords/     # Your password file will be copied here as validators.txt
 ```
 
@@ -103,3 +150,4 @@ If your validator fails to start, check:
 - Your validator keys are sensitive information - handle them securely
 - For production-like environments, consider using an external secure storage solution
 - Ensure proper permissions on keystore files and password files
+- The playbook automatically sets 0600 permissions on key files
