@@ -1,10 +1,12 @@
-# Verification Tests for ansible-ephemery
+# Verification Tests
 
-This document provides an overview of the verification tests used in the ansible-ephemery Molecule testing framework.
+This document provides an overview of the verification tests used in the ansible-ephemery project and how they integrate with the validator.sh script.
 
 ## Overview
 
-Verification tests in Molecule are run during the `verify` phase after the role has been applied. They validate that the role is functioning correctly and all components are properly configured and running.
+Verification tests in Molecule are run during the `verify` phase after the playbook has been applied. They validate that the deployment is functioning correctly and all components are properly configured and running.
+
+The `validator.sh` script in the `scripts/` directory can be used to validate aspects of the codebase, including verification test implementation.
 
 ## Common Verification Tests
 
@@ -140,12 +142,26 @@ Verification tests are implemented in Ansible playbooks within each scenario:
 - `verify.yml`: Main verification playbook for the scenario
 - Shared verification tasks in `molecule/shared/templates/verify/`
 
-## Running Verification Tests Independently
+## Running Verification Tests
+
+### Using Molecule Directly
 
 You can run only the verification tests without re-deploying the entire stack:
 
 ```bash
 molecule verify -s scenario_name
+```
+
+### Using the validator.sh Script
+
+The `validator.sh` script can validate verification tests implementation:
+
+```bash
+# Check all verification tests for compliance with standards
+./scripts/validator.sh conditionals --only-verify
+
+# Check specific scenario verification tests
+./scripts/validator.sh conditionals --only-verify --scenario default
 ```
 
 ## Writing New Verification Tests
@@ -193,3 +209,7 @@ Planned improvements to verification tests:
 2. **Performance Testing**: Adding performance benchmarks
 3. **Fault Injection**: Testing behavior under failure conditions
 4. **Security Scanning**: Integrating vulnerability scanning
+
+## Integration with CI/CD
+
+Verification tests are run as part of the CI/CD pipeline. For more information, see [CI_CD.md](CI_CD.md).

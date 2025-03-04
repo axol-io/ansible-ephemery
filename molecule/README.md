@@ -1,12 +1,8 @@
----
-title: Molecule Testing for Ansible-Ephemery
----
-
 # Molecule Testing Framework
 
 ## Directory Structure
 
-```plaintext
+```bash
 molecule/
 ├── clients/              # Client combination scenarios
 ├── default/              # Main scenario with default clients
@@ -42,6 +38,10 @@ molecule verify -s geth-lighthouse
 # MacOS specific - Run tests on macOS with Docker Desktop
 ./scripts/run-molecule-tests-macos.sh default
 ```
+
+## Verification Tests
+
+For detailed information about verification tests, please see the [Verification Tests](../docs/VERIFICATION_TESTS.md) documentation.
 
 ### macOS Compatibility
 
@@ -105,6 +105,7 @@ molecule/shared/scripts/generate_scenario.sh --cleanup geth-prysm
 ## Structure
 
 Each scenario contains:
+
 - `molecule.yaml`: Configuration
 - `converge.yaml`: Playbook to apply the role
 - `verify.yaml`: Tests to verify configuration

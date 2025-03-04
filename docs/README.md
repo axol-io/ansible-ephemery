@@ -8,6 +8,7 @@
 | [Requirements](REQUIREMENTS.md) | Dependencies |
 | [Security](SECURITY.md) | Security practices |
 | [Testing](TESTING.md) | Testing framework |
+| [Verification Tests](VERIFICATION_TESTS.md) | Test verification details |
 | [CI/CD](CI_CD.md) | Pipeline configuration |
 | [Variable Structure](VARIABLE_STRUCTURE.md) | Variable organization |
 | [Client Combinations](CLIENT_COMBINATIONS.md) | Supported clients |

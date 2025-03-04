@@ -21,15 +21,15 @@ create_client_tasks() {
   local el=$1
   local cl=$2
   local dir="tasks/clients/${el}-${cl}"
-  
+
   # Capitalize first letter of client names for comments
   el_cap="$(echo ${el:0:1} | tr '[:lower:]' '[:upper:]')${el:1}"
   cl_cap="$(echo ${cl:0:1} | tr '[:lower:]' '[:upper:]')${cl:1}"
-  
+
   # Get versions based on client
   local el_version
   local cl_version
-  
+
   case "$el" in
     geth) el_version=$GETH_VERSION ;;
     besu) el_version=$BESU_VERSION ;;
@@ -37,19 +37,19 @@ create_client_tasks() {
     reth) el_version=$RETH_VERSION ;;
     erigon) el_version=$ERIGON_VERSION ;;
   esac
-  
+
   case "$cl" in
     lighthouse) cl_version=$LIGHTHOUSE_VERSION ;;
     teku) cl_version=$TEKU_VERSION ;;
     prysm) cl_version=$PRYSM_VERSION ;;
     lodestar) cl_version=$LODESTAR_VERSION ;;
   esac
-  
+
   echo "Creating tasks for $dir"
-  
+
   # Create directory if it doesn't exist
   mkdir -p "$dir"
-  
+
   # Create firewall.yaml based on client combination
   # Note: Different clients may have different port requirements
   cat > "$dir/firewall.yaml" << 'EOF'
@@ -167,7 +167,7 @@ EOF
   # Replace placeholders with actual values in firewall.yaml
   sed -i "" "s/ELCAP/${el_cap}/g" "$dir/firewall.yaml"
   sed -i "" "s/CLCAP/${cl_cap}/g" "$dir/firewall.yaml"
-  
+
   # Create molecule.yaml
   cat > "$dir/molecule.yaml" << 'EOF'
 ---
@@ -481,14 +481,14 @@ EOF
   # Replace placeholders with actual values in molecule.yaml
   sed -i "" "s/ELNAME/${el}/g" "$dir/molecule.yaml"
   sed -i "" "s/CLNAME/${cl}/g" "$dir/molecule.yaml"
-  
+
   # Create empty converge.yaml and verify.yaml files if they don't exist
   touch "$dir/converge.yaml"
   if [ ! -s "$dir/converge.yaml" ]; then
     # Add document start marker to empty files
     echo "---" > "$dir/converge.yaml"
   fi
-  
+
   touch "$dir/verify.yaml"
   if [ ! -s "$dir/verify.yaml" ]; then
     # Add document start marker to empty files
@@ -500,10 +500,10 @@ EOF
 for el in $EL_CLIENTS; do
   for cl in $CL_CLIENTS; do
     # Check if the directory already exists with all required files
-    if [ -d "tasks/clients/${el}-${cl}" ] && 
-       [ -f "tasks/clients/${el}-${cl}/firewall.yaml" ] && 
-       [ -f "tasks/clients/${el}-${cl}/molecule.yaml" ] && 
-       [ -f "tasks/clients/${el}-${cl}/converge.yaml" ] && 
+    if [ -d "tasks/clients/${el}-${cl}" ] &&
+       [ -f "tasks/clients/${el}-${cl}/firewall.yaml" ] &&
+       [ -f "tasks/clients/${el}-${cl}/molecule.yaml" ] &&
+       [ -f "tasks/clients/${el}-${cl}/converge.yaml" ] &&
        [ -f "tasks/clients/${el}-${cl}/verify.yaml" ] &&
        [ -s "tasks/clients/${el}-${cl}/firewall.yaml" ]; then
       echo "Skipping existing client tasks: ${el}-${cl}"
