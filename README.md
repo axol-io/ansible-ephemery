@@ -87,6 +87,34 @@ validator_memory_percentage: 0.1  # 10% for validator (if enabled)
 └── backups/           # Backup files
 ```
 
+### Validator Configuration
+
+The playbook supports two methods for setting up validators:
+
+#### 1. Automatic Key Generation
+
+By default, if you enable the validator without specifying keys, the playbook will generate new validator keys:
+
+```yaml
+# In host_vars/your-node.yaml
+validator_enabled: true
+```
+
+#### 2. Using Existing Validator Keys
+
+To use your own pre-generated validator keys:
+
+```yaml
+# In host_vars/your-node.yaml
+validator_enabled: true
+validator_keys_src: "/path/to/your/validator/keys"  # Path to directory containing keystore files
+validator_keys_password_file: "/path/to/your/password/file"  # Text file with passwords
+validator_fee_recipient: "0x0000000000000000000000000000000000000000"  # Optional, fee recipient address
+validator_graffiti: "my-custom-validator"  # Optional, custom graffiti text
+```
+
+This will copy the keystore files and password to the node and configure the validator to use them.
+
 ## Client Combinations
 
 This playbook is designed to support multiple client combinations. Ephemery-specific Docker images are used when available, with standard images and custom configuration for other combinations.

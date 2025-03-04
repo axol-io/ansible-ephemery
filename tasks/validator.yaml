@@ -3,52 +3,65 @@
   ansible.builtin.set_fact:
     validator_skip: '{{ not validator_enabled | default(false) }}'
 
-- name: 🌟 Ensure validator directories exist
-  ansible.builtin.file:
-    path: '{{ item }}'
-    state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
-  loop:
-    - '{{ ephemery_base_dir }}/data/validator'
-    - '{{ ephemery_base_dir }}/secrets/validator'
-  when: not validator_skip
-
-- name: 🔑 Generate validator keys
-  ansible.builtin.shell: |
-    if [ ! -f '{{ ephemery_base_dir }}/secrets/validator/keys_generated' ]; then
-      # This is a placeholder command - in a real implementation,
-      # you would use an appropriate tool to generate validator keys
-      # For example: ./deposit --language=english --num_validators=1 generate-keys
-      echo "Keys generated on $(date)" > '{{ ephemery_base_dir }}/secrets/validator/keys_generated'
-    fi
-  args:
-    creates: '{{ ephemery_base_dir }}/secrets/validator/keys_generated'
-  when: not validator_skip
-
-# Set client-specific API endpoints
-- name: Set client-specific beacon API endpoint
+- name: Check if custom validator keys are to be used
   ansible.builtin.set_fact:
-    beacon_api_endpoint: >-
-      {% if cl == 'lighthouse' or cl == 'teku' or cl == 'lodestar' %}http://127.0.0.1:5052
-      {% elif cl == 'prysm' %}http://127.0.0.1:4000
-      {% else %}http://127.0.0.1:5052{% endif %}
+    use_custom_keys: '{{ validator_keys_src is defined }}'
   when: not validator_skip
 
-- name: 🚀 Start Validator client
-  community.docker.docker_container:
-    name: '{{ network }}-validator-{{ cl }}'
-    image: 'pk910/ephemery-{{ cl }}-validator:v1.0.0'
-    state: started
-    pull: true
-    restart_policy: unless-stopped
-    network_mode: host
-    memory: '{{ validator_memory_limit }}'
-    volumes:
-      - '{{ ephemery_base_dir }}/data/validator:/data'
-      - '{{ ephemery_base_dir }}/secrets/validator:/secrets:ro'
-    env:
-      VALIDATOR_CLIENT: '{{ cl }}'
-      BEACON_NODE_API: '{{ beacon_api_endpoint }}'
-  when: not validator_skip
+- name: 🌟 Include custom validator setup if using existing keys
+  ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/custom-validator-setup.yaml'
+  when: not validator_skip and use_custom_keys | default(false) | bool
+  tags:
+    - validator
+    - validator_custom_keys
+
+- block:
+    - name: 🌟 Ensure validator directories exist
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: directory
+        mode: '0755'
+        owner: '{{ ansible_user }}'
+        group: '{{ ansible_user }}'
+      loop:
+        - '{{ ephemery_base_dir }}/data/validator'
+        - '{{ ephemery_base_dir }}/secrets/validator'
+
+    - name: 🔑 Generate validator keys
+      ansible.builtin.shell: |
+        if [ ! -f '{{ ephemery_base_dir }}/secrets/validator/keys_generated' ]; then
+          # This is a placeholder command - in a real implementation,
+          # you would use an appropriate tool to generate validator keys
+          # For example: ./deposit --language=english --num_validators=1 generate-keys
+          echo "Keys generated on $(date)" > '{{ ephemery_base_dir }}/secrets/validator/keys_generated'
+        fi
+      args:
+        creates: '{{ ephemery_base_dir }}/secrets/validator/keys_generated'
+
+    # Set client-specific API endpoints
+    - name: Set client-specific beacon API endpoint
+      ansible.builtin.set_fact:
+        beacon_api_endpoint: >-
+          {% if cl == 'lighthouse' or cl == 'teku' or cl == 'lodestar' %}http://127.0.0.1:5052
+          {% elif cl == 'prysm' %}http://127.0.0.1:4000
+          {% else %}http://127.0.0.1:5052{% endif %}
+
+    - name: 🚀 Start Validator client
+      community.docker.docker_container:
+        name: '{{ network }}-validator-{{ cl }}'
+        image: 'pk910/ephemery-{{ cl }}-validator:v1.0.0'
+        state: started
+        pull: true
+        restart_policy: unless-stopped
+        network_mode: host
+        memory: '{{ validator_memory_limit }}'
+        volumes:
+          - '{{ ephemery_base_dir }}/data/validator:/data'
+          - '{{ ephemery_base_dir }}/secrets/validator:/secrets:ro'
+        env:
+          VALIDATOR_CLIENT: '{{ cl }}'
+          BEACON_NODE_API: '{{ beacon_api_endpoint }}'
+  when: not validator_skip and not use_custom_keys | default(false) | bool
+  tags:
+    - validator
+    - validator_custom_keys

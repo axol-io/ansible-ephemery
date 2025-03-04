@@ -85,6 +85,37 @@ cl: "lighthouse"
 # client_images.lighthouse -> "sigp/lighthouse:latest"
 ```
 
+## Validator-Specific Variables
+
+When enabling validators, the following variables can be set in host_vars:
+
+### Basic Validator Settings
+
+```yaml
+# Enable the validator
+validator_enabled: true
+
+# Resource control
+validator_memory_percentage: 0.1  # 10% of allocated memory
+validator_memory_limit: '2g'      # Or set fixed amount directly
+```
+
+### Custom Validator Keys
+
+To use pre-generated validator keys, specify:
+
+```yaml
+# Path to validator keys
+validator_keys_src: '/path/to/keystore/files'           # Directory with keystore-*.json files
+validator_keys_password_file: '/path/to/password.txt'   # Password file for keystores
+
+# Optional configuration
+validator_fee_recipient: 0x0000000000000000000000000000000000000000  # Fee recipient address
+validator_graffiti: my-custom-validator                              # Custom graffiti
+```
+
+For more details on validator configuration, see the [Validator Setup Guide](VALIDATOR_SETUP.md).
+
 ## Best Practices
 
 1. Keep sensitive data in `secrets.yaml` and encrypt it with Ansible Vault

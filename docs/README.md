@@ -15,6 +15,7 @@
 | [Linting](LINTING.md) | YAML linting |
 | [Coding Standards](CODING_STANDARDS.md) | Code standards |
 | [Molecule Troubleshooting](MOLECULE_TROUBLESHOOTING.md) | Testing issues |
+| [Validator Setup](VALIDATOR_SETUP.md) | Validator configuration guide |
 | [Improvements](IMPROVEMENTS.md) | Planned features |
 
 ## Quick Links

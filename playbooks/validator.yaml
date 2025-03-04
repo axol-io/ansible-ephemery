@@ -1,0 +1,43 @@
+---
+- name: Deploy or Update Validator
+  hosts: all
+  become: true
+  vars_files:
+    - '{{ playbook_dir }}/../defaults/main.yaml'
+    - '{{ playbook_dir }}/../vars/main.yaml'
+  tasks:
+    - block:
+        - name: Load host-specific variables
+          ansible.builtin.include_vars:
+            file: '{{ playbook_dir }}/../host_vars/{{ inventory_hostname }}.yaml'
+          tags: [always]
+          ignore_errors: true
+      rescue:
+        - name: Handle missing host vars
+          debug:
+            msg: Host vars file not found for '{{ inventory_hostname }}', using defaults only.
+          tags: [always]
+
+    - block:
+        - name: Load secrets (if available)
+          ansible.builtin.include_vars:
+            file: '{{ playbook_dir }}/../host_vars/secrets.yaml'
+          tags: [always, secrets]
+      rescue:
+        - name: Handle missing secrets
+          debug:
+            msg: Secrets file not found. Using any secrets defined in host vars.
+          tags: [always]
+
+    - name: Include JWT secret tasks
+      ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/jwt-secret.yaml'
+      tags:
+        - jwt
+        - security
+        - always
+
+    - name: Setup validator
+      ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/validator.yaml'
+      tags:
+        - validator
+        - always

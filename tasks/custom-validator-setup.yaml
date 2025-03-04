@@ -1,0 +1,71 @@
+---
+# Custom validator setup for mounting existing validator keys
+
+- name: Create validator directories
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: directory
+    mode: '0755'
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+  loop:
+    - '{{ ephemery_base_dir }}/data/validator'
+    - '{{ ephemery_base_dir }}/secrets/validator'
+    - '{{ ephemery_base_dir }}/secrets/validator/keys'
+    - '{{ ephemery_base_dir }}/secrets/validator/passwords'
+
+- name: Copy validator keystores to the node
+  ansible.builtin.copy:
+    src: '{{ validator_keys_src }}/'
+    dest: '{{ ephemery_base_dir }}/secrets/validator/keys/'
+    mode: '0600'
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+  register: keystores_copied
+
+- name: Copy password file
+  ansible.builtin.copy:
+    src: '{{ validator_keys_password_file }}'
+    dest: '{{ ephemery_base_dir }}/secrets/validator/passwords/validators.txt'
+    mode: '0600'
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+  register: password_copied
+
+- name: Set beacon API endpoint
+  ansible.builtin.set_fact:
+    beacon_api_endpoint: >-
+      {% if cl == 'lighthouse' or cl == 'teku' or cl == 'lodestar' %}http://127.0.0.1:5052
+      {% elif cl == 'prysm' %}http://127.0.0.1:4000
+      {% else %}http://127.0.0.1:5052{% endif %}
+
+- name: Set fee recipient address
+  ansible.builtin.set_fact:
+    fee_recipient: '{{ validator_fee_recipient | default("0x0000000000000000000000000000000000000000") }}'
+
+- name: Set validator graffiti
+  ansible.builtin.set_fact:
+    validator_graffiti_value: '{{ validator_graffiti | default(inventory_hostname) }}'
+
+- name: Start validator client container with mounted keys
+  community.docker.docker_container:
+    name: '{{ network }}-validator-{{ cl }}'
+    image: '{{ client_images.validator | default("sigp/lighthouse:latest") }}'
+    state: started
+    restart_policy: unless-stopped
+    network_mode: host
+    memory: '{{ validator_memory_limit | default("2g") }}'
+    volumes:
+      - '{{ ephemery_base_dir }}/data/validator:/data'
+      - '{{ ephemery_base_dir }}/secrets/validator/keys:/secrets/validator_keys:ro'
+      - '{{ ephemery_base_dir }}/secrets/validator/passwords:/secrets/validator_passwords:ro'
+    command: >
+      validator
+      --network ephemery
+      --datadir /data
+      --beacon-node {{ beacon_api_endpoint }}
+      --suggested-fee-recipient {{ fee_recipient }}
+      --graffiti {{ validator_graffiti_value }}
+      --validators-dir /secrets/validator_keys
+      --passwords-dir /secrets/validator_passwords
+  when: keystores_copied.changed or keystores_copied.skipped or password_copied.changed or password_copied.skipped
