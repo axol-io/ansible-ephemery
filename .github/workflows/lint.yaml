@@ -64,4 +64,4 @@ jobs:
           ls -la $ANSIBLE_COLLECTIONS_PATH/ansible_collections/community || echo "community dir not found"
 
           # Run ansible-lint with configuration file
-          ansible-lint --config-file .ansible-lint
+          ANSIBLE_COLLECTIONS_PATH=$ANSIBLE_COLLECTIONS_PATH ansible-lint --config-file .ansible-lint

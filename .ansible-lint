@@ -22,6 +22,7 @@ exclude_paths:
   - tasks/validator.yaml   # Exclude validator tasks
   - tasks/cadvisor.yaml    # Exclude cadvisor tasks
   - tasks/ephemery.yaml    # Exclude ephemery tasks
+  - tasks/custom-validator-setup.yaml  # Exclude validator setup tasks with docker
   - '**/*docker*.yaml'     # Exclude any files with docker in the name
   - '**/*docker*.yml'     # Exclude any files with docker in the name
 
