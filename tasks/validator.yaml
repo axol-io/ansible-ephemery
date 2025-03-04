@@ -1,67 +1,114 @@
 ---
 - name: Check if validator is enabled
   ansible.builtin.set_fact:
-    validator_skip: '{{ not validator_enabled | default(false) }}'
+    validator_skip: '{{ not validator_enabled | default(true) | bool }}'
+  tags:
+    - validator
 
 - name: Check if custom validator keys are to be used
   ansible.builtin.set_fact:
-    use_custom_keys: '{{ validator_keys_src is defined }}'
+    use_custom_keys: '{{ validator_keys_src is defined and validator_keys_src | length > 0 }}'
   when: not validator_skip
+  tags:
+    - validator
 
-- name: 🌟 Include custom validator setup if using existing keys
-  ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/custom-validator-setup.yaml'
+- name: Display validator configuration
+  ansible.builtin.debug:
+    msg: |
+      Validator Configuration:
+      - Validator Enabled: {{ validator_enabled | default(true) | bool }}
+      - Using Custom Keys: {{ use_custom_keys | default(false) | bool }}
+      - Validator Client: {{ cl_client_name | default('not specified') }}
+      - Validator Image: {{ client_images.validator | default('not specified') }}
+  when: not validator_skip
+  tags:
+    - validator
+
+- name: Include custom validator setup tasks
+  ansible.builtin.include_tasks:
+    file: custom-validator-setup.yaml
   when: not validator_skip and use_custom_keys | default(false) | bool
   tags:
     - validator
-    - validator_custom_keys
 
-- block:
-    - name: 🌟 Ensure validator directories exist
-      ansible.builtin.file:
-        path: '{{ item }}'
-        state: directory
-        mode: '0755'
-        owner: '{{ ansible_user }}'
-        group: '{{ ansible_user }}'
-      loop:
-        - '{{ ephemery_base_dir }}/data/validator'
-        - '{{ ephemery_base_dir }}/secrets/validator'
-
-    - name: 🔑 Generate validator keys
-      ansible.builtin.shell: |
-        if [ ! -f '{{ ephemery_base_dir }}/secrets/validator/keys_generated' ]; then
-          # This is a placeholder command - in a real implementation,
-          # you would use an appropriate tool to generate validator keys
-          # For example: ./deposit --language=english --num_validators=1 generate-keys
-          echo "Keys generated on $(date)" > '{{ ephemery_base_dir }}/secrets/validator/keys_generated'
-        fi
-      args:
-        creates: '{{ ephemery_base_dir }}/secrets/validator/keys_generated'
-
-    # Set client-specific API endpoints
-    - name: Set client-specific beacon API endpoint
-      ansible.builtin.set_fact:
-        beacon_api_endpoint: >-
-          {% if cl == 'lighthouse' or cl == 'teku' or cl == 'lodestar' %}http://127.0.0.1:5052
-          {% elif cl == 'prysm' %}http://127.0.0.1:4000
-          {% else %}http://127.0.0.1:5052{% endif %}
-
-    - name: 🚀 Start Validator client
-      community.docker.docker_container:
-        name: '{{ network }}-validator-{{ cl }}'
-        image: 'pk910/ephemery-{{ cl }}-validator:v1.0.0'
-        state: started
-        pull: true
-        restart_policy: unless-stopped
-        network_mode: host
-        memory: '{{ validator_memory_limit }}'
-        volumes:
-          - '{{ ephemery_base_dir }}/data/validator:/data'
-          - '{{ ephemery_base_dir }}/secrets/validator:/secrets:ro'
-        env:
-          VALIDATOR_CLIENT: '{{ cl }}'
-          BEACON_NODE_API: '{{ beacon_api_endpoint }}'
+- name: Ensure validator directories exist
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: directory
+    mode: '0755'
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+  loop:
+    - '{{ ephemery_data_dir }}/validator'
+    - '{{ ephemery_secrets_dir }}/validator'
+    - '{{ ephemery_secrets_dir }}/validator/keys'
+    - '{{ ephemery_secrets_dir }}/validator/passwords'
   when: not validator_skip and not use_custom_keys | default(false) | bool
   tags:
     - validator
-    - validator_custom_keys
+
+- name: Generate validator keys
+  ansible.builtin.shell: |
+    if [ ! -f '{{ ephemery_secrets_dir }}/validator/keys_generated' ]; then
+      # This is a placeholder command - in a real implementation,
+      # you would use an appropriate tool to generate validator keys
+      # For example: ./deposit --language=english --num_validators=1 generate-keys
+      echo "Keys generated on $(date)" > '{{ ephemery_secrets_dir }}/validator/keys_generated'
+    fi
+  when: not validator_skip and not use_custom_keys | default(false) | bool
+  tags:
+    - validator
+
+- name: Set client-specific beacon API endpoint
+  ansible.builtin.set_fact:
+    beacon_api_endpoint: >
+      {% if cl_client_name == 'prysm' %}localhost:4000
+      {% else %}http://127.0.0.1:{{ cl_client_port }} {% endif %}
+  when: not validator_skip
+  tags:
+    - validator
+
+- name: Start Validator client
+  community.docker.docker_container:
+    name: '{{ network }}-validator-{{ cl }}'
+    image: '{{ client_images.validator }}'
+    state: started
+    restart_policy: unless-stopped
+    memory: '{{ validator_memory_limit }}'
+    network_mode: host
+    volumes:
+      - '{{ ephemery_data_dir }}/validator:/data:rw'
+      - '{{ ephemery_secrets_dir }}/validator/keys:/secrets/keys:ro'
+      - '{{ ephemery_secrets_dir }}/validator/passwords:/secrets/passwords:ro'
+      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
+    command: >
+      {% if cl_client_name == 'lighthouse' %}
+      lighthouse validator_client
+      --beacon-nodes {{ beacon_api_endpoint }}
+      --validators-dir /secrets/keys
+      --secrets-dir /secrets/passwords
+      --testnet-dir /ephemery_config
+      {% else %}
+      --datadir=/data
+      --beacon-rpc-provider={{ beacon_api_endpoint }}
+      --accept-terms-of-use
+      --chain-config-file=/chain-config.yaml
+      {% endif %}
+  when: not validator_skip and not use_custom_keys | default(false) | bool
+  tags:
+    - validator
+
+- name: Stop existing validator container to prevent slashing
+  community.docker.docker_container:
+    name: '{{ network }}-validator-{{ cl }}'
+    state: stopped
+  ignore_errors: yes
+  when: not validator_skip
+
+- name: Check if zip file exists
+  ansible.builtin.stat:
+    path: files/validator_keys/validator_keys.zip
+  delegate_to: localhost
+  register: zip_stat
+  become: false
+  when: not validator_skip and use_custom_keys | default(false) | bool

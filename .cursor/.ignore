@@ -32,7 +32,7 @@ __pycache__/
 *.deb
 
 # Data directories (from .gitignore)
-/files/validator_keys/
+# /files/validator_keys/
 /files/geth-data/
 /files/lighthouse-data/
 /files/ephemery-data/

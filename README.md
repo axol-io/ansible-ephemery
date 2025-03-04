@@ -31,7 +31,7 @@ Ephemery is a short-lived Ethereum testnet that automatically resets every 24 ho
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/ansible-ephemery.git
+git clone https://github.com/hydepwns/ansible-ephemery.git
 cd ansible-ephemery
 
 # Install requirements
@@ -174,7 +174,7 @@ To set up a development environment:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/ansible-ephemery.git
+git clone https://github.com/hydepwns/ansible-ephemery.git
 cd ansible-ephemery
 
 # Install development requirements

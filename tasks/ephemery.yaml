@@ -85,7 +85,27 @@
       - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
     command: >
       {% if el == "geth" %}
-      ./wrapper.sh
+      --networkid=39438143
+      --bootnodes=enode://50a54ecbd2175497640bcf46a25bbe9bb4fae51d7cc2a29ef4947a7ee17496cf39a699b7fe6b703ed0feb9dbaae7e44fc3827fcb7435ca9ac6de4daa4d983b3d@137.74.203.240:30303,enode://7367578e9d211512a59e2cdd2c600b8bb71199421aac9d4b0b26050098d551575684314ca8bf226930568e29507c45de1ee00ae1ca70c544b9ba8250ce1d66e1@167.235.1.185:30343
+      --datadir=/data
+      --authrpc.addr=0.0.0.0
+      --authrpc.port=8551
+      --authrpc.vhosts=*
+      --authrpc.jwtsecret=/execution-auth.jwt
+      --http
+      --http.addr=0.0.0.0
+      --http.port=8545
+      --http.vhosts=*
+      --http.api=eth,net,web3,engine
+      --ws
+      --ws.addr=0.0.0.0
+      --ws.port=8546
+      --ws.api=eth,net,web3
+      --ws.origins=*
+      --syncmode=snap
+      --metrics
+      --metrics.addr=0.0.0.0
+      --metrics.port=6060
       {% else %}
       --datadir=/data
       --authrpc.addr=0.0.0.0
@@ -146,6 +166,7 @@
       --execution-endpoint=http://localhost:8551
       --execution-jwt=/execution-auth.jwt
       --testnet-dir=/ephemery_config
+      --allow-insecure-genesis-sync
       {{ cl_extra_opts }}
       {% elif cl == "teku" %}
       --data-path=/data
@@ -191,8 +212,7 @@
     network_mode: host
     privileged: true
     volumes:
-      - '{{ ephemery_base_dir }}/config/grafana/agent:{{ ephemery_base_dir }}/config/grafana/agent'
-      - '{{ ephemery_base_dir }}/config/grafana/agent/grafana-agent.yaml:{{ ephemery_base_dir }}/config/grafana/agent/grafana-agent.yaml'
+      - '{{ ephemery_base_dir }}/ephemery/config/grafana/agent/grafana-agent.yaml:/etc/agent/grafana-agent.yaml:ro'
     command:
-      - '--config.file={{ ephemery_base_dir }}/config/grafana/agent/grafana-agent.yaml'
+      - '--config.file=/etc/agent/grafana-agent.yaml'
       - '--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}'

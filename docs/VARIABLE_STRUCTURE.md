@@ -107,7 +107,7 @@ To use pre-generated validator keys, specify:
 ```yaml
 # Path to validator keys
 validator_keys_src: '/path/to/keystore/files'           # Directory with keystore-*.json files
-validator_keys_password_file: '/path/to/password.txt'   # Password file for keystores
+validator_keys_password_file: '/files/passwords/validators.txt'   # Password file for keystores
 
 # Optional configuration
 validator_fee_recipient: 0x0000000000000000000000000000000000000000  # Fee recipient address

@@ -9,26 +9,21 @@
 - name: Install cadvisor
   community.docker.docker_container:
     name: cadvisor
-    image: google/cadvisor:v0.47.0
-    state: '{{ "started" if cadvisor_enabled else "absent" }}'
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    state: '{{ "started" if cadvisor_enabled | default(true) | bool else "absent" }}'
     restart_policy: unless-stopped
+    network_mode: host
     privileged: true
-    ports:
-      - '{{ cadvisor_port }}:{{ cadvisor_port }}'
     volumes:
-      - /dev/disk/:/dev/disk:ro
-      - /dev/kmsg
-      - /sys:/sys:ro
+      - /:/rootfs:ro
       - /var/run:/var/run:ro
-      - '{{ home_dir }}/cadvisor:/rootfs:ro'
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
     command:
       - --port={{ cadvisor_port }}
-      - --docker_only=true
       - --enable_metrics=process,memory,network,oom_event,disk
-      - --store_container_labels=false
-      - --v=2
-    networks_cli_compatible: true
-    networks:
-      - name: '{{ network }}-validator-net'
+    security_opts:
+      - label=disable
   become: true
   become_user: '{{ ansible_user }}'

@@ -14,6 +14,7 @@ secrets.*
 
 # Prefer files
 /files/validator_keys/*
+/files/passwords/*
 /files/validator_keys.tar.gz
 /files/geth-data/*
 /files/lighthouse-data/*

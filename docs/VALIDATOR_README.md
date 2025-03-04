@@ -1,4 +1,4 @@
-# Validator Setup Guide
+# Ephemery Network Validator Guide
 
 This guide explains how to set up and configure validators for the Ephemery testnet using this Ansible playbook.
 
@@ -14,6 +14,19 @@ The playbook provides three main approaches for setting up validators:
 
 All methods include built-in protections against slashing by ensuring validators are properly stopped before key deployments.
 
+## Quick Start
+
+To enable a validator on your node:
+
+1. Set `validator_enabled: true` in your host vars file
+2. Place your validator keys in the appropriate location
+3. Configure your password file
+4. Run the playbook with the validator tag
+
+```bash
+ansible-playbook -i inventory.yaml ephemery.yaml -v -t validator -e "validator_enabled=true"
+```
+
 ## Validator Configuration Options
 
 ### Basic Configuration
@@ -24,6 +37,30 @@ To enable a validator on your node, set the `validator_enabled` flag to `true` i
 # In host_vars/your-node.yaml
 validator_enabled: true
 ```
+
+### Validator Client Selection
+
+You can choose which validator client to use by configuring the client image:
+
+```yaml
+# Client images
+client_images:
+  validator: "pk910/ephemery-lighthouse:latest"  # Specialized image for Ephemery network
+  # Alternative options:
+  # validator: "sigp/lighthouse:v5.3.0"  # Standard Lighthouse validator
+```
+
+### Password File
+
+The password file (e.g., `files/validator_keys/axol-node1.txt`) contains the validator keystore password. This file is copied to the validator container and used to decrypt the validator keys.
+
+Example password file structure:
+
+```plaintext
+!@6YMXVadbU
+```
+
+The password file should be a plain text file containing only the password on a single line.
 
 ### Using Default Key Generation
 
@@ -41,23 +78,18 @@ For efficient deployment of many validators, you can use compressed archives:
    - `files/validator_keys/validator_keys.zip` (preferred format)
    - `files/validator_keys/validator_keys.tar.gz` (alternative format)
 
-3. **Configure your host vars file**:
+3. **Create a password file**:
+   - Create a file like `files/validator_keys/axol-node1.txt` with your keystore password
+
+4. **Configure your host vars file**:
 
    ```yaml
    # In host_vars/your-node.yaml
    validator_enabled: true
-   validator_keys_password_file: '/path/to/your/password/file.txt'  # Text file with passwords
+   validator_keys_password_file: 'files/validator_keys/validators.txt'  # Text file with password
    validator_fee_recipient: 0x0000000000000000000000000000000000000000  # Optional
    validator_graffiti: my-validator-name  # Optional
    ```
-
-The playbook will:
-
-1. Stop any running validator **to prevent slashing**
-2. Transfer the single compressed file (much faster than many individual files)
-3. Extract the keys securely on the target node
-4. Apply proper permissions
-5. Restart the validator with the new keys
 
 ### Using Individual Validator Key Files
 
@@ -68,19 +100,47 @@ For more granular control, you can use individual key files:
 validator_enabled: true
 
 # Validator key paths and configuration
-validator_keys_src: '/path/to/your/validator/keys'  # Directory containing keystore-*.json files
-validator_keys_password_file: '/path/to/your/password/file.txt'  # Text file with passwords
+validator_keys_src: 'files/validator_keys'  # Directory containing keystore-*.json files
+validator_keys_password_file: 'files/validator_keys/validators.txt'  # Password file
 validator_fee_recipient: 0x0000000000000000000000000000000000000000  # Fee recipient address
 validator_graffiti: my-validator-name  # Custom graffiti text
 ```
 
-#### Key Requirements
+## File Structure
 
-When using custom keys, ensure:
+When using validator keys, the following directory structure will be created on the node:
 
-1. Your keys directory contains valid EIP-2335 keystore files (typically named `keystore-m_*.json`)
-2. Your password file contains the password to decrypt these keystores
-3. All paths are accessible to Ansible
+```bash
+{{ ephemery_base_dir }}/ (typically /root/ephemery/)
+├── data/
+│   └── validator/  # Validator client data
+├── secrets/
+│   └── validator/
+│       ├── keys/          # Your keystore files will be copied/extracted here
+│       └── passwords/     # Your password file will be copied here as validators.txt
+```
+
+## Validator Client Configuration
+
+The validator client will be configured with the following settings:
+
+- **Network**: Ephemery testnet
+- **Data Directory**: `/data` (container path)
+- **Beacon Node**: Automatically connected to the local consensus client via `--beacon-nodes` parameter
+- **Fee Recipient**: From `validator_fee_recipient` or default zero address
+- **Graffiti**: From `validator_graffiti` or hostname if not specified
+- **Keys**: Mounted from the copied keystores at `/secrets/keys`
+- **Passwords**: Mounted from the copied password file at `/secrets/passwords`
+
+Note: For Lighthouse validators, the parameter is `--beacon-nodes` (plural), not `--beacon-node`.
+
+## Client-Specific Considerations
+
+The playbook supports different validator clients:
+
+- **Lighthouse**: Uses the standard validator command line options
+- **Prysm**: Requires accepting terms of use and has different wallet setup
+- **Other clients**: Each has its own configuration needs handled automatically
 
 ## Anti-Slashing Protection
 
@@ -96,54 +156,15 @@ The playbook includes several safeguards to prevent slashing:
    - Only after successful extraction are they moved to the final location
    - The original key directory is completely replaced to prevent duplicates
 
-## File Structure
-
-When using validator keys, the following directory structure will be created on the node:
-
-```bash
-/opt/ephemery/
-├── data/
-│   └── validator/  # Validator client data
-├── secrets/
-│   └── validator/
-│       ├── keys/          # Your keystore files will be copied/extracted here
-│       └── passwords/     # Your password file will be copied here as validators.txt
-```
-
-## Validator Client Configuration
-
-The validator client will be configured with the following settings:
-
-- **Network**: Ephemery testnet
-- **Data Directory**: `/data` (container path)
-- **Beacon Node**: Automatically connected to the local consensus client
-- **Fee Recipient**: From `validator_fee_recipient` or default zero address
-- **Graffiti**: From `validator_graffiti` or hostname if not specified
-- **Keys**: Mounted from the copied keystores
-- **Passwords**: Mounted from the copied password file
-
-## Client-Specific Considerations
-
-Different consensus clients (Lighthouse, Teku, Prysm, Lodestar) have slightly different validator configurations. The playbook handles these differences automatically based on the `cl` variable in your host configuration.
-
-## Dedicated Validator Playbook
-
-For managing validators independently of other node components, you can use the dedicated validator playbook:
-
-```bash
-ansible-playbook -i inventory.yaml playbooks/validator.yaml
-```
-
-This allows you to update or reconfigure validators without affecting the execution or consensus clients.
-
 ## Troubleshooting
 
 If your validator fails to start, check:
 
 1. Keystore files are in the correct format
-2. Password file contains the correct password
+2. Password file (`axol-node1.txt`) contains the correct password
 3. Consensus client is running and accessible
-4. Logs from the validator container: `docker logs ephemery-validator-[client]`
+4. Logs from the validator container: `docker logs ephemery-validator` or `docker logs {{ network }}-validator-{{ cl }}`
+5. For Prysm validators, ensure the `--accept-terms-of-use` flag is properly passed
 
 ## Security Considerations
 

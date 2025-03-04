@@ -1,0 +1,7 @@
+---
+validators:
+  - enabled: true
+    voting_public_key: b930b9e4eb23f6bc2dc1fe3dfbe33d164b0aee138503387339ee4952f5025fde9e89362044fc63681381a6e0ae4f402a
+    type: local_keystore
+    voting_keystore_path: /secrets/keys
+    voting_keystore_password_path: /secrets/passwords/validators.txt

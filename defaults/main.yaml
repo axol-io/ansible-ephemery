@@ -8,6 +8,7 @@ network: ephemery
 home_dir: '{{ ansible_env.HOME }}'
 ephemery_base_dir: '{{ home_dir }}/ephemery'
 ephemery_data_dir: '{{ ephemery_base_dir }}/data'
+ephemery_secrets_dir: '{{ ephemery_base_dir }}/secrets'
 ephemery_logs_dir: '{{ ephemery_base_dir }}/logs'
 ephemery_scripts_dir: '{{ ephemery_base_dir }}/scripts'
 ephemery_backup_dir: '{{ ephemery_base_dir }}/backups'

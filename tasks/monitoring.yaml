@@ -85,62 +85,53 @@
   become_user: root
   become: true
   community.docker.docker_container:
-    name: Grafana-Agent
+    name: grafana-agent
     image: grafana/agent:v0.37.3
     state: started
     pull: true
     restart_policy: unless-stopped
     restart: '{{ cfg_changed }}'
-    networks:
-      - name: '{{ network }}-validator-net'
-    networks_cli_compatible: true
+    network_mode: host
     privileged: true
-    ports:
-      - '127.0.0.1:{{ grafana_agent_http_port }}:{{ grafana_agent_http_port }}'
     volumes:
-      - '{{ home_dir }}/config/grafana/agent:{{ home_dir }}/config/grafana/agent'
-      - '{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:{{ home_dir }}/config/grafana/agent/grafana-agent.yaml'
+      - '{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:/etc/agent/grafana-agent.yaml:ro'
     command:
-      - '--config.file={{ home_dir }}/config/grafana/agent/grafana-agent.yaml'
+      - '--config.file=/etc/agent/grafana-agent.yaml'
       - '--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}'
 
 - name: 📊 Start prometheus container
   become_user: root
   become: true
   community.docker.docker_container:
-    name: Prometheus
+    name: prometheus
     image: prom/prometheus:v2.47.2
     state: started
     pull: true
     restart_policy: unless-stopped
     restart: '{{ cfg_changed }}'
-    networks:
-      - name: '{{ network }}-validator-net'
-    networks_cli_compatible: true
+    network_mode: host
     privileged: true
-    ports:
-      - '{{ prometheus_port }}:{{ prometheus_port }}'
     volumes:
-      - '{{ home_dir }}/config/prometheus:{{ home_dir }}/config/prometheus'
-      - '{{ home_dir }}/config/prometheus/prometheus.yaml:{{ home_dir }}/config/prometheus/prometheus.yaml'
+      - '{{ home_dir }}/config/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.listen-address=0.0.0.0:{{ prometheus_port }}'
 
 - name: 📊 Start grafana dashboard container
   become_user: root
   become: true
   community.docker.docker_container:
-    name: Grafana
+    name: grafana
     image: grafana/grafana:10.2.3
     state: started
     pull: true
     restart_policy: unless-stopped
     restart: '{{ cfg_changed }}'
-    networks:
-      - name: '{{ network }}-validator-net'
-    networks_cli_compatible: true
+    network_mode: host
     privileged: true
-    ports:
-      - '{{ grafana_port }}:{{ grafana_port }}'
     env:
-      GF_SECURITY_ADMIN_PASSWORD: '{{ grafana_admin_password }}'
+      GF_SECURITY_ADMIN_PASSWORD: '{{ GRAFANA_ADMIN_PASSWORD }}'
+      GF_SERVER_HTTP_PORT: '{{ grafana_port | string }}'
     volumes:
-      - '{{ home_dir }}/config/grafana/provisioning/datasources/datasource.yaml:{{ home_dir }}/config/grafana/provisioning/datasources/datasource.yaml'
+      - '{{ home_dir }}/config/grafana/provisioning/datasources/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro'

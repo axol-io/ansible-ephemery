@@ -20,12 +20,12 @@
 
 - name: Setup validator if enabled
   ansible.builtin.import_tasks: validator.yaml
-  when: validator_enabled | default(false) | bool
+  when: validator_enabled | default(true) | bool
   tags: [validator]
 
 - name: Include monitoring tasks
   ansible.builtin.import_tasks: monitoring.yaml
-  when: monitoring_enabled | default(false) | bool
+  when: monitoring_enabled | default(true) | bool
   tags: [monitoring, always]
 
 - name: Install Cadvisor
