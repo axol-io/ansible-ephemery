@@ -39,9 +39,9 @@ files:
     prysm: "files/prysm-conf.example"
 
 # Docker volume mounting config
-host_el_data_mount: "{{ el }}-data"
-host_cl_data_mount: "{{ cl }}-data"
-host_keys_mount: "{{ files.validator_keys }}"
+host_el_data_mount: '{{ el }}-data"
+host_cl_data_mount: '{{ cl }}-data"
+host_keys_mount: '{{ files.validator_keys }}'
 
 #
 #
@@ -75,7 +75,7 @@ docker_network_name: ephemery
 docker_network_subnet: 172.20.0.0/24
 
 # JWT secret file path
-jwt_secret_path: "{{ home_dir }}/jwt/jwtsecret"
+jwt_secret_path: '{{ home_dir }}/jwt/jwtsecret"
 jwt_secret_secure_generation: true  # Use more secure random generation
 
 # Client configurations

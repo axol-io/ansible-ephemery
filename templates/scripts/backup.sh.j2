@@ -6,7 +6,7 @@
 set -e
 
 # Variables
-BACKUP_DIR="{{ ephemery_backup_dir }}"
+BACKUP_DIR='{{ ephemery_backup_dir }}'
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="${BACKUP_DIR}/ephemery_backup_${TIMESTAMP}.tar.gz"
 
@@ -20,14 +20,14 @@ echo "Starting backup at $(date)"
 # Note: Exclude large chaindata to keep backups manageable
 # We're mostly backing up configuration and key data
 DIRS_TO_BACKUP=(
-  "{{ ephemery_base_dir }}/jwtsecret"
-  "{{ home_dir }}/config/grafana"
-  "{{ home_dir }}/config/prometheus"
+  '{{ ephemery_base_dir }}/jwtsecret"
+  '{{ home_dir }}/config/grafana"
+  '{{ home_dir }}/config/prometheus"
 )
 
 {% if validator_enabled|default(false) %}
 # Add validator secrets to backup
-DIRS_TO_BACKUP+=("{{ ephemery_base_dir }}/secrets/validator")
+DIRS_TO_BACKUP+=('{{ ephemery_base_dir }}/secrets/validator")
 {% endif %}
 
 # Create the backup

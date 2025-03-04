@@ -36,7 +36,7 @@ jwt_secret_secure_generation: true
 # Resource management for Docker containers
 # Total available memory is limited to a percentage of system memory
 ephemery_docker_memory_limit: |-
-  "{{ (ansible_memory_mb.real.total * 0.90) | round | int }}M"
+  '{{ (ansible_memory_mb.real.total * 0.90) | round | int }}M'
 
 # Individual client memory limits (percentage of total allocated memory)
 el_memory_percentage: 0.5  # 50% for execution client
@@ -44,9 +44,9 @@ cl_memory_percentage: 0.4  # 40% for consensus client
 validator_memory_percentage: 0.1  # 10% for validator (if enabled)
 
 # Calculated memory limits
-el_memory_limit: "{{ ((ansible_memory_mb.real.total * 0.90 * el_memory_percentage) | round | int) }}M"
-cl_memory_limit: "{{ ((ansible_memory_mb.real.total * 0.90 * cl_memory_percentage) | round | int) }}M"
-validator_memory_limit: "{{ ((ansible_memory_mb.real.total * 0.90 * validator_memory_percentage) | round | int) }}M"
+el_memory_limit: '{{ ((ansible_memory_mb.real.total * 0.90 * el_memory_percentage) | round | int) }}M'
+cl_memory_limit: '{{ ((ansible_memory_mb.real.total * 0.90 * cl_memory_percentage) | round | int) }}M'
+validator_memory_limit: '{{ ((ansible_memory_mb.real.total * 0.90 * validator_memory_percentage) | round | int) }}M'
 
 # Monitoring configuration
 monitoring_enabled: false

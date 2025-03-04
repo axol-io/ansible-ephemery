@@ -78,8 +78,8 @@
     state: started
     restart_policy: unless-stopped
     network_mode: host
-    memory: "{{ el_memory_limit }}"
-    memory_swap: "{{ el_memory_limit }}"
+    memory: '{{ el_memory_limit }}'
+    memory_swap: '{{ el_memory_limit }}'
     volumes:
       - '{{ ephemery_base_dir }}/data/{{ el }}:/data'
       - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
@@ -126,13 +126,13 @@
 - name: 🚀 Start Consensus Client with generic configuration
   become: true
   community.docker.docker_container:
-    name: "{{ network }}-{{ cl }}"
-    image: "{% if cl == 'lighthouse' %}pk910/ephemery-lighthouse{% else %}{{ client_images[cl] }}{% endif %}"
+    name: '{{ network }}-{{ cl }}'
+    image: '{% if cl == "lighthouse" %}pk910/ephemery-lighthouse{% else %}{{ client_images[cl] }}{% endif %}'
     state: started
     restart_policy: unless-stopped
     network_mode: host
-    memory: "{{ cl_memory_limit }}"
-    memory_swap: "{{ cl_memory_limit }}"
+    memory: '{{ cl_memory_limit }}'
+    memory_swap: '{{ cl_memory_limit }}'
     volumes:
       - '{{ ephemery_base_dir }}/data/beacon:/data'
       - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'

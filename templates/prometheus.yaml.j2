@@ -1,25 +1,25 @@
 ---
 - name: prometheus
   static_configs:
-    - targets: ["prometheus:{{ prometheus_port }}"]
+    - targets: ["prometheus:{{ prometheus_port }}']
 
 - name: node-exporter
   static_configs:
-    - targets: ["node-exporter:{{ node_exporter_port }}"]
+    - targets: ["node-exporter:{{ node_exporter_port }}']
 
-- name: "{{ network }}-op-node-exporter"
+- name: '{{ network }}-op-node-exporter"
   static_configs:
-    - targets: ["{{ network }}-{{ cl }}:{{ prometheus_port }}"]
+    - targets: ['{{ network }}-{{ cl }}:{{ prometheus_port }}']
 
-- name: "{{ network }}-exporter"
+- name: '{{ network }}-exporter"
   metrics_path: /metrics/prometheus
   static_configs:
-    - targets: ["{{ network }}-{{ cl }}:{{ prometheus_port }}"]
+    - targets: ['{{ network }}-{{ cl }}:{{ prometheus_port }}']
 
 - name: cadvisor
   static_configs:
-    - targets: ["cadvisor:{{ cadvisor_port }}"]
+    - targets: ["cadvisor:{{ cadvisor_port }}']
 
 - name: grafana-agent
   static_configs:
-    - targets: ["grafana-agent:{{ grafana_agent_http_port }}"]
+    - targets: ["grafana-agent:{{ grafana_agent_http_port }}']

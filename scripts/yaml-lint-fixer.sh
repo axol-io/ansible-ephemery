@@ -276,7 +276,7 @@ for file in $YAML_FILES; do
         # Suggest fixes
         if [[ "$line" == *command:* || "$line" == *shell:* || "$line" == *docker* ]]; then
           echo "  - Consider breaking command into multiple lines using YAML folded style (>)" >> "$REPORT_FILE"
-        elif [[ "$line" == *"{{.Names}}"* ]]; then
+        elif [[ "$line" == *'{{.Names}}'* ]]; then
           echo "  - Consider assigning format template to a variable" >> "$REPORT_FILE"
         elif [[ "$line" == *with_items:* || "$line" == *loop:* ]]; then
           echo "  - Consider breaking list into multiple lines" >> "$REPORT_FILE"

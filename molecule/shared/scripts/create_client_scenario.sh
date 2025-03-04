@@ -35,7 +35,7 @@ cat > "${TARGET_DIR}/converge.yaml" << EOF
   tasks:
     - name: "Include ansible-ephemery role"
       include_role:
-        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+        name: '{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}'
 EOF
 
 echo "Created client scenario for ${EL_CLIENT}-${CL_CLIENT} in ${TARGET_DIR}"

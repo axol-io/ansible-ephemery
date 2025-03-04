@@ -104,7 +104,7 @@ When `cl: "lighthouse"` is selected, the role automatically uses the `pk910/ephe
 # Add to host_vars/<hostname>.yaml when using Teku
 cl: "teku"
 # Teku requires more memory than other clients
-cl_memory_limit: "{{ ((ansible_memory_mb.real.total * 0.90 * 0.5) | round | int) }}M"
+cl_memory_limit: '{{ ((ansible_memory_mb.real.total * 0.90 * 0.5) | round | int) }}M"
 # Optional Teku-specific settings:
 teku_validators_per_node: 1000
 ```

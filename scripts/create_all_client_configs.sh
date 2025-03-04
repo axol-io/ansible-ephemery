@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Consolidated script to generate all client combinations
 
 # Define clients
@@ -6,15 +6,15 @@ EL_CLIENTS="geth besu nethermind reth erigon"
 CL_CLIENTS="lighthouse teku prysm lodestar"
 
 # Define client versions - maintain consistency with create_client_tasks.sh
-GETH_VERSION="v1.15.3"
-BESU_VERSION="23.10.0"
-NETHERMIND_VERSION="v1.25.2"
-RETH_VERSION="v0.1.0-alpha.11"
-ERIGON_VERSION="v2.55.1"
-LIGHTHOUSE_VERSION="v4.6.0"
-TEKU_VERSION="24.1.0"
-PRYSM_VERSION="v4.1.1"
-LODESTAR_VERSION="v1.13.0"
+export GETH_VERSION="v1.15.3"
+export BESU_VERSION="23.10.0"
+export NETHERMIND_VERSION="v1.25.2"
+export RETH_VERSION="v0.1.0-alpha.11"
+export ERIGON_VERSION="v2.55.1"
+export LIGHTHOUSE_VERSION="v4.6.0"
+export TEKU_VERSION="24.1.0"
+export PRYSM_VERSION="v4.1.1"
+export LODESTAR_VERSION="v1.13.0"
 
 # Create client configuration files for all combinations
 create_client_config() {
@@ -85,20 +85,20 @@ EOF
 
 - name: Set ELCAP-specific variables
   ansible.builtin.set_fact:
-    ELNAME_data_dir: "{{ ephemery_data_dir }}/{{ el_client_name }}"
+    ELNAME_data_dir: '{{ ephemery_data_dir }}/{{ el_client_name }}'
     ELNAME_network_id: 3151908
-    ELNAME_http_port: "{{ el_client_port }}"
-    ELNAME_p2p_port: "{{ el_p2p_port }}"
-    ELNAME_metrics_port: "{{ el_metrics_port }}"
+    ELNAME_http_port: '{{ el_client_port }}'
+    ELNAME_p2p_port: '{{ el_p2p_port }}'
+    ELNAME_metrics_port: '{{ el_metrics_port }}'
     ELNAME_authrpc_port: 8551
 
 - name: Create ELCAP data directory
   ansible.builtin.file:
-    path: "{{ ELNAME_data_dir }}"
+    path: '{{ ELNAME_data_dir }}'
     state: directory
     mode: '0755'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
 EOF
 
   # Replace placeholders with actual values

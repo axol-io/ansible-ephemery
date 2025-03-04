@@ -49,12 +49,12 @@ if [ ! -f "playbooks/update.yaml" ]; then
   tasks:
     - name: Pull latest Docker images
       community.docker.docker_image:
-        name: "{{ item }}"
+        name: '{{ item }}'
         source: pull
         force_source: true
       loop:
-        - "{{ el_docker_image }}"
-        - "{{ cl_docker_image }}"
+        - '{{ el_docker_image }}'
+        - '{{ cl_docker_image }}'
       tags:
         - update
         - docker

@@ -51,14 +51,14 @@ After:
 For Ansible expressions:
 
 ```yaml
-long_expression: "{{ (ansible_memory_mb.real.total * 0.90 * some_percentage) | round | int }}M"
+long_expression: '{{ (ansible_memory_mb.real.total * 0.90 * some_percentage) | round | int }}M"
 ```
 
 Can be changed to:
 
 ```yaml
 long_expression: |-
-  "{{ (ansible_memory_mb.real.total * 0.90 * some_percentage) | round | int }}M"
+  '{{ (ansible_memory_mb.real.total * 0.90 * some_percentage) | round | int }}M"
 ```
 
 ## Bypassing Linting for Exceptional Cases

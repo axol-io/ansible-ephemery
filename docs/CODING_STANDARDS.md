@@ -94,7 +94,7 @@ Use the supported client values for Execution Layer (EL) and Consensus Layer (CL
 
 ```yaml
 # Good
-jwt_secret: "{{ vault_ephemery_jwt_secret }}"
+jwt_secret: '{{ vault_ephemery_jwt_secret }}'
 
 # Bad
 jwt_secret: "0x1234567890abcdef1234567890abcdef"
@@ -131,13 +131,13 @@ image: "ethereum/client-go:latest"
 # Good
 - name: Create Ethereum data directory
   file:
-    path: "{{ ephemery_data_dir }}"
+    path: '{{ ephemery_data_dir }}'
     state: directory
     mode: 0755
   # This directory will store blockchain data and needs appropriate permissions
 
 # Bad
 - file:
-    path: "{{ ephemery_data_dir }}"
+    path: '{{ ephemery_data_dir }}'
     state: directory
 ```
