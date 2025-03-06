@@ -118,3 +118,8 @@ client_specific_ports:
     - 30303 # Already covered in common ports
   besu:
     - 30303 # Already covered in common ports
+
+# Periodic reset configuration
+ephemery_automatic_reset: false                      # Enable automatic reset via cron
+ephemery_reset_frequency: "0 0 * * *"                # Default: Midnight every day (cron format)
+ephemery_reset_log_file: "{{ ephemery_logs_dir }}/reset.log"  # Reset log file location

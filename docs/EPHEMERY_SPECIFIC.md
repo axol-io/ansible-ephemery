@@ -52,6 +52,50 @@ For other client combinations (not using the Ephemery-specific images), the role
 2. Requires checkpoint sync URLs for consensus clients
 3. May require additional configuration for proper operation on the Ephemery network
 
+## Troubleshooting and Maintenance
+
+### Common Issues
+
+#### 1. Monitoring Configuration Issues
+
+If Prometheus is unable to scrape metrics from clients:
+
+- Check that the correct ports are configured in the Prometheus configuration:
+  - Geth metrics are available on port 6060 with path `/debug/metrics/prometheus`
+  - Lighthouse metrics should be set to a different port (e.g., 5054) than the HTTP API port (5052)
+- Verify that the client containers have the appropriate metrics flags enabled:
+  - For Lighthouse: `--metrics --metrics-address=0.0.0.0 --metrics-port=5054`
+  - For Geth: metrics are enabled by default on port 6060
+
+#### 2. Client Synchronization Issues
+
+Ephemery clients may sometimes fail to sync properly, particularly after a network reset:
+
+- Clear the data directories to start from a clean state:
+  ```bash
+  # Clear data directories
+  rm -rf /root/ephemery/data/geth/* /root/ephemery/data/beacon/*
+  ```
+- Download the latest genesis files and reinitialize the clients
+- Restart the containers with the correct configuration
+
+### Periodic Resets
+
+Since Ephemery is designed to be automatically reset, it's recommended to set up a cron job to handle this:
+
+```bash
+# Create a reset script (see scripts/reset_ephemery.sh in this repository)
+# Add a cron job to run the script daily
+0 0 * * * /opt/ephemery/scripts/reset_ephemery.sh > /opt/ephemery/logs/reset.log 2>&1
+```
+
+The reset process typically includes:
+1. Stopping the client containers
+2. Clearing data directories
+3. Downloading the latest genesis files
+4. Reinitializing the execution client
+5. Restarting the containers
+
 ## Resources
 
 - [Ephemery Client Wrapper](https://github.com/pk910/ephemery-client-wrapper)

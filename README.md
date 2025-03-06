@@ -1,38 +1,30 @@
 # ansible-ephemery
 
-A comprehensive Ansible playbook for deploying and managing [Ephemery](https://ephemery.dev/) Ethereum testnet nodes using Docker containers.
+Ansible playbook for deploying and managing [Ephemery](https://ephemery.dev/) Ethereum testnet nodes using Docker.
 
 ## What is Ephemery?
 
-Ephemery is a short-lived Ethereum testnet that automatically resets every 24 hours. This provides a clean testing environment for developers, researchers, and node operators without the resource requirements of permanent testnets.
+A short-lived Ethereum testnet that resets every 24 hours, providing a clean environment for testing without the resource requirements of permanent testnets.
 
 ## Key Features
 
-- **Multi-client support**: Deploy various execution and consensus client combinations
-  - Execution clients: Geth, Besu, Nethermind, Reth, Erigon
-  - Consensus clients: Lighthouse, Teku, Prysm, Lodestar
-- **Specialized Ephemery images**: Uses optimized Docker images with built-in genesis configuration and automatic reset handling
-- **Comprehensive monitoring**: Grafana, Prometheus, Node Exporter, and cAdvisor integration
-- **Security-focused**: Firewall configuration, JWT secret management, and secure defaults
-- **Automated operations**: Backup, health checks, and resource management
-- **Validator support**: Optional validator deployment and management
-- **Extensive testing**: Includes Molecule testing framework for reliable deployments
-- **Resource-efficient**: Configurable memory allocation for different clients
+- **Multi-client support**: Geth, Besu, Nethermind, Reth, Erigon (execution) and Lighthouse, Teku, Prysm, Lodestar (consensus)
+- **Specialized images**: Optimized Docker images with built-in Ephemery configuration
+- **Monitoring**: Grafana, Prometheus, Node Exporter, and cAdvisor
+- **Security**: Firewall, JWT secrets, secure defaults
+- **Automation**: Backups, health checks, resource management, automatic resets
+- **Resource-efficient**: Configurable memory allocation
 
 ## Prerequisites
 
-- Ansible 2.10+ on the control machine
-- Target hosts with:
-  - Docker installed (or enable auto-installation)
-  - SSH access
-  - Sufficient resources (4+ CPU cores, 8+ GB RAM recommended)
+- Ansible 2.10+ on control machine
+- Target hosts with Docker, SSH access, and sufficient resources (4+ CPU cores, 8+ GB RAM)
 
 ## Quick Start
 
 ```bash
 # Clone repository
-git clone https://github.com/hydepwns/ansible-ephemery.git
-cd ansible-ephemery
+git clone https://github.com/hydepwns/ansible-ephemery.git && cd ansible-ephemery
 
 # Install requirements
 ansible-galaxy collection install -r requirements.yaml
@@ -40,25 +32,66 @@ pip install -r requirements.txt
 
 # Configure inventory
 cp example-inventory.yaml inventory.yaml
-# Edit inventory.yaml with your target hosts and configuration
-# .gitignore is setup to help prevent leaking secrets
+# Edit inventory.yaml with your target hosts
 
-# Run the playbook
+# Run playbook
 ansible-playbook -i inventory.yaml ephemery.yaml
 ```
 
+**New to Ansible?** See our detailed [Getting Started Guide](docs/GETTING_STARTED.md) for step-by-step instructions.
+
+## Getting Started for Ansible Beginners
+
+If you're new to Ansible, follow these steps to get your Ephemery node running:
+
+1. **Set up your inventory file**:
+
+   ```bash
+   cp example-inventory.yaml inventory.yaml
+   ```
+
+   Edit `inventory.yaml` and replace:
+   - Host names (e.g., `ephemery-node1`)
+   - IP addresses (`ansible_host: 192.168.1.101`)
+   - User account (`ansible_user: root`)
+   - Client selections (`el: geth`, `cl: lighthouse`)
+
+2. **Configure host variables** (optional but recommended):
+
+   ```bash
+   mkdir -p host_vars
+   cp host_vars/example-host.yaml host_vars/your-node-name.yaml
+   ```
+
+   Edit `host_vars/your-node-name.yaml` and set:
+   - `ansible_host`: Your server's IP address
+   - `ansible_user`: SSH username
+   - Client selection: `el: geth`, `cl: lighthouse`
+   - `monitoring_enabled`: Set to `true` for monitoring
+   - `validator_enabled`: Set to `true` to run a validator
+
+3. **Run the playbook**:
+
+   ```bash
+   ansible-playbook -i inventory.yaml ephemery.yaml
+   ```
+
+4. **Access your node**:
+   - Execution API: `http://your-server-ip:8545`
+   - Consensus API: `http://your-server-ip:5052`
+   - Grafana (if enabled): `http://your-server-ip:3000`
+
+For a more detailed step-by-step guide, see [Getting Started Guide](docs/GETTING_STARTED.md).
+
 ## Configuration
 
-The playbook provides extensive configuration options:
-
-### Basic Configuration
+### Basic Settings
 
 ```yaml
-# Example Client selection
-el: "geth"             # Execution client
-cl: "lighthouse"       # Consensus client
+el: "geth"                # Execution client
+cl: "lighthouse"          # Consensus client
 
-# Feature toggles
+# Features
 validator_enabled: false
 monitoring_enabled: true
 backup_enabled: true
@@ -67,159 +100,80 @@ firewall_enabled: true
 
 ### Resource Management
 
-The playbook automatically configures resource limits based on available system memory:
-
 ```yaml
-# Total allocation is 90% of system memory
-el_memory_percentage: 0.5    # 50% for execution client
-cl_memory_percentage: 0.4    # 40% for consensus client
-validator_memory_percentage: 0.1  # 10% for validator (if enabled)
+# 90% of system memory allocated in these proportions
+el_memory_percentage: 0.5      # Execution client
+cl_memory_percentage: 0.4      # Consensus client
+validator_memory_percentage: 0.1  # Validator (if enabled)
 ```
 
-### Directory Structure
+### Automatic Reset
 
-```bash
+```yaml
+ephemery_automatic_reset: true      # Enable via cron
+ephemery_reset_frequency: "0 0 * * *"  # Midnight daily
+```
+
+## Directory Structure
+
+```
 /opt/ephemery/
-├── data/              # Node data
-│   ├── el/            # Execution client data
-│   └── cl/            # Consensus client data
-├── logs/              # Log files
-├── scripts/           # Operational scripts
-└── backups/           # Backup files
+├── data/        # Node data (el/ and cl/)
+├── logs/        # Log files
+├── scripts/     # Operational scripts
+└── backups/     # Backup files
 ```
 
-### Validator Configuration
+## Validator Configuration
 
-The playbook supports multiple methods for setting up validators:
+Three options available:
 
-#### 1. Automatic Key Generation
+1. **Automatic Generation**: Enable validator without specifying keys
+2. **Compressed Keys**: Place archive in `files/validator_keys/validator_keys.zip`
+3. **Individual Key Files**: Configure paths to keystore files and password
 
-By default, if you enable the validator without specifying keys, the playbook will generate new validator keys:
-
-```yaml
-# In host_vars/your-node.yaml
-validator_enabled: true
-```
-
-#### 2. Using Compressed Validator Keys (Recommended)
-
-For efficient deployment, you can use compressed archives of your validator keys:
-
-```yaml
-# In host_vars/your-node.yaml
-validator_enabled: true
-```
-
-Then place your compressed keys in *one* of these locations:
-
-- `files/validator_keys/validator_keys.zip`
-- `files/validator_keys/validator_keys.tar.gz`
-
-This approach is significantly faster and more efficient for large numbers of validators.
-
-#### 3. Using Individual Validator Key Files
-
-For more granular control, you can use individual key files:
-
-```yaml
-# In host_vars/your-node.yaml
-validator_enabled: true
-validator_keys_src: "/path/to/your/validator/keys"  # Path to directory containing keystore files
-validator_keys_password_file: "/path/to/your/password/file"  # Text file with passwords
-validator_fee_recipient: "0x0000000000000000000000000000000000000000"  # Optional, fee recipient address
-validator_graffiti: "my-custom-validator"  # Optional, custom graffiti text
-```
-
-This will copy the keystore files and password to the node and configure the validator to use them.
+For details, see [docs/VALIDATOR_README.md](docs/VALIDATOR_README.md).
 
 ## Client Combinations
 
-This playbook is designed to support multiple client combinations. Ephemery-specific Docker images are used when available, with standard images and custom configuration for other combinations.
+Ephemery-specific images used when available:
 
-### Ephemery-Specific Images
+- `pk910/ephemery-geth`
+- `pk910/ephemery-lighthouse`
 
-- `pk910/ephemery-geth`: Preconfigured Geth for Ephemery network
-- `pk910/ephemery-lighthouse`: Preconfigured Lighthouse for Ephemery network
-
-See [docs/CLIENT_COMBINATIONS.md](docs/CLIENT_COMBINATIONS.md) for detailed compatibility information.
+See [docs/CLIENT_COMBINATIONS.md](docs/CLIENT_COMBINATIONS.md) for compatibility details.
 
 ## Monitoring
 
-The playbook includes comprehensive monitoring tools:
+Tools included for comprehensive monitoring:
 
-- **Grafana**: Visualize metrics via dashboards
-- **Prometheus**: Collect and store metrics
-- **Node Exporter**: System metrics collection
-- **cAdvisor**: Container metrics
+- Grafana, Prometheus, Node Exporter, cAdvisor
+
+For configuration and troubleshooting, see [docs/MONITORING.md](docs/MONITORING.md).
 
 ## Testing
 
-The repository includes a comprehensive Molecule testing framework:
+Run tests with the Molecule framework:
 
 ```bash
-# Run test with automatic cleanup
 molecule/shared/scripts/demo_scenario.sh --execution geth --consensus prysm
-
-# Keep the scenario after testing
-molecule/shared/scripts/demo_scenario.sh -e nethermind -c lodestar
 ```
-
-For more details on testing and verification, see [docs/TESTING.md](docs/TESTING.md) and [docs/VERIFICATION_TESTS.md](docs/VERIFICATION_TESTS.md).
-
-## Development and Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-To set up a development environment:
-
-```bash
-# Clone repository
-git clone https://github.com/hydepwns/ansible-ephemery.git
-cd ansible-ephemery
-
-# Install development requirements
-pip install -r requirements-dev.txt
-
-# Set up pre-commit hooks
-pre-commit install
-
-# Run linting
-ansible-lint
-yamllint .
-```
-
-## Utility Scripts
-
-The repository includes several utility scripts to simplify common tasks:
-
-- **dev-env-manager.sh**: Development environment setup
-- **molecule-manager.sh**: Test management
-- **yaml-lint-fixer.sh**: YAML linting and formatting
-- **repo-standards.sh**: Repository structure validation
-- **validator.sh**: Documentation and code validation
-
-Each script provides help information via the `--help` flag.
 
 ## Documentation
-
-Comprehensive documentation is available in the `docs/` directory:
 
 - [Repository Structure](docs/REPOSITORY_STRUCTURE.md)
 - [Requirements](docs/REQUIREMENTS.md)
 - [Security](docs/SECURITY.md)
 - [Testing](docs/TESTING.md)
-- [Verification Tests](docs/VERIFICATION_TESTS.md)
-- [CI/CD](docs/CI_CD.md)
 - [Client Combinations](docs/CLIENT_COMBINATIONS.md)
-- [Coding Standards](docs/CODING_STANDARDS.md)
-- [Validator Setup](docs/VALIDATOR_SETUP.md)
+- [Validator Setup](docs/VALIDATOR_README.md)
+- [Monitoring](docs/MONITORING.md)
 
 ## Additional Resources
 
 - [Ephemery Website](https://ephemery.dev/)
 - [Ephemery Resources](https://github.com/ephemery-testnet/ephemery-resources)
 - [Ephemery Scripts](https://github.com/ephemery-testnet/ephemery-scripts)
-- [Ephemery Client Wrapper](https://github.com/pk910/ephemery-client-wrapper)
 
 ## License
 

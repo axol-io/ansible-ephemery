@@ -4,7 +4,7 @@ This document provides guidance on addressing YAML linting issues in the Ansible
 
 ## Common Linting Issues
 
-The repository uses pre-commit hooks and yamllint to enforce code quality. Common issues include:
+The repository uses pre-commit hooks and ansible-lint to enforce code quality. Common issues include:
 
 1. **Line Length**: Lines exceeding 80 characters
 2. **Truthy Values**: Using `yes`/`no` instead of `true`/`false`
@@ -72,17 +72,8 @@ git commit -m "your message" --no-verify
 For specific lines in a file that cannot be reformatted:
 
 ```yaml
-# yamllint disable-line rule:line-length
+# Comment indicating the reason for bypassing the linter
 this_line_is_too_long_but_we_need_to_keep_it_this_way: "long value here"
-```
-
-To disable checks for a section:
-
-```yaml
-# yamllint disable
-these_lines: will_not_be_checked
-for_any_lint: issues
-# yamllint enable
 ```
 
 ## Pre-commit Configuration
@@ -94,7 +85,7 @@ The pre-commit configuration is in `.pre-commit-config.yaml`. To temporarily ski
 SKIP=all git commit -m "message"
 
 # Skip specific hooks
-SKIP=yamllint git commit -m "message"
+SKIP=ansible-lint git commit -m "message"
 ```
 
 ## Linting During Development
@@ -108,5 +99,5 @@ pre-commit run --all-files
 Run a specific hook:
 
 ```bash
-pre-commit run yamllint --all-files
+pre-commit run ansible-lint --all-files
 ```

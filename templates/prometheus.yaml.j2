@@ -1,25 +1,84 @@
 ---
-- name: prometheus
-  static_configs:
-    - targets: ["prometheus:{{ prometheus_port }}']
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
 
-- name: node-exporter
-  static_configs:
-    - targets: ["node-exporter:{{ node_exporter_port }}']
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:{{ prometheus_port }}"]
 
-- name: '{{ network }}-op-node-exporter"
-  static_configs:
-    - targets: ['{{ network }}-{{ cl }}:{{ prometheus_port }}']
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["localhost:{{ node_exporter_port }}"]
 
-- name: '{{ network }}-exporter"
-  metrics_path: /metrics/prometheus
-  static_configs:
-    - targets: ['{{ network }}-{{ cl }}:{{ prometheus_port }}']
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["localhost:{{ cadvisor_port }}"]
 
-- name: cadvisor
-  static_configs:
-    - targets: ["cadvisor:{{ cadvisor_port }}']
+  - job_name: "grafana-agent"
+    static_configs:
+      - targets: ["localhost:{{ grafana_agent_http_port }}"]
 
-- name: grafana-agent
-  static_configs:
-    - targets: ["grafana-agent:{{ grafana_agent_http_port }}']
+  {% if el == "geth" %}
+  - job_name: "geth"
+    metrics_path: /debug/metrics/prometheus
+    static_configs:
+      - targets: ["localhost:6060"]
+  {% endif %}
+
+  {% if cl == "lighthouse" %}
+  - job_name: "lighthouse"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["localhost:5054"]
+  {% endif %}
+
+  {% if cl == "prysm" %}
+  - job_name: "prysm"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["localhost:8080"]
+  {% endif %}
+
+  {% if cl == "teku" %}
+  - job_name: "teku"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["localhost:8008"]
+  {% endif %}
+
+  {% if cl == "lodestar" %}
+  - job_name: "lodestar"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["localhost:8008"]
+  {% endif %}
+
+  {% if el == "nethermind" %}
+  - job_name: "nethermind"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["localhost:9091"]
+  {% endif %}
+
+  {% if el == "besu" %}
+  - job_name: "besu"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["localhost:9545"]
+  {% endif %}
+
+  {% if el == "erigon" %}
+  - job_name: "erigon"
+    metrics_path: /debug/metrics/prometheus
+    static_configs:
+      - targets: ["localhost:6060"]
+  {% endif %}
+
+  {% if el == "reth" %}
+  - job_name: "reth"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["localhost:9090"]
+  {% endif %}

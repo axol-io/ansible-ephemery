@@ -61,3 +61,19 @@
   tasks:
     - name: Import main tasks
       ansible.builtin.import_tasks: tasks/main.yaml
+
+- name: Configure Periodic Reset for Ephemery Nodes
+  hosts: all
+  become: true
+  gather_facts: true
+  vars_files:
+    - defaults/main.yaml
+    - vars/main.yaml
+  tasks:
+    - name: Load host-specific variables
+      ansible.builtin.include_vars:
+        file: 'host_vars/{{ inventory_hostname }}.yaml'
+
+    - name: Setup periodic reset tasks
+      ansible.builtin.import_tasks: tasks/periodic_reset.yaml
+      when: ephemery_automatic_reset | default(false) | bool

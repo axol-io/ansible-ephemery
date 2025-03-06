@@ -1,44 +1,35 @@
 # ansible-ephemery Documentation
 
-## Documentation Index
+## Essential Guides
 
-| Document | Description |
-|----------|-------------|
-| [Repository Structure](REPOSITORY_STRUCTURE.md) | File organization |
-| [Requirements](REQUIREMENTS.md) | Dependencies |
-| [Security](SECURITY.md) | Security practices |
-| [Testing](TESTING.md) | Testing framework |
-| [Verification Tests](VERIFICATION_TESTS.md) | Test verification details |
-| [CI/CD](CI_CD.md) | Pipeline configuration |
-| [Variable Structure](VARIABLE_STRUCTURE.md) | Variable organization |
-| [Client Combinations](CLIENT_COMBINATIONS.md) | Supported clients |
-| [Linting](LINTING.md) | YAML linting |
-| [Coding Standards](CODING_STANDARDS.md) | Code standards |
-| [Molecule Troubleshooting](MOLECULE_TROUBLESHOOTING.md) | Testing issues |
-| [Validator Setup](VALIDATOR_SETUP.md) | Validator configuration guide |
-| [Improvements](IMPROVEMENTS.md) | Planned features |
+| Guide | Purpose |
+|-------|---------|
+| [Getting Started](GETTING_STARTED.md) | Step-by-step setup for beginners |
+| [Client Combinations](CLIENT_COMBINATIONS.md) | Supported client pairs |
+| [Validator Setup](VALIDATOR_README.md) | Running validators |
+| [Monitoring](MONITORING.md) | Metrics and dashboards |
+| [Security](SECURITY.md) | Security settings |
+| [Ephemery Network](EPHEMERY_SPECIFIC.md) | Ephemery testnet details |
+
+## Technical Reference
+
+| Document | Content |
+|----------|---------|
+| [Requirements](REQUIREMENTS.md) | Software dependencies |
+| [Variable Structure](VARIABLE_STRUCTURE.md) | Configuration options |
+| [Repository Structure](REPOSITORY_STRUCTURE.md) | Codebase organization |
+| [Testing](TESTING.md) | Test framework |
+
+## Development
+
+| Document | Purpose |
+|----------|---------|
+| [Coding Standards](CODING_STANDARDS.md) | Code style guide |
+| [Linting](LINTING.md) | Code quality tools |
+| [Molecule Troubleshooting](MOLECULE_TROUBLESHOOTING.md) | Test debugging |
+| [Improvements](IMPROVEMENTS.md) | Roadmap |
 
 ## Quick Links
 
 - [Main README](../README.md) - Project overview
 - [Contributing Guide](../CONTRIBUTING.md) - How to contribute
-- [Molecule Testing](../molecule/README.md) - Testing details
-
-## Documentation Conventions
-
-1. **Structure**:
-   - H1 (#) - Document title
-   - H2 (##) - Main sections
-   - H3 (###) - Subsections
-
-2. **Style**:
-   - Concise language, active voice
-   - Short paragraphs
-   - Code examples with language specifiers
-   - Maximum line length of 150 characters
-
-3. **Files**:
-   - YAML files use `.yaml` extension (not `.yml`) except in molecule directory
-   - Variables use `snake_case`
-   - Code blocks use triple backticks with language identifiers
-   - Links use relative paths

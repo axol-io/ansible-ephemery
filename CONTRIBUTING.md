@@ -31,6 +31,7 @@ pre-commit install
 ## Making Changes
 
 1. Create a new branch for your changes:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -38,13 +39,14 @@ pre-commit install
 2. Make your changes
 
 3. Follow the coding standards and best practices:
-   - Use `.yaml` extension for YAML files, not `.yml`
+   - Use `.yaml` extension for YAML files, only use `.yml` in molecule/
    - Follow Ansible best practices
    - Use snake_case for variable names
    - Include meaningful task names
    - Keep line length to a reasonable limit (preferably under 100 characters)
 
 4. Run tests to ensure your changes work correctly:
+
    ```bash
    # For quick testing with automatic cleanup
    molecule/shared/scripts/demo_scenario.sh --execution geth --consensus prysm
@@ -54,6 +56,7 @@ pre-commit install
    ```
 
 5. Commit your changes:
+
    ```bash
    git commit -m "Add feature X" -m "Detailed description of changes"
    ```
@@ -73,6 +76,7 @@ molecule test -s geth-lighthouse
 ## Pull Requests
 
 1. Push your changes to your fork:
+
    ```bash
    git push origin feature/your-feature-name
    ```

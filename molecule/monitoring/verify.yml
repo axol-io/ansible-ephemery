@@ -45,11 +45,28 @@
       failed_when: false
       changed_when: false
 
-    - name: Verify Ethereum client targets exist
+    - name: Set execution client job name based on selected client
+      ansible.builtin.set_fact:
+        execution_job_name: "{{ el }}"
+      when: prometheus_targets.status == 200
+
+    - name: Set consensus client job name based on selected client
+      ansible.builtin.set_fact:
+        consensus_job_name: "{{ cl }}"
+      when: prometheus_targets.status == 200
+
+    - name: Verify execution client target exists
       assert:
         that:
-          - prometheus_targets.json.data.activeTargets | selectattr('labels.job', 'search', 'ethereum') | list | length > 0
-        fail_msg: No Ethereum client targets found in Prometheus
+          - prometheus_targets.json.data.activeTargets | selectattr('labels.job', 'equalto', execution_job_name) | list | length > 0
+        fail_msg: "No targets found for execution client job '{{ execution_job_name }}' in Prometheus"
+      when: prometheus_targets.status == 200
+
+    - name: Verify consensus client target exists
+      assert:
+        that:
+          - prometheus_targets.json.data.activeTargets | selectattr('labels.job', 'equalto', consensus_job_name) | list | length > 0
+        fail_msg: "No targets found for consensus client job '{{ consensus_job_name }}' in Prometheus"
       when: prometheus_targets.status == 200
 
     - name: Check if Docker metrics are being collected
