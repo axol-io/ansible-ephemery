@@ -21,24 +21,50 @@ docker.errors.DockerException: Error while fetching server API version: ('Connec
 2. **Check Docker socket path**:
 
    ```bash
-   ls -la /var/run/docker.sock # varies based on your OS / Docker install.
-   ls -la /Users/<username>/.docker/run/docker.sock
-   ls -la /Users/<username>/Library/Containers/com.docker.docker/Data/docker-cli.sock
+   ls -la /var/run/docker.sock # Linux
+   ls -la /Users/<username>/.docker/run/docker.sock # macOS with Docker Desktop
+   ls -la /Users/<username>/.orbstack/run/docker.sock # macOS with OrbStack
    ```
 
-3. **Update molecule.yml file**:
+3. **Check Docker contexts**:
+
+   ```bash
+   # List available contexts
+   docker context ls
+
+   # Use the correct context for your environment
+   docker context use desktop-linux  # For Docker Desktop on macOS
+   docker context use orbstack       # For OrbStack on macOS
+   docker context use default        # For standard Linux setups
+
+   # Inspect the context to find the Docker socket path
+   docker context inspect desktop-linux
+   ```
+
+4. **Update molecule.yml file**:
 
    ```yaml
    driver:
      name: docker
-     options:
-       docker_host: "unix:///path/to/your/docker.sock"
+     docker_host: "unix:///path/to/your/docker.sock"
+   platforms:
+     - name: instance-name
+       volumes:
+         - /sys/fs/cgroup:/sys/fs/cgroup:rw
+         - "/path/to/your/docker.sock:/var/run/docker.sock:rw"
    ```
 
-4. **Use the helper script**:
+5. **Use environment variables**:
 
    ```bash
-   ./run-molecule.sh test # automatically configures the correct Docker context and socket path.
+   export DOCKER_HOST=unix:///path/to/your/docker.sock
+   molecule test -s your-scenario
+   ```
+
+6. **Use the helper script**:
+
+   ```bash
+   ./scripts/run-molecule-tests-macos.sh your-scenario # automatically configures the correct Docker context and socket path.
    ```
 
 ## Docker Context Issues
@@ -60,9 +86,9 @@ Warning: DOCKER_HOST environment variable overrides the active context.
 2. **Switch to a working context**:
 
    ```bash
-   docker context use desktop-linux  # For macOS
-   # OR
-   docker context use default  # For standard setups
+   docker context use desktop-linux  # For macOS with Docker Desktop
+   docker context use orbstack       # For macOS with OrbStack
+   docker context use default        # For standard setups
    ```
 
 3. **Create a new context if needed**:
@@ -108,6 +134,42 @@ Error starting container: failed to create task for container: failed to create 
 
 ## macOS-Specific Issues
 
+### Problem: Docker socket path varies on macOS
+
+Different Docker implementations on macOS use different socket paths:
+
+1. **Docker Desktop socket paths**:
+   - `/Users/<username>/.docker/run/docker.sock` (most common)
+   - `/var/run/docker.sock` (via symlink)
+
+2. **OrbStack socket path**:
+   - `/Users/<username>/.orbstack/run/docker.sock`
+
+3. **Determine correct socket path**:
+
+   ```bash
+   # Check context and socket path
+   docker context ls
+   docker context inspect <context-name> | grep "Host"
+
+   # Check if sockets exist
+   ls -la /Users/<username>/.docker/run/docker.sock
+   ls -la /Users/<username>/.orbstack/run/docker.sock
+   ```
+
+4. **Update molecule.yml configuration**:
+
+   ```yaml
+   driver:
+     name: docker
+     docker_host: "unix:///Users/<username>/.docker/run/docker.sock"
+   platforms:
+     - name: instance-name
+       volumes:
+         - /sys/fs/cgroup:/sys/fs/cgroup:rw
+         - "/Users/<username>/.docker/run/docker.sock:/var/run/docker.sock:rw"
+   ```
+
 ### Problem: Docker Desktop in Eco Mode
 
 Docker Desktop's Eco Mode pauses the Docker engine when not in use, which can cause connection issues.
@@ -123,22 +185,6 @@ Docker Desktop's Eco Mode pauses the Docker engine when not in use, which can ca
    docker ps  # Run a simple command to wake Docker
    sleep 5    # Wait for Docker to fully wake up
    molecule test
-   ```
-
-### Problem: Docker Contexts on macOS
-
-macOS has multiple Docker contexts and the default may not work with Molecule.
-
-1. **Use the desktop-linux context**:
-
-   ```bash
-   docker context use desktop-linux
-   ```
-
-2. **Update the Docker host path**:
-
-   ```bash
-   export DOCKER_HOST=unix:///Users/<username>/.docker/run/docker.sock
    ```
 
 ### Solution: Use Our macOS Helper Script
@@ -160,6 +206,24 @@ This script:
 - Sets the necessary environment variables
 - Handles the different `sed` syntax in macOS
 - Restores original configuration after testing
+
+## Role Path Resolution Issues
+
+### Problem: Role not found when using include_role
+
+Error message:
+
+```bash
+ERROR! the role 'ansible-ephemery' was not found in /path/to/molecule/scenario/roles:/path/to/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles
+```
+
+**Solution**: Use relative paths to the project root in converge.yml:
+
+```yaml
+- name: Include ephemery role
+  include_role:
+    name: ../..  # Points to the project root which contains the role
+```
 
 ## Ansible Conditional Issues
 
@@ -247,16 +311,6 @@ failed to create shim task: OCI runtime create failed: exec: "/lib/systemd/syste
    platforms:
      - name: ethereum-node
        image: geerlingguy/docker-ubuntu2204-ansible:latest
-   ```
-
-2. **Ensure proper cgroup mounting**:
-
-   ```yaml
-   platforms:
-     - name: ethereum-node
-       volumes:
-         - /sys/fs/cgroup:/sys/fs/cgroup:rw
-       cgroupns_mode: host
    ```
 
 ## Automating Configuration Updates

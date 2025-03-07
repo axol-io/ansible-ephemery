@@ -11,8 +11,9 @@ secrets.*
 # Ansible files
 .DS_Store
 .ansible/
+ansible.cfg
 
-# Prefer files
+# Optional files
 /files/validator_keys/*
 /files/passwords/*
 /files/validator_keys.tar.gz
@@ -23,4 +24,7 @@ secrets.*
 /files/ephemery-testnet.tar.gz
 
 # Local collections
-/collections/
+collections/
+
+# venv files
+.venv/

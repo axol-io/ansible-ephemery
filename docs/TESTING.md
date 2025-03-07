@@ -48,23 +48,55 @@ molecule/shared/scripts/demo_scenario.sh -e nethermind -c lodestar --keep
 
 ### macOS Compatibility
 
-For macOS users with Docker Desktop, we provide a dedicated helper script to resolve common Docker connectivity issues:
+For macOS users with Docker Desktop or OrbStack:
 
 ```bash
-# Run a specific scenario on macOS
-./scripts/run-molecule-tests-macos.sh default
+# Set up Docker context and socket path
+export DOCKER_HOST=unix:///Users/<username>/.docker/run/docker.sock  # For Docker Desktop
+# OR
+export DOCKER_HOST=unix:///Users/<username>/.orbstack/run/docker.sock  # For OrbStack
 
-# Run client combination scenario on macOS
+# Run a test with manually set environment
+molecule test -s geth-lighthouse
+
+# OR use our automated helper script
 ./scripts/run-molecule-tests-macos.sh geth-lighthouse
 ```
 
-This script:
+The helper script:
+- Automatically detects your Docker environment (Docker Desktop or OrbStack)
+- Updates configuration to use the correct Docker socket
+- Maintains compatibility across macOS versions
 
-- Automatically detects the correct Docker socket path on macOS
-- Updates the molecule.yml configuration with the correct path
-- Sets the necessary environment variables
-- Handles the different `sed` syntax in macOS
-- Restores original configuration after testing
+#### Troubleshooting macOS Docker Connections
+
+If you encounter Docker connection issues:
+
+1. **Check Docker contexts**:
+   ```bash
+   docker context ls
+   docker context use desktop-linux  # For Docker Desktop
+   docker context use orbstack       # For OrbStack
+   ```
+
+2. **Verify Docker socket exists**:
+   ```bash
+   ls -la /Users/<username>/.docker/run/docker.sock  # For Docker Desktop
+   ls -la /Users/<username>/.orbstack/run/docker.sock  # For OrbStack
+   ```
+
+3. **Update molecule.yml**:
+   ```yaml
+   driver:
+     name: docker
+     docker_host: "unix:///Users/<username>/.docker/run/docker.sock"
+   platforms:
+     - name: instance-name
+       volumes:
+         - "/Users/<username>/.docker/run/docker.sock:/var/run/docker.sock:rw"
+   ```
+
+4. **See detailed troubleshooting**: [MOLECULE_TROUBLESHOOTING.md](MOLECULE_TROUBLESHOOTING.md)
 
 ### Creating and Running Specific Scenarios
 

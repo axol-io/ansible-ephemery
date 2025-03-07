@@ -93,6 +93,7 @@ function manage_structure {
   echo "Processing repository structure..."
 
   # Create temporary file for structure
+  local temp_file
   temp_file=$(mktemp)
 
   # Generate repository structure
@@ -279,7 +280,8 @@ function normalize_task_names {
   for file in $yaml_files; do
     total_files=$((total_files + 1))
     local file_modified=0
-    local temp_file=$(mktemp)
+    local temp_file
+    temp_file=$(mktemp)
     local in_task=0
     local line_num=0
     local task_line_num=0
@@ -298,8 +300,10 @@ function normalize_task_names {
         # Check if task name matches convention
         if ! [[ "$task_name" =~ ^[A-Z][a-z]+:[[:space:]][A-Z0-9] ]]; then
           # Task name doesn't match convention, normalize it
-          local action=$(echo "$task_name" | awk -F ':' '{print $1}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-          local description=$(echo "$task_name" | awk -F ':' '{$1=""; print $0}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          local action
+          action=$(echo "$task_name" | awk -F ':' '{print $1}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          local description
+          description=$(echo "$task_name" | awk -F ':' '{$1=""; print $0}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
           # If no colon, treat whole thing as description and guess action
           if [ -z "$description" ]; then

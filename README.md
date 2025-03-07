@@ -153,11 +153,29 @@ For configuration and troubleshooting, see [docs/MONITORING.md](docs/MONITORING.
 
 ## Testing
 
-Run tests with the Molecule framework:
+The role includes comprehensive Molecule tests for all supported client combinations and features.
 
 ```bash
-molecule/shared/scripts/demo_scenario.sh --execution geth --consensus prysm
+# Install test dependencies
+pip install -r requirements-dev.txt
+
+# Run tests (Linux)
+molecule test -s geth-lighthouse
+
+# Run tests (macOS)
+# For Docker Desktop users
+export DOCKER_HOST=unix:///Users/<username>/.docker/run/docker.sock
+molecule test -s geth-lighthouse
+
+# For OrbStack users
+export DOCKER_HOST=unix:///Users/<username>/.orbstack/run/docker.sock
+molecule test -s geth-lighthouse
+
+# OR use our helper script that works with both Docker Desktop and OrbStack
+./scripts/run-molecule-tests-macos.sh geth-lighthouse
 ```
+
+See [Molecule Testing](./molecule/README.md) and [Testing Documentation](./docs/TESTING.md) for more details.
 
 ## Documentation
 

@@ -45,7 +45,7 @@ For detailed information about verification tests, please see the [Verification 
 
 ### macOS Compatibility
 
-For macOS users with Docker Desktop, we provide a helper script to handle Docker socket connections:
+For macOS users with Docker Desktop or OrbStack, we provide a helper script to handle Docker socket connections:
 
 ```bash
 # Run a specific scenario on macOS
@@ -55,7 +55,26 @@ For macOS users with Docker Desktop, we provide a helper script to handle Docker
 ./scripts/run-molecule-tests-macos.sh geth-lighthouse
 ```
 
-This script dynamically detects the Docker socket path and configures Molecule to use it correctly, avoiding common connectivity issues on macOS.
+Alternatively, you can manually set the Docker environment for macOS:
+
+```bash
+# Check available Docker contexts
+docker context ls
+
+# Use the appropriate context (typically desktop-linux for Docker Desktop)
+docker context use desktop-linux
+
+# Get the Docker socket path
+docker context inspect desktop-linux | grep Host
+
+# Set the DOCKER_HOST environment variable
+export DOCKER_HOST=unix:///Users/<username>/.docker/run/docker.sock
+
+# Run the test with the explicit Docker host
+molecule test -s geth-lighthouse
+```
+
+This approach dynamically detects the Docker socket path and configures Molecule to use it correctly, avoiding common connectivity issues on macOS.
 
 ### Creating Scenarios
 
@@ -123,10 +142,59 @@ Each scenario contains:
 
 ### Docker Connectivity Issues on macOS
 
-If you encounter Docker connection errors on macOS, use the helper script:
+If you encounter Docker connection errors on macOS:
 
-```bash
-./scripts/run-molecule-tests-macos.sh <scenario>
+1. **Check Docker Context**:
+
+   ```bash
+   docker context ls
+   docker context use desktop-linux  # For Docker Desktop
+   docker context use orbstack       # For OrbStack
+   ```
+
+2. **Verify Docker Socket Path**:
+
+   ```bash
+   # For Docker Desktop
+   ls -la /Users/<username>/.docker/run/docker.sock
+
+   # For OrbStack
+   ls -la /Users/<username>/.orbstack/run/docker.sock
+   ```
+
+3. **Update molecule.yml**:
+
+   ```yaml
+   driver:
+     name: docker
+     docker_host: "unix:///Users/<username>/.docker/run/docker.sock"
+   platforms:
+     - name: instance-name
+       volumes:
+         - /sys/fs/cgroup:/sys/fs/cgroup:rw
+         - "/Users/<username>/.docker/run/docker.sock:/var/run/docker.sock:rw"
+   ```
+
+4. **Use Environment Variable**:
+
+   ```bash
+   export DOCKER_HOST=unix:///Users/<username>/.docker/run/docker.sock
+   molecule test -s geth-lighthouse
+   ```
+
+5. **Or use the helper script**:
+   ```bash
+   ./scripts/run-molecule-tests-macos.sh <scenario>
+   ```
+
+### Role path resolution in converge.yml
+
+When including the ephemery role, use relative paths:
+
+```yaml
+- name: Include ephemery role
+  include_role:
+    name: ../..  # Points to the project root directory which contains the role
 ```
 
 ### Ansible Conditional Errors

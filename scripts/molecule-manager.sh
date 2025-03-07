@@ -188,7 +188,8 @@ function test_all_scenarios {
   local failed_scenarios=()
 
   # Get start time
-  local start_time=$(date +%s)
+  local start_time
+  start_time=$(date +%s)
 
   # Run test for each scenario
   for scenario in "${SCENARIOS[@]}"; do
@@ -230,7 +231,8 @@ function test_all_scenarios {
   done
 
   # Get end time and calculate duration
-  local end_time=$(date +%s)
+  local end_time
+  end_time=$(date +%s)
   local duration=$((end_time - start_time))
   local minutes=$((duration / 60))
   local seconds=$((duration % 60))

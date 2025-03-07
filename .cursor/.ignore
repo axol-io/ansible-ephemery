@@ -1,6 +1,5 @@
-# Ansible specific
-.ansible/
-ansible-*.log
+# Test & development
+.venv/
 
 # Version control
 .git/
@@ -32,12 +31,9 @@ __pycache__/
 *.deb
 
 # Data directories (from .gitignore)
-# /files/validator_keys/
-/files/geth-data/
-/files/lighthouse-data/
-/files/ephemery-data/
-/files/ephemery-testnet/
+/files/validator_keys/*
+/files/passwords/*
 
 # Host files (from .gitignore)
-# host_vars/*
+host_vars/*
 !host_vars/example-*
