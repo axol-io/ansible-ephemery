@@ -13,12 +13,15 @@ ignore: |
   node_modules/
   *.min.yaml
   *.min.yml
+  collections/ansible_collections/
 
 rules:
   # 80 chars should be enough, but don't fail if a line is longer
   line-length:
-    max: 80
+    max: 120
     level: warning
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
   # Relax quote rules (ansible-lint will handle this more specifically)
   # The version of yamllint installed might not support this rule
   # quotes: any
