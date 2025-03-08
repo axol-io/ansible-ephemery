@@ -19,6 +19,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install ansible-lint yamllint
+          pip install ansible-core
+      - name: Install Ansible collections
+        run: |
+          mkdir -p collections
+          ansible-galaxy collection install -r requirements.yaml -p collections --force
+          echo "ANSIBLE_COLLECTIONS_PATH=$PWD/collections" >> $GITHUB_ENV
+
+          # Verify collections were installed correctly
+          find collections -type d -name "docker" | grep -v '__pycache__'
       - name: Check YAML file extensions
         run: |
           chmod +x scripts/check-yaml-extensions.sh
@@ -26,9 +35,13 @@ jobs:
       - name: Run ansible-lint
         run: |
           ansible-lint
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ env.ANSIBLE_COLLECTIONS_PATH }}
       - name: Run yamllint
         run: |
           yamllint .
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ env.ANSIBLE_COLLECTIONS_PATH }}
 
   molecule:
     runs-on: ubuntu-latest
@@ -75,6 +88,14 @@ jobs:
           pip install molecule molecule-docker docker pytest-testinfra ansible-lint
           sudo apt-get update
           sudo apt-get install -y socat procps iproute2
+      - name: Install Ansible collections
+        run: |
+          mkdir -p collections
+          ansible-galaxy collection install -r requirements.yaml -p collections --force
+          echo "ANSIBLE_COLLECTIONS_PATH=$PWD/collections" >> $GITHUB_ENV
+
+          # Verify collections were installed correctly
+          find collections -type d -name "docker" | grep -v '__pycache__'
       - name: Verify Docker
         run: |
           docker --version
@@ -100,6 +121,7 @@ jobs:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
           DOCKER_HOST: unix:///var/run/docker.sock
+          ANSIBLE_COLLECTIONS_PATH: ${{ env.ANSIBLE_COLLECTIONS_PATH }}
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v4
