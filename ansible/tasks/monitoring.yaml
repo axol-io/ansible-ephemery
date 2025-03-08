@@ -31,7 +31,7 @@
   become: true
   ansible.builtin.template:
     src: templates/datasources.yaml.j2
-    dest: "{{ ephemery_dir }}/config/grafana/provisioning/datasources/datasource.yaml"
+    dest: '{{ ephemery_dir }}/config/grafana/provisioning/datasources/datasource.yaml'
     mode: '0644'
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
@@ -41,7 +41,7 @@
   become: true
   ansible.builtin.template:
     src: templates/grafana-agent.yaml.j2
-    dest: "{{ ephemery_dir }}/config/grafana/agent/grafana-agent.yaml"
+    dest: '{{ ephemery_dir }}/config/grafana/agent/grafana-agent.yaml'
     mode: '0644'
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
@@ -52,7 +52,7 @@
   become: true
   ansible.builtin.template:
     src: templates/prometheus.yaml.j2
-    dest: "{{ ephemery_dir }}/config/prometheus/prometheus.yaml"
+    dest: '{{ ephemery_dir }}/config/prometheus/prometheus.yaml'
     mode: '0644'
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
@@ -125,9 +125,9 @@
     network_mode: host
     privileged: true
     env:
-      GF_SECURITY_ADMIN_PASSWORD: "{{ GRAFANA_ADMIN_PASSWORD }}"
-      GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_SERVER_HTTP_PORT: "{{ grafana_port | string }}"
+      GF_SECURITY_ADMIN_PASSWORD: '{{ GRAFANA_ADMIN_PASSWORD }}'
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_SERVER_HTTP_PORT: '{{ grafana_port | string }}'
     volumes:
       - '{{ ephemery_dir }}/data/grafana:/var/lib/grafana'
       - '{{ ephemery_dir }}/config/grafana/provisioning/datasources/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro'
@@ -135,18 +135,18 @@
 
 - name: Create monitoring directories
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: '{{ item }}'
     state: directory
     mode: '0755'
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   loop:
-    - "{{ ephemery_dir }}/config/prometheus"
-    - "{{ ephemery_dir }}/config/grafana"
-    - "{{ ephemery_dir }}/config/grafana/dashboards"
-    - "{{ ephemery_dir }}/config/grafana/agent"
-    - "{{ ephemery_dir }}/data/prometheus"
-    - "{{ ephemery_dir }}/data/grafana"
+    - '{{ ephemery_dir }}/config/prometheus'
+    - '{{ ephemery_dir }}/config/grafana'
+    - '{{ ephemery_dir }}/config/grafana/dashboards'
+    - '{{ ephemery_dir }}/config/grafana/agent'
+    - '{{ ephemery_dir }}/data/prometheus'
+    - '{{ ephemery_dir }}/data/grafana'
 
 # - name: Create Lighthouse performance monitoring dashboard
 #   ansible.builtin.template:

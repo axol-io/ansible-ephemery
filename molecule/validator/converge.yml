@@ -9,6 +9,8 @@
         validator_enabled: true
         # Override variables for testing validators
         home_dir: /root
+        ephemery_base_dir: '{{ home_dir }}/ephemery'
+        ephemery_dir: '{{ ephemery_base_dir }}'
         # Validator-specific test variables
         validator_memory_limit: 1024M
         validator_client: '{{ cl }}'

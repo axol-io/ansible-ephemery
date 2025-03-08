@@ -8,4 +8,6 @@
       vars:
         # Override variables for testing
         home_dir: /root
+        ephemery_base_dir: '{{ home_dir }}/ephemery'
+        ephemery_dir: '{{ ephemery_base_dir }}'
         test_mode: true
