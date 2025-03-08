@@ -9,7 +9,6 @@
         mode: '0755'
 
     # Skip package installs to avoid network dependency issues during testing
-
     - name: Ensure Docker directory exists
       file:
         path: /var/lib/docker
@@ -18,7 +17,7 @@
 
     - name: Create mock Docker files
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: touch
         mode: '0644'
       with_items:

@@ -13,6 +13,12 @@
     - '{{ ephemery_base_dir }}/data/cl'
     - '{{ ephemery_base_dir }}/scripts'
     - '{{ ephemery_base_dir }}/logs'
+    - '{{ ephemery_base_dir }}/config'
+    - '{{ ephemery_base_dir }}/config/grafana'
+    - '{{ ephemery_base_dir }}/config/grafana/agent'
+    - '{{ ephemery_base_dir }}/config/grafana/provisioning'
+    - '{{ ephemery_base_dir }}/config/grafana/provisioning/datasources'
+    - '{{ ephemery_base_dir }}/config/grafana/provisioning/dashboards'
 
 - name: 🔑 Include JWT secret management task
   ansible.builtin.import_tasks:
@@ -140,7 +146,7 @@
       --metrics
       --metrics-address=0.0.0.0
       --metrics-port=5054
-      --checkpoint-sync-url=https://checkpoint-sync.ephemery.dev
+      --checkpoint-sync-url=https://checkpoint-sync.ephemery.ethpandaops.io/
       --testnet-dir=/ephemery_config
       --allow-insecure-genesis-sync
       {{ cl_extra_opts }}
