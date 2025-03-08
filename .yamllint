@@ -9,11 +9,15 @@ ignore: |
   .git/
   .github/
   .cursor/
+  .ansible/
   venv/
   node_modules/
   *.min.yaml
   *.min.yml
-  collections/ansible_collections/
+  collections/*
+  .vscode/
+  .idea/
+  .cache/
 
 rules:
   # 80 chars should be enough, but don't fail if a line is longer
