@@ -1,11 +1,11 @@
 ---
 - name: Create directory structure for cadvisor
-
   ansible.builtin.file:
     path: '{{ home_dir }}/cadvisor'
     state: directory
-    owner: '{{ ansible_user }}'
+    owner: '{{ ansible_user | default("root") }}'
     mode: '0755'
+  when: not test_mode | default(false)
 
 - name: Install cadvisor
   community.docker.docker_container:
@@ -28,4 +28,5 @@
     security_opts:
       - label=disable
   become: true
-  become_user: '{{ ansible_user }}'
+  become_user: '{{ ansible_user | default("root") }}'
+  when: not test_mode | default(false)

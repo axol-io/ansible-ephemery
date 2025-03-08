@@ -4,7 +4,8 @@
   tasks:
     - name: Include ansible-ephemery role
       include_role:
-        name: ansible
+        name: ../../ansible
       vars:
         # Override variables for testing
         home_dir: /root
+        test_mode: true

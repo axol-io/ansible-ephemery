@@ -29,9 +29,9 @@
 - name: Include EL client-specific tasks
   ansible.builtin.include_tasks:
     file: 'el-{{ el_client_name }}.yaml'
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Include CL client-specific tasks
   ansible.builtin.include_tasks:
     file: 'cl-{{ cl_client_name }}.yaml'
-  ignore_errors: yes
+  ignore_errors: true

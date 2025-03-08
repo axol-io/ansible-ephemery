@@ -19,8 +19,8 @@
     path: '{{ item }}'
     state: directory
     mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
   loop:
     - '{{ ephemery_data_dir }}/{{ el_client_name }}'
     - '{{ ephemery_data_dir }}/{{ cl_client_name }}'
@@ -29,9 +29,9 @@
 - name: Include EL client-specific tasks
   ansible.builtin.include_tasks:
     file: 'el-{{ el_client_name }}.yaml'
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Include CL client-specific tasks
   ansible.builtin.include_tasks:
     file: 'cl-{{ cl_client_name }}.yaml'
-  ignore_errors: yes
+  ignore_errors: true

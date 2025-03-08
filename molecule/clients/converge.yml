@@ -4,7 +4,7 @@
   tasks:
     - name: Include ansible-ephemery role with Nethermind and Teku clients
       include_role:
-        name: ansible
+        name: ../../ansible
       vars:
         # Override variables for client testing
         home_dir: /root

@@ -4,7 +4,7 @@
   tasks:
     - name: Include the role
       ansible.builtin.include_role:
-        name: ansible
+        name: ../../ansible
       vars:
         backup_enabled: true
 

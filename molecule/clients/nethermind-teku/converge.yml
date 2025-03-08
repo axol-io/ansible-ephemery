@@ -9,7 +9,7 @@
           - procps
           - iproute2
         state: present
-        update_cache: yes
+        update_cache: true
 
     - name: Include ephemery role
       include_role:

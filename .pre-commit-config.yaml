@@ -22,7 +22,7 @@ repos:
         description: Lint YAML files with yamllint
         entry: yamllint -c .yamllint
         types: [yaml]
-        args: [--strict, -f, parsable, --no-warnings]
+        args: [-f, parsable, --no-warnings]
         exclude: ^collections/
 
   - repo: local

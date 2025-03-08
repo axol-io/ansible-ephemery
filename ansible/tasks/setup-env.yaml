@@ -14,11 +14,16 @@
       - curl
       - software-properties-common
     state: present
+  when: not test_mode | default(false) | bool
 
 - name: 🔑 Add Docker GPG apt key
-  ansible.builtin.apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
+  ansible.builtin.shell: |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
+    https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+  args:
+    creates: /usr/share/keyrings/docker-archive-keyring.gpg
+  when: ansible_facts['os_family'] == 'Debian' and not test_mode | default(false) | bool
 
 - name: 📦 Install Docker
   ansible.builtin.apt:
@@ -27,12 +32,22 @@
       - docker-compose
       - gnupg-agent
     state: present
+  when: not test_mode | default(false) | bool
 
-- name: 📦 Install git, default-jre, make, gcc
-  ansible.builtin.apt:
-    name:
+- name: Set package list with conditional Java
+  ansible.builtin.set_fact:
+    pkg_list:
       - git
-      - default-jre
       - make
       - gcc
+
+- name: Add Java to package list if not in CI
+  ansible.builtin.set_fact:
+    pkg_list: "{{ pkg_list + ['default-jre'] }}"
+  when: not test_mode | default(false) | bool
+
+- name: 📦 Install git, make, gcc and optionally Java
+  ansible.builtin.apt:
+    name: "{{ pkg_list }}"
     state: present
+  when: not test_mode | default(false) | bool

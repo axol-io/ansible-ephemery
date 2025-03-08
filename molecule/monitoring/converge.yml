@@ -4,7 +4,7 @@
   tasks:
     - name: Include the role
       ansible.builtin.include_role:
-        name: ansible
+        name: ../../ansible
       vars:
         monitoring_enabled: true
         prometheus_enabled: true

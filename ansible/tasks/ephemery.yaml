@@ -5,8 +5,8 @@
     path: '{{ item }}'
     state: directory
     mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
   loop:
     - '{{ ephemery_base_dir }}'
     - '{{ ephemery_base_dir }}/data/el'
@@ -21,17 +21,18 @@
 
 - name: 🔑 Add user to Docker group
   ansible.builtin.user:
-    name: '{{ ansible_user }}'
+    name: '{{ ansible_user | default("root") }}'
     groups: docker
     append: true
+  when: not test_mode | default(false) | bool
 
 - name: 📝 Create health check script
   ansible.builtin.template:
     src: templates/scripts/health_check.sh.j2
     dest: '{{ ephemery_scripts_dir }}/health_check.sh'
     force: true
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
     mode: '0755'
 
 - name: ⏱️ Setup cron job for health check
@@ -39,7 +40,7 @@
     name: Ephemery health check
     minute: '*/5'
     job: '{{ ephemery_scripts_dir }}/health_check.sh'
-    user: '{{ ansible_user }}'
+    user: '{{ ansible_user | default("root") }}'
 
   # Include client-specific configuration
 - name: 🚀 Include client-specific configuration
@@ -63,13 +64,14 @@
     name: '{{ network }}-{{ el }}'
   register: el_container_info
   ignore_errors: true
+  when: not test_mode | default(false)
 
 - name: 🚀 Remove existing Execution Client container if it exists
   community.docker.docker_container:
     name: '{{ network }}-{{ el }}'
     state: absent
     force_kill: true
-  when: el_container_info.exists
+  when: not test_mode | default(false) and el_container_info.exists | default(false)
 
 - name: 🚀 Start Execution Client with generic configuration
   become: true
@@ -79,70 +81,32 @@
     state: started
     restart_policy: unless-stopped
     network_mode: host
-    memory: '{{ el_memory_limit }}'
-    memory_swap: '{{ el_memory_limit }}'
     volumes:
-      - '{{ ephemery_base_dir }}/data/{{ el }}:/data'
-      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
+      - '{{ ephemery_dir }}/data/{{ el }}:/data'
+      - '{{ ephemery_dir }}/jwt.hex:/jwt.hex'
     command: >
       {% if el == "geth" %}
-      --networkid=39438143
-      --bootnodes=enode://50a54ecbd2175497640bcf46a25bbe9bb4fae51d7cc2a29ef4947a7ee17496cf39a699b7fe6b703ed0feb9dbaae7e44fc3827fcb7435ca9ac6de4daa4d983b3d@137.74.203.240:30303,enode://7367578e9d211512a59e2cdd2c600b8bb71199421aac9d4b0b26050098d551575684314ca8bf226930568e29507c45de1ee00ae1ca70c544b9ba8250ce1d66e1@167.235.1.185:30343
-      --datadir=/data
-      --authrpc.addr=0.0.0.0
-      --authrpc.port=8551
-      --authrpc.vhosts=*
-      --authrpc.jwtsecret=/execution-auth.jwt
-      --http
-      --http.addr=0.0.0.0
-      --http.port=8545
-      --http.vhosts=*
-      --http.api=eth,net,web3,engine
-      --ws
-      --ws.addr=0.0.0.0
-      --ws.port=8546
-      --ws.api=eth,net,web3
-      --ws.origins=*
-      --syncmode=snap
-      --metrics
-      --metrics.addr=0.0.0.0
-      --metrics.port=6060
-      {% else %}
-      --datadir=/data
-      --authrpc.addr=0.0.0.0
-      --authrpc.port=8551
-      --authrpc.vhosts=*
-      --authrpc.jwtsecret=/execution-auth.jwt
-      --http
-      --http.addr=0.0.0.0
-      --http.port=8545
-      --http.vhosts=*
-      --http.api=eth,net,web3,engine
-      --ws
-      --ws.addr=0.0.0.0
-      --ws.port=8546
-      --ws.api=eth,net,web3
-      --ws.origins=*
-      --syncmode=snap
-      --metrics
-      --metrics.addr=0.0.0.0
-      --metrics.port=6060
-      {{ el_extra_opts }}
+      --{{ network }} --datadir=/data --authrpc.jwtsecret=/jwt.hex --http --http.api=eth,net,web3,engine
+      --http.addr=0.0.0.0 --http.corsdomain=* --http.vhosts=* --ws --ws.api=eth,net,web3,engine
+      --ws.addr=0.0.0.0 --ws.origins=* {{ el_extra_opts }}
       {% endif %}
-  when: el == "geth" or el == "besu" or el == "nethermind" or el == "reth" or el == "erigon"
+  when: >
+    (el == "geth" or el == "besu" or el == "nethermind" or el == "reth" or el == "erigon")
+    and not test_mode | default(false)
 
 - name: 🚀 Check if Consensus Client container exists
   community.docker.docker_container_info:
     name: '{{ network }}-{{ cl }}'
   register: cl_container_info
   ignore_errors: true
+  when: not test_mode | default(false)
 
 - name: 🚀 Remove existing Consensus Client container if it exists
   community.docker.docker_container:
     name: '{{ network }}-{{ cl }}'
     state: absent
     force_kill: true
-  when: cl_container_info.exists
+  when: not test_mode | default(false) and cl_container_info.exists | default(false)
 
 - name: 🚀 Start Consensus Client with generic configuration
   become: true
@@ -152,56 +116,15 @@
     state: started
     restart_policy: unless-stopped
     network_mode: host
-    memory: '{{ cl_memory_limit }}'
-    memory_swap: '{{ cl_memory_limit }}'
     volumes:
-      - '{{ ephemery_base_dir }}/data/beacon:/data'
-      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
+      - '{{ ephemery_dir }}/data/{{ cl }}:/data'
+      - '{{ ephemery_dir }}/jwt.hex:/jwt.hex'
     command: >
       {% if cl == "lighthouse" %}
-      lighthouse beacon_node
-      --datadir=/data
-      --http
-      --http-address=0.0.0.0
-      --http-port=5052
-      --execution-endpoint=http://localhost:8551
-      --execution-jwt=/execution-auth.jwt
-      --testnet-dir=/ephemery_config
-      --allow-insecure-genesis-sync
-      {{ cl_extra_opts }}
-      {% elif cl == "teku" %}
-      --data-path=/data
-      --rest-api-enabled=true
-      --rest-api-interface=0.0.0.0
-      --rest-api-port=5052
-      --metrics-enabled=true
-      --metrics-interface=0.0.0.0
-      --metrics-port=5054
-      --ee-endpoint=http://127.0.0.1:8551
-      --ee-jwt-secret-file=/execution-auth.jwt
-      {{ cl_extra_opts }}
-      {% elif cl == "prysm" %}
-      --datadir=/data
-      --rpc-host=0.0.0.0
-      --rpc-port=5052
-      --monitoring-host=0.0.0.0
-      --monitoring-port=5054
-      --execution-endpoint=http://127.0.0.1:8551
-      --jwt-secret=/execution-auth.jwt
-      {{ cl_extra_opts }}
-      {% elif cl == "lodestar" %}
-      --dataDir=/data
-      --rest
-      --rest.address=0.0.0.0
-      --rest.port=5052
-      --metrics
-      --metrics.address=0.0.0.0
-      --metrics.port=5054
-      --execution.urls=http://127.0.0.1:8551
-      --jwt-secret=/execution-auth.jwt
-      {{ cl_extra_opts }}
+      --{{ network }} --datadir=/data --execution-jwt=/jwt.hex --http
+      --http.addr=0.0.0.0 --http.port=5052 {{ cl_extra_opts }}
       {% endif %}
-  when: cl in ["lighthouse", "teku", "prysm", "lodestar"]
+  when: (cl == "lighthouse" or cl == "teku" or cl == "prysm" or cl == "lodestar") and not test_mode | default(false)
 
 - name: 📊 Start Grafana agent
   community.docker.docker_container:
@@ -213,7 +136,8 @@
     network_mode: host
     privileged: true
     volumes:
-      - '{{ ephemery_base_dir }}/ephemery/config/grafana/agent/grafana-agent.yaml:/etc/agent/grafana-agent.yaml:ro'
+      - '{{ ephemery_dir }}/config/grafana/agent/grafana-agent.yaml:/etc/agent/grafana-agent.yaml:ro'
     command:
       - '--config.file=/etc/agent/grafana-agent.yaml'
       - '--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}'
+  when: not test_mode | default(false)

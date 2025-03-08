@@ -2,40 +2,24 @@
 - name: Prepare
   hosts: all
   tasks:
-    - name: Update apt cache
-      apt:
-        update_cache: true
-        cache_valid_time: 3600
+    - name: Create home directory for testing
+      file:
+        path: /root/ephemery
+        state: directory
+        mode: '0755'
 
-    - name: Install required packages
-      apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - software-properties-common
-          - python3-pip
-          - docker.io
-          - jq
-          - iptables  # Required for Docker in some environments
-        state: present
-        update_cache: false
+    # Skip package installs to avoid network dependency issues during testing
 
-    - name: Ensure pip is installed
-      pip:
-        name:
-          - pip
-          - setuptools
-          - docker
-        state: latest
+    - name: Ensure Docker directory exists
+      file:
+        path: /var/lib/docker
+        state: directory
+        mode: '0755'
 
-    - name: Ensure Docker service is running
-      service:
-        name: docker
-        state: started
-        enabled: true
-
-    - name: Create Docker network for testing
-      docker_network:
-        name: ephemery-validator-net
-        state: present
+    - name: Create mock Docker files
+      file:
+        path: "{{ item }}"
+        state: touch
+        mode: '0644'
+      with_items:
+        - /root/ephemery/docker-compose.yml

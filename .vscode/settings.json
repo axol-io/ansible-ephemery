@@ -1,5 +1,5 @@
 {
     "yaml.schemas": {
-        "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json": ["playbooks/*.yaml", "tasks/*.yaml", "handlers/*.yaml", "roles/*/*.yaml"]
+        "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json": ["ansible/playbooks/*.yaml", "ansible/tasks/*.yaml", "ansible/handlers/*.yaml", "ansible/roles/*/*.yaml"]
     }
 }

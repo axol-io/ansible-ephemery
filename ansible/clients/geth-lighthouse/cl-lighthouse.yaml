@@ -13,8 +13,8 @@
     path: '{{ lighthouse_data_dir }}'
     state: directory
     mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
 
 - name: Ensure metrics port is different from HTTP API port
   ansible.builtin.set_fact:

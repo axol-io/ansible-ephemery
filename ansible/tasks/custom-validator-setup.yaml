@@ -25,7 +25,6 @@
   community.docker.docker_container:
     name: '{{ network }}-validator-{{ cl }}'
     state: stopped
-  ignore_errors: yes    # Continue even if container doesn't exist
 
 - name: Debug validator keys path
   ansible.builtin.debug:
@@ -72,7 +71,8 @@
 - name: Move extracted validator keys to secrets directory
   ansible.builtin.shell: |
     # Move keystore files to validator keys directory
-    find {{ ephemery_base_dir }}/tmp -name "keystore*.json" -exec mv {} {{ ephemery_base_dir }}/secrets/validator/keys/ \\;
+    find {{ ephemery_base_dir }}/tmp -name "keystore*.json" \
+      -exec mv {} {{ ephemery_base_dir }}/secrets/validator/keys/ \\;
   when: extracted_keys is defined and extracted_keys.changed
   register: moved_keys
 
@@ -83,7 +83,7 @@
     mode: '0600'
     owner: '{{ ansible_user }}'
     group: '{{ ansible_user }}'
-    recurse: yes
+    recurse: true
   when: moved_keys is defined and moved_keys.changed
 
 - name: Set beacon API endpoint

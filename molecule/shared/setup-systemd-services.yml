@@ -130,22 +130,22 @@
 
 - name: Reload systemd configurations
   ansible.builtin.systemd:
-    daemon_reload: yes
+    daemon_reload: true
 
 - name: Enable and start execution client service
   ansible.builtin.systemd:
     name: "{{ el }}.service"
-    enabled: yes
+    enabled: true
     state: started
 
 - name: Enable and start consensus beacon service
   ansible.builtin.systemd:
     name: "{{ cl }}-beacon.service"
-    enabled: yes
+    enabled: true
     state: started
 
 - name: Enable and start validator service
   ansible.builtin.systemd:
     name: "{{ cl }}-validator.service"
-    enabled: yes
+    enabled: true
     state: started

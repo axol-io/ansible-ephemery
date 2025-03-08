@@ -4,7 +4,7 @@
   tasks:
     - name: Include the role
       ansible.builtin.include_role:
-        name: ansible
+        name: ../../ansible
       vars:
         el_memory_limit: 2048M
         cl_memory_limit: 1024M
