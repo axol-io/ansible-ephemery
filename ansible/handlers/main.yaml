@@ -1,0 +1,7 @@
+---
+# Handlers for ansible-ephemery
+
+- name: Display password file copied
+  ansible.builtin.debug:
+    msg: 'Password file copied to {{ ephemery_base_dir }}/secrets/validator/passwords/validators.txt'
+  listen: Display password file copied

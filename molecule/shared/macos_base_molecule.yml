@@ -36,4 +36,4 @@ provisioner: &base_provisioner
       group_vars: ../../molecule/shared/group_vars/
       host_vars: ../../molecule/shared/host_vars/
 verifier: &base_verifier
-  name: ansible 
+  name: ansible

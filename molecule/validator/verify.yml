@@ -1,32 +1,32 @@
 ---
-- name: Verify validator functionality
+- name: Verify
   hosts: all
-  become: true
-  vars:
-    validator_enabled: true
+  gather_facts: false
   tasks:
-    # Include common verification tasks
-    - name: Include common verification tasks
-      ansible.builtin.include_tasks: ../shared/templates/verify/common.yml
+    - name: Check if required services are running
+      ansible.builtin.service_facts:
 
-    # Include validator-specific verification tasks
-    - name: Include validator-specific verification tasks
-      ansible.builtin.include_tasks: ../shared/templates/verify/validator.yml
-
-    # Additional validator-specific verification tasks
-    - name: Verify validator API is responding
-      uri:
-        url: http://localhost:5064/metrics
-        method: GET
-        status_code: 200
-      register: validator_metrics
-      failed_when: false
+    - name: Get systemd services
+      ansible.builtin.command: systemctl list-units --type=service --all
+      register: systemd_services
       changed_when: false
-      when: validator_enabled | bool and not is_molecule_test | bool
 
-    - name: Assert validator API is responding if enabled
-      assert:
-        that: validator_metrics.status == 200
-        fail_msg: Validator API is not responding at http://localhost:5064/metrics
-        success_msg: Validator API is responding correctly
-      when: validator_enabled | bool and not is_molecule_test | bool and validator_metrics.status is defined
+    - name: Debug systemd services
+      ansible.builtin.debug:
+        var: systemd_services.stdout_lines
+
+    - name: Verify validator configuration files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: validator_files
+      loop:
+        - /etc/ethereum/validators
+        - /etc/systemd/system/validator.service
+
+    - name: Assert validator files exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        fail_msg: "Required validator file {{ item.item }} does not exist"
+        success_msg: "Validator file {{ item.item }} exists"
+      loop: "{{ validator_files.results }}"

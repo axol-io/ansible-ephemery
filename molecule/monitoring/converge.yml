@@ -2,15 +2,16 @@
 - name: Converge
   hosts: all
   tasks:
-    - name: Include ansible-ephemery role with monitoring enabled
-      include_role:
-        name: ansible-ephemery
+    - name: Include the role
+      ansible.builtin.include_role:
+        name: ansible
       vars:
+        monitoring_enabled: true
+        prometheus_enabled: true
+        grafana_enabled: true
         # Override variables for monitoring testing
         home_dir: /root
         # Enable monitoring components
-        prometheus_enabled: true
-        grafana_enabled: true
         cadvisor_enabled: true
         node_exporter_enabled: true
         # Monitor service ports

@@ -1,3 +1,10 @@
 ---
-# This file inherits from ../verify.yml
-- import_playbook: ../verify.yml
+- name: Verify
+  hosts: all
+  vars:
+    el: geth
+    cl: lighthouse
+  tasks:
+    - name: Include mock services verification tasks
+      ansible.builtin.include_tasks:
+        file: ../../shared/verify-mock-services.yml

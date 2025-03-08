@@ -1,12 +1,12 @@
 # Host files
-host_vars/*
+ansible/host_vars/*
 inventory.*
 secrets.*
-!host_vars/example-*
+!ansible/host_vars/example-*
 
 # Example files
-!host_vars/example-inventory.ini
-!host_vars/example-hostname.yaml
+!ansible/host_vars/example-inventory.ini
+!ansible/host_vars/example-hostname.yaml
 
 # Ansible files
 .DS_Store
@@ -14,14 +14,15 @@ secrets.*
 ansible.cfg
 
 # Optional files
-/files/validator_keys/*
-/files/passwords/*
-/files/validator_keys.tar.gz
-/files/geth-data/*
-/files/lighthouse-data/*
-/files/ephemery-data/*
-/files/ephemery-testnet/*
-/files/ephemery-testnet.tar.gz
+ansible/files/validator_keys/*
+ansible/files/passwords/*
+ansible/files/validator_keys.tar.gz
+ansible/files/validator_keys.zip
+ansible/files/geth-data/*
+ansible/files/lighthouse-data/*
+ansible/files/ephemery-data/*
+ansible/files/ephemery-testnet/*
+ansible/files/ephemery-testnet.tar.gz
 
 # Local collections
 collections/

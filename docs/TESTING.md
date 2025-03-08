@@ -23,8 +23,10 @@ Tests are organized into scenarios within the `molecule/` directory:
 
 ```bash
 molecule/
-├── [client-scenarios]/   # Client combination scenarios
-├── clients/              # Client combination templates
+├── clients/              # Client combination scenarios
+│   ├── geth-lighthouse/  # EL-CL client pair
+│   ├── geth-prysm/       # EL-CL client pair
+│   └── ...               # Other client pairs
 ├── default/              # Default scenario
 ├── backup/               # Backup functionality tests
 ├── monitoring/           # Monitoring functionality tests

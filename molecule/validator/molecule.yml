@@ -4,37 +4,14 @@ dependency:
 driver:
   name: docker
 platforms:
-  - name: ethereum-validator
-    image: geerlingguy/docker-ubuntu2204-ansible:latest
-    pre_build_image: true
-    privileged: true
+  - name: instance
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible:latest"
+    command: ""
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-    command: /lib/systemd/systemd
-    cgroupns_mode: host
+    privileged: true
+    pre_build_image: true
 provisioner:
   name: ansible
-  inventory:
-    host_vars:
-      ethereum-validator:
-        el: geth
-        cl: lighthouse
-        network: ephemery
-        ephemery_base_dir: /home/ubuntu/ephemery
-        ephemery_data_dir: /home/ubuntu/ephemery/data
-        ephemery_logs_dir: /home/ubuntu/ephemery/logs
-        ephemery_scripts_dir: /home/ubuntu/ephemery/scripts
-        ephemery_backup_dir: /home/ubuntu/ephemery/backups
-        jwt_secret_path: /home/ubuntu/ephemery/jwtsecret
-        validator_enabled: true  # Enable validator for this scenario
-        backup_enabled: false
-        firewall_enabled: true
-        prometheus_port: 9090
-        grafana_port: 3000
-        grafana_agent_http_port: 12345
-        cadvisor_port: 8080
-        el_memory_limit: 2048M
-        cl_memory_limit: 2048M
-        validator_memory_limit: 1024M
 verifier:
   name: ansible

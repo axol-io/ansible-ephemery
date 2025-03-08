@@ -60,16 +60,15 @@ Contains sensitive information that should be encrypted with Ansible Vault:
 - Private keys
 - JWT secrets
 
-## Example Usage
+## Example Files
 
-The example files provided (`example-host.yaml`, `secrets.yaml.example`, and `inventory.yaml.example`) demonstrate the recommended variable structure.
+The example files provided (`example-host.yaml`, `secrets.yaml.example`, and `example-inventory.yaml`) demonstrate the recommended variable structure.
 
-For a new deployment:
+## Getting Started
 
-1. Copy `inventory.yaml.example` to `inventory.yaml` and customize for your environment
-2. For each host in your inventory, create a host_vars file by copying `example-host.yaml`
-3. Copy `secrets.yaml.example` to `secrets.yaml` and fill in your sensitive data
-4. Encrypt `secrets.yaml` using: `ansible-vault encrypt host_vars/secrets.yaml`
+1. Copy `example-inventory.yaml` to `inventory.yaml` and customize for your environment
+2. Create host_vars files for each node with specific configurations
+3. Use group_vars for setting common variables across groups
 
 ## Client-Specific Variables
 

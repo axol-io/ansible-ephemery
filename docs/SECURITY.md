@@ -70,10 +70,10 @@ jwtsecret: !vault |
 
 ```bash
 # Prompt for password
-ansible-playbook -i inventory.yaml main.yaml --ask-vault-pass
+ansible-playbook -i inventory.yaml ephemery.yaml --ask-vault-pass
 
 # Use a password file (store this securely!)
-ansible-playbook -i inventory.yaml main.yaml --vault-password-file ~/.vault_pass
+ansible-playbook -i inventory.yaml ephemery.yaml --vault-password-file ~/.vault_pass
 ```
 
 ## ⚠️ WARNING: Remove Example Secrets Before Production
@@ -126,3 +126,28 @@ Failure to remove example secrets could result in security vulnerabilities in yo
 - [ ] SSH using key authentication only
 - [ ] Monitoring alerts configured
 - [ ] Regular security updates scheduled
+
+## Using Ansible Vault for Secrets
+
+For production environments, store sensitive variables in an encrypted format using Ansible Vault:
+
+```bash
+# Create an encrypted file
+ansible-vault create host_vars/your-node.vault.yaml
+
+# Add sensitive variables to this file
+jwt_secret: "your-secret-here"
+validator_password: "your-password-here"
+```
+
+Reference these variables in your playbook or include them in your host variables.
+
+To run the playbook with vault-encrypted files:
+
+```bash
+# Prompt for the vault password
+ansible-playbook -i inventory.yaml ephemery.yaml --ask-vault-pass
+
+# Or use a password file
+ansible-playbook -i inventory.yaml ephemery.yaml --vault-password-file ~/.vault_pass
+```

@@ -31,52 +31,57 @@ create_client_config() {
   # Create directory if it doesn't exist
   mkdir -p "$dir"
 
-  # Create main.yaml
-  cat > "$dir/main.yaml" << 'EOF'
+  # Create ephemery.yaml
+  cat > "$dir/ephemery.yaml" << 'EOF'
 ---
-# Client-specific configuration for ELCAP (EL) and CLCAP (CL)
+- name: Deploy Ephemery Test Environment for ELCAP (ELNAME) + CLCAP (CLNAME)
+  hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    el: ELNAME
+    cl: CLNAME
+    monitoring_enabled: true
+    validator_enabled: false
+    node_exporter_enabled: true
+    cadvisor_enabled: true
+    firewall_enabled: true
+    setup_checks_enabled: true
 
-- name: Set client-specific variables
-  ansible.builtin.set_fact:
-    el_client_name: ELNAME
-    cl_client_name: CLNAME
-    el_client_image: '{{ client_images.ELNAME }}'
-    cl_client_image: '{{ client_images.CLNAME }}'
-    el_client_port: 8545
-    cl_client_port: 5052
-    el_p2p_port: 30303
-    cl_p2p_port: 9000
-    el_metrics_port: 6060
-    cl_metrics_port: 5054
+  tasks:
+    - name: Include validation tasks
+      ansible.builtin.include_tasks: validation.yaml
 
-- name: Create client-specific directories
-  ansible.builtin.file:
-    path: '{{ item }}'
-    state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
-  loop:
-    - '{{ ephemery_data_dir }}/{{ el_client_name }}'
-    - '{{ ephemery_data_dir }}/{{ cl_client_name }}'
+    - name: Include environment setup tasks
+      ansible.builtin.include_tasks: setup-env.yaml
 
-# Include client-specific tasks if they exist
-- name: Include EL client-specific tasks
-  ansible.builtin.include_tasks:
-    file: 'el-{{ el_client_name }}.yaml'
-  ignore_errors: yes
+    - name: Include JWT secret tasks
+      ansible.builtin.include_tasks: jwt-secret.yaml
 
-- name: Include CL client-specific tasks
-  ansible.builtin.include_tasks:
-    file: 'cl-{{ cl_client_name }}.yaml'
-  ignore_errors: yes
+    - name: Include client specific tasks
+      ansible.builtin.include_tasks: "clients/{{ el }}.yaml"
+
+    - name: Include client specific tasks
+      ansible.builtin.include_tasks: "clients/{{ cl }}.yaml"
+
+    - name: Include validator tasks if enabled
+      ansible.builtin.include_tasks: validator.yaml
+      when: validator_enabled | bool
+
+    - name: Include monitoring tasks if enabled
+      ansible.builtin.include_tasks: monitoring.yaml
+      when: monitoring_enabled | bool
+
+    - name: Include firewall tasks if enabled
+      ansible.builtin.include_tasks: firewall.yaml
+      when: firewall_enabled | bool
 EOF
 
   # Replace placeholders with actual values
-  sed -i "" "s/ELCAP/${el_cap}/g" "$dir/main.yaml"
-  sed -i "" "s/CLCAP/${cl_cap}/g" "$dir/main.yaml"
-  sed -i "" "s/ELNAME/${el}/g" "$dir/main.yaml"
-  sed -i "" "s/CLNAME/${cl}/g" "$dir/main.yaml"
+  sed -i "" "s/ELCAP/${el_cap}/g" "$dir/ephemery.yaml"
+  sed -i "" "s/CLCAP/${cl_cap}/g" "$dir/ephemery.yaml"
+  sed -i "" "s/ELNAME/${el}/g" "$dir/ephemery.yaml"
+  sed -i "" "s/CLNAME/${cl}/g" "$dir/ephemery.yaml"
 
   # Create el-client.yaml
   cat > "$dir/el-${el}.yaml" << 'EOF'
@@ -136,7 +141,7 @@ for el in $EL_CLIENTS; do
   for cl in $CL_CLIENTS; do
     # Check if the directory already exists and has all required files
     if [ -d "clients/${el}-${cl}" ] &&
-       [ -f "clients/${el}-${cl}/main.yaml" ] &&
+       [ -f "clients/${el}-${cl}/ephemery.yaml" ] &&
        [ -f "clients/${el}-${cl}/el-${el}.yaml" ] &&
        [ -f "clients/${el}-${cl}/cl-${cl}.yaml" ]; then
       echo "Skipping existing client config: ${el}-${cl}"

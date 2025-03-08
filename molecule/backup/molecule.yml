@@ -7,14 +7,13 @@ dependency:
 driver:
   name: docker
 platforms:
-  - name: ethereum-node
-    image: ubuntu:22.04
-    pre_build_image: true
-    privileged: true
+  - name: instance
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible:latest"
+    command: ""
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: "/lib/systemd/systemd"
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    privileged: true
+    pre_build_image: true
 provisioner:
   name: ansible
   env:

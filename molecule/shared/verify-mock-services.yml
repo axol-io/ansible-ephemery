@@ -1,0 +1,60 @@
+---
+# Shared verification tasks for mock services
+
+- name: Check if required directories and files exist
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: path_check
+  failed_when: not path_check.stat.exists
+  with_items:
+    - "/etc/ethereum"
+    - "/etc/ethereum/{{ el }}/{{ el }}.conf"
+    - "/etc/ethereum/{{ cl }}/{{ cl }}-beacon.conf"
+    - "/etc/ethereum/jwt.hex"
+
+- name: Check for mock service directories
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: service_check
+  failed_when: not service_check.stat.exists
+  with_items:
+    - "/run/systemd/system/{{ el }}.service.d"
+    - "/run/systemd/system/{{ cl }}-beacon.service.d"
+    - "/run/systemd/system/{{ cl }}-validator.service.d"
+
+- name: Check if service state is running
+  ansible.builtin.shell: "cat {{ item }}"
+  register: service_state_check
+  failed_when: service_state_check.stdout != "running"
+  changed_when: false
+  with_items:
+    - "/run/systemd/system/{{ el }}.service.d/state"
+    - "/run/systemd/system/{{ cl }}-beacon.service.d/state"
+    - "/run/systemd/system/{{ cl }}-validator.service.d/state"
+
+- name: Check if execution client port is listening
+  ansible.builtin.shell: ss -tuln | grep -q ":8545 "
+  register: el_port_check
+  changed_when: false
+  failed_when: el_port_check.rc != 0
+
+- name: Check if engine API port is listening
+  ansible.builtin.shell: ss -tuln | grep -q ":8551 "
+  register: engine_port_check
+  changed_when: false
+  failed_when: engine_port_check.rc != 0
+
+- name: Check if consensus client port is listening
+  ansible.builtin.shell: |
+    {% if cl == 'lighthouse' %}
+    ss -tuln | grep -q ":5052 "
+    {% elif cl == 'prysm' %}
+    ss -tuln | grep -q ":4000 "
+    {% elif cl == 'teku' %}
+    ss -tuln | grep -q ":5051 "
+    {% else %}
+    ss -tuln | grep -q ":9000 "
+    {% endif %}
+  register: cl_port_check
+  changed_when: false
+  failed_when: cl_port_check.rc != 0

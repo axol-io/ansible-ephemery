@@ -1,0 +1,10 @@
+---
+- name: Verify
+  hosts: all
+  vars:
+    el: besu
+    cl: lighthouse
+  tasks:
+    - name: Include mock services verification tasks
+      ansible.builtin.include_tasks:
+        file: ../../shared/verify-mock-services.yml

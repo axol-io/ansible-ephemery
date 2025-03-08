@@ -4,7 +4,7 @@
   tasks:
     - name: Include ansible-ephemery role with security enhancements
       include_role:
-        name: ansible-ephemery
+        name: ansible
       vars:
         # Override variables for security testing
         home_dir: /root

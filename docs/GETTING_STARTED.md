@@ -59,15 +59,15 @@ Host variables allow more detailed configuration for each node.
 
 1. Create a host variable file:
    ```bash
-   mkdir -p host_vars
-   cp host_vars/example-host.yaml host_vars/your-node-name.yaml
+   mkdir -p ansible/host_vars
+   cp ansible/host_vars/example-host.yaml ansible/host_vars/your-node-name.yaml
    ```
 
    Note: The filename must match the hostname in your inventory.
 
 2. Edit the host variables:
    ```bash
-   nano host_vars/your-node-name.yaml
+   nano ansible/host_vars/your-node-name.yaml
    ```
 
 3. Configure essential settings:

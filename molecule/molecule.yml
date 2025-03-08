@@ -1,0 +1,49 @@
+---
+# Root molecule.yml file that defines all client scenarios
+dependency:
+  name: galaxy
+  enabled: false
+driver:
+  name: docker
+scenarios:
+  # Client combinations with explicit paths
+  - name: geth-lighthouse
+    directory: clients/geth-lighthouse
+  - name: geth-prysm
+    directory: clients/geth-prysm
+  - name: geth-teku
+    directory: clients/geth-teku
+  - name: geth-lodestar
+    directory: clients/geth-lodestar
+  - name: reth-lighthouse
+    directory: clients/reth-lighthouse
+  - name: reth-prysm
+    directory: clients/reth-prysm
+  - name: reth-teku
+    directory: clients/reth-teku
+  - name: reth-lodestar
+    directory: clients/reth-lodestar
+  - name: erigon-lighthouse
+    directory: clients/erigon-lighthouse
+  - name: erigon-prysm
+    directory: clients/erigon-prysm
+  - name: erigon-teku
+    directory: clients/erigon-teku
+  - name: erigon-lodestar
+    directory: clients/erigon-lodestar
+  - name: nethermind-lighthouse
+    directory: clients/nethermind-lighthouse
+  - name: nethermind-prysm
+    directory: clients/nethermind-prysm
+  - name: nethermind-teku
+    directory: clients/nethermind-teku
+  - name: nethermind-lodestar
+    directory: clients/nethermind-lodestar
+  - name: besu-lighthouse
+    directory: clients/besu-lighthouse
+  - name: besu-prysm
+    directory: clients/besu-prysm
+  - name: besu-teku
+    directory: clients/besu-teku
+  - name: besu-lodestar
+    directory: clients/besu-lodestar

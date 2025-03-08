@@ -1,235 +1,143 @@
-# Molecule Testing Framework
+# Molecule Testing Framework for Ephemery
 
-## Directory Structure
+This directory contains the Molecule tests for the Ephemery project. Molecule is used to test the Ansible roles in isolation to ensure they work correctly.
 
-```bash
+## Test Structure
+
+The tests are organized into scenarios, each with its own directory:
+
+```
 molecule/
-├── clients/              # Client combination scenarios
-├── default/              # Main scenario with default clients
-├── backup/               # Backup functionality testing
-├── monitoring/           # Monitoring functionality testing
-├── resource-limits/      # Resource limitation testing
-├── security/             # Security configuration testing
-├── validator/            # Validator node testing
-├── shared/               # Shared resources across scenarios
-└── requirements.yml      # Dependencies for tests
+├── clients/               # Client combination scenarios
+│   ├── <client-pair>/     # e.g., geth-lighthouse
+│   │   ├── converge.yml   # Playbook to apply the role
+│   │   ├── molecule.yml   # Molecule configuration
+│   │   └── verify.yml     # Tests to verify the role applied correctly
+├── <special-scenario>/    # e.g., default, validator, etc.
+├── shared/                # Shared resources across scenarios
+└── run-tests.sh           # Helper script to run tests locally
 ```
 
-## Quick Start
-
-### Running Tests
-
-```bash
-# Run demo with auto-cleanup
-molecule/shared/scripts/demo_scenario.sh --execution geth --consensus prysm
-
-# Keep scenario after testing
-molecule/shared/scripts/demo_scenario.sh -e nethermind -c lodestar --keep
-
-# Run a specific scenario
-molecule test -s geth-lighthouse
-
-# Run only converge step (for development)
-molecule converge -s geth-lighthouse
-
-# Run only verify step
-molecule verify -s geth-lighthouse
-
-# MacOS specific - Run tests on macOS with Docker Desktop
-./scripts/run-molecule-tests-macos.sh default
-```
-
-## Verification Tests
-
-For detailed information about verification tests, please see the [Verification Tests](../docs/VERIFICATION_TESTS.md) documentation.
-
-### macOS Compatibility
-
-For macOS users with Docker Desktop or OrbStack, we provide a helper script to handle Docker socket connections:
-
-```bash
-# Run a specific scenario on macOS
-./scripts/run-molecule-tests-macos.sh default
-
-# Run client combination scenario on macOS
-./scripts/run-molecule-tests-macos.sh geth-lighthouse
-```
-
-Alternatively, you can manually set the Docker environment for macOS:
-
-```bash
-# Check available Docker contexts
-docker context ls
-
-# Use the appropriate context (typically desktop-linux for Docker Desktop)
-docker context use desktop-linux
-
-# Get the Docker socket path
-docker context inspect desktop-linux | grep Host
-
-# Set the DOCKER_HOST environment variable
-export DOCKER_HOST=unix:///Users/<username>/.docker/run/docker.sock
-
-# Run the test with the explicit Docker host
-molecule test -s geth-lighthouse
-```
-
-This approach dynamically detects the Docker socket path and configures Molecule to use it correctly, avoiding common connectivity issues on macOS.
-
-### Creating Scenarios
-
-```bash
-# Create client combination scenario
-molecule/shared/scripts/generate_scenario.sh --type clients --execution geth --consensus lighthouse
-
-# Create temporary scenario
-molecule/shared/scripts/generate_scenario.sh --type clients --execution nethermind --consensus lodestar --temp
-
-# Create custom scenario
-molecule/shared/scripts/generate_scenario.sh --type custom --name high-memory --var memory=8192M --var cpu=2.0
-```
-
-## Scenario Types
+## Available Scenarios
 
 ### Client Combinations
 
-Test specific client combinations:
+We have tests for all combinations of execution clients and consensus clients in the `molecule/clients/` directory:
+
+| Execution Client | Consensus Client | Scenario Name |
+|-----------------|------------------|---------------|
+| geth            | lighthouse       | geth-lighthouse |
+| geth            | prysm           | geth-prysm |
+| geth            | teku            | geth-teku |
+| geth            | lodestar        | geth-lodestar |
+| reth            | lighthouse      | reth-lighthouse |
+| reth            | prysm           | reth-prysm |
+| reth            | teku            | reth-teku |
+| reth            | lodestar        | reth-lodestar |
+| erigon          | lighthouse      | erigon-lighthouse |
+| erigon          | prysm           | erigon-prysm |
+| erigon          | teku            | erigon-teku |
+| erigon          | lodestar        | erigon-lodestar |
+| nethermind      | lighthouse      | nethermind-lighthouse |
+| nethermind      | prysm           | nethermind-prysm |
+| nethermind      | teku            | nethermind-teku |
+| nethermind      | lodestar        | nethermind-lodestar |
+| besu            | lighthouse      | besu-lighthouse |
+| besu            | prysm           | besu-prysm |
+| besu            | teku            | besu-teku |
+| besu            | lodestar        | besu-lodestar |
+
+### Special Scenarios
+
+- `default`: Tests the base Ephemery role setup
+- `validator`: Tests the validator setup
+- `security`: Tests security configurations
+- `monitoring`: Tests monitoring setup
+- `backup`: Tests backup functionality
+
+## Running Tests Locally
+
+To run a specific test locally:
 
 ```bash
-# Create a client combination scenario
-molecule/shared/scripts/generate_scenario.sh --type clients --execution geth --consensus lighthouse
+# Run a specific test
+molecule test -s <scenario-name>
+
+# Example: Test the geth-lighthouse client combination
+molecule test -s geth-lighthouse
 ```
 
-### Custom Scenarios
-
-Test specific configurations:
+You can also use the provided `run-tests.sh` script:
 
 ```bash
-# Create a custom scenario
-molecule/shared/scripts/generate_scenario.sh --type custom --name high-memory --var memory=8192M --var cpu=2.0
+# Run all tests
+./run-tests.sh
+
+# Run a specific test
+./run-tests.sh geth-lighthouse
 ```
 
-### Temporary Scenarios
+## Adding a New Test
 
-For quick testing:
+To add a new test scenario:
+
+1. Create a new directory `molecule/<scenario-name>/`
+2. Create the required files:
+   - `molecule.yml`: Configuration for the test environment
+   - `converge.yml`: Playbook to apply the role
+   - `verify.yml`: Tests to verify the role worked correctly
+
+Alternatively, you can use the `generate-molecule-tests.sh` script in the scripts directory to generate tests for all client combinations:
 
 ```bash
-# Create temporary scenario
-molecule/shared/scripts/generate_scenario.sh --type clients --execution geth --consensus prysm --temp
-
-# Clean up when finished
-molecule/shared/scripts/generate_scenario.sh --cleanup geth-prysm
+# Generate all client combination tests
+../scripts/generate-molecule-tests.sh
 ```
 
-## Structure
+## Test Verification
 
-Each scenario contains:
+The verification phase checks that:
 
-- `molecule.yaml`: Configuration
-- `converge.yaml`: Playbook to apply the role
-- `verify.yaml`: Tests to verify configuration
+1. Required services are running
+2. Necessary ports are open
+3. Configuration files exist and have correct permissions
+4. Components can communicate with each other
 
-## Best Practices
+## Continuous Integration
 
-1. Keep scenarios minimal
-2. Use temporary scenarios for quick tests
-3. Clean up after testing
-4. Standardize verification
-5. Parameterize tests
-6. Use the macOS helper script on Apple computers
-
-## Common Issues and Solutions
-
-### Docker Connectivity Issues on macOS
-
-If you encounter Docker connection errors on macOS:
-
-1. **Check Docker Context**:
-
-   ```bash
-   docker context ls
-   docker context use desktop-linux  # For Docker Desktop
-   docker context use orbstack       # For OrbStack
-   ```
-
-2. **Verify Docker Socket Path**:
-
-   ```bash
-   # For Docker Desktop
-   ls -la /Users/<username>/.docker/run/docker.sock
-
-   # For OrbStack
-   ls -la /Users/<username>/.orbstack/run/docker.sock
-   ```
-
-3. **Update molecule.yml**:
-
-   ```yaml
-   driver:
-     name: docker
-     docker_host: "unix:///Users/<username>/.docker/run/docker.sock"
-   platforms:
-     - name: instance-name
-       volumes:
-         - /sys/fs/cgroup:/sys/fs/cgroup:rw
-         - "/Users/<username>/.docker/run/docker.sock:/var/run/docker.sock:rw"
-   ```
-
-4. **Use Environment Variable**:
-
-   ```bash
-   export DOCKER_HOST=unix:///Users/<username>/.docker/run/docker.sock
-   molecule test -s geth-lighthouse
-   ```
-
-5. **Or use the helper script**:
-   ```bash
-   ./scripts/run-molecule-tests-macos.sh <scenario>
-   ```
-
-### Role path resolution in converge.yml
-
-When including the ephemery role, use relative paths:
-
-```yaml
-- name: Include ephemery role
-  include_role:
-    name: ../..  # Points to the project root directory which contains the role
-```
-
-### Ansible Conditional Errors
-
-When writing verification tasks:
-
-- Always quote string literals in conditionals: `when: "'docker.service' in ansible_facts.services"`
-- Add existence checks for dictionary keys: `when: ansible_facts.services is defined and ...`
-- Always quote default values: `ephemery_base_dir | default("/home/ubuntu/ephemery")`
-
-### Validation Script
-
-Run our conditional verification script to check for common issues:
-
-```bash
-./scripts/verify-ansible-conditionals.sh
-```
+Tests run automatically on GitHub Actions for all pull requests and pushes to the main/master branch. The workflow is defined in `.github/workflows/molecule.yaml`.
 
 ## Troubleshooting
 
-See [MOLECULE_TROUBLESHOOTING.md](../docs/MOLECULE_TROUBLESHOOTING.md) for guidance.
+If tests fail, check:
 
-## Test Coverage
+1. Docker is running and accessible
+2. The Docker socket is available at `/var/run/docker.sock`
+3. You have sufficient permissions to access the Docker socket
+4. The containers have network connectivity
+5. The client binaries are installed correctly
 
-- Client Compatibility
-- Resource Management
-- Security
-- Backup & Recovery
-- Monitoring
-- Validator Configurations
+For detailed logs, run tests with increased verbosity:
 
-## CI/CD Integration
+```bash
+molecule --debug test -s <scenario-name>
+```
 
-- Pull Request Testing: Basic scenarios
-- Scheduled Testing: Comprehensive tests
-- Release Testing: All scenarios
+## Port References
 
-See [TESTING.md](../docs/TESTING.md) for details.
+| Client | Port | Description |
+|--------|------|-------------|
+| All execution clients | 8545 | JSON-RPC API |
+| Lighthouse | 5052 | HTTP API |
+| Prysm | 4000 | gRPC API |
+| Teku | 5051 | REST API |
+| Lodestar | 9000 | HTTP API |
+
+## Contributing
+
+When contributing new tests, ensure they:
+
+1. Are idempotent (can run multiple times without error)
+2. Clean up after themselves
+3. Test for actual functionality, not just presence of files
+4. Include clear assertions with helpful error messages

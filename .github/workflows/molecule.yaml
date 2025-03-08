@@ -39,9 +39,27 @@ jobs:
         scenario:
           - default
           - validator
-          # Add other critical scenarios here
-          # - geth-prysm
-          # - clients
+          # All client combinations
+          - clients/geth-lighthouse
+          - clients/geth-prysm
+          - clients/geth-teku
+          - clients/geth-lodestar
+          - clients/reth-lighthouse
+          - clients/reth-prysm
+          - clients/reth-teku
+          - clients/reth-lodestar
+          - clients/erigon-lighthouse
+          - clients/erigon-prysm
+          - clients/erigon-teku
+          - clients/erigon-lodestar
+          - clients/nethermind-lighthouse
+          - clients/nethermind-prysm
+          - clients/nethermind-teku
+          - clients/nethermind-lodestar
+          - clients/besu-lighthouse
+          - clients/besu-prysm
+          - clients/besu-teku
+          - clients/besu-lodestar
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -55,6 +73,8 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
           pip install molecule molecule-docker docker pytest-testinfra ansible-lint
+          sudo apt-get update
+          sudo apt-get install -y socat procps iproute2
       - name: Verify Docker
         run: |
           docker --version
@@ -66,11 +86,12 @@ jobs:
             echo "Updating $file for GitHub Actions environment..."
             # Use default Docker socket path for GitHub Actions
             sed -i 's|/Users/.*/\.docker/run/docker\.sock|/var/run/docker.sock|g' $file
+            sed -i 's|/Users/.*/\.orbstack/run/docker\.sock|/var/run/docker.sock|g' $file
             # Ensure proper cgroup mounting
             sed -i 's|/sys/fs/cgroup:/sys/fs/cgroup:ro|/sys/fs/cgroup:/sys/fs/cgroup:rw|g' $file
             # Add cgroupns_mode if not present
             if ! grep -q "cgroupns_mode:" $file; then
-              sed -i '/command:/a\    cgroupns_mode: host' $file
+              sed -i '/privileged:/a\    cgroupns_mode: host' $file
             fi
           done
       - name: Run Molecule tests for ${{ matrix.scenario }} scenario

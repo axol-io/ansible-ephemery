@@ -1,0 +1,151 @@
+---
+# Tasks to set up systemd services for the test environment
+- name: Create directory structure for Ethereum clients
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  with_items:
+    - /etc/ethereum
+    - /etc/ethereum/{{ el }}
+    - /etc/ethereum/{{ cl }}
+    - /var/lib/ethereum
+    - /var/lib/ethereum/{{ el }}
+    - /var/lib/ethereum/{{ cl }}
+
+- name: Create JWT secret file
+  ansible.builtin.copy:
+    content: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+    dest: /etc/ethereum/jwt.hex
+    mode: '0644'
+
+- name: Create mock configuration files for execution client
+  ansible.builtin.copy:
+    content: |
+      # Mock configuration for {{ el }} execution client
+      # This is just for testing purposes
+      Listening Port: 8545
+      Engine API Port: 8551
+      JWT Secret Path: /etc/ethereum/jwt.hex
+    dest: "/etc/ethereum/{{ el }}/{{ el }}.conf"
+    mode: '0644'
+
+- name: Create mock configuration files for consensus client
+  ansible.builtin.copy:
+    content: |
+      # Mock configuration for {{ cl }} consensus client
+      # This is just for testing purposes
+      API Port: {% if cl == 'lighthouse' %}5052{% elif cl == 'prysm' %}4000{% elif cl == 'teku' %}5051{% else %}9000{% endif %}
+      JWT Secret Path: /etc/ethereum/jwt.hex
+      Execution Client: http://localhost:8551
+    dest: "/etc/ethereum/{{ cl }}/{{ cl }}-beacon.conf"
+    mode: '0644'
+
+- name: Create systemd service file for execution client
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description={{ el }} Execution Client
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/echo "{{ el }} service is running"
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: "/etc/systemd/system/{{ el }}.service"
+    mode: '0644'
+
+- name: Create systemd service file for consensus beacon
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description={{ cl }} Consensus Client Beacon Node
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/echo "{{ cl }} beacon service is running"
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: "/etc/systemd/system/{{ cl }}-beacon.service"
+    mode: '0644'
+
+- name: Create systemd service file for validator
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description={{ cl }} Validator
+      After=network.target {{ cl }}-beacon.service
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/echo "{{ cl }} validator service is running"
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: "/etc/systemd/system/{{ cl }}-validator.service"
+    mode: '0644'
+
+- name: Create mock port listeners for execution client
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      socat TCP-LISTEN:8545,fork,reuseaddr,bind=0.0.0.0 PIPE &
+      socat TCP-LISTEN:8551,fork,reuseaddr,bind=0.0.0.0 PIPE &
+    dest: "/usr/local/bin/start-{{ el }}-ports.sh"
+    mode: '0755'
+
+- name: Create mock port listeners for consensus client
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      {% if cl == 'lighthouse' %}
+      PORT=5052
+      {% elif cl == 'prysm' %}
+      PORT=4000
+      {% elif cl == 'teku' %}
+      PORT=5051
+      {% else %}
+      PORT=9000
+      {% endif %}
+      socat TCP-LISTEN:$PORT,fork,reuseaddr,bind=0.0.0.0 PIPE &
+    dest: "/usr/local/bin/start-{{ cl }}-ports.sh"
+    mode: '0755'
+
+- name: Start mock port listeners
+  ansible.builtin.shell: |
+    /usr/local/bin/start-{{ el }}-ports.sh
+    /usr/local/bin/start-{{ cl }}-ports.sh
+  args:
+    executable: /bin/bash
+
+- name: Reload systemd configurations
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Enable and start execution client service
+  ansible.builtin.systemd:
+    name: "{{ el }}.service"
+    enabled: yes
+    state: started
+
+- name: Enable and start consensus beacon service
+  ansible.builtin.systemd:
+    name: "{{ cl }}-beacon.service"
+    enabled: yes
+    state: started
+
+- name: Enable and start validator service
+  ansible.builtin.systemd:
+    name: "{{ cl }}-validator.service"
+    enabled: yes
+    state: started

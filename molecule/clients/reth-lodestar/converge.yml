@@ -1,0 +1,24 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - socat
+          - procps
+          - iproute2
+        state: present
+        update_cache: yes
+
+    - name: Include ephemery role
+      include_role:
+        name: ansible
+      vars:
+        execution_client: reth
+        consensus_client: lodestar
+
+    # After the role runs, set up the mock services for testing
+    - name: Include mock services setup for testing
+      ansible.builtin.include_tasks:
+        file: ../../shared/setup-mock-services.yml

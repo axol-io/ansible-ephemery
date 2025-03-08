@@ -1,0 +1,24 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+  docker_host: "unix:///var/run/docker.sock"
+platforms:
+  - name: ephemery-reth-lighthouse
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      all:
+        el: reth
+        cl: lighthouse
+verifier:
+  name: ansible

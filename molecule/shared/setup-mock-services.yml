@@ -1,0 +1,114 @@
+---
+# Tasks to set up mock services for the test environment (without systemd)
+- name: Create directory structure for Ethereum clients
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  with_items:
+    - /etc/ethereum
+    - /etc/ethereum/{{ el }}
+    - /etc/ethereum/{{ cl }}
+    - /var/lib/ethereum
+    - /var/lib/ethereum/{{ el }}
+    - /var/lib/ethereum/{{ cl }}
+
+- name: Create JWT secret file
+  ansible.builtin.copy:
+    content: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+    dest: /etc/ethereum/jwt.hex
+    mode: '0644'
+
+- name: Create mock configuration files for execution client
+  ansible.builtin.copy:
+    content: |
+      # Mock configuration for {{ el }} execution client
+      # This is just for testing purposes
+      Listening Port: 8545
+      Engine API Port: 8551
+      JWT Secret Path: /etc/ethereum/jwt.hex
+    dest: "/etc/ethereum/{{ el }}/{{ el }}.conf"
+    mode: '0644'
+
+- name: Create mock configuration files for consensus client
+  ansible.builtin.copy:
+    content: |
+      # Mock configuration for {{ cl }} consensus client
+      # This is just for testing purposes
+      API Port: {% if cl == 'lighthouse' %}5052{% elif cl == 'prysm' %}4000{% elif cl == 'teku' %}5051{% else %}9000{% endif %}
+      JWT Secret Path: /etc/ethereum/jwt.hex
+      Execution Client: http://localhost:8551
+    dest: "/etc/ethereum/{{ cl }}/{{ cl }}-beacon.conf"
+    mode: '0644'
+
+- name: Create fake service files for service_facts
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: '0755'
+  with_items:
+    - { path: "/run/systemd/system/{{ el }}.service.d" }
+    - { path: "/run/systemd/system/{{ cl }}-beacon.service.d" }
+    - { path: "/run/systemd/system/{{ cl }}-validator.service.d" }
+
+- name: Create fake service state files
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "{{ item.dest }}"
+    mode: '0644'
+  with_items:
+    - { dest: "/run/systemd/system/{{ el }}.service.d/state", content: "running" }
+    - { dest: "/run/systemd/system/{{ cl }}-beacon.service.d/state", content: "running" }
+    - { dest: "/run/systemd/system/{{ cl }}-validator.service.d/state", content: "running" }
+
+- name: Create mock port listeners for execution client
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      # Start listening on execution client ports
+      nohup socat TCP-LISTEN:8545,fork,reuseaddr,bind=0.0.0.0 PIPE > /dev/null 2>&1 &
+      nohup socat TCP-LISTEN:8551,fork,reuseaddr,bind=0.0.0.0 PIPE > /dev/null 2>&1 &
+      touch /tmp/el-ports-started
+      echo "Started mock ports for {{ el }}"
+    dest: "/usr/local/bin/start-{{ el }}-ports.sh"
+    mode: '0755'
+
+- name: Create mock port listeners for consensus client
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      # Start listening on consensus client port
+      {% if cl == 'lighthouse' %}
+      PORT=5052
+      {% elif cl == 'prysm' %}
+      PORT=4000
+      {% elif cl == 'teku' %}
+      PORT=5051
+      {% else %}
+      PORT=9000
+      {% endif %}
+      nohup socat TCP-LISTEN:$PORT,fork,reuseaddr,bind=0.0.0.0 PIPE > /dev/null 2>&1 &
+      touch /tmp/cl-ports-started
+      echo "Started mock port for {{ cl }} on $PORT"
+    dest: "/usr/local/bin/start-{{ cl }}-ports.sh"
+    mode: '0755'
+
+- name: Check if port listeners are already started
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: port_listeners_check
+  with_items:
+    - /tmp/el-ports-started
+    - /tmp/cl-ports-started
+
+- name: Start execution client port listeners if not already started
+  ansible.builtin.shell: /usr/local/bin/start-{{ el }}-ports.sh
+  args:
+    executable: /bin/bash
+  when: not port_listeners_check.results[0].stat.exists
+
+- name: Start consensus client port listeners if not already started
+  ansible.builtin.shell: /usr/local/bin/start-{{ cl }}-ports.sh
+  args:
+    executable: /bin/bash
+  when: not port_listeners_check.results[1].stat.exists

@@ -61,20 +61,20 @@ echo -e "${GREEN}Setting DOCKER_HOST=${DOCKER_HOST}${NC}"
 create_molecule_patch() {
     local SCENARIO=$1
     local MOLECULE_YML="molecule/${SCENARIO}/molecule.yml"
-    
+
     if [ ! -f "$MOLECULE_YML" ]; then
         echo -e "${RED}Cannot find molecule.yml at ${MOLECULE_YML}${NC}"
         return 1
     fi
-    
+
     # Create a backup if it doesn't already exist
     if [ ! -f "${MOLECULE_YML}.original" ]; then
         cp "$MOLECULE_YML" "${MOLECULE_YML}.original"
     fi
-    
+
     # Update the Docker socket path in molecule.yml
     sed -i '' "s|/var/run/docker.sock|${DOCKER_SOCKET}|g" "$MOLECULE_YML"
-    
+
     # Update driver settings
     if ! grep -q "docker_host:" "$MOLECULE_YML"; then
         # Create a temporary file with the correct driver section
@@ -92,33 +92,33 @@ d}" "$MOLECULE_YML"
         # Just update the existing docker_host value
         sed -i '' "s|docker_host:.*|docker_host: \"${DOCKER_HOST}\"|g" "$MOLECULE_YML"
     fi
-    
+
     # Update cgroup mount options for macOS
     sed -i '' "s|/sys/fs/cgroup:/sys/fs/cgroup:ro|/sys/fs/cgroup:/sys/fs/cgroup:rw|g" "$MOLECULE_YML"
-    
+
     # Add cgroupns_mode: host if not present
     if ! grep -q "cgroupns_mode:" "$MOLECULE_YML"; then
         sed -i '' "/privileged: true/a\\
 \ \ \ \ cgroupns_mode: host" "$MOLECULE_YML"
     fi
-    
+
     echo -e "${GREEN}Updated ${MOLECULE_YML} for macOS compatibility${NC}"
 }
 
 # Generate scenario if it doesn't exist
 if [ ! -d "molecule/${SCENARIO}" ]; then
     echo -e "${YELLOW}Scenario '${SCENARIO}' does not exist. Generating it...${NC}"
-    
+
     # Check if this is a client combination
     if [[ "$SCENARIO" == *"-"* ]]; then
         EXECUTION_CLIENT=${SCENARIO%-*}
         CONSENSUS_CLIENT=${SCENARIO#*-}
-        
+
         echo -e "${YELLOW}Generating client scenario: ${EXECUTION_CLIENT}-${CONSENSUS_CLIENT}${NC}"
-        
+
         if [ -f "molecule/shared/scripts/generate_scenario.sh" ]; then
             molecule/shared/scripts/generate_scenario.sh --type clients --execution $EXECUTION_CLIENT --consensus $CONSENSUS_CLIENT
-            
+
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to generate scenario.${NC}"
                 exit 1
@@ -158,4 +158,4 @@ else
     echo -e "${RED}Molecule ${COMMAND} failed for scenario '${SCENARIO}'${NC}"
 fi
 
-exit $RESULT 
+exit $RESULT

@@ -59,11 +59,11 @@ If you're new to Ansible, follow these steps to get your Ephemery node running:
 2. **Configure host variables** (optional but recommended):
 
    ```bash
-   mkdir -p host_vars
-   cp host_vars/example-host.yaml host_vars/your-node-name.yaml
+   mkdir -p ansible/host_vars
+   cp ansible/host_vars/example-host.yaml ansible/host_vars/your-node-name.yaml
    ```
 
-   Edit `host_vars/your-node-name.yaml` and set:
+   Edit `ansible/host_vars/your-node-name.yaml` and set:
    - `ansible_host`: Your server's IP address
    - `ansible_user`: SSH username
    - Client selection: `el: geth`, `cl: lighthouse`
@@ -122,6 +122,31 @@ ephemery_reset_frequency: "0 0 * * *"  # Midnight daily
 ├── logs/        # Log files
 ├── scripts/     # Operational scripts
 └── backups/     # Backup files
+```
+
+## Repository Structure
+
+```
+ansible-ephemery/
+├── ansible/                # Ansible related files
+│   ├── tasks/              # Task definitions
+│   ├── playbooks/          # Additional playbooks
+│   ├── templates/          # Jinja2 templates
+│   ├── defaults/           # Default variables
+│   ├── vars/               # Non-default variables
+│   ├── meta/               # Role metadata
+│   ├── group_vars/         # Group-specific variables
+│   ├── host_vars/          # Host-specific variables
+│   ├── files/              # Static files
+│   └── inventory.yaml      # Inventory file
+├── molecule/               # Testing framework
+│   ├── clients/            # Client combinations
+│   │   ├── geth-lighthouse/  # Example client pair
+│   │   └── ...             # Other client pairs
+│   ├── shared/             # Shared test resources
+│   ├── default/            # Basic tests
+│   └── ...                 # Other test scenarios
+└── scripts/                # Utility scripts
 ```
 
 ## Validator Configuration

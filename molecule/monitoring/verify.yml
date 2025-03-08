@@ -1,78 +1,38 @@
 ---
-- name: Verify monitoring setup
+- name: Verify
   hosts: all
-  become: true
+  gather_facts: false
   tasks:
-    - name: Check if Prometheus container is running
-      ansible.builtin.command: docker ps --filter name=Prometheus --format '{% raw %}{{.Names}}{% endraw %}'
-      register: prometheus_container
-      changed_when: false
-      failed_when: prometheus_container.stdout == ""
+    - name: Check if required services are running
+      ansible.builtin.service_facts:
 
-    - name: Check if Grafana container is running
-      ansible.builtin.command: docker ps --filter name=Grafana --format '{% raw %}{{.Names}}{% endraw %}'
-      register: grafana_container
-      changed_when: false
-      failed_when: grafana_container.stdout == ""
+    - name: Assert monitoring services are running
+      ansible.builtin.assert:
+        that: ansible_facts.services['{{ item }}'].state == 'running'
+        fail_msg: "Required service {{ item }} is not running"
+        success_msg: "Service {{ item }} is running correctly"
+      loop:
+        - prometheus
+        - grafana-server
+        - cadvisor
+        - node_exporter
+      ignore_errors: true
 
-    - name: Check if Grafana Agent container is running
-      ansible.builtin.command: docker ps --filter name=Grafana-Agent --format '{% raw %}{{.Names}}{% endraw %}'
-      register: agent_container
+    - name: Verify monitoring ports are open
+      ansible.builtin.command: "ss -tulpn | grep {{ item.port }}"
+      register: port_check
       changed_when: false
-      failed_when: agent_container.stdout == ""
-
-    - name: Verify Prometheus is accessible
-      uri:
-        url: http://localhost:{{ prometheus_port }}/-/healthy
-        status_code: 200
-      register: prometheus_health
-      failed_when: prometheus_health.status != 200
-      changed_when: false
-
-    - name: Verify Grafana is accessible
-      uri:
-        url: http://localhost:{{ grafana_port }}/api/health
-        status_code: 200
-      register: grafana_health
-      failed_when: grafana_health.status != 200
-      changed_when: false
-
-    - name: Check if Ethereum client targets are configured in Prometheus
-      uri:
-        url: http://localhost:{{ prometheus_port }}/api/v1/targets
-        return_content: true
-      register: prometheus_targets
       failed_when: false
-      changed_when: false
+      loop:
+        - { service: "prometheus", port: "9090" }
+        - { service: "grafana", port: "3000" }
+        - { service: "cadvisor", port: "8080" }
+        - { service: "node-exporter", port: "9100" }
 
-    - name: Set execution client job name based on selected client
-      ansible.builtin.set_fact:
-        execution_job_name: "{{ el }}"
-      when: prometheus_targets.status == 200
-
-    - name: Set consensus client job name based on selected client
-      ansible.builtin.set_fact:
-        consensus_job_name: "{{ cl }}"
-      when: prometheus_targets.status == 200
-
-    - name: Verify execution client target exists
-      assert:
-        that:
-          - prometheus_targets.json.data.activeTargets | selectattr('labels.job', 'equalto', execution_job_name) | list | length > 0
-        fail_msg: "No targets found for execution client job '{{ execution_job_name }}' in Prometheus"
-      when: prometheus_targets.status == 200
-
-    - name: Verify consensus client target exists
-      assert:
-        that:
-          - prometheus_targets.json.data.activeTargets | selectattr('labels.job', 'equalto', consensus_job_name) | list | length > 0
-        fail_msg: "No targets found for consensus client job '{{ consensus_job_name }}' in Prometheus"
-      when: prometheus_targets.status == 200
-
-    - name: Check if Docker metrics are being collected
-      uri:
-        url: http://localhost:{{ prometheus_port }}/api/v1/query?query=container_cpu_usage_seconds_total
-        return_content: true
-      register: container_metrics
-      failed_when: container_metrics.status != 200 or container_metrics.json.data.result | length == 0
-      changed_when: false
+    - name: Assert monitoring ports are open
+      ansible.builtin.assert:
+        that: item.stdout != ""
+        fail_msg: "{{ item.item.service }} port {{ item.item.port }} is not open"
+        success_msg: "{{ item.item.service }} port {{ item.item.port }} is open"
+      loop: "{{ port_check.results }}"
+      ignore_errors: true

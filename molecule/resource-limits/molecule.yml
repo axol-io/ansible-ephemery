@@ -4,38 +4,14 @@ dependency:
 driver:
   name: docker
 platforms:
-  - name: ethereum-resources
-    image: ubuntu:22.04
-    pre_build_image: true
-    privileged: true
+  - name: instance
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible:latest"
+    command: ""
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: '/lib/systemd/systemd'
-    memory: 4G  # Limited memory for testing resource constraints
-    cpus: 2
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    privileged: true
+    pre_build_image: true
 provisioner:
   name: ansible
-  inventory:
-    host_vars:
-      ethereum-resources:
-        el: geth
-        cl: lighthouse
-        network: ephemery
-        ephemery_base_dir: /home/ubuntu/ephemery
-        ephemery_data_dir: /home/ubuntu/ephemery/data
-        ephemery_logs_dir: /home/ubuntu/ephemery/logs
-        ephemery_scripts_dir: /home/ubuntu/ephemery/scripts
-        ephemery_backup_dir: /home/ubuntu/ephemery/backups
-        jwt_secret_path: /home/ubuntu/ephemery/jwtsecret
-        # Resource limits settings
-        validator_enabled: false
-        backup_enabled: false
-        firewall_enabled: false
-        # Memory limit is 90% of available memory
-        ephemery_docker_memory_limit: 3.6G  # 90% of 4G
-        # Split ratios
-        el_memory_percentage: 0.6  # 60% for execution client
-        cl_memory_percentage: 0.4  # 40% for consensus client
 verifier:
   name: ansible

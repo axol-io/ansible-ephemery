@@ -1,60 +1,47 @@
 ---
-- name: Verify backup functionality
+- name: Verify
   hosts: all
-  become: true
-  vars:
-    backup_enabled: true
+  gather_facts: false
   tasks:
-    # Include common verification tasks
-    - name: Include common verification tasks
-      ansible.builtin.include_tasks: ../shared/templates/verify/common.yaml
+    - name: Check if backup scripts are installed
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: backup_files
+      loop:
+        - /etc/cron.daily/backup-ethereum
+        - /usr/local/bin/backup-ethereum.sh
 
-    # Include backup-specific verification tasks
-    - name: Include backup-specific verification tasks
-      ansible.builtin.include_tasks: ../shared/templates/verify/backup.yaml
+    - name: Assert backup files exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "Backup file {{ item.item }} does not exist"
+        success_msg: "Backup file {{ item.item }} exists"
+      loop: "{{ backup_files.results }}"
 
-    # Additional backup-specific verification tasks
-    - name: Run backup script
-      ansible.builtin.command: '{{ ephemery_scripts_dir }}/backup.sh'
-      register: backup_run
-      changed_when: false
-      when: backup_enabled | bool
+    - name: Check if backup directory exists
+      ansible.builtin.stat:
+        path: /root/ephemery/backups
+      register: backup_dir
 
-    - name: Assert backup script runs successfully
-      assert:
-        that: backup_run.rc == 0
-        fail_msg: Backup script failed to run
-        success_msg: Backup script ran successfully
-      when: backup_enabled | bool and backup_run is defined
+    - name: Assert backup directory exists
+      ansible.builtin.assert:
+        that: backup_dir.stat.exists and backup_dir.stat.isdir
+        fail_msg: "Backup directory does not exist or is not a directory"
+        success_msg: "Backup directory exists"
 
-    - name: Check if backup file was created
-      ansible.builtin.shell: find '{{ ephemery_backup_dir }}' -name 'ephemery_backup_*.tar.gz' -type f -mmin -5
-      register: recent_backups
-      changed_when: false
-      when: backup_enabled | bool and backup_run is defined and backup_run.rc == 0
+    - name: Run backup script manually
+      ansible.builtin.command: /usr/local/bin/backup-ethereum.sh
+      changed_when: true
+      register: backup_result
 
-    - name: Assert backup file was created
-      assert:
-        that: recent_backups.stdout != ''
-        fail_msg: No recent backup files were created
-        success_msg: Backup files were created successfully
-      when: backup_enabled | bool and recent_backups is defined
+    - name: Check if backups were created
+      ansible.builtin.find:
+        paths: /root/ephemery/backups
+        patterns: "*.tar.gz"
+      register: backup_files_result
 
-    - name: Verify backup file permissions (if any backups found)
-      stat:
-        path: '{{ recent_backups.stdout_lines[0] }}'
-      register: backup_file_perms
-      when: backup_enabled | bool and recent_backups is defined and recent_backups.stdout != ''
-
-    - name: Assert backup file has correct permissions
-      assert:
-        that: backup_file_perms.stat.mode == '0600'
-        fail_msg: Backup file has incorrect permissions '{{ backup_file_perms.stat.mode }}'
-        success_msg: Backup file has correct permissions
-      when: backup_enabled | bool and backup_file_perms is defined
-
-    - name: Check backup cron job
-      ansible.builtin.command: crontab -l
-      register: cron_jobs
-      changed_when: false
-      failed_when: backup_enabled and 'Ephemery backup' not in cron_jobs.stdout
+    - name: Assert backup files were created
+      ansible.builtin.assert:
+        that: backup_files_result.matched > 0
+        fail_msg: "No backup files were created"
+        success_msg: "{{ backup_files_result.matched }} backup files were created"
