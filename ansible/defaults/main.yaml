@@ -31,7 +31,7 @@ cl_extra_opts: ''    # Extra options for consensus client
 ephemery_checkpoint_sync_url: 'https://checkpoint-sync.ephemery.ethpandaops.io/'
 
 # JWT Secret configuration
-jwt_secret_path: '{{ ephemery_base_dir }}/jwtsecret'
+jwt_secret_path: '{{ ephemery_base_dir }}/jwt.hex'
 jwt_secret_secure_generation: true
 
 # Resource management for Docker containers

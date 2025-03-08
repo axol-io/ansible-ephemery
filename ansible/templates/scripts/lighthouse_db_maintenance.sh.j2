@@ -1,0 +1,109 @@
+#!/bin/bash
+# Lighthouse Database Maintenance Script
+# This script helps maintain and optimize the Lighthouse beacon node database
+
+set -e
+
+CONTAINER_NAME="{{ network }}-{{ cl }}"
+DATA_DIR="{{ ephemery_dir }}/data/{{ cl }}"
+LOG_DIR="{{ ephemery_dir }}/logs"
+LOG_FILE="$LOG_DIR/lighthouse_db_maintenance.log"
+
+# Create log directory if it doesn't exist
+mkdir -p $LOG_DIR
+
+# Function to log messages
+log() {
+  local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  echo "[$timestamp] $1" | tee -a $LOG_FILE
+}
+
+# Check if container is running
+check_container() {
+  if ! docker ps | grep -q $CONTAINER_NAME; then
+    log "WARNING: Lighthouse container ($CONTAINER_NAME) is not running"
+    return 1
+  fi
+  return 0
+}
+
+# Stop the lighthouse container
+stop_lighthouse() {
+  log "Stopping Lighthouse container..."
+  docker stop $CONTAINER_NAME
+}
+
+# Start the lighthouse container
+start_lighthouse() {
+  log "Starting Lighthouse container..."
+  docker start $CONTAINER_NAME
+}
+
+# Compact the database
+compact_database() {
+  log "Compacting Lighthouse database..."
+  stop_lighthouse
+
+  log "Running database compaction..."
+  # Using a temporary container to run the compaction
+  docker run --rm \
+    -v $DATA_DIR:/data \
+    {{ client_images.lighthouse }} \
+    lighthouse db migrate \
+    --datadir /data \
+    --prune payloads
+
+  log "Database compaction completed"
+  start_lighthouse
+}
+
+# Check database integrity
+check_database_integrity() {
+  log "Checking database integrity..."
+  stop_lighthouse
+
+  # Using a temporary container to check the database
+  docker run --rm \
+    -v $DATA_DIR:/data \
+    {{ client_images.lighthouse }} \
+    lighthouse db check-db \
+    --datadir /data
+
+  log "Database integrity check completed"
+  start_lighthouse
+}
+
+# Display usage
+usage() {
+  echo "Usage: $0 [OPTION]"
+  echo "Options:"
+  echo "  compact   - Compact the Lighthouse database"
+  echo "  check     - Check database integrity"
+  echo "  status    - Check Lighthouse status"
+  echo "  help      - Display this help message"
+}
+
+# Main execution
+case "$1" in
+  compact)
+    compact_database
+    ;;
+  check)
+    check_database_integrity
+    ;;
+  status)
+    if check_container; then
+      log "Lighthouse container is running"
+      docker logs --tail 50 $CONTAINER_NAME | grep -i "slot\|sync\|finalized\|head"
+    fi
+    ;;
+  help)
+    usage
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac
+
+exit 0

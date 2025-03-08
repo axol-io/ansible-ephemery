@@ -42,23 +42,23 @@
         force_source: false
       when: validator_enabled | default(false) | bool
 
-- name: Deploy Ephemery Nodes
-  hosts: all
+- name: 🏖️ Deploy Ephemery Nodes
+  hosts: ephemery
   become: true
-  gather_facts: true
   vars:
-    jwt_secret_secure_generation: false
-  pre_tasks:
-    - name: Remove existing Grafana Agent container if it exists
-      community.docker.docker_container:
-        name: grafana-agent
-        state: absent
-        force_kill: true
-      ignore_errors: true
-  vars_files:
-    - defaults/main.yaml
-    - vars/main.yaml
+    ephemery_base_dir: "/opt/ephemery"
+    ephemery_dir: "{{ ephemery_base_dir }}"
+    ephemery_scripts_dir: "{{ ephemery_base_dir }}/scripts"
+    jwt_secret_path: "{{ ephemery_dir }}/jwt.hex"
   tasks:
+    - name: 🏖️ Create cozy axolotl home directory 🏖️
+      ansible.builtin.file:
+        path: "{{ ephemery_base_dir }}"
+        state: directory
+        mode: "0755"
+        owner: "{{ ansible_user | default('root') }}"
+        group: "{{ ansible_user | default('root') }}"
+
     - name: Import main tasks
       ansible.builtin.import_tasks: ansible/tasks/main.yaml
 

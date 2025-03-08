@@ -7,6 +7,8 @@
     lighthouse_http_port: '{{ cl_client_port }}'
     lighthouse_p2p_port: '{{ cl_p2p_port }}'
     lighthouse_metrics_port: '{{ cl_metrics_port | default("5054") }}'
+    lighthouse_jwt_path: '{{ jwt_secret_path | default(ephemery_dir + "/jwt.hex") }}'
+    lighthouse_execution_endpoint: 'http://127.0.0.1:8551'
 
 - name: Create Lighthouse data directory
   ansible.builtin.file:
@@ -20,3 +22,43 @@
   ansible.builtin.set_fact:
     lighthouse_metrics_port: 5054
   when: lighthouse_metrics_port == lighthouse_http_port
+
+# Optimize system for Lighthouse
+- name: Optimize system for Lighthouse Beacon Node
+  ansible.builtin.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  with_items:
+    - { name: "vm.max_map_count", value: "262144" }
+    - { name: "vm.swappiness", value: "10" }
+    - { name: "fs.file-max", value: "65536" }
+  become: true
+
+- name: Create heap profiles directory for memory analysis
+  ansible.builtin.file:
+    path: '{{ lighthouse_data_dir }}/heap_profiles'
+    state: directory
+    mode: '0755'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
+
+# Skip the Lighthouse database maintenance script for now to avoid template errors
+# We'll add it back later when the project structure is better understood
+# - name: Deploy Lighthouse database maintenance script
+#   ansible.builtin.template:
+#     src: "{{ playbook_dir }}/../ansible/templates/scripts/lighthouse_db_maintenance.sh.j2"
+#     dest: "{{ ephemery_scripts_dir }}/lighthouse_db_maintenance.sh"
+#     mode: '0755'
+#     owner: '{{ ansible_user | default("root") }}'
+#     group: '{{ ansible_user | default("root") }}'
+
+# - name: Setup weekly database maintenance cron job
+#   ansible.builtin.cron:
+#     name: "Lighthouse weekly DB maintenance"
+#     weekday: "0"
+#     hour: "3"
+#     minute: "0"
+#     job: "{{ ephemery_scripts_dir }}/lighthouse_db_maintenance.sh compact >> {{ ephemery_dir }}/logs/cron.log 2>&1"
+#     user: '{{ ansible_user | default("root") }}'

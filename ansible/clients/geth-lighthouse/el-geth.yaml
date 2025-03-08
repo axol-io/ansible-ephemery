@@ -9,6 +9,7 @@
     geth_p2p_port: '{{ el_p2p_port }}'
     geth_metrics_port: '{{ el_metrics_port }}'
     geth_authrpc_port: 8551
+    geth_jwt_path: '{{ jwt_secret_path | default(ephemery_dir + "/jwt.hex") }}'
 
 - name: Create Geth data directory
   ansible.builtin.file:

@@ -28,7 +28,7 @@
 
 - name: 📝 Create health check script
   ansible.builtin.template:
-    src: templates/scripts/health_check.sh.j2
+    src: ../templates/scripts/health_check.sh.j2
     dest: '{{ ephemery_scripts_dir }}/health_check.sh'
     force: true
     owner: '{{ ansible_user | default("root") }}'
@@ -45,7 +45,7 @@
   # Include client-specific configuration
 - name: 🚀 Include client-specific configuration
   ansible.builtin.include_tasks:
-    file: clients/{{ el }}-{{ cl }}/main.yaml
+    file: ../clients/{{ el }}-{{ cl }}/main.yaml
   when:
     - el in ['geth', 'besu', 'nethermind', 'reth', 'erigon']
     - cl in ['lighthouse', 'teku', 'prysm', 'lodestar']
@@ -53,7 +53,7 @@
   # Fallback to generic configuration if specific client combination is not available
 - name: 🚀 Check if client-specific configuration exists
   ansible.builtin.stat:
-    path: tasks/clients/{{ el }}-{{ cl }}/main.yaml
+    path: ../clients/{{ el }}-{{ cl }}/main.yaml
   register: client_config
   when:
     - el in ['geth', 'besu', 'nethermind', 'reth', 'erigon']
@@ -77,7 +77,7 @@
   become: true
   community.docker.docker_container:
     name: '{{ network }}-{{ el }}'
-    image: '{% if el == "geth" %}pk910/ephemery-geth{% else %}{{ client_images[el] }}{% endif %}'
+    image: '{% if el == "geth" %}ethereum/client-go:v1.15.4{% else %}{{ client_images[el] }}{% endif %}'
     state: started
     restart_policy: unless-stopped
     network_mode: host
@@ -86,9 +86,18 @@
       - '{{ ephemery_dir }}/jwt.hex:/jwt.hex'
     command: >
       {% if el == "geth" %}
-      --{{ network }} --datadir=/data --authrpc.jwtsecret=/jwt.hex --http --http.api=eth,net,web3,engine
-      --http.addr=0.0.0.0 --http.corsdomain=* --http.vhosts=* --ws --ws.api=eth,net,web3,engine
-      --ws.addr=0.0.0.0 --ws.origins=* {{ el_extra_opts }}
+      --datadir=/data
+      --authrpc.jwtsecret=/jwt.hex
+      --http
+      --http.api=eth,net,web3,engine
+      --http.addr=0.0.0.0
+      --http.corsdomain=*
+      --http.vhosts=*
+      --ws
+      --ws.api=eth,net,web3,engine
+      --ws.addr=0.0.0.0
+      --ws.origins=*
+      {{ el_extra_opts }}
       {% endif %}
   when: >
     (el == "geth" or el == "besu" or el == "nethermind" or el == "reth" or el == "erigon")
@@ -112,7 +121,7 @@
   become: true
   community.docker.docker_container:
     name: '{{ network }}-{{ cl }}'
-    image: '{% if cl == "lighthouse" %}pk910/ephemery-lighthouse{% else %}{{ client_images[cl] }}{% endif %}'
+    image: '{% if cl == "lighthouse" %}sigp/lighthouse:v5.3.0{% else %}{{ client_images[cl] }}{% endif %}'
     state: started
     restart_policy: unless-stopped
     network_mode: host
@@ -121,8 +130,20 @@
       - '{{ ephemery_dir }}/jwt.hex:/jwt.hex'
     command: >
       {% if cl == "lighthouse" %}
-      --{{ network }} --datadir=/data --execution-jwt=/jwt.hex --http
-      --http.addr=0.0.0.0 --http.port=5052 {{ cl_extra_opts }}
+      lighthouse beacon_node
+      --datadir=/data
+      --execution-jwt=/jwt.hex
+      --execution-endpoint=http://127.0.0.1:8551
+      --http
+      --http-address=0.0.0.0
+      --http-port=5052
+      --metrics
+      --metrics-address=0.0.0.0
+      --metrics-port=5054
+      --checkpoint-sync-url=https://checkpoint-sync.ephemery.dev
+      --testnet-dir=/ephemery_config
+      --allow-insecure-genesis-sync
+      {{ cl_extra_opts }}
       {% endif %}
   when: (cl == "lighthouse" or cl == "teku" or cl == "prysm" or cl == "lodestar") and not test_mode | default(false)
 
