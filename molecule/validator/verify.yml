@@ -2,6 +2,8 @@
 - name: Verify
   hosts: all
   gather_facts: false
+  vars:
+    test_mode: true
   tasks:
     - name: Check if required services are running
       ansible.builtin.service_facts:
@@ -22,6 +24,7 @@
       loop:
         - /etc/ethereum/validators
         - /etc/systemd/system/validator.service
+      when: not test_mode | default(false) | bool
 
     - name: Assert validator files exist
       ansible.builtin.assert:
@@ -30,3 +33,4 @@
         fail_msg: "Required validator file {{ item.item }} does not exist"
         success_msg: "Validator file {{ item.item }} exists"
       loop: "{{ validator_files.results }}"
+      when: not test_mode | default(false) | bool

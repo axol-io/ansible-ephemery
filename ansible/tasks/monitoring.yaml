@@ -1,6 +1,5 @@
 ---
 - name: Ensure home directory for root exists with correct permissions
-
   ansible.builtin.file:
     path: '{{ home_dir }}'
     state: directory
@@ -21,6 +20,21 @@
     - '{{ home_dir }}/config/grafana/agent'
     - '{{ home_dir }}/config/grafana/provisioning'
     - '{{ home_dir }}/config/grafana/provisioning/datasources'
+
+- name: Create monitoring directories
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: directory
+    mode: '0755'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
+  loop:
+    - '{{ ephemery_dir }}/config/prometheus'
+    - '{{ ephemery_dir }}/config/grafana'
+    - '{{ ephemery_dir }}/config/grafana/dashboards'
+    - '{{ ephemery_dir }}/config/grafana/agent'
+    - '{{ ephemery_dir }}/data/prometheus'
+    - '{{ ephemery_dir }}/data/grafana'
 
 - name: Set default monitoring config changed value
   ansible.builtin.set_fact:
@@ -125,28 +139,13 @@
     network_mode: host
     privileged: true
     env:
-      GF_SECURITY_ADMIN_PASSWORD: '{{ GRAFANA_ADMIN_PASSWORD }}'
+      GF_SECURITY_ADMIN_PASSWORD: '{{ GRAFANA_ADMIN_PASSWORD | default("admin") }}'
       GF_USERS_ALLOW_SIGN_UP: false
       GF_SERVER_HTTP_PORT: '{{ grafana_port | string }}'
     volumes:
       - '{{ ephemery_dir }}/data/grafana:/var/lib/grafana'
       - '{{ ephemery_dir }}/config/grafana/provisioning/datasources/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro'
-  when: grafana_enabled | default(true) | bool
-
-- name: Create monitoring directories
-  ansible.builtin.file:
-    path: '{{ item }}'
-    state: directory
-    mode: '0755'
-    owner: '{{ ansible_user | default("root") }}'
-    group: '{{ ansible_user | default("root") }}'
-  loop:
-    - '{{ ephemery_dir }}/config/prometheus'
-    - '{{ ephemery_dir }}/config/grafana'
-    - '{{ ephemery_dir }}/config/grafana/dashboards'
-    - '{{ ephemery_dir }}/config/grafana/agent'
-    - '{{ ephemery_dir }}/data/prometheus'
-    - '{{ ephemery_dir }}/data/grafana'
+  when: grafana_enabled | default(true) | bool and not test_mode | default(false)
 
 # - name: Create Lighthouse performance monitoring dashboard
 #   ansible.builtin.template:

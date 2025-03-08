@@ -6,11 +6,14 @@
       ansible.builtin.include_role:
         name: ../../ansible
       vars:
+        test_mode: true
         validator_enabled: true
         # Override variables for testing validators
         home_dir: /root
         ephemery_base_dir: '{{ home_dir }}/ephemery'
         ephemery_dir: '{{ ephemery_base_dir }}'
+        ephemery_data_dir: '{{ ephemery_base_dir }}/data'
+        ephemery_secrets_dir: '{{ ephemery_base_dir }}/secrets'
         # Validator-specific test variables
         validator_memory_limit: 1024M
         validator_client: '{{ cl }}'

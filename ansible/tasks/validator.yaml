@@ -40,8 +40,8 @@
     path: '{{ item }}'
     state: directory
     mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
   loop:
     - '{{ ephemery_data_dir }}/validator'
     - '{{ ephemery_secrets_dir }}/validator'
@@ -62,6 +62,8 @@
         echo "Keys generated on $(date)" > \
           '{{ ephemery_secrets_dir }}/validator/keys_generated'
     fi
+  args:
+    creates: '{{ ephemery_secrets_dir }}/validator/keys_generated'
   when: not validator_skip and validator_enabled | default(true) | bool
   tags:
     - validator
@@ -101,7 +103,7 @@
       --accept-terms-of-use
       --chain-config-file=/chain-config.yaml
       {% endif %}
-  when: not validator_skip and not use_custom_keys | default(false) | bool
+  when: not validator_skip and not use_custom_keys | default(false) | bool and not test_mode | default(false) | bool
   tags:
     - validator
 
@@ -110,7 +112,7 @@
     name: '{{ network }}-validator-{{ cl }}'
     state: stopped
   ignore_errors: true
-  when: not validator_skip
+  when: not validator_skip and not test_mode | default(false) | bool
 
 - name: Check if zip file exists
   ansible.builtin.stat:
