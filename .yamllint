@@ -4,6 +4,16 @@
 
 extends: default
 
+# Add ignore patterns to exclude files/directories from linting
+ignore: |
+  .git/
+  .github/
+  .cursor/
+  venv/
+  node_modules/
+  *.min.yaml
+  *.min.yml
+
 rules:
   # 80 chars should be enough, but don't fail if a line is longer
   line-length:
