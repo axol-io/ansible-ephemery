@@ -1,5 +1,6 @@
 ---
-# Required collections:
+  # Required collections:
+
 # - ansible.posix
 # - community.general
 # - community.docker
@@ -20,7 +21,7 @@
     state: present
   when: not firewall_skip and ansible_os_family == "Debian"
 
-# RedHat-based systems firewall configuration
+  # RedHat-based systems firewall configuration
 - name: Enable and start firewalld
   ansible.builtin.service:
     name: firewalld
@@ -52,7 +53,7 @@
   ansible.builtin.command: firewall-cmd --reload
   when: not firewall_skip and ansible_os_family == "RedHat"
 
-# Debian-based systems firewall configuration
+  # Debian-based systems firewall configuration
 - name: Enable UFW
   community.general.ufw:
     state: enabled

@@ -8,7 +8,7 @@ network: ephemery
 # Client selection
 el: geth              # Execution client: geth, besu, nethermind, reth, erigon
 cl: lighthouse        # Consensus client: lighthouse, teku, prysm, lodestar
-validator_enabled: true # Set to true to enable validator
+validator_enabled: true  # Set to true to enable validator
 
 # Host-specific directory paths (override defaults if needed)
 home_dir: /home/ubuntu  # Home directory path for this host

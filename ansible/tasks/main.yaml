@@ -1,5 +1,6 @@
 ---
-# Main tasks file for ansible-ephemery role
+  # Main tasks file for ansible-ephemery role
+
 
 - name: Include setup environment tasks
   ansible.builtin.import_tasks: setup-env.yaml

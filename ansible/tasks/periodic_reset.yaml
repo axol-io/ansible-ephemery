@@ -1,5 +1,6 @@
 ---
-# Tasks for setting up periodic resets of Ephemery nodes
+  # Tasks for setting up periodic resets of Ephemery nodes
+
 
 - name: Create script directory if it doesn't exist
   ansible.builtin.file:

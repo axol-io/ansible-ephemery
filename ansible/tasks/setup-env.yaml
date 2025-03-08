@@ -1,5 +1,6 @@
 ---
 - name: 🏖️ Create cozy axolotl home directory 🏖️
+
   ansible.builtin.command:
     cmd: mkdir -p {{ home_dir }}
   args:

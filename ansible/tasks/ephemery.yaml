@@ -1,5 +1,6 @@
 ---
 - name: 🌟 Ensure ephemery directories exist
+
   ansible.builtin.file:
     path: '{{ item }}'
     state: directory
@@ -40,7 +41,7 @@
     job: '{{ ephemery_scripts_dir }}/health_check.sh'
     user: '{{ ansible_user }}'
 
-# Include client-specific configuration
+  # Include client-specific configuration
 - name: 🚀 Include client-specific configuration
   ansible.builtin.include_tasks:
     file: clients/{{ el }}-{{ cl }}/main.yaml
@@ -48,7 +49,7 @@
     - el in ['geth', 'besu', 'nethermind', 'reth', 'erigon']
     - cl in ['lighthouse', 'teku', 'prysm', 'lodestar']
 
-# Fallback to generic configuration if specific client combination is not available
+  # Fallback to generic configuration if specific client combination is not available
 - name: 🚀 Check if client-specific configuration exists
   ansible.builtin.stat:
     path: tasks/clients/{{ el }}-{{ cl }}/main.yaml

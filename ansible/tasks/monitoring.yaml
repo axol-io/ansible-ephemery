@@ -1,5 +1,6 @@
 ---
 - name: Ensure home directory for root exists with correct permissions
+
   ansible.builtin.file:
     path: '{{ home_dir }}'
     state: directory

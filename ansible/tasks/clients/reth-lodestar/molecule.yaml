@@ -1,5 +1,6 @@
 ---
 - name: Check if client combination is selected
+
   ansible.builtin.set_fact:
     client_skip: '{{ not (el == "reth" and cl == "lodestar") }}'
 

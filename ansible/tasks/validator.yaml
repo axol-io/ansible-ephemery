@@ -1,5 +1,6 @@
 ---
 - name: Check if validator is enabled
+
   ansible.builtin.set_fact:
     validator_skip: '{{ not validator_enabled | default(true) | bool }}'
   tags:
@@ -7,7 +8,8 @@
 
 - name: Check if custom validator keys are to be used
   ansible.builtin.set_fact:
-    use_custom_keys: '{{ validator_keys_src is defined and validator_keys_src | length > 0 }}'
+    use_custom_keys: >-
+      {{ validator_keys_src is defined and validator_keys_src | length > 0 }}
   when: not validator_skip
   tags:
     - validator
@@ -18,8 +20,10 @@
       Validator Configuration:
       - Validator Enabled: {{ validator_enabled | default(true) | bool }}
       - Using Custom Keys: {{ use_custom_keys | default(false) | bool }}
-      - Validator Client: {{ cl_client_name | default('not specified') }}
-      - Validator Image: {{ client_images.validator | default('not specified') }}
+      - Validator Client: >-
+          {{ cl_client_name | default('not specified') }}
+      - Validator Image: >-
+          {{ client_images.validator | default('not specified') }}
   when: not validator_skip
   tags:
     - validator
@@ -50,12 +54,15 @@
 - name: Generate validator keys
   ansible.builtin.shell: |
     if [ ! -f '{{ ephemery_secrets_dir }}/validator/keys_generated' ]; then
-      # This is a placeholder command - in a real implementation,
-      # you would use an appropriate tool to generate validator keys
-      # For example: ./deposit --language=english --num_validators=1 generate-keys
-      echo "Keys generated on $(date)" > '{{ ephemery_secrets_dir }}/validator/keys_generated'
+        # This is a placeholder command - in a real implementation,
+        # you would use an appropriate tool to generate validator keys
+
+        # For example: ./deposit --language=english --num_validators=1
+        # generate-keys
+        echo "Keys generated on $(date)" > \
+          '{{ ephemery_secrets_dir }}/validator/keys_generated'
     fi
-  when: not validator_skip and not use_custom_keys | default(false) | bool
+  when: not validator_skip and validator_enabled | default(true) | bool
   tags:
     - validator
 
@@ -102,7 +109,7 @@
   community.docker.docker_container:
     name: '{{ network }}-validator-{{ cl }}'
     state: stopped
-  ignore_errors: yes
+  ignore_errors: true
   when: not validator_skip
 
 - name: Check if zip file exists

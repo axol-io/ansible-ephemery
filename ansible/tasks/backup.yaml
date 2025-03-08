@@ -1,5 +1,6 @@
 ---
 - name: Check if backups are enabled
+
   ansible.builtin.set_fact:
     backup_skip: '{{ not backup_enabled | default(false) }}'
 

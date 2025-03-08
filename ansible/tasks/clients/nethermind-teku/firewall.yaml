@@ -1,14 +1,16 @@
 ---
-# Firewall rules for Nethermind (execution client) and Teku (consensus client) combination
+# Firewall rules for Nethermind (execution client) and Teku
+# (consensus client) combination
+
 firewall_allowed_tcp_ports:
-  - 22    # SSH
-  - 80    # HTTP
-  - 443   # HTTPS
-  - 30303 # Nethermind P2P
-  - 8551  # Nethermind Engine API
-  - 9000  # Teku P2P
-  - 8008  # Teku metrics
+  - 22      # SSH
+  - 80      # HTTP
+  - 443     # HTTPS
+  - 30303   # Nethermind P2P
+  - 8551    # Nethermind Engine API
+  - 9000    # Teku P2P
+  - 8008    # Teku metrics
 
 firewall_allowed_udp_ports:
-  - 30303 # Nethermind P2P
-  - 9000  # Teku P2P
+  - 30303   # Nethermind P2P
+  - 9000    # Teku P2P

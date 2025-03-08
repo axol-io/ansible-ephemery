@@ -1,5 +1,6 @@
 ---
-# Custom validator setup for mounting existing validator keys
+  # Custom validator setup for mounting existing validator keys
+
 
 - name: Set default variables if not defined
   set_fact:
@@ -18,19 +19,19 @@
     - '{{ ephemery_base_dir }}/secrets/validator'
     - '{{ ephemery_base_dir }}/secrets/validator/keys'
     - '{{ ephemery_base_dir }}/secrets/validator/passwords'
-    - '{{ ephemery_base_dir }}/tmp'  # Temporary directory for safe extraction
+    - '{{ ephemery_base_dir }}/tmp'    # Temporary directory for safe extraction
 
 - name: Stop existing validator container to prevent slashing
   community.docker.docker_container:
     name: '{{ network }}-validator-{{ cl }}'
     state: stopped
-  ignore_errors: yes  # Continue even if container doesn't exist
+  ignore_errors: yes    # Continue even if container doesn't exist
 
 - name: Debug validator keys path
   ansible.builtin.debug:
     msg: 'Validator keys path: {{ validator_keys_password_file }}, playbook dir: {{ playbook_dir }}'
 
-# Direct copy for password file first to ensure it's available
+  # Direct copy for password file first to ensure it's available
 - name: Copy password file
   ansible.builtin.copy:
     src: '{{ playbook_dir }}/files/passwords/validators.txt'
@@ -41,7 +42,7 @@
   register: password_copied
   notify: Display password file copied
 
-# Copy validator definitions.yaml
+  # Copy validator definitions.yaml
 - name: Copy validator definitions file
   ansible.builtin.copy:
     src: '{{ playbook_dir }}/files/validator_definitions.yaml'
@@ -51,7 +52,7 @@
     group: '{{ ansible_user }}'
   register: definitions_copied
 
-# Check if the validator keys are in a zip file
+  # Check if the validator keys are in a zip file
 - name: Check if zip file exists
   ansible.builtin.stat:
     path: '{{ playbook_dir }}/{{ validator_keys_src }}/validator_keys.zip'
@@ -71,7 +72,7 @@
 - name: Move extracted validator keys to secrets directory
   ansible.builtin.shell: |
     # Move keystore files to validator keys directory
-    find {{ ephemery_base_dir }}/tmp -name "keystore*.json" -exec mv {} {{ ephemery_base_dir }}/secrets/validator/keys/ \;
+    find {{ ephemery_base_dir }}/tmp -name "keystore*.json" -exec mv {} {{ ephemery_base_dir }}/secrets/validator/keys/ \\;
   when: extracted_keys is defined and extracted_keys.changed
   register: moved_keys
 
@@ -92,7 +93,7 @@
       {% elif cl == 'prysm' %}http://127.0.0.1:4000
       {% else %}http://127.0.0.1:5052{% endif %}
 
-# Start validator with custom keys for Lighthouse
+  # Start validator with custom keys for Lighthouse
 - name: Start validator with custom keys (Lighthouse)
   community.docker.docker_container:
     name: '{{ network }}-validator-{{ cl }}'
@@ -111,7 +112,7 @@
       --testnet-dir /ephemery_config
   when: cl == 'lighthouse'
 
-# Start validator with custom keys for other clients
+  # Start validator with custom keys for other clients
 - name: Start validator with custom keys (non-Lighthouse)
   community.docker.docker_container:
     name: '{{ network }}-validator-{{ cl }}'

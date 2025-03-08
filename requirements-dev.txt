@@ -13,6 +13,7 @@ black
 flake8
 mypy
 isort
+yamllint
 
 # The following are pinned versions for development
 # These override the versions in requirements.txt when installed

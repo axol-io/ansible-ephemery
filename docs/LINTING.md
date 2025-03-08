@@ -1,103 +1,90 @@
-# YAML Linting Guidelines
+# Linting in ansible-ephemery
 
-This document provides guidance on addressing YAML linting issues in the Ansible Ephemery repository.
+This document describes the linting tools and configuration used in the ansible-ephemery project.
 
-## Common Linting Issues
+## YAML Linting
 
-The repository uses pre-commit hooks and ansible-lint to enforce code quality. Common issues include:
+We use [yamllint](https://yamllint.readthedocs.io/) to enforce consistent formatting in YAML files.
 
-1. **Line Length**: Lines exceeding 80 characters
-2. **Truthy Values**: Using `yes`/`no` instead of `true`/`false`
-3. **Document Start Markers**: Missing `---` at the beginning of YAML files
-4. **Comment Spacing**: Insufficient spaces before comments
-5. **Trailing Whitespace**: Extra spaces at the end of lines
-6. **End of File**: Missing newline at end of file
-7. **Indentation**: Incorrect spacing for indentation
+### Installation
 
-## Automated Fixes
-
-A consolidated script is provided to automatically fix common issues:
+yamllint is included in the project's development dependencies. Install it with:
 
 ```bash
-# Check for linting issues
-./scripts/yaml-lint-fixer.sh --check
-
-# Fix all YAML linting issues (document start markers, truthy values, line length, quotes)
-./scripts/yaml-lint-fixer.sh --fix-all
-
-# Fix specific issues
-./scripts/yaml-lint-fixer.sh --fix-truthy    # Fix only truthy values
-./scripts/yaml-lint-fixer.sh --fix-line-length  # Fix line length issues
+pip install -r requirements-dev.txt
 ```
 
-## Manually Fixing Line Length Issues
+### Configuration
 
-For molecule test files and task files with long lines, manually break up lines:
+The yamllint configuration is defined in `.yamllint` at the root of the project. Key rules include:
 
-Before:
+- Line length: maximum 80 characters (warning only)
+- Comments: must have at least 2 spaces before the text
+- Truthy values: must use `true` and `false` (not `yes`, `no`, `on`, `off`)
+- Indentation: 2 spaces
 
-```yaml
-- name: This is a very long task name that exceeds the 80 character limit and needs to be reformatted
-```
+### Running yamllint
 
-After:
-
-```yaml
-- name: >-
-    This is a very long task name that exceeds the 80 character limit
-    and needs to be reformatted
-```
-
-For Ansible expressions:
-
-```yaml
-long_expression: '{{ (ansible_memory_mb.real.total * 0.90 * some_percentage) | round | int }}M"
-```
-
-Can be changed to:
-
-```yaml
-long_expression: |-
-  '{{ (ansible_memory_mb.real.total * 0.90 * some_percentage) | round | int }}M"
-```
-
-## Bypassing Linting for Exceptional Cases
-
-If you need to bypass linting for a specific commit:
+You can run yamllint manually with:
 
 ```bash
-git commit -m "your message" --no-verify
+# Check a single file
+yamllint -c .yamllint path/to/file.yaml
+
+# Check all YAML files in a directory
+yamllint -c .yamllint ansible/
+
+# Check all YAML files in the project
+yamllint -c .yamllint .
 ```
 
-For specific lines in a file that cannot be reformatted:
+### Integration with pre-commit
 
-```yaml
-# Comment indicating the reason for bypassing the linter
-this_line_is_too_long_but_we_need_to_keep_it_this_way: "long value here"
-```
+yamllint is run automatically as part of pre-commit hooks. The pre-commit hook is configured to fail only on errors, not on warnings, to avoid being too strict about line length.
 
-## Pre-commit Configuration
-
-The pre-commit configuration is in `.pre-commit-config.yaml`. To temporarily skip checks:
+To install pre-commit hooks:
 
 ```bash
-# Skip all pre-commit hooks
-SKIP=all git commit -m "message"
-
-# Skip specific hooks
-SKIP=ansible-lint git commit -m "message"
+pre-commit install
 ```
 
-## Linting During Development
+### IDE Integration
 
-Run linting checks without committing:
+#### VS Code
 
-```bash
-pre-commit run --all-files
+For VS Code, install the [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) and configure it to use the project's yamllint configuration:
+
+1. Install the extension
+2. Add to your settings.json:
+
+```json
+{
+  "yaml.validate": true,
+  "yaml.customTags": [],
+  "yaml.format.enable": true,
+  "yaml.linting.enable": true,
+  "yaml.linting.yamllint.enable": true,
+  "yaml.linting.yamllint.configPath": ".yamllint"
+}
 ```
 
-Run a specific hook:
+#### JetBrains IDEs (PyCharm, IntelliJ)
 
-```bash
-pre-commit run ansible-lint --all-files
-```
+1. Go to Settings → Tools → File Watchers
+2. Click + and select "custom"
+3. Configure:
+   - Name: yamllint
+   - File type: YAML
+   - Program: yamllint
+   - Arguments: -c $ProjectFileDir$/.yamllint $FilePath$
+   - Working directory: $ProjectFileDir$
+
+## Other Linting Tools
+
+The project also uses:
+
+- ansible-lint: for Ansible-specific linting
+- flake8, black, isort: for Python code formatting
+- shellcheck: for shell script linting
+
+See the `.pre-commit-config.yaml` file for details on how these are configured.
