@@ -23,6 +23,7 @@ repos:
         entry: yamllint -c .yamllint
         types: [yaml]
         args: [--strict, -f, parsable, --no-warnings]
+        exclude: ^collections/
 
   - repo: local
     hooks:
