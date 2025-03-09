@@ -25,6 +25,11 @@
     file: jwt-secret.yaml
   tags: [jwt, security, always]
 
+- name: 🌐 Setup Ephemery network configuration
+  ansible.builtin.import_tasks:
+    file: ephemery_config.yaml
+  tags: [network, config, always]
+
 - name: 🔑 Add user to Docker group
   ansible.builtin.user:
     name: '{{ ansible_user | default("root") }}'
@@ -83,7 +88,7 @@
   become: true
   community.docker.docker_container:
     name: '{{ network }}-{{ el }}'
-    image: '{% if el == "geth" %}ethereum/client-go:v1.15.4{% else %}{{ client_images[el] }}{% endif %}'
+    image: '{% if el == "geth" %}pk910/ephemery-geth:v1.15.3{% else %}{{ client_images[el] }}{% endif %}'
     state: started
     restart_policy: unless-stopped
     network_mode: host
@@ -123,19 +128,10 @@
     force_kill: true
   when: not test_mode | default(false) and cl_container_info.exists | default(false)
 
-- name: 🚀 Start Consensus Client with generic configuration
-  become: true
-  community.docker.docker_container:
-    name: '{{ network }}-{{ cl }}'
-    image: '{% if cl == "lighthouse" %}sigp/lighthouse:v5.3.0{% else %}{{ client_images[cl] }}{% endif %}'
-    state: started
-    restart_policy: unless-stopped
-    network_mode: host
-    volumes:
-      - '{{ ephemery_dir }}/data/{{ cl }}:/data'
-      - '{{ ephemery_dir }}/jwt.hex:/jwt.hex'
-    command: >
-      {% if cl == "lighthouse" %}
+# Set up Lighthouse command based on sync strategy
+- name: Set Lighthouse command for checkpoint sync
+  ansible.builtin.set_fact:
+    lighthouse_command: >
       lighthouse beacon_node
       --datadir=/data
       --execution-jwt=/jwt.hex
@@ -146,10 +142,46 @@
       --metrics
       --metrics-address=0.0.0.0
       --metrics-port=5054
-      --checkpoint-sync-url=https://checkpoint-sync.ephemery.ethpandaops.io/
+      --checkpoint-sync-url={{ checkpoint_sync_url }}
       --testnet-dir=/ephemery_config
-      --allow-insecure-genesis-sync
+      {% if bootstrap_nodes is defined %}
+      --boot-nodes={{ bootstrap_nodes | join(',') }}
+      {% endif %}
       {{ cl_extra_opts }}
+  when: cl == "lighthouse" and (use_checkpoint_sync | bool)
+
+- name: Set Lighthouse command for genesis sync
+  ansible.builtin.set_fact:
+    lighthouse_command: >
+      lighthouse beacon_node
+      --datadir=/data
+      --execution-jwt=/jwt.hex
+      --execution-endpoint=http://127.0.0.1:8551
+      --http
+      --http-address=0.0.0.0
+      --http-port=5052
+      --metrics
+      --metrics-address=0.0.0.0
+      --metrics-port=5054
+      --testnet-dir=/ephemery_config
+      {{ cl_extra_opts }}
+  when: cl == "lighthouse" and not (use_checkpoint_sync | bool)
+
+- name: 🚀 Start Consensus Client with generic configuration
+  become: true
+  community.docker.docker_container:
+    name: '{{ network }}-{{ cl }}'
+    image: '{% if cl == "lighthouse" %}pk910/ephemery-lighthouse:latest{% else %}{{ client_images[cl] }}{% endif %}'
+    state: started
+    restart_policy: unless-stopped
+    network_mode: host
+    volumes:
+      - '{{ ephemery_dir }}/data/{{ cl }}:/data'
+      - '{{ ephemery_dir }}/jwt.hex:/jwt.hex'
+      - '{{ ephemery_dir }}/config/ephemery_network:/ephemery_config:ro'
+    command: >
+      {% if cl == "lighthouse" %}
+      {{ lighthouse_command }}
       {% endif %}
   when: (cl == "lighthouse" or cl == "teku" or cl == "prysm" or cl == "lodestar") and not test_mode | default(false)
 

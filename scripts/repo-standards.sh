@@ -350,7 +350,7 @@ function normalize_task_names {
 
         total_tasks=$((total_tasks + 1))
       else
-        in_task=0
+        # in_task=0  # Removing unused variable
       fi
 
       # Write line to temp file

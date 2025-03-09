@@ -10,6 +10,7 @@ A short-lived Ethereum testnet that resets every 24 hours, providing a clean env
 
 - **Multi-client support**: Geth, Besu, Nethermind, Reth, Erigon (execution) and Lighthouse, Teku, Prysm, Lodestar (consensus)
 - **Specialized images**: Optimized Docker images with built-in Ephemery configuration
+- **Reliable sync**: Uses genesis sync for consistent and reliable initial sync
 - **Monitoring**: Grafana, Prometheus, Node Exporter, and cAdvisor
 - **Security**: Firewall, JWT secrets, secure defaults
 - **Automation**: Backups, health checks, resource management, automatic resets
@@ -176,6 +177,37 @@ Tools included for comprehensive monitoring:
 
 For configuration and troubleshooting, see [docs/MONITORING.md](docs/MONITORING.md).
 
+## Sync Optimization
+
+Optimize your Ephemery node sync times with these tested techniques:
+
+- **Bootstrap Node Formatting**: Ensure correct format with UDP ports (`/ip4/IP/tcp/9000/udp/9000/p2p/ID`)
+- **Ephemery-Specific Images**: Use pk910 images (`pk910/ephemery-geth`, `pk910/ephemery-lighthouse`) for best compatibility
+- **Genesis Sync Strategy**: Our testing shows best results using genesis sync with optimized flags rather than checkpoint sync
+- **Execution Client Optimization**: Use these proven Geth parameters: `--cache=4096 --txlookuplimit=0 --syncmode=snap --maxpeers=100`
+- **Consensus Client Optimization**: Use these Lighthouse flags: `--target-peers=100 --execution-timeout-multiplier=5 --allow-insecure-genesis-sync --genesis-backfill --disable-backfill-rate-limiting`
+- **Resource Allocation**: Properly divide memory between clients: 50% for execution client, 40% for consensus client, 10% for validator
+
+Example inventory configuration:
+```yaml
+ephemery:
+  hosts:
+    ephemery-node1:
+      # Disable checkpoint sync since it often fails
+      use_checkpoint_sync: false
+      # Clear database for a fresh start
+      clear_database: true
+      # Lighthouse optimization parameters for faster sync
+      cl_extra_opts: "--target-peers=100 --execution-timeout-multiplier=5 --allow-insecure-genesis-sync --genesis-backfill --disable-backfill-rate-limiting"
+      # Geth optimization parameters for faster sync
+      el_extra_opts: "--cache=4096 --txlookuplimit=0 --syncmode=snap --maxpeers=100"
+```
+
+For detailed optimization instructions, see our updated guides:
+- [Optimized Sync Guide](docs/CHECKPOINT_SYNC.md)
+- [Client Optimization Guide](docs/LIGHTHOUSE_OPTIMIZATION.md)
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
+
 ## Testing
 
 The role includes comprehensive Molecule tests for all supported client combinations and features.
@@ -204,13 +236,13 @@ See [Molecule Testing](./molecule/README.md) and [Testing Documentation](./docs/
 
 ## Documentation
 
-- [Repository Structure](docs/REPOSITORY_STRUCTURE.md)
-- [Requirements](docs/REQUIREMENTS.md)
-- [Security](docs/SECURITY.md)
-- [Testing](docs/TESTING.md)
-- [Client Combinations](docs/CLIENT_COMBINATIONS.md)
-- [Validator Setup](docs/VALIDATOR_README.md)
-- [Monitoring](docs/MONITORING.md)
+- [Getting Started Guide](docs/GETTING_STARTED.md)
+- [Genesis Sync](docs/GENESIS_SYNC.md)
+- [Client-Specific Configuration](docs/CLIENT_SPECIFIC.md)
+- [Ephemery-Specific Information](docs/EPHEMERY_SPECIFIC.md)
+- [Monitoring Setup](docs/MONITORING.md)
+- [Security Considerations](docs/SECURITY.md)
+- [Validator Setup](docs/VALIDATOR_SETUP.md)
 
 ## Additional Resources
 

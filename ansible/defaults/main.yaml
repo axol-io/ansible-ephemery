@@ -19,16 +19,25 @@ cl: lighthouse       # Consensus client: lighthouse, teku, prysm, lodestar
 
 # Client extra options
 el_extra_opts: ''    # Extra options for execution client
-cl_extra_opts: ''    # Extra options for consensus client
+cl_extra_opts: '--target-peers=70 --execution-timeout-multiplier=5'    # Extra options for consensus client
 
-# Checkpoint sync URLs for Ephemery network
-# Note: Not needed when using pk910/ephemery-lighthouse image as it includes built-in configuration
-# Kept for reference or when using standard client images
-# Available options:
-# - https://checkpointz.bordel.wtf/
-# - https://checkpoint-sync.ephemery.ethpandaops.io/
-# - https://ephemery.beaconstate.ethstaker.cc/
-ephemery_checkpoint_sync_url: 'https://checkpoint-sync.ephemery.ethpandaops.io/'
+# Sync configuration
+use_checkpoint_sync: true  # Whether to use checkpoint sync (true) or genesis sync (false)
+checkpoint_sync_url: 'https://checkpoint-sync.ephemery.ethpandaops.io'  # Checkpoint sync URL for Ephemery
+clear_database: false      # Whether to clear the database before starting the client
+
+# Client images - using pk910 Ephemery-wrapped images
+client_images:
+  geth: 'pk910/ephemery-geth:latest'
+  lighthouse: 'pk910/ephemery-lighthouse:latest'
+  validator: 'pk910/ephemery-prysm-validator:latest'
+
+# Additional bootstrap nodes for better peer connectivity
+bootstrap_nodes:
+  - "/ip4/157.90.35.151/tcp/9000/udp/9000/p2p/16Uiu2HAmVZnsqvTNQ2ya1YG2qi6DQchqX57jF9zN2CukZnQY84wJ"
+  - "/ip4/136.243.15.66/tcp/9000/udp/9000/p2p/16Uiu2HAmAwGWqGShumBQeUuivDyRMmCZjvbZsQwcEWYYLDVKvFjG"
+  - "/ip4/88.198.2.150/tcp/9000/udp/9000/p2p/16Uiu2HAm8cEfaKtweXbT4koAuifKKJPm8q7TdpaVfWk9j5E5L2m3"
+  - "/ip4/135.181.91.151/tcp/9000/udp/9000/p2p/16Uiu2HAmEP7X3JDcdAYLagNQxpJ24n3HDwLGxVVsWyv2aUHrXA5b"
 
 # JWT Secret configuration
 jwt_secret_path: '{{ ephemery_base_dir }}/jwt.hex'

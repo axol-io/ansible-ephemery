@@ -44,7 +44,7 @@
   become_user: root
   become: true
   ansible.builtin.template:
-    src: templates/datasources.yaml.j2
+    src: ../templates/datasources.yaml.j2
     dest: '{{ ephemery_dir }}/config/grafana/provisioning/datasources/datasource.yaml'
     mode: '0644'
     owner: '{{ ansible_user | default("root") }}'
@@ -54,7 +54,7 @@
   become_user: root
   become: true
   ansible.builtin.template:
-    src: templates/grafana-agent.yaml.j2
+    src: ../templates/grafana-agent.yaml.j2
     dest: '{{ ephemery_dir }}/config/grafana/agent/grafana-agent.yaml'
     mode: '0644'
     owner: '{{ ansible_user | default("root") }}'
@@ -65,7 +65,7 @@
   become_user: root
   become: true
   ansible.builtin.template:
-    src: templates/prometheus.yaml.j2
+    src: ../templates/prometheus.yaml.j2
     dest: '{{ ephemery_dir }}/config/prometheus/prometheus.yaml'
     mode: '0644'
     owner: '{{ ansible_user | default("root") }}'
@@ -140,7 +140,7 @@
     privileged: true
     env:
       GF_SECURITY_ADMIN_PASSWORD: '{{ GRAFANA_ADMIN_PASSWORD | default("admin") }}'
-      GF_USERS_ALLOW_SIGN_UP: false
+      GF_USERS_ALLOW_SIGN_UP: 'false'
       GF_SERVER_HTTP_PORT: '{{ grafana_port | string }}'
     volumes:
       - '{{ ephemery_dir }}/data/grafana:/var/lib/grafana'

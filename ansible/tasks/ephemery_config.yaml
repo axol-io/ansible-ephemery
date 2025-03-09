@@ -1,0 +1,34 @@
+---
+# Task file to set up Ephemery network configuration
+
+- name: Create Ephemery network configuration directory
+  ansible.builtin.file:
+    path: '{{ ephemery_dir }}/config/ephemery_network'
+    state: directory
+    mode: '0755'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
+
+- name: Download latest Ephemery network configuration
+  ansible.builtin.get_url:
+    url: https://github.com/ephemery-testnet/ephemery-genesis/releases/latest/download/testnet-all.tar.gz
+    dest: '{{ ephemery_dir }}/config/ephemery_network/testnet-all.tar.gz'
+    mode: '0644'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
+  register: ephemery_download
+
+- name: Extract Ephemery network configuration
+  ansible.builtin.unarchive:
+    src: '{{ ephemery_dir }}/config/ephemery_network/testnet-all.tar.gz'
+    dest: '{{ ephemery_dir }}/config/ephemery_network'
+    remote_src: yes
+    mode: '0755'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
+  when: ephemery_download.changed
+
+- name: Set fact that Ephemery network configuration was updated
+  ansible.builtin.set_fact:
+    ephemery_config_updated: true
+  when: ephemery_download.changed

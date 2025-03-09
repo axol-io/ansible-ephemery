@@ -1,0 +1,119 @@
+---
+# Custom tasks to enhance sync speed
+
+- name: Combine default and additional bootstrap nodes
+  ansible.builtin.set_fact:
+    bootstrap_nodes: "{{ bootstrap_nodes | default([]) + additional_bootstrap_nodes | default([]) }}"
+  when: additional_bootstrap_nodes is defined
+
+- name: Ensure Lighthouse uses all available bootstrap nodes
+  ansible.builtin.set_fact:
+    lighthouse_command: >
+      lighthouse beacon_node
+      --datadir=/data
+      --execution-jwt=/jwt.hex
+      --execution-endpoint=http://127.0.0.1:8551
+      --http
+      --http-address=0.0.0.0
+      --http-port=5052
+      --metrics
+      --metrics-address=0.0.0.0
+      --metrics-port=5054
+      --checkpoint-sync-url={{ checkpoint_sync_url }}
+      --testnet-dir=/ephemery_config
+      {% if bootstrap_nodes is defined and bootstrap_nodes | length > 0 %}
+      --boot-nodes={{ bootstrap_nodes | join(',') }}
+      {% endif %}
+      --disable-deposit-contract-sync
+      --import-all-attestations
+      --disable-backfill-rate-limiting
+      --execution-timeout-multiplier=10
+  when: cl == "lighthouse" and (use_checkpoint_sync | bool)
+
+- name: Create network optimization script
+  ansible.builtin.copy:
+    dest: "{{ ephemery_scripts_dir | default('/opt/ephemery/scripts') }}/optimize_network.sh"
+    mode: '0755'
+    content: |
+      #!/bin/bash
+
+      # Network optimization for Ethereum nodes
+      # Increase socket buffer sizes
+      sysctl -w net.core.rmem_max=16777216
+      sysctl -w net.core.wmem_max=16777216
+      sysctl -w net.core.rmem_default=1048576
+      sysctl -w net.core.wmem_default=1048576
+      sysctl -w net.ipv4.tcp_rmem="4096 1048576 16777216"
+      sysctl -w net.ipv4.tcp_wmem="4096 1048576 16777216"
+
+      # Increase connection tracking table size
+      sysctl -w net.netfilter.nf_conntrack_max=1000000
+
+      # Increase the maximum number of open files
+      ulimit -n 65536
+
+      # Optimize TCP settings
+      sysctl -w net.ipv4.tcp_fastopen=3
+      sysctl -w net.ipv4.tcp_slow_start_after_idle=0
+      sysctl -w net.ipv4.tcp_no_metrics_save=1
+
+      echo "Network optimizations applied"
+
+- name: Run network optimization script
+  ansible.builtin.command: "{{ ephemery_scripts_dir | default('/opt/ephemery/scripts') }}/optimize_network.sh"
+  become: true
+  register: network_optimization
+  changed_when: "'Network optimizations applied' in network_optimization.stdout"
+
+- name: Create sync status check script
+  ansible.builtin.copy:
+    dest: "{{ ephemery_scripts_dir | default('/opt/ephemery/scripts') }}/check_sync_status.sh"
+    mode: '0755'
+    content: |
+      #!/bin/bash
+
+      GREEN='\033[0;32m'
+      RED='\033[0;31m'
+      YELLOW='\033[1;33m'
+      NC='\033[0m' # No Color
+
+      echo -e "${YELLOW}Checking Lighthouse sync status...${NC}"
+
+      # Check if curl and jq are installed
+      if ! command -v curl &> /dev/null || ! command -v jq &> /dev/null; then
+        echo -e "${RED}curl and jq are required. Installing...${NC}"
+        apt-get update && apt-get install -y curl jq
+      fi
+
+      # Get sync status
+      SYNC_STATUS=$(curl -s http://localhost:5052/eth/v1/node/syncing)
+
+      if [ -z "$SYNC_STATUS" ]; then
+        echo -e "${RED}Could not get sync status. Is the beacon node running?${NC}"
+        exit 1
+      fi
+
+      # Parse JSON
+      IS_SYNCING=$(echo "$SYNC_STATUS" | jq -r '.data.is_syncing')
+      HEAD_SLOT=$(echo "$SYNC_STATUS" | jq -r '.data.head_slot')
+      SYNC_DISTANCE=$(echo "$SYNC_STATUS" | jq -r '.data.sync_distance')
+
+      # Show results
+      echo -e "${YELLOW}Sync Status:${NC}"
+      echo -e "  Is Syncing: ${IS_SYNCING}"
+      echo -e "  Head Slot: ${HEAD_SLOT}"
+      echo -e "  Sync Distance: ${SYNC_DISTANCE}"
+
+      # Check peer count
+      PEER_COUNT=$(curl -s http://localhost:5052/eth/v1/node/peer_count)
+      CONNECTED=$(echo "$PEER_COUNT" | jq -r '.data.connected')
+
+      echo -e "${YELLOW}Peer Count:${NC}"
+      echo -e "  Connected Peers: ${CONNECTED}"
+
+      if [ "$CONNECTED" -lt 10 ]; then
+        echo -e "${RED}Warning: Low peer count. This will slow down your sync.${NC}"
+        echo -e "${YELLOW}Try adding more bootstrap nodes or check your network connectivity.${NC}"
+      else
+        echo -e "${GREEN}Good peer count. Sync should proceed normally.${NC}"
+      fi

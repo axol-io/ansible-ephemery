@@ -54,26 +54,26 @@ jobs:
           - default
           - validator
           # All client combinations, reenabled as we have a working validator setup
-          - clients/geth-lighthouse
-          #- clients/geth-prysm
-          #- clients/geth-teku
-          #- clients/geth-lodestar
-          #- clients/reth-lighthouse
-          #- clients/reth-prysm
-          #- clients/reth-teku
-          #- clients/reth-lodestar
-          #- clients/erigon-lighthouse
-          #- clients/erigon-prysm
-          #- clients/erigon-teku
-          #- clients/erigon-lodestar
-          #- clients/nethermind-lighthouse
-          #- clients/nethermind-prysm
-          #- clients/nethermind-teku
-          #- clients/nethermind-lodestar
-          #- clients/besu-lighthouse
-          #- clients/besu-prysm
-          #- clients/besu-teku
-          #- clients/besu-lodestar
+          - geth-lighthouse
+          #- geth-prysm
+          #- geth-teku
+          #- geth-lodestar
+          #- reth-lighthouse
+          #- reth-prysm
+          #- reth-teku
+          #- reth-lodestar
+          #- erigon-lighthouse
+          #- erigon-prysm
+          #- erigon-teku
+          #- erigon-lodestar
+          #- nethermind-lighthouse
+          #- nethermind-prysm
+          #- nethermind-teku
+          #- nethermind-lodestar
+          #- besu-lighthouse
+          #- besu-prysm
+          #- besu-teku
+          #- besu-lodestar
     steps:
       - name: Checkout
         uses: actions/checkout@v4

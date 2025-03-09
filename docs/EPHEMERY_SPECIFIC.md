@@ -20,7 +20,7 @@ These specialized images offer several advantages:
 1. **Pre-configured for Ephemery**: These images are specifically built for the Ephemery testnet with all necessary configurations.
 2. **Built-in Genesis Configuration**: Contains the correct genesis state and configuration for the Ephemery network.
 3. **Automatic Network Reset Handling**: Handles Ephemery network resets automatically.
-4. **Simplified Deployment**: Reduces the need for complex configuration and checkpoint sync URLs.
+4. **Simplified Deployment**: Reduces the need for complex configuration.
 
 ## Implementation Details
 
@@ -36,6 +36,7 @@ When `cl: "lighthouse"` is selected, the role:
 - Uses `pk910/ephemery-lighthouse` instead of `sigp/lighthouse`
 - Runs the container with the `lighthouse beacon_node` command
 - Includes the `--testnet-dir=/ephemery_config` parameter to use the built-in Ephemery network configuration
+- Uses genesis sync with `--allow-insecure-genesis-sync` for reliable syncing
 
 ## JWT Secret Configuration
 
@@ -49,7 +50,7 @@ The JWT secret is used for secure communication between execution and consensus 
 
 For other client combinations (not using the Ephemery-specific images), the role:
 1. Uses standard Docker images with custom configuration
-2. Requires checkpoint sync URLs for consensus clients
+2. Uses genesis sync with appropriate options
 3. May require additional configuration for proper operation on the Ephemery network
 
 ## Troubleshooting and Maintenance

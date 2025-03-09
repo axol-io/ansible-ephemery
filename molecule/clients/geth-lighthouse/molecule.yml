@@ -3,6 +3,7 @@ dependency:
   name: galaxy
 driver:
   name: docker
+  docker_host: "unix:///var/run/docker.sock"
 platforms:
   - name: ephemery-geth-lighthouse
     image: geerlingguy/docker-ubuntu2204-ansible:latest

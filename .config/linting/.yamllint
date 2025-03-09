@@ -1,0 +1,72 @@
+---
+# yamllint configuration for ansible-ephemery
+# https://yamllint.readthedocs.io/
+
+extends: default
+
+# Add ignore patterns to exclude files/directories from linting
+ignore: |
+  .git/
+  .github/
+  .cursor/
+  .ansible/
+  venv/
+  node_modules/
+  *.min.yaml
+  *.min.yml
+  collections/*
+  .vscode/
+  .idea/
+  .cache/
+
+rules:
+  # 80 chars should be enough, but don't fail if a line is longer
+  line-length:
+    max: 120
+    level: warning
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+  # Relax quote rules (ansible-lint will handle this more specifically)
+  # The version of yamllint installed might not support this rule
+  # quotes: any
+
+  # Set comment spacing to 1 to be compatible with ansible-lint
+  comments:
+    min-spaces-from-content: 1
+
+  # Disable comments-indentation to be compatible with ansible-lint
+  comments-indentation: false
+
+  # Set max spaces inside braces to 1 for ansible-lint compatibility
+  braces:
+    max-spaces-inside: 1
+
+  # Add octal-values settings for ansible-lint compatibility
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+
+  # Allow multiple entries with the same key in mappings
+  # This is sometimes necessary for Ansible files
+  key-duplicates:
+    level: warning
+
+  # Enforce truthy values using true/false rather than yes/no/on/off
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
+
+  # Don't require document start marker
+  document-start:
+    present: true
+
+  # Content indentation should be consistent
+  indentation:
+    spaces: 2
+    indent-sequences: true
+
+  # Always end files with a newline
+  new-line-at-end-of-file: enable
+
+  # No trailing spaces at the end of lines
+  trailing-spaces: enable

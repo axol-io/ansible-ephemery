@@ -1,0 +1,42 @@
+---
+# Optimized inventory file for faster Ephemery node sync
+# This configuration focuses on rapid sync by using multiple optimizations
+
+ephemery:
+  hosts:
+    ephemery-node:
+      ansible_host: 103.214.23.174  # Change to your actual host IP
+      el: geth                 # Fast execution client
+      cl: lighthouse           # Fastest consensus client for checkpoint sync
+      validator_enabled: false # Disable validator for faster initial sync
+
+all:
+  vars:
+    ansible_user: failed yesterday in 1m 1s      # Change to your actual user
+    ansible_become: true
+
+    # Explicit path definitions
+    ephemery_base_dir: "/opt/ephemery"
+    ephemery_dir: "/opt/ephemery"
+    jwt_secret_path: "/opt/ephemery/jwt.hex"
+
+    # Optimized sync configuration
+    use_checkpoint_sync: true
+    checkpoint_sync_url: "https://checkpoint-sync.ephemery.ethpandaops.io"
+    clear_database: true    # Start with a clean database
+
+    # Higher target peers setting moved to tasks file
+    # to avoid duplication with default settings
+
+    # Additional bootstrap nodes beyond the defaults for better peer discovery
+    additional_bootstrap_nodes:
+      - "/ip4/95.217.131.28/tcp/9000/p2p/16Uiu2HAm4ijy2FE8SntNeBTFqKqLxKVWUqZ2QHPz4m8tQcJNvvBc"
+      - "/ip4/159.69.65.98/tcp/9000/p2p/16Uiu2HAmTACwFnTRoTWZRen4whDMMgcR7QAQoJKBrsBLNJqJiEkD"
+      - "/ip4/95.217.99.173/tcp/9000/p2p/16Uiu2HAkvq1xTJR2fNy4wY2bZ4xtCGZrLx7Zc9VpBLmAXmVeYYBD"
+
+    # Higher resource allocation for sync
+    el_memory_percentage: 0.4  # 40% for execution client
+    cl_memory_percentage: 0.6  # 60% for consensus client (no validator)
+
+    # Network optimization
+    firewall_enabled: false  # Temporarily disable firewall for better connectivity

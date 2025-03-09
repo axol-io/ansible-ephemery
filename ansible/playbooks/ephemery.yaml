@@ -14,12 +14,12 @@
   become: true
   gather_facts: true
   vars_files:
-    - defaults/main.yaml
-    - vars/main.yaml
+    - ../defaults/main.yaml
+    - ../vars/main.yaml
   tasks:
     - name: Load host-specific variables
       ansible.builtin.include_vars:
-        file: 'ansible/host_vars/{{ inventory_hostname }}.yaml'
+        file: '../host_vars/{{ inventory_hostname }}.yaml'
 
     - name: Pull latest execution client Docker image
       community.docker.docker_image:
@@ -60,20 +60,20 @@
         group: "{{ ansible_user | default('root') }}"
 
     - name: Import main tasks
-      ansible.builtin.import_tasks: ansible/tasks/main.yaml
+      ansible.builtin.import_tasks: ../tasks/main.yaml
 
 - name: Configure Periodic Reset for Ephemery Nodes
   hosts: all
   become: true
   gather_facts: true
   vars_files:
-    - defaults/main.yaml
-    - vars/main.yaml
+    - ../defaults/main.yaml
+    - ../vars/main.yaml
   tasks:
     - name: Load host-specific variables
       ansible.builtin.include_vars:
-        file: 'ansible/host_vars/{{ inventory_hostname }}.yaml'
+        file: '../host_vars/{{ inventory_hostname }}.yaml'
 
     - name: Setup periodic reset tasks
-      ansible.builtin.import_tasks: ansible/tasks/periodic_reset.yaml
+      ansible.builtin.import_tasks: ../tasks/periodic_reset.yaml
       when: ephemery_automatic_reset | default(false) | bool
