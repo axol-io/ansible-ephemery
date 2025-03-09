@@ -1,8 +1,33 @@
 ---
+# Root molecule.yml file that defines all client scenarios
 dependency:
   name: galaxy
+  enabled: false
 driver:
   name: docker
+# Scenario names are now just the client combinations
+# The .config/molecule/config.yml file handles finding them in molecule/clients directory
+scenarios:
+  - name: geth-lighthouse
+  - name: geth-prysm
+  - name: geth-teku
+  - name: geth-lodestar
+  - name: reth-lighthouse
+  - name: reth-prysm
+  - name: reth-teku
+  - name: reth-lodestar
+  - name: erigon-lighthouse
+  - name: erigon-prysm
+  - name: erigon-teku
+  - name: erigon-lodestar
+  - name: nethermind-lighthouse
+  - name: nethermind-prysm
+  - name: nethermind-teku
+  - name: nethermind-lodestar
+  - name: besu-lighthouse
+  - name: besu-prysm
+  - name: besu-teku
+  - name: besu-lodestar
 platforms:
   - name: ethereum-clients
     image: ubuntu:22.04

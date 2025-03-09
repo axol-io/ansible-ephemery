@@ -1,6 +1,32 @@
 ---
 - name: Converge
   hosts: all
+  vars_files:
+    - ../../ansible/defaults/main.yaml
+    - ../../ansible/vars/main.yaml
+  vars:
+    test_mode: true
+    home_dir: "/opt/ephemery"
+    ephemery_base_dir: "/opt/ephemery"
+    ephemery_dir: "{{ ephemery_base_dir }}"
+    ephemery_data_dir: "{{ ephemery_base_dir }}/data"
+    ephemery_scripts_dir: "{{ ephemery_base_dir }}/scripts"
+    jwt_secret_path: "{{ ephemery_dir }}/jwt.hex"
+    firewall_enabled: false
+    monitoring_enabled: false
+    validator_enabled: false
+    backup_enabled: false
+    cadvisor_enabled: false
+    grafana_agent_http_port: 12345
+    grafana_port: 3000
+    node_exporter_port: 9100
+    prometheus_port: 17690
+    cadvisor_port: 8080
+    el: geth
+    cl: lighthouse
+    client_images:
+      geth: ethereum/client-go:v1.15.4
+      lighthouse: sigp/lighthouse:v5.3.0
   tasks:
     - name: Install required packages
       ansible.builtin.apt:
@@ -11,9 +37,8 @@
         state: present
         update_cache: true
 
-    - name: Include ephemery role
-      include_role:
-        name: ansible
+    - name: Import main Ephemery tasks
+      ansible.builtin.import_tasks: ../../ansible/tasks/main.yaml
       vars:
         execution_client: geth
         consensus_client: lighthouse
@@ -21,4 +46,4 @@
     # After the role runs, set up the mock services for testing
     - name: Include mock services setup for testing
       ansible.builtin.include_tasks:
-        file: ../../shared/setup-mock-services.yml
+        file: ../../molecule/shared/setup-mock-services.yml

@@ -112,3 +112,24 @@
   args:
     executable: /bin/bash
   when: not port_listeners_check.results[1].stat.exists
+
+# Mock services setup for testing
+- name: Create mock services directory
+  ansible.builtin.file:
+    path: "{{ ephemery_base_dir }}/mock-services"
+    state: directory
+    mode: '0755'
+
+- name: Create mock service file
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      echo "Mock service for testing"
+      exit 0
+    dest: "{{ ephemery_base_dir }}/mock-services/mock-service.sh"
+    mode: '0755'
+
+- name: Run mock service
+  ansible.builtin.command:
+    cmd: "echo 'Mock service started'"
+  changed_when: false

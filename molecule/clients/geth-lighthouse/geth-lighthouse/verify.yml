@@ -4,8 +4,7 @@
   vars:
     el: geth
     cl: lighthouse
-    ephemery_base_dir: "/opt/ephemery"
   tasks:
     - name: Include mock services verification tasks
       ansible.builtin.include_tasks:
-        file: ../../molecule/shared/verify-mock-services.yml
+        file: ../../shared/verify-mock-services.yml

@@ -1,0 +1,11 @@
+---
+molecule:
+  scenario:
+    search_paths:
+      - molecule/clients
+
+scenarios:
+  - name: clients/geth-lighthouse
+    directory: clients/geth-lighthouse
+  - name: clients/geth-prysm
+    directory: clients/geth-prysm

@@ -58,3 +58,31 @@
   register: cl_port_check
   changed_when: false
   failed_when: cl_port_check.rc != 0
+
+# Verify mock services for testing
+- name: Check if mock services directory exists
+  ansible.builtin.stat:
+    path: "{{ ephemery_base_dir }}/mock-services"
+  register: mock_services_dir
+
+- name: Verify mock services directory exists
+  ansible.builtin.assert:
+    that:
+      - mock_services_dir.stat.exists
+      - mock_services_dir.stat.isdir
+    fail_msg: "Mock services directory does not exist"
+    success_msg: "Mock services directory exists"
+
+- name: Check if mock service file exists
+  ansible.builtin.stat:
+    path: "{{ ephemery_base_dir }}/mock-services/mock-service.sh"
+  register: mock_service_file
+
+- name: Verify mock service file exists
+  ansible.builtin.assert:
+    that:
+      - mock_service_file.stat.exists
+      - mock_service_file.stat.isreg
+      - mock_service_file.stat.executable
+    fail_msg: "Mock service file does not exist or is not executable"
+    success_msg: "Mock service file exists and is executable"
