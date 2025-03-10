@@ -7,13 +7,13 @@ local:
   base_dir: /Users/droo/ephemery-test      # Base directory for all Ephemery files
   data_dir: /Users/droo/ephemery-test/data # Data directory (default: base_dir/data)
   logs_dir: /Users/droo/ephemery-test/logs # Logs directory (default: base_dir/logs)
-  
+
   # Optional advanced configuration
   geth:
     image: pk910/ephemery-geth:v1.15.3
     cache: 4096
     max_peers: 100
-    
+
   lighthouse:
     image: pk910/ephemery-lighthouse:latest
-    target_peers: 100 
+    target_peers: 100

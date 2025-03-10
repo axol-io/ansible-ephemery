@@ -74,4 +74,4 @@ To stop containers and optionally remove data:
 ./scripts/utils/cleanup.sh --data
 ```
 
-For more configuration options, see the [Configuration Guide](configuration.md). 
+For more configuration options, see the [Configuration Guide](configuration.md).

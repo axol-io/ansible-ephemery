@@ -23,4 +23,4 @@
 - name: Display Geth container status
   ansible.builtin.debug:
     msg: "Geth container is {{ geth_container.container.State.Status }}"
-  when: geth_container.container is defined 
+  when: geth_container.container is defined

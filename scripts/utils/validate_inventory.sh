@@ -49,7 +49,7 @@ check_yaml_syntax() {
             echo "Warning: Neither yamllint nor python3 is available. Skipping YAML syntax validation."
         fi
     fi
-    
+
     return 0
 }
 
@@ -76,9 +76,9 @@ fi
 # Function to validate local inventory
 validate_local_inventory() {
     local errors=0
-    
+
     echo "Validating local inventory..."
-    
+
     # Check if yq is available
     if command_exists yq; then
         # Check required fields
@@ -86,23 +86,23 @@ validate_local_inventory() {
             echo "Error: Missing required field 'local.base_dir'"
             errors=$((errors+1))
         fi
-        
+
         if [ -z "$(yq '.local.data_dir // ""' "$INVENTORY_FILE")" ]; then
             echo "Error: Missing required field 'local.data_dir'"
             errors=$((errors+1))
         fi
-        
+
         if [ -z "$(yq '.local.logs_dir // ""' "$INVENTORY_FILE")" ]; then
             echo "Error: Missing required field 'local.logs_dir'"
             errors=$((errors+1))
         fi
-        
+
         # Check geth configuration
         if [ -z "$(yq '.local.geth.image // ""' "$INVENTORY_FILE")" ]; then
             echo "Error: Missing required field 'local.geth.image'"
             errors=$((errors+1))
         fi
-        
+
         # Check lighthouse configuration
         if [ -z "$(yq '.local.lighthouse.image // ""' "$INVENTORY_FILE")" ]; then
             echo "Error: Missing required field 'local.lighthouse.image'"
@@ -110,44 +110,44 @@ validate_local_inventory() {
         fi
     else
         echo "Warning: 'yq' command not found. Using fallback method with grep (less reliable)"
-        
+
         # Check required fields using grep
         if ! grep -q "base_dir:" "$INVENTORY_FILE"; then
             echo "Error: Missing required field 'local.base_dir'"
             errors=$((errors+1))
         fi
-        
+
         if ! grep -q "data_dir:" "$INVENTORY_FILE"; then
             echo "Error: Missing required field 'local.data_dir'"
             errors=$((errors+1))
         fi
-        
+
         if ! grep -q "logs_dir:" "$INVENTORY_FILE"; then
             echo "Error: Missing required field 'local.logs_dir'"
             errors=$((errors+1))
         fi
-        
+
         # Check if geth and lighthouse sections exist
         if ! grep -q "geth:" "$INVENTORY_FILE"; then
             echo "Error: Missing 'geth' section"
             errors=$((errors+1))
         fi
-        
+
         if ! grep -q "lighthouse:" "$INVENTORY_FILE"; then
             echo "Error: Missing 'lighthouse' section"
             errors=$((errors+1))
         fi
     fi
-    
+
     return $errors
 }
 
 # Function to validate remote inventory
 validate_remote_inventory() {
     local errors=0
-    
+
     echo "Validating remote inventory..."
-    
+
     # Check if yq is available
     if command_exists yq; then
         # Check remote host configuration
@@ -155,48 +155,48 @@ validate_remote_inventory() {
             echo "Error: Missing required field 'hosts[0].host'"
             errors=$((errors+1))
         fi
-        
+
         if [ -z "$(yq '.hosts[0].user // ""' "$INVENTORY_FILE")" ]; then
             echo "Error: Missing required field 'hosts[0].user'"
             errors=$((errors+1))
         fi
-        
+
         # Check remote configuration
         if [ -z "$(yq '.remote.base_dir // ""' "$INVENTORY_FILE")" ]; then
             echo "Error: Missing required field 'remote.base_dir'"
             errors=$((errors+1))
         fi
-        
+
         if [ -z "$(yq '.remote.data_dir // ""' "$INVENTORY_FILE")" ]; then
             echo "Error: Missing required field 'remote.data_dir'"
             errors=$((errors+1))
         fi
-        
+
         if [ -z "$(yq '.remote.logs_dir // ""' "$INVENTORY_FILE")" ]; then
             echo "Error: Missing required field 'remote.logs_dir'"
             errors=$((errors+1))
         fi
     else
         echo "Warning: 'yq' command not found. Using fallback method with grep (less reliable)"
-        
+
         # Check remote host configuration
         if ! grep -q "host:" "$INVENTORY_FILE"; then
             echo "Error: Missing required field 'hosts[0].host'"
             errors=$((errors+1))
         fi
-        
+
         if ! grep -q "user:" "$INVENTORY_FILE"; then
             echo "Error: Missing required field 'hosts[0].user'"
             errors=$((errors+1))
         fi
-        
+
         # Check if remote section exists
         if ! grep -q "remote:" "$INVENTORY_FILE"; then
             echo "Error: Missing 'remote' section"
             errors=$((errors+1))
         fi
     fi
-    
+
     return $errors
 }
 
@@ -220,4 +220,4 @@ if [ $errors -eq 0 ]; then
 else
     echo "Validation failed: Found $errors error(s) in $INVENTORY_TYPE inventory"
     exit 1
-fi 
+fi

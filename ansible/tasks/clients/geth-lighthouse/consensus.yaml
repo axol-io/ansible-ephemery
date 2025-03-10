@@ -23,4 +23,4 @@
 - name: Display Lighthouse container status
   ansible.builtin.debug:
     msg: "Lighthouse container is {{ lighthouse_container.container.State.Status }}"
-  when: lighthouse_container.container is defined 
+  when: lighthouse_container.container is defined

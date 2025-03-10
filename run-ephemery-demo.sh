@@ -86,4 +86,4 @@ echo "  docker logs -f ephemery-lighthouse"
 echo
 echo "To stop the demo:"
 echo "  docker stop ephemery-geth ephemery-lighthouse"
-echo "====================================================" 
+echo "===================================================="

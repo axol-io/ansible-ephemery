@@ -15,12 +15,12 @@ local:
   base_dir: /path/to/ephemery      # Base directory for all Ephemery files
   data_dir: /path/to/ephemery/data # Data directory
   logs_dir: /path/to/ephemery/logs # Logs directory
-  
+
   geth:
     image: pk910/ephemery-geth:v1.15.3
     cache: 4096
     max_peers: 100
-    
+
   lighthouse:
     image: pk910/ephemery-lighthouse:latest
     target_peers: 100
@@ -65,4 +65,4 @@ The default ports used by Ephemery are:
 - 5052: Lighthouse HTTP API
 - 9000: Lighthouse P2P (TCP/UDP)
 
-Ensure these ports are available on your machine and not blocked by firewalls. 
+Ensure these ports are available on your machine and not blocked by firewalls.

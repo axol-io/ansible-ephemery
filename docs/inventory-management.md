@@ -68,19 +68,19 @@ If you know the inventory type, you can specify it explicitly:
 local:
   # Base directory for Ephemery
   base_dir: "/path/to/ephemery"
-  
+
   # Directory for node data
   data_dir: "/path/to/ephemery/data"
-  
+
   # Directory for logs
   logs_dir: "/path/to/ephemery/logs"
-  
+
   # Geth Configuration
   geth:
     image: "ethereum/client-go:latest"
     cache: 4096
     max_peers: 25
-  
+
   # Lighthouse Configuration
   lighthouse:
     image: "sigp/lighthouse:latest"
@@ -100,19 +100,19 @@ hosts:
 remote:
   # Base directory for Ephemery
   base_dir: "/opt/ephemery"
-  
+
   # Directory for node data
   data_dir: "/opt/ephemery/data"
-  
+
   # Directory for logs
   logs_dir: "/opt/ephemery/logs"
-  
+
   # Geth Configuration
   geth:
     image: "ethereum/client-go:latest"
     cache: 4096
     max_peers: 25
-  
+
   # Lighthouse Configuration
   lighthouse:
     image: "sigp/lighthouse:latest"
@@ -128,12 +128,12 @@ local:
   base_dir: "/data/ephemery"
   data_dir: "/data/ephemery/data"
   logs_dir: "/data/ephemery/logs"
-  
+
   geth:
     image: "ethereum/client-go:v1.12.0"
     cache: 8192
     max_peers: 50
-  
+
   lighthouse:
     image: "sigp/lighthouse:v4.1.0"
     target_peers: 60
@@ -146,12 +146,12 @@ local:
   base_dir: "/home/user/ephemery"
   data_dir: "/home/user/ephemery/data"
   logs_dir: "/home/user/ephemery/logs"
-  
+
   geth:
     image: "ethereum/client-go:latest"
     cache: 2048
     max_peers: 10
-  
+
   lighthouse:
     image: "sigp/lighthouse:latest"
     target_peers: 15
@@ -176,12 +176,12 @@ remote:
   base_dir: "/opt/ephemery"
   data_dir: "/opt/ephemery/data"
   logs_dir: "/opt/ephemery/logs"
-  
+
   geth:
     image: "ethereum/client-go:latest"
     cache: 4096
     max_peers: 25
-  
+
   lighthouse:
     image: "sigp/lighthouse:latest"
     target_peers: 30
@@ -201,4 +201,4 @@ To use your inventory file with deployment scripts:
 
 ```bash
 ./scripts/remote/run-ephemery-remote.sh --inventory my-remote-inventory.yaml
-``` 
+```

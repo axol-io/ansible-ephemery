@@ -53,22 +53,22 @@ parse_local_inventory() {
     # Export variables
     EPHEMERY_BASE_DIR="$BASE_DIR"
     export EPHEMERY_BASE_DIR
-    
+
     EPHEMERY_DATA_DIR="$DATA_DIR"
     export EPHEMERY_DATA_DIR
-    
+
     EPHEMERY_LOGS_DIR="$LOGS_DIR"
     export EPHEMERY_LOGS_DIR
-    
+
     GETH_IMAGE="$GETH_IMAGE"
     export GETH_IMAGE
-    
+
     export GETH_CACHE="$GETH_CACHE"
     export GETH_MAX_PEERS="$GETH_MAX_PEERS"
-    
+
     LIGHTHOUSE_IMAGE="$LIGHTHOUSE_IMAGE"
     export LIGHTHOUSE_IMAGE
-    
+
     export LIGHTHOUSE_TARGET_PEERS="$LIGHTHOUSE_TARGET_PEERS"
 
     echo "Inventory parsed successfully"

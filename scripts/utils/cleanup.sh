@@ -52,11 +52,11 @@ echo "Containers removed successfully"
 # Remove data if requested
 if [ "$REMOVE_DATA" = true ]; then
     echo "Removing Ephemery data directories..."
-    
+
     # Determine base directories
     DEFAULT_DIR="$HOME/ephemery-demo"
     LOCAL_DIR="$HOME/ephemery-local"
-    
+
     # Ask for confirmation
     read -p "This will delete all data in $DEFAULT_DIR and $LOCAL_DIR. Continue? (y/N): " CONFIRM
     if [[ $CONFIRM == [yY] ]]; then
@@ -68,4 +68,4 @@ if [ "$REMOVE_DATA" = true ]; then
     fi
 fi
 
-echo "Cleanup complete" 
+echo "Cleanup complete"

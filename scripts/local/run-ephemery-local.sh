@@ -53,7 +53,7 @@ if [ -n "$INVENTORY_FILE" ]; then
         echo "Error: Inventory file '$INVENTORY_FILE' not found"
         exit 1
     fi
-    
+
     echo "Loading configuration from $INVENTORY_FILE"
     parse_local_inventory "$INVENTORY_FILE"
 fi
@@ -150,4 +150,4 @@ echo "  - Consensus client: docker logs -f ephemery-lighthouse"
 echo
 echo "To stop the nodes:"
 echo "  docker stop ephemery-geth ephemery-lighthouse"
-echo "--------------------------------------------------------------" 
+echo "--------------------------------------------------------------"

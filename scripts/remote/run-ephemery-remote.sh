@@ -174,4 +174,4 @@ echo "  docker logs -f ephemery-lighthouse"
 echo
 echo "To stop the nodes:"
 echo "  docker stop ephemery-geth ephemery-lighthouse"
-echo "--------------------------------------------------------------" 
+echo "--------------------------------------------------------------"

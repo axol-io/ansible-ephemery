@@ -220,17 +220,17 @@
           ===== ETHEREUM CLIENT SYNC STATUS REPORT =====
           Date: {{ ansible_date_time.date }}
           Time: {{ ansible_date_time.time }}
-          
+
           Container Status:
           - Geth (Execution Client): {{ 'Running' if geth_container.stdout != '' else 'Not Running' }}
           - Lighthouse (Consensus Client): {{ 'Running' if lighthouse_container.stdout != '' else 'Not Running' }}
           - Validator: {{ 'Running' if validator_container.stdout != '' else 'Not Running' }}
-          
+
           Resource Usage:
           - Memory: {{ memory_usage.stdout | default('0') | float | round(2) }}%
           - CPU: {{ cpu_usage.stdout | default('0') | float | round(2) }}%
           - Disk: {{ disk_usage.stdout | default('0') | float | round(2) }}%
-          
+
           {% if geth_container.stdout != '' and geth_sync.status is defined and geth_sync.status == 200 %}
           {% if geth_sync.json.result == false %}
           Geth is fully synced
@@ -242,7 +242,7 @@
           {% else %}
           Geth sync status unavailable
           {% endif %}
-          
+
           {% if lighthouse_container.stdout != '' and lighthouse_sync.status is defined and lighthouse_sync.status == 200 %}
           {% if lighthouse_sync.json.data.is_syncing %}
           Lighthouse is syncing - Head slot: {{ lighthouse_sync.json.data.head_slot }}, Sync distance: {{ lighthouse_sync.json.data.sync_distance }}
@@ -252,13 +252,13 @@
           {% else %}
           Lighthouse sync status unavailable
           {% endif %}
-          
+
           {% if validator_container.stdout != '' %}
           Validator status: {{ validator_status_message }}
           {% else %}
           Validator is not running
           {% endif %}
-          
+
           {% if sync_estimate is defined %}
           Estimated time to complete sync: {{ sync_estimate }}
           {% endif %}

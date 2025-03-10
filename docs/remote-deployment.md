@@ -26,7 +26,7 @@ This guide explains how to deploy an Ephemery node to a remote server.
      - host: your-server-ip-or-hostname
        user: your-username
        port: 22
-   
+
    remote:
      base_dir: "/opt/ephemery"
      # ... other settings
@@ -78,4 +78,4 @@ If you encounter issues, check:
 3. Firewall settings
 4. Remote server resource usage
 
-For more help, see the [Configuration Guide](configuration.md). 
+For more help, see the [Configuration Guide](configuration.md).

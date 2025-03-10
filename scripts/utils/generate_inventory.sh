@@ -11,7 +11,7 @@ LOGS_DIR="$HOME/ephemery/logs"
 GETH_IMAGE="ethereum/client-go:latest"
 GETH_CACHE="4096"
 GETH_MAX_PEERS="25"
-LIGHTHOUSE_IMAGE="sigp/lighthouse:latest" 
+LIGHTHOUSE_IMAGE="sigp/lighthouse:latest"
 LIGHTHOUSE_TARGET_PEERS="30"
 REMOTE_HOST=""
 REMOTE_USER=""
@@ -143,19 +143,19 @@ if [ "$TEMPLATE_TYPE" = "local" ]; then
 local:
   # Base directory for Ephemery
   base_dir: "$BASE_DIR"
-  
+
   # Directory for node data
   data_dir: "$DATA_DIR"
-  
+
   # Directory for logs
   logs_dir: "$LOGS_DIR"
-  
+
   # Geth Configuration
   geth:
     image: "$GETH_IMAGE"
     cache: $GETH_CACHE
     max_peers: $GETH_MAX_PEERS
-  
+
   # Lighthouse Configuration
   lighthouse:
     image: "$LIGHTHOUSE_IMAGE"
@@ -174,19 +174,19 @@ hosts:
 remote:
   # Base directory for Ephemery
   base_dir: "$BASE_DIR"
-  
+
   # Directory for node data
   data_dir: "$DATA_DIR"
-  
+
   # Directory for logs
   logs_dir: "$LOGS_DIR"
-  
+
   # Geth Configuration
   geth:
     image: "$GETH_IMAGE"
     cache: $GETH_CACHE
     max_peers: $GETH_MAX_PEERS
-  
+
   # Lighthouse Configuration
   lighthouse:
     image: "$LIGHTHOUSE_IMAGE"
@@ -195,4 +195,4 @@ EOF
 fi
 
 echo "Inventory file generated: $OUTPUT_FILE"
-exit 0 
+exit 0
