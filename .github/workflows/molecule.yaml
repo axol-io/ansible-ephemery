@@ -140,6 +140,35 @@ jobs:
           docker --version
           docker info
           ls -la /var/run/docker.sock
+      - name: Create local ansible.cfg
+        run: |
+          cat > ansible.cfg << 'EOF'
+          [defaults]
+          collections_paths = ./collections
+          retry_files_enabled = False
+          host_key_checking = False
+          transport = local
+          force_color = True
+
+          [ssh_connection]
+          pipelining = True
+          EOF
+          echo "Created ansible.cfg in $(pwd)"
+      - name: Fix trailing whitespace and line endings
+        run: |
+          # Install dos2unix if needed
+          if ! command -v dos2unix &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y dos2unix
+          fi
+
+          # Fix all YAML files
+          find . -name "*.yml" -o -name "*.yaml" | xargs -I{} dos2unix {}
+
+          # Remove trailing whitespace
+          find . -name "*.yml" -o -name "*.yaml" | xargs -I{} sed -i 's/[[:space:]]*$//' {}
+
+          echo "Fixed line endings and trailing whitespace in YAML files"
       - name: Update Molecule configuration for GitHub Actions
         run: |
           for file in $(find molecule -name "molecule.yml"); do
@@ -159,24 +188,50 @@ jobs:
           # Set environment variables for consistent collection loading
           export ANSIBLE_COLLECTIONS_PATH="${{ github.workspace }}/collections"
           export ANSIBLE_COLLECTIONS_SCAN_SYS_PATH=false
+          export MOLECULE_EPHEMERAL_DIRECTORY="${{ github.workspace }}/molecule/${{ matrix.scenario }}/.molecule"
 
-          # For all scenarios, run from the root directory
+          # Set color and terminal settings
+          export PYTHONIOENCODING=UTF-8
+          export TERM=xterm-256color
+          export PY_COLORS=1
+          export ANSIBLE_FORCE_COLOR=1
+
+          # Copy all collections to each scenario's directory for better isolation
           if [[ "${{ matrix.scenario }}" == *"/"* ]]; then
-            # For nested scenarios like "clients/geth-lighthouse", we need molecule to find
-            # the molecule.yml in the correct directory
+            # For nested scenarios like "clients/geth-lighthouse"
+            SCENARIO_DIR="molecule/${{ matrix.scenario }}"
+            SCENARIO_NAME=$(echo "${{ matrix.scenario }}" | cut -d'/' -f2)
             echo "Running nested scenario: ${{ matrix.scenario }}"
-            ANSIBLE_VERBOSITY=2 molecule test -s "${{ matrix.scenario }}"
+
+            # Create collections directory in the scenario folder
+            mkdir -p "$SCENARIO_DIR/collections"
+            cp -r "${{ github.workspace }}/collections/ansible_collections" "$SCENARIO_DIR/collections/"
+
+            cd molecule
+            # Use script to capture clean terminal output
+            script -q -c "ANSIBLE_VERBOSITY=2 molecule test -s \"$SCENARIO_NAME\" --debug" /dev/null
           else
-            # For non-nested scenarios, run from the root directory
+            # For standard scenarios
+            SCENARIO_DIR="molecule/${{ matrix.scenario }}"
             echo "Running standard scenario: ${{ matrix.scenario }}"
-            ANSIBLE_VERBOSITY=2 molecule test -s ${{ matrix.scenario }}
+
+            # Create collections directory in the scenario folder
+            mkdir -p "$SCENARIO_DIR/collections"
+            cp -r "${{ github.workspace }}/collections/ansible_collections" "$SCENARIO_DIR/collections/"
+
+            # Use script to capture clean terminal output
+            script -q -c "ANSIBLE_VERBOSITY=2 molecule test -s ${{ matrix.scenario }} --debug" /dev/null
           fi
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
           DOCKER_HOST: unix:///var/run/docker.sock
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
-          ANSIBLE_COLLECTIONS_SCAN_SYS_PATH: 'false'
+          ANSIBLE_COLLECTIONS_SCAN_SYS_PATH: 'true'
+          ANSIBLE_CONFIG: ${{ github.workspace }}/ansible.cfg
+          ANSIBLE_ROLES_PATH: ${{ github.workspace }}/ansible
+          PYTHONIOENCODING: 'UTF-8'
+          TERM: 'xterm-256color'
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v4

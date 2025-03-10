@@ -6,9 +6,18 @@
       ansible.builtin.set_fact:
         ansible_collections_path: "{{ lookup('env', 'ANSIBLE_COLLECTIONS_PATH') | default(playbook_dir + '/../../collections', true) }}"
 
+    - name: Ensure collections directory exists
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/collections"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+
     - name: Display collection paths for debugging
       ansible.builtin.debug:
         msg: "Using collections from: {{ ansible_collections_path }}"
+        verbosity: 0
 
     - name: Include ansible-ephemery role
       ansible.builtin.include_role:
