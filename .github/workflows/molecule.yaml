@@ -106,7 +106,7 @@ jobs:
           sudo apt-get install -y socat procps iproute2
 
           # Prevent Ansible from using system-wide collections
-          echo "ANSIBLE_COLLECTIONS_PATHS=${{ github.workspace }}/collections" >> $GITHUB_ENV
+          echo "ANSIBLE_COLLECTIONS_PATH=${{ github.workspace }}/collections" >> $GITHUB_ENV
       - name: Install Ansible collections
         run: |
           mkdir -p collections
@@ -159,7 +159,6 @@ jobs:
           # Set environment variables for consistent collection loading
           export ANSIBLE_COLLECTIONS_PATH="${{ github.workspace }}/collections"
           export ANSIBLE_COLLECTIONS_SCAN_SYS_PATH=false
-          export ANSIBLE_COLLECTIONS_PATHS="${{ github.workspace }}/collections"
 
           # For all scenarios, run from the root directory
           if [[ "${{ matrix.scenario }}" == *"/"* ]]; then
@@ -177,7 +176,6 @@ jobs:
           ANSIBLE_FORCE_COLOR: '1'
           DOCKER_HOST: unix:///var/run/docker.sock
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
-          ANSIBLE_COLLECTIONS_PATHS: ${{ github.workspace }}/collections
           ANSIBLE_COLLECTIONS_SCAN_SYS_PATH: 'false'
       - name: Archive test results
         if: always()
