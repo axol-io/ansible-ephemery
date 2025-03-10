@@ -1,99 +1,201 @@
 # Ephemery Troubleshooting Guide
 
-This document provides guidance for common issues when running Ephemery nodes, with a focus on sync issues and client connectivity problems.
+This document provides solutions for common issues when running Ephemery nodes, with focus on optimization, connectivity, and synchronization problems.
 
-## Bootnode Connectivity Issues
+## Sync Performance Issues
 
-### Missing UDP Port in Bootnode Addresses
+### Slow Genesis Sync
 
-**Problem**: Lighthouse logs show errors like `Error getting mapping to ENR: InvalidMultiaddr("A UDP port must be specified in the multiaddr")`.
-
-**Solution**:
-- Bootnode addresses must include both TCP and UDP ports for proper peer discovery.
-- Use the format: `/ip4/<IP>/tcp/9000/udp/9000/p2p/<PEER_ID>`
-- Example: `/ip4/157.90.35.151/tcp/9000/udp/9000/p2p/16Uiu2HAmVZnsqvTNQ2ya1YG2qi6DQchqX57jF9zN2CukZnQY84wJ`
-
-If you're seeing these errors in your logs, verify that your bootnode addresses in `inventory.yaml` or `ansible/defaults/main.yaml` include the UDP ports.
-
-### Low Peer Count
-
-**Problem**: Your node is connecting to very few peers (0-1), making sync extremely slow.
+**Problem**: Initial synchronization taking too long (expected: 8-12 hours with optimizations).
 
 **Solution**:
-1. Ensure bootnode addresses are correctly formatted with UDP ports
-2. Increase the target peer count: `--target-peers=150`
-3. Verify your firewall allows both TCP and UDP traffic on port 9000
-4. Check if you're behind a NAT and consider port forwarding
 
-## JWT Authentication Issues
+1. **Apply optimization flags**:
 
-**Problem**: Logs show `Failed jwt authorization` or `Auth(InvalidToken)` errors when the consensus client tries to connect to the execution client.
-
-**Solution**:
-1. Ensure the same JWT token is used by both clients
-2. The JWT token should be a file, not a directory
-3. Proper file permissions should be set (600)
-4. Both clients should mount the same JWT file path
-
-To manually fix JWT issues:
-
-```bash
-# Generate a new JWT token
-openssl rand -hex 32 | tr -d '\n' > ~/ephemery/jwt.hex
-chmod 600 ~/ephemery/jwt.hex
-
-# Restart both clients with the correct JWT path
-docker restart ephemery-geth ephemery-lighthouse
-```
-
-## Client Sync Issues
-
-### Using the Right Client Images
-
-**Problem**: Standard Ethereum client images may not work properly with Ephemery.
-
-**Solution**:
-- Use the Ephemery-specific pk910 images:
-  - Execution client: `pk910/ephemery-geth:v1.15.3`
-  - Consensus client: `pk910/ephemery-lighthouse:latest`
-
-These images have built-in support for the Ephemery network and its configuration.
-
-### Slow Sync Progress
-
-**Problem**: Syncing is extremely slow or stuck.
-
-**Solution**:
-1. Check Lighthouse logs for sync status
-2. For Lighthouse, add these optimization flags for faster genesis sync:
-   ```
+   ```bash
+   # Lighthouse optimizations
+   --target-peers=100
+   --execution-timeout-multiplier=5
    --allow-insecure-genesis-sync
    --genesis-backfill
    --disable-backfill-rate-limiting
+   --disable-deposit-contract-sync
+
+   # Geth optimizations
+   --cache=4096
+   --txlookuplimit=0
+   --syncmode=snap
+   --maxpeers=100
+   --db.engine=pebble
    ```
-3. Consider using checkpoint sync if available: `use_checkpoint_sync: true`
-4. Ensure the execution client is running before starting the consensus client
 
-## Execution Client Issues
+2. **Check system resources**:
+   - SSD storage (required for reasonable sync times)
+   - Minimum 8GB RAM
+   - At least 4 CPU cores
+   - Check disk I/O with `iostat -xz 1`
 
-**Problem**: Execution client is not connecting to the consensus client.
+3. **Check client logs for errors**:
+
+   ```bash
+   docker logs -f ephemery-geth
+   docker logs -f ephemery-lighthouse
+   ```
+
+### Network Reset Handling
+
+**Problem**: After Ephemery's daily reset, node stops syncing or shows invalid chain errors.
 
 **Solution**:
-1. Check if JWT authentication is working correctly
-2. Ensure the execution endpoint URL is correct (default: `http://127.0.0.1:8551`)
-3. Verify the execution client can listen on the configured ports
-4. For Geth, ensure auth RPC is configured with `--authrpc.jwtsecret=/path/to/jwt.hex`
+
+1. Stop clients
+
+   ```bash
+   docker stop ephemery-geth ephemery-lighthouse
+   ```
+
+2. Clear data directories
+
+   ```bash
+   rm -rf /root/ephemery/data/geth/* /root/ephemery/data/lighthouse/*
+   ```
+
+3. Restart clients in correct order
+
+   ```bash
+   docker start ephemery-geth
+   sleep 10  # Wait for execution client to initialize
+   docker start ephemery-lighthouse
+   ```
+
+## Connectivity Issues
+
+### Low Peer Count
+
+**Problem**: Node connecting to few or no peers.
+
+**Solutions**:
+
+1. **Verify bootstrap nodes configuration**:
+   - Include correct bootstrap nodes in configuration
+   - Ensure UDP port is specified in bootnode addresses: `/ip4/<IP>/tcp/9000/udp/9000/p2p/<PEER_ID>`
+
+2. **Check firewall settings**:
+   - Port 30303 (TCP/UDP) for execution client
+   - Port 9000 (TCP/UDP) for consensus client
+
+3. **Increase target peers parameter**:
+
+   ```bash
+   --target-peers=100
+   ```
+
+### JWT Authentication Issues
+
+**Problem**: Authorization errors between execution and consensus clients.
+
+**Solutions**:
+
+1. Verify JWT secret exists and has correct permissions
+
+   ```bash
+   ls -la /root/ephemery/jwt.hex  # Should be -rw------- (600)
+   ```
+
+2. Regenerate JWT secret if needed
+
+   ```bash
+   openssl rand -hex 32 | tr -d "\n" > /root/ephemery/jwt.hex
+   chmod 600 /root/ephemery/jwt.hex
+   ```
+
+3. Ensure both containers mount the same JWT file
+
+   ```bash
+   docker inspect ephemery-geth | grep jwt
+   docker inspect ephemery-lighthouse | grep jwt
+   ```
 
 ## Monitoring Sync Progress
 
-To monitor sync progress, use:
+### Real-time Sync Status Commands
 
 ```bash
-# Check Lighthouse sync status
-docker logs ephemery-lighthouse | grep "Syncing\|sync\|peers"
+# Lighthouse sync status
+curl -s http://localhost:5052/eth/v1/node/syncing | jq
 
-# Check Geth status
-docker logs ephemery-geth | grep "Looking for peers"
+# Geth sync status
+curl -s -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' \
+  http://localhost:8545 | jq
+
+# Check peer counts
+curl -s http://localhost:5052/eth/v1/node/peers | jq '.data | length'
 ```
 
-The complete sync process for Ephemery can take several hours to days depending on network conditions and server resources.
+### Interpreting Sync Status
+
+For Lighthouse:
+
+- `is_syncing: true` - Node is actively syncing
+- `head_slot` vs `sync_distance` - Shows how far behind the node is
+- Decreasing `sync_distance` indicates progress
+
+For Geth:
+
+- `"result": false` - Fully synced or snap sync in progress
+- `"currentBlock"` vs `"highestBlock"` - Shows sync progress
+
+## Deployment Method Issues
+
+### Ansible Playbook Issues
+
+**Problem**: Recursive templating errors or variable resolution problems.
+
+**Solution**:
+
+1. Explicitly define all directory paths in inventory.yaml
+
+   ```yaml
+   directories:
+     base: "/root/ephemery"
+     data: "/root/ephemery/data"
+     secrets: "/root/ephemery/secrets"
+     logs: "/root/ephemery/logs"
+     scripts: "/root/ephemery/scripts"
+     backups: "/root/ephemery/backups"
+   jwt_secret_path: "/root/ephemery/jwt.hex"
+   ```
+
+2. Use the simpler direct script alternative for testing
+
+   ```bash
+   ./scripts/local/run-ephemery-local.sh
+   ```
+
+### Container Issues
+
+**Problem**: Docker containers exit immediately after starting.
+
+**Solution**:
+
+1. Check logs for startup errors
+
+   ```bash
+   docker logs ephemery-geth
+   docker logs ephemery-lighthouse
+   ```
+
+2. Verify all required volumes are mounted correctly
+
+   ```bash
+   docker inspect ephemery-geth | grep -A 10 Mounts
+   docker inspect ephemery-lighthouse | grep -A 10 Mounts
+   ```
+
+3. Ensure data directories exist and have correct permissions
+
+   ```bash
+   mkdir -p /root/ephemery/data/geth /root/ephemery/data/lighthouse
+   chmod 755 -R /root/ephemery/data
+   ```

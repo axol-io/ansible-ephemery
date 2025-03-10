@@ -14,8 +14,10 @@ ephemery_scripts_dir: '{{ ephemery_base_dir }}/scripts'
 ephemery_backup_dir: '{{ ephemery_base_dir }}/backups'
 
 # Default client selection
-el: geth             # Execution client: geth, besu, nethermind, reth, erigon
-cl: lighthouse       # Consensus client: lighthouse, teku, prysm, lodestar
+# NOTE: Currently, only the geth+lighthouse combination is fully implemented and supported.
+# Other client options are placeholders for future development.
+el: geth             # Execution client: currently only 'geth' is fully supported
+cl: lighthouse       # Consensus client: currently only 'lighthouse' is fully supported
 
 # Client extra options
 el_extra_opts: ''    # Extra options for execution client
@@ -27,10 +29,11 @@ checkpoint_sync_url: 'https://checkpoint-sync.ephemery.ethpandaops.io'  # Checkp
 clear_database: false      # Whether to clear the database before starting the client
 
 # Client images - using pk910 Ephemery-wrapped images
+# NOTE: Currently, only the geth+lighthouse combination has pre-configured Ephemery images
 client_images:
   geth: 'pk910/ephemery-geth:latest'
   lighthouse: 'pk910/ephemery-lighthouse:latest'
-  validator: 'pk910/ephemery-prysm-validator:latest'
+  validator: 'pk910/ephemery-lighthouse:latest'
 
 # Additional bootstrap nodes for better peer connectivity
 bootstrap_nodes:

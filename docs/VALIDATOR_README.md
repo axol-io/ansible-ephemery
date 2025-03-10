@@ -46,9 +46,11 @@ You can choose which validator client to use by configuring the client image:
 # Client images
 client_images:
   validator: "pk910/ephemery-lighthouse:latest"  # Specialized image for Ephemery network
-  # Alternative options:
+  # Alternative options (for future reference):
   # validator: "sigp/lighthouse:v5.3.0"  # Standard Lighthouse validator
 ```
+
+> **Note**: Currently, only the Lighthouse validator client is fully supported, which aligns with our supported consensus client (Lighthouse).
 
 ### Password File
 
@@ -79,7 +81,7 @@ For efficient deployment of many validators, you can use compressed archives:
    - `files/validator_keys/validator_keys.tar.gz` (alternative format)
 
 3. **Create a password file**:
-   - Create a file like `files/validator_keys/axol-node1.txt` with your keystore password
+   - Create a file like `files/validator_keys/validators.txt` with your keystore password
 
 4. **Configure your host vars file**:
 
@@ -136,11 +138,13 @@ Note: For Lighthouse validators, the parameter is `--beacon-nodes` (plural), not
 
 ## Client-Specific Considerations
 
-The playbook supports different validator clients:
+The playbook currently supports only the Lighthouse validator client, which:
 
-- **Lighthouse**: Uses the standard validator command line options
-- **Prysm**: Requires accepting terms of use and has different wallet setup
-- **Other clients**: Each has its own configuration needs handled automatically
+- Uses the standard validator command line options
+- Connects seamlessly to the Lighthouse consensus client
+- Handles Ephemery network specifics with pre-configured images
+
+Other validator clients (Prysm, Teku, etc.) may be supported in the future as additional client combinations are implemented.
 
 ## Anti-Slashing Protection
 
@@ -161,7 +165,7 @@ The playbook includes several safeguards to prevent slashing:
 If your validator fails to start, check:
 
 1. Keystore files are in the correct format
-2. Password file (`axol-node1.txt`) contains the correct password
+2. Password file (`validators.txt`) contains the correct password
 3. Consensus client is running and accessible
 4. Logs from the validator container: `docker logs ephemery-validator` or `docker logs {{ network }}-validator-{{ cl }}`
 5. For Prysm validators, ensure the `--accept-terms-of-use` flag is properly passed

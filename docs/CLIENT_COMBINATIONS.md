@@ -2,47 +2,49 @@
 
 This document provides detailed information about the supported client combinations in the Ephemery testnet deployment and their specific configuration requirements.
 
+> **IMPORTANT NOTE**: Currently, only the **Geth + Lighthouse** client combination is fully implemented and supported. Other client combinations listed in this document are placeholders for future development and are not yet fully tested or supported.
+
 ## Available Clients
 
 ### Execution Clients
 
-- **Geth**: Go Ethereum client (default)
-- **Besu**: Java-based Ethereum client by Hyperledger
-- **Nethermind**: .NET Core Ethereum client
-- **Reth**: Rust implementation client
-- **Erigon**: Efficiency-focused Ethereum client
+- **Geth**: Go Ethereum client (default and currently the only fully supported execution client)
+- **Besu**: Java-based Ethereum client by Hyperledger (planned for future support)
+- **Nethermind**: .NET Core Ethereum client (planned for future support)
+- **Reth**: Rust implementation client (planned for future support)
+- **Erigon**: Efficiency-focused Ethereum client (planned for future support)
 
 ### Consensus Clients
 
-- **Lighthouse**: Rust implementation (default)
-- **Teku**: Java implementation by ConsenSys
-- **Prysm**: Go implementation by Prysmatic Labs
-- **Lodestar**: TypeScript implementation
+- **Lighthouse**: Rust implementation (default and currently the only fully supported consensus client)
+- **Teku**: Java implementation by ConsenSys (planned for future support)
+- **Prysm**: Go implementation by Prysmatic Labs (planned for future support)
+- **Lodestar**: TypeScript implementation (planned for future support)
 
 ## Client Combination Matrix
 
-| Execution Client | Consensus Client | Notes |
-|------------------|------------------|-------|
-| Geth | Lighthouse | Default combination, well-tested, uses Ephemery-specific images |
-| Geth | Teku | Higher memory requirements for Teku |
-| Geth | Prysm | Requires additional port configurations |
-| Geth | Lodestar | Lightweight combination, good for testing |
-| Besu | Lighthouse | Good stability, higher CPU usage |
-| Besu | Teku | All-Java stack, consistent memory profile |
-| Besu | Prysm | Mixed language stack |
-| Besu | Lodestar | Experimental combination |
-| Nethermind | Lighthouse | Good performance combination |
-| Nethermind | Teku | Higher memory requirements |
-| Nethermind | Prysm | Mixed language stack |
-| Nethermind | Lodestar | Experimental combination |
-| Reth | Lighthouse | Fast sync capabilities |
-| Reth | Teku | Experimental combination |
-| Reth | Prysm | Experimental combination |
-| Reth | Lodestar | Experimental combination |
-| Erigon | Lighthouse | Fast sync, larger disk requirements |
-| Erigon | Teku | Experimental combination |
-| Erigon | Prysm | Experimental combination |
-| Erigon | Lodestar | Experimental combination |
+| Execution Client | Consensus Client | Support Status |
+|------------------|------------------|----------------|
+| Geth | Lighthouse | ✅ Fully supported and tested |
+| Geth | Teku | 🔄 Planned for future support |
+| Geth | Prysm | 🔄 Planned for future support |
+| Geth | Lodestar | 🔄 Planned for future support |
+| Besu | Lighthouse | 🔄 Planned for future support |
+| Besu | Teku | 🔄 Planned for future support |
+| Besu | Prysm | 🔄 Planned for future support |
+| Besu | Lodestar | 🔄 Planned for future support |
+| Nethermind | Lighthouse | 🔄 Planned for future support |
+| Nethermind | Teku | 🔄 Planned for future support |
+| Nethermind | Prysm | 🔄 Planned for future support |
+| Nethermind | Lodestar | 🔄 Planned for future support |
+| Reth | Lighthouse | 🔄 Planned for future support |
+| Reth | Teku | 🔄 Planned for future support |
+| Reth | Prysm | 🔄 Planned for future support |
+| Reth | Lodestar | 🔄 Planned for future support |
+| Erigon | Lighthouse | 🔄 Planned for future support |
+| Erigon | Teku | 🔄 Planned for future support |
+| Erigon | Prysm | 🔄 Planned for future support |
+| Erigon | Lodestar | 🔄 Planned for future support |
 
 ## Ephemery-Specific Images
 

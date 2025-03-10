@@ -1,0 +1,10 @@
+---
+# Example inventory file for Ephemery remote deployment
+# Copy this file to create your own inventory
+# Example: cp remote-inventory.yaml.example my-inventory.yaml
+
+hosts:
+  - host: your-server-ip-or-hostname  # Required: IP address or hostname of target server
+    user: your-username               # Required: SSH username
+    port: 22                          # Optional: SSH port (default: 22)
+    # Add other server-specific configurations as needed 

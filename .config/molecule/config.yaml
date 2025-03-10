@@ -9,3 +9,41 @@ scenarios:
     directory: clients/geth-lighthouse
   - name: clients/geth-prysm
     directory: clients/geth-prysm
+  - name: clients/geth-teku
+    directory: clients/geth-teku
+  - name: clients/geth-lodestar
+    directory: clients/geth-lodestar
+  - name: clients/reth-lighthouse
+    directory: clients/reth-lighthouse
+  - name: clients/reth-prysm
+    directory: clients/reth-prysm
+  - name: clients/reth-teku
+    directory: clients/reth-teku
+  - name: clients/reth-lodestar
+    directory: clients/reth-lodestar
+  - name: clients/reth-nimbus
+    directory: clients/reth-nimbus
+  - name: clients/erigon-lighthouse
+    directory: clients/erigon-lighthouse
+  - name: clients/erigon-prysm
+    directory: clients/erigon-prysm
+  - name: clients/erigon-teku
+    directory: clients/erigon-teku
+  - name: clients/erigon-lodestar
+    directory: clients/erigon-lodestar
+  - name: clients/nethermind-lighthouse
+    directory: clients/nethermind-lighthouse
+  - name: clients/nethermind-prysm
+    directory: clients/nethermind-prysm
+  - name: clients/nethermind-teku
+    directory: clients/nethermind-teku
+  - name: clients/nethermind-lodestar
+    directory: clients/nethermind-lodestar
+  - name: clients/besu-lighthouse
+    directory: clients/besu-lighthouse
+  - name: clients/besu-prysm
+    directory: clients/besu-prysm
+  - name: clients/besu-teku
+    directory: clients/besu-teku
+  - name: clients/besu-lodestar
+    directory: clients/besu-lodestar

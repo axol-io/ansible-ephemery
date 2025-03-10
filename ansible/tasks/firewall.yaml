@@ -89,19 +89,19 @@
   ansible.builtin.include_tasks:
     file: clients/erigon-prysm/firewall.yaml
   when:
-    - firewall_enabled | bool
-    - el == 'erigon'
+    - not firewall_skip
+    - clients.execution == 'erigon'
 
 - name: Add client-specific firewall rules - Nethermind
   ansible.builtin.include_tasks:
     file: clients/nethermind-teku/firewall.yaml
   when:
-    - firewall_enabled | bool
-    - el == 'nethermind'
+    - not firewall_skip
+    - clients.execution == 'nethermind'
 
 - name: Add client-specific firewall rules - Geth
   ansible.builtin.include_tasks:
     file: clients/geth-lighthouse/firewall.yaml
   when:
-    - firewall_enabled | bool
-    - el == 'geth'
+    - not firewall_skip
+    - clients.execution == 'geth'

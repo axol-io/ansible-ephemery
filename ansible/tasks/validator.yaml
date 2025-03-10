@@ -91,18 +91,11 @@
       - '{{ ephemery_secrets_dir }}/validator/passwords:/secrets/passwords:ro'
       - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
     command: >
-      {% if cl_client_name == 'lighthouse' %}
       lighthouse validator_client
       --beacon-nodes {{ beacon_api_endpoint }}
       --validators-dir /secrets/keys
       --secrets-dir /secrets/passwords
       --testnet-dir /ephemery_config
-      {% else %}
-      --datadir=/data
-      --beacon-rpc-provider={{ beacon_api_endpoint }}
-      --accept-terms-of-use
-      --chain-config-file=/chain-config.yaml
-      {% endif %}
   when: not validator_skip and not use_custom_keys | default(false) | bool and not test_mode | default(false) | bool
   tags:
     - validator

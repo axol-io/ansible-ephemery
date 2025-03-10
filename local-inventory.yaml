@@ -1,0 +1,57 @@
+---
+# Local inventory file for testing
+ephemery:
+  hosts:
+    localhost:
+      ansible_connection: local
+      el: geth
+      cl: lighthouse
+      validator_enabled: true
+      use_checkpoint_sync: true
+      checkpoint_sync_url: 'https://checkpoint-sync.ethpandaops.io'
+      # Checkpoint sync is prioritized, but we also add optimization params for faster sync
+      cl_extra_opts: "--target-peers=100 --execution-timeout-multiplier=5"
+      el_extra_opts: "--cache=4096 --txlookuplimit=0 --syncmode=snap --maxpeers=100"
+      # Force bypass the memory check (min 4GB required by default)
+      ansible_memory_mb:
+        real:
+          total: 8192
+
+      # Define explicit directories to avoid recursive templating errors
+      ephemery_base_dir: "/Users/{{ ansible_user }}/ephemery"
+      ephemery_data_dir: "/Users/{{ ansible_user }}/ephemery/data"
+      ephemery_secrets_dir: "/Users/{{ ansible_user }}/ephemery/secrets"
+      ephemery_logs_dir: "/Users/{{ ansible_user }}/ephemery/logs"
+      ephemery_scripts_dir: "/Users/{{ ansible_user }}/ephemery/scripts"
+      ephemery_backup_dir: "/Users/{{ ansible_user }}/ephemery/backups"
+      jwt_secret_path: "/Users/{{ ansible_user }}/ephemery/jwt.hex"
+
+# Group nodes by type (for organization)
+validators:
+  hosts:
+    localhost:
+      ansible_connection: local
+
+all:
+  vars:
+    ansible_user: "{{ lookup('env', 'USER') }}"
+    ansible_become: false
+    network: 'ephemery'
+
+    # Bootstrap nodes for better peer connectivity
+    bootstrap_nodes:
+      - "/ip4/157.90.35.151/tcp/9000/udp/9000/p2p/16Uiu2HAmVZnsqvTNQ2ya1YG2qi6DQchqX57jF9zN2CukZnQY84wJ"
+      - "/ip4/136.243.15.66/tcp/9000/udp/9000/p2p/16Uiu2HAmAwGWqGShumBQeUuivDyRMmCZjvbZsQwcEWYYLDVKvFjG"
+      - "/ip4/88.198.2.150/tcp/9000/udp/9000/p2p/16Uiu2HAm8cEfaKtweXbT4koAuifKKJPm8q7TdpaVfWk9j5E5L2m3"
+      - "/ip4/135.181.91.151/tcp/9000/udp/9000/p2p/16Uiu2HAmEP7X3JDcdAYLagNQxpJ24n3HDwLGxVVsWyv2aUHrXA5b"
+
+    # Client images - using pk910's Ephemery-specific images
+    client_images:
+      geth: 'pk910/ephemery-geth:latest'
+      lighthouse: 'pk910/ephemery-lighthouse:latest'
+      validator: 'pk910/ephemery-lighthouse:latest'
+
+    # Resource allocation - adjust based on your system
+    el_memory_percentage: 0.5  # 50% for execution client
+    cl_memory_percentage: 0.4  # 40% for consensus client
+    validator_memory_percentage: 0.1  # 10% for validator

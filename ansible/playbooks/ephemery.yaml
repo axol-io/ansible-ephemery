@@ -46,10 +46,17 @@
   hosts: ephemery
   become: true
   vars:
-    ephemery_base_dir: "/opt/ephemery"
-    ephemery_dir: "{{ ephemery_base_dir }}"
-    ephemery_scripts_dir: "{{ ephemery_base_dir }}/scripts"
-    jwt_secret_path: "{{ ephemery_dir }}/jwt.hex"
+    # Use the directories structure from inventory if available, otherwise fall back to defaults
+    ephemery_base_dir: "{{ directories.base | default('/root/ephemery') }}"
+    ephemery_data_dir: "{{ directories.data | default('/root/ephemery/data') }}"
+    ephemery_secrets_dir: "{{ directories.secrets | default('/root/ephemery/secrets') }}"
+    ephemery_logs_dir: "{{ directories.logs | default('/root/ephemery/logs') }}"
+    ephemery_scripts_dir: "{{ directories.scripts | default('/root/ephemery/scripts') }}"
+    ephemery_backup_dir: "{{ directories.backups | default('/root/ephemery/backups') }}"
+    # For backward compatibility with tasks that use ephemery_dir
+    ephemery_dir: "{{ directories.base | default('/root/ephemery') }}"
+    # Set JWT secret path from inventory or default
+    jwt_secret_path: "{{ jwt_secret_path | default('/root/ephemery/jwt.hex') }}"
   tasks:
     - name: 🏖️ Create cozy axolotl home directory 🏖️
       ansible.builtin.file:

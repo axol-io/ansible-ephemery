@@ -6,7 +6,7 @@ This directory contains the Molecule tests for the Ephemery project. Molecule is
 
 The tests are organized into scenarios, each with its own directory:
 
-```
+```bash
 molecule/
 ├── clients/               # Client combination scenarios
 │   ├── <client-pair>/     # e.g., geth-lighthouse
@@ -22,30 +22,30 @@ molecule/
 
 ### Client Combinations
 
-We have tests for all combinations of execution clients and consensus clients in the `molecule/clients/` directory:
+We have test infrastructure for various combinations of execution clients and consensus clients in the `molecule/clients/` directory, but **currently only the geth-lighthouse combination is fully implemented and tested**. Other client combinations are placeholders for future development.
 
-| Execution Client | Consensus Client | Scenario Name |
-|-----------------|------------------|---------------|
-| geth            | lighthouse       | geth-lighthouse |
-| geth            | prysm           | geth-prysm |
-| geth            | teku            | geth-teku |
-| geth            | lodestar        | geth-lodestar |
-| reth            | lighthouse      | reth-lighthouse |
-| reth            | prysm           | reth-prysm |
-| reth            | teku            | reth-teku |
-| reth            | lodestar        | reth-lodestar |
-| erigon          | lighthouse      | erigon-lighthouse |
-| erigon          | prysm           | erigon-prysm |
-| erigon          | teku            | erigon-teku |
-| erigon          | lodestar        | erigon-lodestar |
-| nethermind      | lighthouse      | nethermind-lighthouse |
-| nethermind      | prysm           | nethermind-prysm |
-| nethermind      | teku            | nethermind-teku |
-| nethermind      | lodestar        | nethermind-lodestar |
-| besu            | lighthouse      | besu-lighthouse |
-| besu            | prysm           | besu-prysm |
-| besu            | teku            | besu-teku |
-| besu            | lodestar        | besu-lodestar |
+| Execution Client | Consensus Client | Scenario Name | Implementation Status |
+|-----------------|------------------|---------------|------------------------|
+| geth            | lighthouse       | geth-lighthouse | ✅ Implemented and tested |
+| geth            | prysm           | geth-prysm | 🔄 Placeholder for future development |
+| geth            | teku            | geth-teku | 🔄 Placeholder for future development |
+| geth            | lodestar        | geth-lodestar | 🔄 Placeholder for future development |
+| reth            | lighthouse      | reth-lighthouse | 🔄 Placeholder for future development |
+| reth            | prysm           | reth-prysm | 🔄 Placeholder for future development |
+| reth            | teku            | reth-teku | 🔄 Placeholder for future development |
+| reth            | lodestar        | reth-lodestar | 🔄 Placeholder for future development |
+| erigon          | lighthouse      | erigon-lighthouse | 🔄 Placeholder for future development |
+| erigon          | prysm           | erigon-prysm | 🔄 Placeholder for future development |
+| erigon          | teku            | erigon-teku | 🔄 Placeholder for future development |
+| erigon          | lodestar        | erigon-lodestar | 🔄 Placeholder for future development |
+| nethermind      | lighthouse      | nethermind-lighthouse | 🔄 Placeholder for future development |
+| nethermind      | prysm           | nethermind-prysm | 🔄 Placeholder for future development |
+| nethermind      | teku            | nethermind-teku | 🔄 Placeholder for future development |
+| nethermind      | lodestar        | nethermind-lodestar | 🔄 Placeholder for future development |
+| besu            | lighthouse      | besu-lighthouse | 🔄 Placeholder for future development |
+| besu            | prysm           | besu-prysm | 🔄 Placeholder for future development |
+| besu            | teku            | besu-teku | 🔄 Placeholder for future development |
+| besu            | lodestar        | besu-lodestar | 🔄 Placeholder for future development |
 
 ### Special Scenarios
 

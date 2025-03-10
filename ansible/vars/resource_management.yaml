@@ -1,0 +1,67 @@
+---
+# Centralized Resource Management Configuration
+# This file contains all resource allocation settings for Ephemery nodes
+
+# System Resource Detection
+system:
+  memory_total: '{{ ansible_memory_mb.real.total }}' # Total system memory in MB
+  cpu_cores: '{{ ansible_processor_vcpus }}' # Total CPU cores/threads
+  disk_space: '{{ ansible_mounts | selectattr("mount", "equalto", "/") | map(attribute="size_total") | list | first | int }}' # Root filesystem total space
+
+# Resource Allocation Strategy
+# Controls how much of the system resources are allocated to Ephemery services
+allocation:
+  # Total memory allocated to all Ephemery services (percentage of system memory)
+  memory_total_percentage: 0.90 # 90% of total system memory
+  memory_total_limit: '{{ (system.memory_total * allocation.memory_total_percentage) | round | int }}M'
+
+  # Distribution of allocated memory among components
+  memory_distribution:
+    execution_client: 0.5  # 50% for execution client
+    consensus_client: 0.4  # 40% for consensus client
+    validator_client: 0.1  # 10% for validator (if enabled)
+
+  # CPU allocation
+  cpu_allocation:
+    execution_client: 0.5  # 50% for execution client
+    consensus_client: 0.3  # 30% for consensus client
+    validator_client: 0.2  # 20% for validator (if enabled)
+
+# Calculated resource limits
+calculated_limits:
+  # Memory limits
+  execution_memory: '{{ ((system.memory_total * allocation.memory_total_percentage * allocation.memory_distribution.execution_client) | round | int) }}M'
+  consensus_memory: '{{ ((system.memory_total * allocation.memory_total_percentage * allocation.memory_distribution.consensus_client) | round | int) }}M'
+  validator_memory: '{{ ((system.memory_total * allocation.memory_total_percentage * allocation.memory_distribution.validator_client) | round | int) }}M'
+
+  # CPU limits (if using Docker CPU limits)
+  execution_cpus: '{{ (system.cpu_cores * allocation.cpu_allocation.execution_client) | round(1) }}'
+  consensus_cpus: '{{ (system.cpu_cores * allocation.cpu_allocation.consensus_client) | round(1) }}'
+  validator_cpus: '{{ (system.cpu_cores * allocation.cpu_allocation.validator_client) | round(1) }}'
+
+# Minimum resource requirements - prevents under-allocation on small systems
+minimum_requirements:
+  execution_memory: '2048M'  # Minimum 2GB for execution client
+  consensus_memory: '1536M'  # Minimum 1.5GB for consensus client
+  validator_memory: '512M'   # Minimum 512MB for validator client
+
+# Resource allocation for other services
+services:
+  monitoring:
+    memory: '{{ [512, (system.memory_total * 0.05) | round | int] | max }}M'  # 5% of system memory or 512MB, whichever is greater
+    cpu: '{{ [0.5, (system.cpu_cores * 0.1) | round(1)] | max }}'  # 10% of CPU or 0.5 CPU, whichever is greater
+
+# Final resource values - use these in container configurations
+# These ensure we don't go below minimum requirements
+resources:
+  execution_client:
+    memory: '{{ [minimum_requirements.execution_memory, calculated_limits.execution_memory] | max }}'
+    cpu: '{{ calculated_limits.execution_cpus }}'
+
+  consensus_client:
+    memory: '{{ [minimum_requirements.consensus_memory, calculated_limits.consensus_memory] | max }}'
+    cpu: '{{ calculated_limits.consensus_cpus }}'
+
+  validator_client:
+    memory: '{{ [minimum_requirements.validator_memory, calculated_limits.validator_memory] | max }}'
+    cpu: '{{ calculated_limits.validator_cpus }}'

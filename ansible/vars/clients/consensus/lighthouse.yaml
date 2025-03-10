@@ -1,0 +1,85 @@
+---
+# Lighthouse-specific configuration variables
+
+# Lighthouse client identification
+lighthouse:
+  name: "Lighthouse"
+  description: "Rust Ethereum consensus client (default consensus client)"
+  config_dir: "/home/{{ ansible_user }}/ephemery/data/lighthouse"
+
+  # Lighthouse-specific options
+  options:
+    target_peers: 100
+    execution_timeout_multiplier: 5
+    allow_insecure_genesis_sync: True
+    genesis_backfill: True
+    disable_backfill_rate_limiting: True
+    checkpoint_sync_url: "https://checkpoint-sync.ephemery.ethpandaops.io"
+    use_checkpoint_sync: true
+    ephemery_optimized: True
+
+  # Docker container configuration
+  container:
+    name: "ephemery-lighthouse"
+    image: "pk910/ephemery-lighthouse:latest"
+    volumes:
+      - "/home/{{ ansible_user }}/ephemery/data/lighthouse:/ethdata"
+      - "/home/{{ ansible_user }}/ephemery/jwt.hex:/config/jwt-secret"
+    ports:
+      - "9000:9000/tcp"
+      - "9000:9000/udp"
+      - "5052:5052"
+      - "8008:8008"
+
+    # Startup command templates
+    beacon_cmd_template: >-
+      lighthouse beacon
+      --datadir /ethdata
+      --network ephemery
+      --execution-jwt /config/jwt-secret
+      --execution-endpoint http://localhost:8551
+      --http
+      --http-address 0.0.0.0
+      --http-port 5052
+      --metrics
+      --metrics-address 0.0.0.0
+      --metrics-port 8008
+      --target-peers 100
+      --execution-timeout-multiplier 5
+      --allow-insecure-genesis-sync
+      --genesis-backfill
+      --disable-backfill-rate-limiting
+      --checkpoint-sync-url https://checkpoint-sync.ephemery.ethpandaops.io
+
+# Validator client configuration
+validator:
+  name: "Lighthouse Validator"
+  description: "Lighthouse validator client"
+  config_dir: "/home/{{ ansible_user }}/ephemery/data/validator"
+  keys_dir: "/home/{{ ansible_user }}/ephemery/secrets/validator_keys"
+
+  # Docker container configuration
+  container:
+    name: "ephemery-validator"
+    image: "pk910/ephemery-lighthouse:latest"
+    volumes:
+      - "/home/{{ ansible_user }}/ephemery/data/validator:/validatordata"
+      - "/home/{{ ansible_user }}/ephemery/secrets/validator_keys:/validatorkeys"
+      - "/home/{{ ansible_user }}/ephemery/jwt.hex:/config/jwt-secret"
+    ports:
+      - '5062:5062'
+      - '8009:8009'
+
+    # Startup command template
+    cmd_template: >-
+      lighthouse validator_client
+      --datadir /validatordata
+      --network ephemery
+      --beacon-nodes http://localhost:5052
+      --http
+      --http-address 0.0.0.0
+      --http-port 5062
+      --metrics
+      --metrics-address 0.0.0.0
+      --metrics-port 8009
+      --suggested-fee-recipient 0x0000000000000000000000000000000000000000

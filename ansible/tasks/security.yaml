@@ -1,0 +1,198 @@
+---
+# security.yaml - Consolidated security configurations for Ephemery nodes
+# This file combines firewall and JWT secret management
+
+# Required collections:
+# - ansible.posix
+# - community.general
+# - community.docker
+
+##############################################################################
+# JWT SECRET MANAGEMENT
+##############################################################################
+
+- name: Check if secure JWT generation is enabled
+  ansible.builtin.set_fact:
+    use_vault: false
+
+# Skip JWT generation in test mode
+- name: Skip JWT generation in test mode
+  ansible.builtin.set_fact:
+    jwt_secret_generated: true
+  when: test_mode | default(false) | bool
+
+# Check if JWT path is a directory instead of a file and remove it if needed
+- name: Check if JWT path is a directory
+  ansible.builtin.stat:
+    path: '{{ jwt_secret_path }}'
+  register: jwt_path_stat
+  when: not test_mode | default(false) | bool
+
+- name: Remove JWT directory if it exists
+  ansible.builtin.file:
+    path: '{{ jwt_secret_path }}'
+    state: absent
+  when: not test_mode | default(false) | bool and jwt_path_stat.stat.exists | default(false) | bool and jwt_path_stat.stat.isdir | default(false) | bool
+
+# Standard JWT secret generation (less secure)
+- name: Generate JWT secret with openssl
+  ansible.builtin.shell: |
+    # Ensure parent directory exists
+    mkdir -p $(dirname {{ jwt_secret_path }})
+    # Generate the JWT secret file
+    echo "0x$(openssl rand -hex 32)" > {{ jwt_secret_path }}
+    chmod 600 {{ jwt_secret_path }}
+  args:
+    creates: '{{ jwt_secret_path }}'
+  register: jwt_secret_result
+  changed_when: jwt_secret_result.rc == 0
+  when: not test_mode | default(false) | bool
+
+- name: Ensure JWT secret has proper permissions
+  ansible.builtin.file:
+    path: '{{ jwt_secret_path }}'
+    mode: '0600'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
+  when: not test_mode | default(false) | bool
+
+# Create a symbolic link to ensure consistent JWT path across clients if needed
+- name: Create consistent JWT path links for different client implementations
+  ansible.builtin.file:
+    src: '{{ jwt_secret_path }}'
+    dest: '{{ ephemery_dir }}/jwt.hex'
+    state: link
+    force: true
+  when:
+    - not test_mode | default(false) | bool
+    - jwt_secret_path != ephemery_dir + '/jwt.hex'
+
+##############################################################################
+# FIREWALL CONFIGURATION
+##############################################################################
+
+- name: Check if firewall is enabled
+  ansible.builtin.set_fact:
+    firewall_skip: '{{ not firewall_enabled | default(false) }}'
+
+# Install appropriate firewall software based on OS family
+- name: Install firewalld (for RedHat-based systems)
+  ansible.builtin.package:
+    name: firewalld
+    state: present
+  when: not firewall_skip and ansible_os_family == "RedHat"
+
+- name: Install UFW (for Debian-based systems)
+  ansible.builtin.package:
+    name: ufw
+    state: present
+  when: not firewall_skip and ansible_os_family == "Debian"
+
+# Configure RedHat-based systems (firewalld)
+- name: Enable and start firewalld
+  ansible.builtin.service:
+    name: firewalld
+    enabled: true
+    state: started
+  when: not firewall_skip and ansible_os_family == "RedHat"
+
+- name: Set default policy for firewalld
+  ansible.builtin.command: firewall-cmd --permanent --set-default-zone=drop
+  when: not firewall_skip and ansible_os_family == "RedHat" and firewall_default_policy == "deny"
+
+- name: Configure firewalld - allow specific ports
+  ansible.posix.firewalld:
+    port: '{{ item }}/tcp'
+    permanent: true
+    state: enabled
+  loop: '{{ firewall_allowed_tcp_ports }}'
+  when: not firewall_skip and ansible_os_family == 'RedHat'
+
+- name: Configure firewalld - allow UDP ports
+  ansible.posix.firewalld:
+    port: '{{ item }}/udp'
+    permanent: true
+    state: enabled
+  loop: '{{ firewall_allowed_udp_ports }}'
+  when: not firewall_skip and ansible_os_family == 'RedHat'
+
+- name: Reload firewalld
+  ansible.builtin.command: firewall-cmd --reload
+  when: not firewall_skip and ansible_os_family == "RedHat"
+
+# Configure Debian-based systems (UFW)
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+  when: not firewall_skip and ansible_os_family == "Debian"
+
+- name: Set default UFW policy
+  community.general.ufw:
+    default: '{{ firewall_default_policy }}'
+  when: not firewall_skip and ansible_os_family == 'Debian'
+
+- name: Configure UFW - allow specific TCP ports
+  community.general.ufw:
+    rule: allow
+    port: '{{ item }}'
+    proto: tcp
+  loop: '{{ firewall_allowed_tcp_ports }}'
+  when: not firewall_skip and ansible_os_family == 'Debian'
+
+- name: Configure UFW - allow specific UDP ports
+  community.general.ufw:
+    rule: allow
+    port: '{{ item }}'
+    proto: udp
+  loop: '{{ firewall_allowed_udp_ports }}'
+  when: not firewall_skip and ansible_os_family == 'Debian'
+
+- name: Enable UFW logging
+  community.general.ufw:
+    logging: 'on'
+  when: not firewall_skip and ansible_os_family == "Debian"
+
+# Client-specific firewall rules
+- name: Add client-specific firewall rules - Erigon
+  ansible.builtin.include_tasks:
+    file: clients/erigon-prysm/firewall.yaml
+  when:
+    - firewall_enabled | bool
+    - el == 'erigon'
+
+- name: Add client-specific firewall rules - Nethermind
+  ansible.builtin.include_tasks:
+    file: clients/nethermind-teku/firewall.yaml
+  when:
+    - firewall_enabled | bool
+    - el == 'nethermind'
+
+- name: Add client-specific firewall rules - Geth
+  ansible.builtin.include_tasks:
+    file: clients/geth-lighthouse/firewall.yaml
+  when:
+    - firewall_enabled | bool
+    - el == 'geth'
+
+##############################################################################
+# ADDITIONAL SECURITY HARDENING
+##############################################################################
+
+# Docker security settings
+- name: Configure Docker daemon with secure defaults
+  ansible.builtin.template:
+    src: docker-daemon.json.j2
+    dest: /etc/docker/daemon.json
+    mode: '0640'
+  when:
+    - firewall_enabled | bool
+    - not test_mode | default(false) | bool
+  register: docker_daemon_config
+
+- name: Restart Docker service if configuration changed
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+  when:
+    - docker_daemon_config is changed
+    - not test_mode | default(false) | bool

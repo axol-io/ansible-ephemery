@@ -108,6 +108,10 @@
       --ws.api=eth,net,web3,engine
       --ws.addr=0.0.0.0
       --ws.origins=*
+      --cache=4096
+      --txlookuplimit=0
+      --syncmode=snap
+      --maxpeers=100
       {{ el_extra_opts }}
       {% endif %}
   when: >
@@ -128,7 +132,7 @@
     force_kill: true
   when: not test_mode | default(false) and cl_container_info.exists | default(false)
 
-# Set up Lighthouse command based on sync strategy
+# Set up Lighthouse command with appropriate optimization flags
 - name: Set Lighthouse command for checkpoint sync
   ansible.builtin.set_fact:
     lighthouse_command: >
@@ -147,10 +151,12 @@
       {% if bootstrap_nodes is defined %}
       --boot-nodes={{ bootstrap_nodes | join(',') }}
       {% endif %}
+      --target-peers=100
+      --execution-timeout-multiplier=5
       {{ cl_extra_opts }}
   when: cl == "lighthouse" and (use_checkpoint_sync | bool)
 
-- name: Set Lighthouse command for genesis sync
+- name: Set Lighthouse command for genesis sync with optimizations
   ansible.builtin.set_fact:
     lighthouse_command: >
       lighthouse beacon_node
@@ -164,6 +170,14 @@
       --metrics-address=0.0.0.0
       --metrics-port=5054
       --testnet-dir=/ephemery_config
+      --target-peers=100
+      --execution-timeout-multiplier=5
+      --allow-insecure-genesis-sync
+      --genesis-backfill
+      --disable-backfill-rate-limiting
+      {% if bootstrap_nodes is defined %}
+      --boot-nodes={{ bootstrap_nodes | join(',') }}
+      {% endif %}
       {{ cl_extra_opts }}
   when: cl == "lighthouse" and not (use_checkpoint_sync | bool)
 

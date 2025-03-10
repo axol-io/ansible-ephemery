@@ -1,89 +1,99 @@
 ---
-- name: Deploy Ephemery Ethereum Node
-  hosts: all
+# Main Ephemery Deployment Playbook
+
+- name: Deploy Ephemery Testnet Nodes
+  hosts: ephemery
   become: true
-  vars_files:
-    - '{{ playbook_dir }}/../defaults/main.yaml'
-    - '{{ playbook_dir }}/../vars/main.yaml'
+
+  # Pre-tasks: Load all variables and verify requirements are met
+  pre_tasks:
+    - name: Import centralized variable management
+      ansible.builtin.include_tasks: ../vars_management.yaml
+
+    - name: Verify deployment environment
+      ansible.builtin.fail:
+        msg: "Insufficient memory for Ephemery deployment. Minimum 4GB required."
+      when: ansible_memory_mb.real.total < 4096
+
+  # Tasks for deploying Ephemery nodes
   tasks:
-    - name: Load host-specific variables block
-      block:
-        - name: Load host-specific variables
-          ansible.builtin.include_vars:
-            file: '{{ playbook_dir }}/../host_vars/{{ inventory_hostname }}.yaml'
-          tags: [always]
-          failed_when: false
-      rescue:
-        - name: Handle missing host vars
-          ansible.builtin.debug:
-            msg: Host vars file not found for '{{ inventory_hostname }}', using defaults only.
-          tags: [always]
+    # Setup base directories
+    - name: Create Ephemery directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ directories.base }}"
+        - "{{ directories.data }}"
+        - "{{ directories.secrets }}"
+        - "{{ directories.logs }}"
+        - "{{ directories.scripts }}"
+        - "{{ directories.backups }}"
+        - "{{ lighthouse.config_dir }}"
+        - "{{ geth.config_dir }}"
+        - "{{ validator.config_dir }}"
 
-    - name: Load secrets block
-      block:
-        - name: Load secrets (if available)
-          ansible.builtin.include_vars:
-            file: '{{ playbook_dir }}/../host_vars/secrets.yaml'
-          tags: [always, secrets]
-          failed_when: false
-      rescue:
-        - name: Handle missing secrets
-          ansible.builtin.debug:
-            msg: Secrets file not found. Using any secrets defined in host vars.
-          tags: [always]
+    # Setup security components
+    - name: Generate JWT secret
+      ansible.builtin.include_tasks: ../tasks/jwt-secret.yaml
 
-    - name: Include JWT secret tasks
-      ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/jwt-secret.yaml'
-      tags:
-        - jwt
-        - security
-        - always
+    # Deploy Docker containers
+    - name: Deploy Execution Client (Geth)
+      ansible.builtin.include_tasks: clients/execution_client.yaml
+      vars:
+        client_type: "{{ clients.execution }}"
 
-    - name: Configure firewall
-      ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/firewall.yaml'
-      when: firewall_enabled | default(true) | bool
-      tags:
-        - firewall
-        - security
+    - name: Deploy Consensus Client (Lighthouse)
+      ansible.builtin.include_tasks: clients/consensus_client.yaml
+      vars:
+        client_type: "{{ clients.consensus }}"
 
-    - name: Include ephemery tasks
-      ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/ephemery.yaml'
-      tags:
-        - ephemery
-        - always
+    - name: Deploy Validator Client (if enabled)
+      ansible.builtin.include_tasks: validator.yaml
+      when: features.validator.enabled | bool
 
-    - name: Setup validator if enabled
-      ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/validator.yaml'
-      when: validator_enabled | default(false) | bool
-      tags:
-        - validator
-
-    - name: Include monitoring tasks
-      ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/monitoring.yaml'
-      when: monitoring_enabled | default(false) | bool
-      tags:
-        - monitoring
-        - always
-
-    - name: Install Cadvisor
-      ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/cadvisor.yaml'
-      when: cadvisor_enabled | default(true) | bool
-      tags:
-        - cadvisor
-        - monitoring
-
-    - name: Setup automatic backups
-      ansible.builtin.import_tasks: '{{ playbook_dir }}/../tasks/backup.yaml'
-      when: backup_enabled | default(true) | bool
-      tags:
-        - backup
-
-    # Test cadvisor
-    # Expected response: ok~
-    # curl http://0.0.0.0:8080/healthz
+    # Final verification
+    - name: Display Ephemery node information
+      ansible.builtin.debug:
+        msg: |
+          Ephemery node is now running
+          --------------------------
+          Execution client: {{ clients.execution | upper }}
+          Consensus client: {{ clients.consensus | upper }}
+          Validator enabled: {{ features.validator.enabled | bool }}
+          Monitoring enabled: {{ features.monitoring.enabled | bool }}
+          --------------------------
+          Management dashboard: http://{{ ansible_host }}:{{ ports.monitoring.grafana }}
+          (if monitoring is enabled)
 
   handlers:
     - name: Reload cadvisor
       ansible.builtin.systemd:
         name: cadvisor.service
         state: restarted
+
+    - name: Extract Ephemery network configuration
+      ansible.builtin.unarchive:
+        src: '{{ ephemery_dir }}/config/ephemery_network/testnet-all.tar.gz'
+        dest: '{{ ephemery_dir }}/config/ephemery_network'
+        remote_src: true
+        mode: '0755'
+        owner: '{{ ansible_user | default("root") }}'
+        group: '{{ ansible_user | default("root") }}'
+
+# Import additional playbooks
+- name: Import firewall setup playbook
+  ansible.builtin.import_playbook: firewall_setup.yaml
+  when: security.firewall_enabled | bool
+
+- name: Import monitoring playbook
+  ansible.builtin.import_playbook: monitoring.yaml
+  when: features.monitoring.enabled | bool
+
+- name: Import backup playbook
+  ansible.builtin.import_playbook: backup.yaml
+  when: features.backup.enabled | bool
+
+- name: Import sync status check playbook
+  ansible.builtin.import_playbook: check_sync_status.yaml

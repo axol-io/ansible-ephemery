@@ -1,9 +1,11 @@
 ---
 # Playbook for setting up firewall rules
-- name: Configure Firewall
+- name: Configure firewall
   hosts: all
   become: true
   tasks:
-    - name: Import firewall tasks
-      ansible.builtin.import_tasks:
-        file: ../tasks/firewall.yaml
+    - name: Firewall setup tasks
+      block:
+        - name: Import firewall tasks
+          ansible.builtin.import_tasks:
+            file: ../tasks/firewall.yaml

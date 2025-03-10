@@ -1,104 +1,128 @@
 # Ephemery-Specific Configuration
 
-This document provides details about the Ephemery-specific configurations and Docker images used in this Ansible role.
+This document provides essential information about Ephemery-specific configurations and optimizations used in this Ansible role.
 
-## Ephemery-Specific Docker Images
+## Ephemery Docker Images
 
-### Available Images
+| Client | Image | Version | Notes |
+|--------|-------|---------|-------|
+| Geth (Execution) | `pk910/ephemery-geth` | v1.15.3 | Pre-configured for Ephemery |
+| Lighthouse (Consensus) | `pk910/ephemery-lighthouse` | latest | Pre-configured for Ephemery |
 
-The role automatically uses specialized Docker images for certain client combinations:
+### Benefits
 
-| Client Type | Standard Selection | Ephemery-Specific Image |
-|-------------|-------------------|-------------------------|
-| Execution   | `el: "geth"`      | `pk910/ephemery-geth`   |
-| Consensus   | `cl: "lighthouse"`| `pk910/ephemery-lighthouse` |
+- Pre-configured genesis state and network parameters
+- Automatic network reset handling
+- Simplified deployment with built-in Ephemery configurations
+- Optimized for faster synchronization
 
-### Benefits of Ephemery-Specific Images
+## Deployment Methods
 
-These specialized images offer several advantages:
+### 1. Using Ansible (Recommended)
 
-1. **Pre-configured for Ephemery**: These images are specifically built for the Ephemery testnet with all necessary configurations.
-2. **Built-in Genesis Configuration**: Contains the correct genesis state and configuration for the Ephemery network.
-3. **Automatic Network Reset Handling**: Handles Ephemery network resets automatically.
-4. **Simplified Deployment**: Reduces the need for complex configuration.
+```bash
+# Install requirements
+ansible-galaxy collection install -r requirements.yaml
+pip install -r requirements.txt
 
-## Implementation Details
+# Configure inventory.yaml with optimized parameters
+# See example in inventory.yaml
+
+# Run playbook
+ansible-playbook -i inventory.yaml ephemery.yaml
+```
+
+### 2. Using Direct Script Deployment
+
+For rapid deployment or testing purposes, use the included script:
+
+```bash
+# Configure settings in scripts/local/run-ephemery-local.sh
+# Run script
+./scripts/local/run-ephemery-local.sh
+```
+
+This script:
+
+- Deploys to remote host via SSH
+- Sets up directories and JWT authentication
+- Configures and starts optimized Docker containers
+- Includes all performance optimizations
+
+## Critical Optimizations
 
 ### Execution Client (Geth)
 
-When `el: "geth"` is selected, the role:
-- Uses `pk910/ephemery-geth` instead of `ethereum/client-go`
-- Runs the container with a wrapper script (`./wrapper.sh`) that handles Ephemery-specific initialization
+```bash
+--cache=4096           # Increase cache size for faster processing
+--txlookuplimit=0      # Disable transaction lookup index
+--syncmode=snap        # Use snap sync mode
+--maxpeers=100         # Increase peer count
+--db.engine=pebble     # Use Pebble DB for better performance
+```
 
 ### Consensus Client (Lighthouse)
 
-When `cl: "lighthouse"` is selected, the role:
-- Uses `pk910/ephemery-lighthouse` instead of `sigp/lighthouse`
-- Runs the container with the `lighthouse beacon_node` command
-- Includes the `--testnet-dir=/ephemery_config` parameter to use the built-in Ephemery network configuration
-- Uses genesis sync with `--allow-insecure-genesis-sync` for reliable syncing
+```bash
+--target-peers=100                      # More peers for faster sync
+--execution-timeout-multiplier=5        # Prevent timeouts
+--allow-insecure-genesis-sync           # Enable optimized genesis sync
+--genesis-backfill                      # Improve genesis sync performance
+--disable-backfill-rate-limiting        # Remove sync rate limiting
+--disable-deposit-contract-sync         # Skip unnecessary deposit contract operations
+# Include bootstrap nodes for better connectivity
+```
 
-## JWT Secret Configuration
+## Troubleshooting
 
-The JWT secret is used for secure communication between execution and consensus clients:
+### Reset After Network Regenesis
 
-1. The role generates a JWT secret file at the configured location (`{{ jwt_secret_path }}`)
-2. This file is mounted into both the execution and consensus client containers
-3. Both containers are configured to use this JWT secret for authentication
+When Ephemery resets (every 24 hours), nodes may need manual intervention:
 
-## Manual Configuration for Other Clients
+```bash
+# Stop containers
+docker stop ephemery-geth ephemery-lighthouse
 
-For other client combinations (not using the Ephemery-specific images), the role:
-1. Uses standard Docker images with custom configuration
-2. Uses genesis sync with appropriate options
-3. May require additional configuration for proper operation on the Ephemery network
+# Clear data directories
+rm -rf /root/ephemery/data/geth/* /root/ephemery/data/lighthouse/*
 
-## Troubleshooting and Maintenance
+# Restart containers
+docker start ephemery-geth
+sleep 10
+docker start ephemery-lighthouse
+```
+
+### Monitoring Sync Progress
+
+```bash
+# Lighthouse sync status
+curl -s http://localhost:5052/eth/v1/node/syncing | jq
+
+# Geth sync status
+curl -s -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' \
+  http://localhost:8545
+```
 
 ### Common Issues
 
-#### 1. Monitoring Configuration Issues
+1. **Low Peer Count**
+   - Check firewall settings (ports 30303, 9000)
+   - Verify bootstrap nodes are correctly configured
+   - Increase target peer count
 
-If Prometheus is unable to scrape metrics from clients:
+2. **JWT Authentication Failures**
+   - Ensure JWT secret file is mounted correctly in both containers
+   - Verify file permissions (600)
+   - Check execution endpoint URL is correct
 
-- Check that the correct ports are configured in the Prometheus configuration:
-  - Geth metrics are available on port 6060 with path `/debug/metrics/prometheus`
-  - Lighthouse metrics should be set to a different port (e.g., 5054) than the HTTP API port (5052)
-- Verify that the client containers have the appropriate metrics flags enabled:
-  - For Lighthouse: `--metrics --metrics-address=0.0.0.0 --metrics-port=5054`
-  - For Geth: metrics are enabled by default on port 6060
-
-#### 2. Client Synchronization Issues
-
-Ephemery clients may sometimes fail to sync properly, particularly after a network reset:
-
-- Clear the data directories to start from a clean state:
-  ```bash
-  # Clear data directories
-  rm -rf /root/ephemery/data/geth/* /root/ephemery/data/beacon/*
-  ```
-- Download the latest genesis files and reinitialize the clients
-- Restart the containers with the correct configuration
-
-### Periodic Resets
-
-Since Ephemery is designed to be automatically reset, it's recommended to set up a cron job to handle this:
-
-```bash
-# Create a reset script (see scripts/reset_ephemery.sh in this repository)
-# Add a cron job to run the script daily
-0 0 * * * /opt/ephemery/scripts/reset_ephemery.sh > /opt/ephemery/logs/reset.log 2>&1
-```
-
-The reset process typically includes:
-1. Stopping the client containers
-2. Clearing data directories
-3. Downloading the latest genesis files
-4. Reinitializing the execution client
-5. Restarting the containers
+3. **Slow Genesis Sync**
+   - Verify all optimization flags are applied
+   - Check system resources (CPU, memory, disk I/O)
+   - Ensure SSD storage is used
 
 ## Resources
 
+- [Ephemery Official Site](https://ephemery.dev/)
 - [Ephemery Client Wrapper](https://github.com/pk910/ephemery-client-wrapper)
 - [Ephemery Resources](https://github.com/ephemery-testnet/ephemery-resources)
-- [Ephemery Scripts](https://github.com/ephemery-testnet/ephemery-scripts)

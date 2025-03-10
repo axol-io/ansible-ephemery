@@ -7,3 +7,13 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+    allow:
+      - dependency-type: "all"
+    target-branch: "main"
+    versioning-strategy: "auto"
+    labels:
+      - "dependencies"
+      - "python"
+    open-pull-requests-limit: 10
+    assignees:
+      - "axol-io"

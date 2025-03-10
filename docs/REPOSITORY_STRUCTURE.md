@@ -14,9 +14,8 @@ ansible-ephemery/
 │   │   ├── backup.yaml     # Backup operations
 │   │   ├── cadvisor.yaml   # Container monitoring
 │   │   ├── ephemery.yaml   # Core Ephemery functions
-│   │   ├── firewall.yaml   # Network security
-│   │   ├── jwt-secret.yaml # Authentication secrets
 │   │   ├── monitoring.yaml # Metrics collection
+│   │   ├── security.yaml   # Consolidated security (JWT + firewall)
 │   │   ├── setup-env.yaml  # Environment preparation
 │   │   └── validator.yaml  # Validator configuration
 │   ├── handlers/           # Event handlers
@@ -102,6 +101,7 @@ Variables precedence (lowest to highest):
 - Core tasks in `ansible/tasks/` directory
 - Client-specific tasks in `ansible/tasks/clients/`
 - Component-specific task files for modularity
+- Consolidated security configuration in `security.yaml`
 
 ## Playbook Organization
 

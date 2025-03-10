@@ -1,0 +1,125 @@
+---
+# Ephemery Centralized Variable Management
+# This file contains all core variables needed for Ephemery deployment
+
+# ==============================================
+# === CORE CONFIGURATION VARIABLES ============
+# ==============================================
+
+# Network identity
+network:
+  name: 'ephemery'
+  description: 'Ephemery Testnet (24-hour reset cycle)'
+  genesis_time: '2023-01-01T00:00:00Z'  # This will be overridden by actual network genesis
+
+# Directory structure - define each path directly to avoid circular references
+directories:
+  base: '{{ ansible_env.HOME }}/ephemery'
+  data: '{{ ansible_env.HOME }}/ephemery/data'
+  secrets: '{{ ansible_env.HOME }}/ephemery/secrets'
+  logs: '{{ ansible_env.HOME }}/ephemery/logs'
+  scripts: '{{ ansible_env.HOME }}/ephemery/scripts'
+  backups: '{{ ansible_env.HOME }}/ephemery/backups'
+
+# Client selection (currently only geth+lighthouse fully supported)
+clients:
+  execution: 'geth'      # Currently only geth is fully supported
+  consensus: 'lighthouse' # Currently only lighthouse is fully supported
+  validator: 'lighthouse' # Currently only lighthouse is fully supported
+
+  # Additional client configuration options
+  options:
+    execution: '--target-peers=70 --execution-timeout-multiplier=5'
+    consensus: '--target-peers=70 --execution-timeout-multiplier=5'
+    validator: ''
+
+  # Docker images for clients
+  images:
+    geth: 'pk910/ephemery-geth:latest'
+    lighthouse: 'pk910/ephemery-lighthouse:latest'
+    validator: 'pk910/ephemery-lighthouse:latest'
+
+# ==============================================
+# === NETWORK CONFIGURATION ===================
+# ==============================================
+
+# Sync configuration
+sync:
+  use_checkpoint: true
+  checkpoint_url: 'https://checkpoint-sync.ephemery.ethpandaops.io'
+  clear_database_on_start: false
+
+# Security configuration
+security:
+  jwt_secret_path: '{{ ansible_env.HOME }}/ephemery/jwt.hex'
+  jwt_secure_generation: true
+  firewall_enabled: true
+  firewall_default_policy: 'deny'
+
+# Bootstrap nodes
+bootstrap_nodes:
+  - "/ip4/157.90.35.151/tcp/9000/udp/9000/p2p/16Uiu2HAmVZnsqvTNQ2ya1YG2qi6DQchqX57jF9zN2CukZnQY84wJ"
+  - "/ip4/136.243.15.66/tcp/9000/udp/9000/p2p/16Uiu2HAmAwGWqGShumBQeUuivDyRMmCZjvbZsQwcEWYYLDVKvFjG"
+  - "/ip4/88.198.2.150/tcp/9000/udp/9000/p2p/16Uiu2HAm8cEfaKtweXbT4koAuifKKJPm8q7TdpaVfWk9j5E5L2m3"
+  - "/ip4/135.181.91.151/tcp/9000/udp/9000/p2p/16Uiu2HAmEP7X3JDcdAYLagNQxpJ24n3HDwLGxVVsWyv2aUHrXA5b"
+
+# ==============================================
+# === FEATURE FLAGS AND TOGGLES ===============
+# ==============================================
+
+# Feature flags - enable/disable functionality
+features:
+  validator:
+    enabled: false
+  monitoring:
+    enabled: false
+    prometheus_enabled: true
+    grafana_enabled: true
+    cadvisor_enabled: true
+  backup:
+    enabled: true
+    frequency: 'daily'  # Options: hourly, daily, weekly
+    retention_days: 7
+  automatic_reset:
+    enabled: false
+    frequency: "0 0 * * *"  # Default: Midnight every day (cron format)
+    log_file: "{{ ansible_env.HOME }}/ephemery/logs/reset.log"
+
+# ==============================================
+# === PORT CONFIGURATION ======================
+# ==============================================
+
+# Standard service ports
+ports:
+  # Execution client ports
+  execution:
+    p2p: 30303          # P2P communication
+    http_rpc: 8545      # HTTP RPC
+    ws_rpc: 8546        # WebSocket RPC
+    engine_api: 8551    # Engine API
+
+  # Consensus client ports
+  consensus:
+    p2p: 9000           # P2P communication
+    http_api: 5052      # HTTP API
+    metrics: 8008       # Metrics endpoint
+
+  # Validator ports
+  validator:
+    http_api: 5062      # HTTP API
+    metrics: 8009       # Metrics endpoint
+
+  # Monitoring ports
+  monitoring:
+    prometheus: 17690
+    grafana: 3000
+    cadvisor: 8080
+    node_exporter: 9100
+    grafana_agent: 12345
+
+# ==============================================
+# === RESOURCE MANAGEMENT =====================
+# ==============================================
+
+# Import resource management settings
+# These are defined in resource_management.yaml

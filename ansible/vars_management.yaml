@@ -1,0 +1,49 @@
+---
+# Ephemery Variable Management System
+# This file centralizes the import of all variables used in the ansible-ephemery role
+
+- name: Import core Ephemery variables
+  include_vars: "{{ ephemery_vars_file | default('vars/ephemery_variables.yaml') }}"
+
+- name: Import resource management configuration
+  include_vars: "{{ resource_management_file | default('vars/resource_management.yaml') }}"
+
+# Import network-specific configurations if they exist
+- name: Check if network-specific configuration exists
+  stat:
+    path: "vars/networks/{{ network.name | default('ephemery') }}.yaml"
+  register: network_config
+
+- name: Import network-specific configuration
+  include_vars: "vars/networks/{{ network.name }}.yaml"
+  when: network_config.stat.exists
+
+# Import client-specific configurations
+- name: Import execution client specific variables
+  include_vars: "vars/clients/execution/{{ clients.execution | default('geth') }}.yaml"
+  when:
+    - clients is defined
+    - clients.execution is defined
+
+- name: Import consensus client specific variables
+  include_vars: "vars/clients/consensus/{{ clients.consensus | default('lighthouse') }}.yaml"
+  when:
+    - clients is defined
+    - clients.consensus is defined
+
+# Optional environment overrides
+- name: Check if environment-specific configuration exists
+  stat:
+    path: "vars/environments/{{ deploy_environment | default('production') }}.yaml"
+  register: environment_config
+
+- name: Import environment-specific configuration
+  include_vars: "vars/environments/{{ deploy_environment }}.yaml"
+  when:
+    - deploy_environment is defined
+    - environment_config.stat.exists
+
+# Host-specific overrides - these take precedence over all other variables
+- name: Import host-specific variable overrides
+  include_vars: "{{ host_vars_file }}"
+  when: host_vars_file is defined

@@ -1,0 +1,8 @@
+---
+# Playbook for setting up automated backups
+- name: Configure automated backups
+  hosts: all
+  become: true
+  tasks:
+    - name: Include backup tasks
+      ansible.builtin.include_tasks: "../tasks/backup.yaml"

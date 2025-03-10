@@ -64,7 +64,10 @@ jobs:
         scenario:
           - default
           - validator
-          # All client combinations, reenabled as we have a working validator setup
+          # Only keep geth-lighthouse active, all other client combinations are commented out
+          # to reduce CI execution time. While all combinations are supported (see docs/CLIENT_COMBINATIONS.md),
+          # we test only the default combination in CI to ensure basic functionality.
+          # For comprehensive testing of all combinations, run the tests locally.
           - clients/geth-lighthouse
           # - clients/geth-prysm
           # - clients/geth-teku
@@ -73,6 +76,7 @@ jobs:
           # - clients/reth-prysm
           # - clients/reth-teku
           # - clients/reth-lodestar
+          # - clients/reth-nimbus
           # - clients/erigon-lighthouse
           # - clients/erigon-prysm
           # - clients/erigon-teku

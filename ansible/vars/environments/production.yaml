@@ -1,0 +1,34 @@
+---
+# Production Environment Variables
+# These settings apply only to production deployments
+
+# Enable additional security features in production
+security:
+  firewall_enabled: true
+  ssh_hardening: true
+  fail2ban_enabled: true
+  automatic_updates: true
+
+# Production resource allocation
+allocation:
+  memory_total_percentage: 0.85  # Slightly less aggressive than default (90%)
+
+# Production features configuration
+features:
+  # Monitoring settings for production
+  monitoring:
+    enabled: true
+    alerting_enabled: true
+    slack_notifications: true
+
+  # Backup settings for production
+  backup:
+    enabled: true
+    frequency: 'daily'
+    retention_days: 14  # Longer retention for production
+    offsite_backup: true
+
+  # Reset frequency for production
+  automatic_reset:
+    enabled: true
+    frequency: "0 0 * * *" # Midnight every day

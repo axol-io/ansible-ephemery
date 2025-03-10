@@ -116,18 +116,37 @@
 - name: Start validator with custom keys (non-Lighthouse)
   community.docker.docker_container:
     name: '{{ network }}-validator-{{ cl }}'
-    image: pk910/ephemery-prysm-validator
+    image: '{{ client_images.validator }}'
     network_mode: host
     restart_policy: unless-stopped
     volumes:
       - '{{ ephemery_base_dir }}/secrets/validator/keys:/secrets/keys'
       - '{{ ephemery_base_dir }}/secrets/validator/passwords:/secrets/passwords'
-      - '{{ ephemery_base_dir }}/secrets/validator/validator_definitions.yaml:/secrets/validator_definitions.yaml'
       - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
     command: >
-      --beacon-rpc-provider={{ beacon_api_endpoint }}
-      --import-accounts-path=/secrets/keys
-      --wallet-password-file=/secrets/passwords/validators.txt
-      --accept-terms-of-use
-      --chain-config-file=/chain-config.yaml
-  when: cl != 'lighthouse'
+      lighthouse validator_client
+      --beacon-nodes {{ beacon_api_endpoint }}
+      --validators-dir /secrets/keys
+      --secrets-dir /secrets/passwords
+      --testnet-dir /ephemery_config
+  when: cl != 'lighthouse' and (cl == 'teku' or cl == 'lodestar')
+
+# Keep Prysm validator as an option but commented out for future reference
+# - name: Start validator with custom keys (Prysm)
+#   community.docker.docker_container:
+#     name: '{{ network }}-validator-{{ cl }}'
+#     image: pk910/ephemery-prysm-validator
+#     network_mode: host
+#     restart_policy: unless-stopped
+#     volumes:
+#       - '{{ ephemery_base_dir }}/secrets/validator/keys:/secrets/keys'
+#       - '{{ ephemery_base_dir }}/secrets/validator/passwords:/secrets/passwords'
+#       - '{{ ephemery_base_dir }}/secrets/validator/validator_definitions.yaml:/secrets/validator_definitions.yaml'
+#       - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
+#     command: >
+#       --beacon-rpc-provider={{ beacon_api_endpoint }}
+#       --import-accounts-path=/secrets/keys
+#       --wallet-password-file=/secrets/passwords/validators.txt
+#       --accept-terms-of-use
+#       --chain-config-file=/chain-config.yaml
+#   when: cl == 'prysm'

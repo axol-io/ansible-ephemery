@@ -1,0 +1,45 @@
+---
+# Development Environment Variables
+# These settings apply only to development deployments
+
+# Simplified security for development
+security:
+  firewall_enabled: false
+  ssh_hardening: false
+  fail2ban_enabled: false
+  automatic_updates: false
+
+# Development resource allocation (reduced to free up resources for other dev tools)
+allocation:
+  memory_total_percentage: 0.70  # Lower than production (85-90%)
+  memory_distribution:
+    execution_client: 0.5
+    consensus_client: 0.4
+    validator_client: 0.1
+
+# Development features configuration
+features:
+  # Minimal monitoring for development
+  monitoring:
+    enabled: true
+    alerting_enabled: false
+    slack_notifications: false
+
+  # Simplified backup for development
+  backup:
+    enabled: false
+
+  # More frequent reset for development testing
+  automatic_reset:
+    enabled: false
+
+# Development-specific overrides
+sync:
+  use_checkpoint: true
+  clear_database_on_start: false
+
+# Development client settings
+geth:
+  options:
+    cache: 1024      # Lower memory cache for dev environment
+    maxpeers: 50     # Fewer peers for quicker startup

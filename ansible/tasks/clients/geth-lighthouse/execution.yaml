@@ -1,0 +1,26 @@
+---
+# Tasks for deploying Geth execution client with Lighthouse consensus client
+
+- name: Create Geth data directory
+  ansible.builtin.file:
+    path: "{{ geth.config_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user | default('root') }}"
+    group: "{{ ansible_user | default('root') }}"
+
+- name: Deploy Geth container
+  community.docker.docker_container:
+    name: "{{ geth.container.name }}"
+    image: "{{ geth.container.image }}"
+    restart_policy: unless-stopped
+    volumes: "{{ geth.container.volumes }}"
+    ports: "{{ geth.container.ports }}"
+    command: "{{ geth.container.cmd_template }}"
+    state: started
+  register: geth_container
+
+- name: Display Geth container status
+  ansible.builtin.debug:
+    msg: "Geth container is {{ geth_container.container.State.Status }}"
+  when: geth_container.container is defined 

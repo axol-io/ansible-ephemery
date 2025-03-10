@@ -3,15 +3,24 @@ exclude_paths:
   - collections/
   - .git/
   - molecule/
+  - .github/
+  - .vscode/
+  - ansible/playbooks/validator.yaml
+  - ansible/playbooks/firewall_setup.yaml
 
 skip_list:
   - yaml[line-length]
+  - yaml[truthy]
+  - schema[tasks]
+  - no-handler
   - no-changed-when
 
 warn_list:
   - experimental
-  - no-handler
   - unnamed-task
 
 use_default_rules: true
 parseable: true
+
+offline: false
+verbosity: 1

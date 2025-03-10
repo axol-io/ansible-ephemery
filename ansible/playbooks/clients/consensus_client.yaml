@@ -1,0 +1,6 @@
+---
+# Tasks for setting up the consensus client
+- name: Include specific consensus client tasks
+  ansible.builtin.include_tasks: "../../tasks/clients/{{ execution_client | default('geth') }}-{{ client_type }}/consensus.yaml"
+  vars:
+    execution_client: "{{ clients.execution | default('geth') }}"

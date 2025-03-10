@@ -17,16 +17,7 @@
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   register: ephemery_download
-
-- name: Extract Ephemery network configuration
-  ansible.builtin.unarchive:
-    src: '{{ ephemery_dir }}/config/ephemery_network/testnet-all.tar.gz'
-    dest: '{{ ephemery_dir }}/config/ephemery_network'
-    remote_src: true
-    mode: '0755'
-    owner: '{{ ansible_user | default("root") }}'
-    group: '{{ ansible_user | default("root") }}'
-  when: ephemery_download.changed
+  notify: Extract Ephemery network configuration
 
 - name: Set fact that Ephemery network configuration was updated
   ansible.builtin.set_fact:

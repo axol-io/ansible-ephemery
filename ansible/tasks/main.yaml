@@ -6,14 +6,9 @@
   ansible.builtin.import_tasks: setup-env.yaml
   tags: [setup, always]
 
-- name: Include JWT secret tasks
-  ansible.builtin.import_tasks: jwt-secret.yaml
-  tags: [jwt, security, always]
-
-- name: Configure firewall
-  ansible.builtin.import_tasks: firewall.yaml
-  when: firewall_enabled | default(true) | bool
-  tags: [firewall, security]
+- name: Configure security (JWT and firewall)
+  ansible.builtin.import_tasks: security.yaml
+  tags: [security, jwt, firewall, always]
 
 - name: Include ephemery tasks
   ansible.builtin.import_tasks: ephemery.yaml

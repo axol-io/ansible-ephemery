@@ -35,7 +35,7 @@ if [ -z "$SCENARIO" ]; then
   # Get all scenarios
   # Get regular directories (excluding shared and clients)
   REGULAR_DIRS=$(find . -maxdepth 1 -type d -not -path "." -not -path "./shared" -not -path "./clients" | sed 's|^./||' | sort)
-  
+
   # Get client scenarios directly from the clients directory
   CLIENT_DIRS=$(find ./clients -maxdepth 1 -type d -not -path "./clients" | sed 's|^./||' | sort)
 
