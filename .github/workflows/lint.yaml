@@ -48,8 +48,9 @@ jobs:
             ansible-galaxy collection install community.docker:4.4.0 -p ${{ github.workspace }}/collections
           fi
 
-          # List collections for debugging
-          find ${{ github.workspace }}/collections -type d -name "docker" | grep -v '__pycache__'
+          # Use the new verification script for more reliable collection verification
+          chmod +x scripts/verify-collections.sh
+          ./scripts/verify-collections.sh
 
       - name: Install pre-commit
         run: pip3 install pre-commit
