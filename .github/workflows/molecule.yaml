@@ -144,12 +144,9 @@ jobs:
           done
       - name: Run Molecule tests for ${{ matrix.scenario }} scenario
         run: |
-          if [[ "${{ matrix.scenario }}" == clients/* ]]; then
-            cd molecule/clients
-            ANSIBLE_VERBOSITY=2 molecule test -s $(echo "${{ matrix.scenario }}" | sed 's|clients/||')
-          else
-            ANSIBLE_VERBOSITY=2 molecule test -s ${{ matrix.scenario }}
-          fi
+          # The correct approach is to run molecule from the root directory
+          # with the full scenario path
+          ANSIBLE_VERBOSITY=2 molecule test -s ${{ matrix.scenario }}
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
