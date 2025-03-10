@@ -48,6 +48,24 @@ if [ ! -d "$COLLECTIONS_DIR" ]; then
   fi
 fi
 
+# Check for potential conflicting collections in system paths
+SYSTEM_COLLECTIONS_PATH="/opt/hostedtoolcache/Python/3.10.16/x64/lib/python3.10/site-packages/ansible_collections"
+if [ -d "$SYSTEM_COLLECTIONS_PATH" ]; then
+  echo "⚠️ WARNING: System-wide collections found at $SYSTEM_COLLECTIONS_PATH"
+  echo "This may conflict with local collections and cause issues."
+  echo "Consider setting ANSIBLE_COLLECTIONS_SCAN_SYS_PATH=false to ignore system collections."
+
+  # Check if any of our required collections exist in system path
+  for collection in "${required_collections[@]}"; do
+    # Fix shellcheck warning SC2206 by using read for robust word splitting
+    IFS='/' read -r namespace name <<< "$collection"
+
+    if [ -d "$SYSTEM_COLLECTIONS_PATH/$namespace/$name" ]; then
+      echo "⚠️ CONFLICT: $namespace.$name exists in system path and may conflict with local collection"
+    fi
+  done
+fi
+
 # Array of required collections
 required_collections=(
   "community/docker"
@@ -85,6 +103,12 @@ fi
 if [ $missing_collections -eq 0 ]; then
   echo ""
   echo "All required collections are installed correctly."
+
+  # Final environment recommendation
+  echo ""
+  echo "Recommended environment variables for consistent collection loading:"
+  echo "export ANSIBLE_COLLECTIONS_PATH=$COLLECTIONS_DIR"
+  echo "export ANSIBLE_COLLECTIONS_SCAN_SYS_PATH=false"
   exit 0
 else
   echo ""

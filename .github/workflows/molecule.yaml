@@ -104,11 +104,23 @@ jobs:
           pip install molecule molecule-docker docker pytest-testinfra ansible-lint
           sudo apt-get update
           sudo apt-get install -y socat procps iproute2
+
+          # Prevent Ansible from using system-wide collections
+          echo "ANSIBLE_COLLECTIONS_PATHS=${{ github.workspace }}/collections" >> $GITHUB_ENV
       - name: Install Ansible collections
         run: |
           mkdir -p collections
+          # Uninstall any system-wide collections to avoid conflicts
+          if [ -d "/opt/hostedtoolcache/Python/3.10.16/x64/lib/python3.10/site-packages/ansible_collections" ]; then
+            echo "Removing system-wide ansible collections to avoid conflicts"
+            sudo rm -rf /opt/hostedtoolcache/Python/3.10.16/x64/lib/python3.10/site-packages/ansible_collections
+          fi
+
           ansible-galaxy collection install -r requirements.yaml -p collections --force
           echo "ANSIBLE_COLLECTIONS_PATH=${{ github.workspace }}/collections" >> $GITHUB_ENV
+
+          # Set environment variable to explicitly ignore system collections
+          echo "ANSIBLE_COLLECTIONS_SCAN_SYS_PATH=false" >> $GITHUB_ENV
 
           # Verify community.docker collection was installed correctly
           if ls -la "${{ github.workspace }}/collections/ansible_collections/community/docker/" 2>/dev/null; then
@@ -144,6 +156,11 @@ jobs:
           done
       - name: Run Molecule tests for ${{ matrix.scenario }} scenario
         run: |
+          # Set environment variables for consistent collection loading
+          export ANSIBLE_COLLECTIONS_PATH="${{ github.workspace }}/collections"
+          export ANSIBLE_COLLECTIONS_SCAN_SYS_PATH=false
+          export ANSIBLE_COLLECTIONS_PATHS="${{ github.workspace }}/collections"
+
           # For all scenarios, run from the root directory
           if [[ "${{ matrix.scenario }}" == *"/"* ]]; then
             # For nested scenarios like "clients/geth-lighthouse", we need molecule to find
@@ -160,6 +177,8 @@ jobs:
           ANSIBLE_FORCE_COLOR: '1'
           DOCKER_HOST: unix:///var/run/docker.sock
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+          ANSIBLE_COLLECTIONS_PATHS: ${{ github.workspace }}/collections
+          ANSIBLE_COLLECTIONS_SCAN_SYS_PATH: 'false'
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v4

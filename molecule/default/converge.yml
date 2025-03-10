@@ -2,8 +2,16 @@
 - name: Converge
   hosts: all
   tasks:
+    - name: Set Ansible collection paths
+      ansible.builtin.set_fact:
+        ansible_collections_path: "{{ lookup('env', 'ANSIBLE_COLLECTIONS_PATH') | default(playbook_dir + '/../../collections', true) }}"
+
+    - name: Display collection paths for debugging
+      ansible.builtin.debug:
+        msg: "Using collections from: {{ ansible_collections_path }}"
+
     - name: Include ansible-ephemery role
-      include_role:
+      ansible.builtin.include_role:
         name: ../../ansible
       vars:
         # Override variables for testing
