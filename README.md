@@ -117,7 +117,7 @@ ephemery_reset_frequency: "0 0 * * *"  # Midnight daily
 
 ## Directory Structure
 
-```
+```bash
 /opt/ephemery/
 ├── data/        # Node data (el/ and cl/)
 ├── logs/        # Log files
@@ -127,7 +127,7 @@ ephemery_reset_frequency: "0 0 * * *"  # Midnight daily
 
 ## Repository Structure
 
-```
+```bash
 ansible-ephemery/
 ├── ansible/                # Ansible related files
 │   ├── tasks/              # Task definitions
@@ -189,6 +189,7 @@ Optimize your Ephemery node sync times with these tested techniques:
 - **Resource Allocation**: Properly divide memory between clients: 50% for execution client, 40% for consensus client, 10% for validator
 
 Example inventory configuration:
+
 ```yaml
 ephemery:
   hosts:
@@ -204,6 +205,7 @@ ephemery:
 ```
 
 For detailed optimization instructions, see our updated guides:
+
 - [Optimized Sync Guide](docs/CHECKPOINT_SYNC.md)
 - [Client Optimization Guide](docs/LIGHTHOUSE_OPTIMIZATION.md)
 - [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
@@ -217,19 +219,19 @@ The role includes comprehensive Molecule tests for all supported client combinat
 pip install -r requirements-dev.txt
 
 # Run tests (Linux)
-molecule test -s geth-lighthouse
+molecule test -s clients/geth-lighthouse
 
 # Run tests (macOS)
 # For Docker Desktop users
 export DOCKER_HOST=unix:///Users/<username>/.docker/run/docker.sock
-molecule test -s geth-lighthouse
+molecule test -s clients/geth-lighthouse
 
 # For OrbStack users
 export DOCKER_HOST=unix:///Users/<username>/.orbstack/run/docker.sock
-molecule test -s geth-lighthouse
+molecule test -s clients/geth-lighthouse
 
 # OR use our helper script that works with both Docker Desktop and OrbStack
-./scripts/run-molecule-tests-macos.sh geth-lighthouse
+./scripts/run-molecule-tests-macos.sh clients/geth-lighthouse
 ```
 
 See [Molecule Testing](./molecule/README.md) and [Testing Documentation](./docs/TESTING.md) for more details.

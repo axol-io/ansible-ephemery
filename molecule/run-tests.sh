@@ -33,14 +33,14 @@ if [ -z "$SCENARIO" ]; then
   echo "Running all Molecule tests..."
 
   # Get all scenarios
-  # First, get all symlinks at the top level (these point to client directories)
-  CLIENT_SYMLINKS=$(find . -maxdepth 1 -type l | sed 's|^./||' | sort)
-
-  # Then get regular directories (excluding shared and clients)
+  # Get regular directories (excluding shared and clients)
   REGULAR_DIRS=$(find . -maxdepth 1 -type d -not -path "." -not -path "./shared" -not -path "./clients" | sed 's|^./||' | sort)
+  
+  # Get client scenarios directly from the clients directory
+  CLIENT_DIRS=$(find ./clients -maxdepth 1 -type d -not -path "./clients" | sed 's|^./||' | sort)
 
   # Combine all scenarios
-  SCENARIOS="$REGULAR_DIRS $CLIENT_SYMLINKS"
+  SCENARIOS="$REGULAR_DIRS $CLIENT_DIRS"
 
   # Run each scenario
   for s in $SCENARIOS; do

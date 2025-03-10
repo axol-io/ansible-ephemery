@@ -64,7 +64,7 @@ To run a specific test locally:
 molecule test -s <scenario-name>
 
 # Example: Test the geth-lighthouse client combination
-molecule test -s geth-lighthouse
+molecule test -s clients/geth-lighthouse
 ```
 
 You can also use the provided `run-tests.sh` script:
@@ -74,7 +74,7 @@ You can also use the provided `run-tests.sh` script:
 ./run-tests.sh
 
 # Run a specific test
-./run-tests.sh geth-lighthouse
+./run-tests.sh clients/geth-lighthouse
 ```
 
 ## Adding a New Test
