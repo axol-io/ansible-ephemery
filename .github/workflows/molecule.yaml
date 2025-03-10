@@ -143,7 +143,13 @@ jobs:
             fi
           done
       - name: Run Molecule tests for ${{ matrix.scenario }} scenario
-        run: molecule test -s ${{ matrix.scenario }}
+        run: |
+          if [[ "${{ matrix.scenario }}" == clients/* ]]; then
+            cd molecule/clients
+            ANSIBLE_VERBOSITY=2 molecule test -s $(echo "${{ matrix.scenario }}" | sed 's|clients/||')
+          else
+            ANSIBLE_VERBOSITY=2 molecule test -s ${{ matrix.scenario }}
+          fi
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'

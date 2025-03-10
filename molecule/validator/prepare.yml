@@ -1,0 +1,37 @@
+---
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: Create minimal ephemery directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /root/ephemery
+        - /root/ephemery/config
+        - /root/ephemery/config/ephemery_network
+        - /root/ephemery/data
+        - /root/ephemery/secrets
+        - /root/ephemery/secrets/validator
+        - /root/ephemery/secrets/validator/keys
+        - /root/ephemery/secrets/validator/passwords
+        - /root/ephemery/logs
+
+    - name: Create placeholder JWT secret
+      ansible.builtin.copy:
+        content: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        dest: /root/ephemery/jwt.hex
+        mode: '0600'
+
+    - name: Create placeholder validator password file
+      ansible.builtin.copy:
+        content: "testpassword"
+        dest: /root/ephemery/secrets/validator/passwords/validators.txt
+        mode: '0600'
+
+    - name: Create placeholder network configuration archive
+      ansible.builtin.copy:
+        content: "This is a placeholder for testnet-all.tar.gz"
+        dest: /root/ephemery/config/ephemery_network/testnet-all.tar.gz
+        mode: '0644'

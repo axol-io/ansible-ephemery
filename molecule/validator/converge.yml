@@ -2,6 +2,15 @@
 - name: Converge
   hosts: all
   tasks:
+    - name: Debug - Show variables
+      ansible.builtin.debug:
+        msg: |
+          Test Mode: {{ test_mode | default('undefined') }}
+          Validator Enabled: {{ validator_enabled | default('undefined') }}
+          Home Directory: {{ home_dir | default('undefined') }}
+          Ephemery Base Directory: {{ ephemery_base_dir | default('undefined') }}
+          Ansible User: {{ ansible_user | default('undefined') }}
+
     - name: Include the role
       ansible.builtin.include_role:
         name: ../../ansible
