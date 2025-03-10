@@ -146,7 +146,16 @@ jobs:
         run: |
           # The correct approach is to run molecule from the root directory
           # with the full scenario path
-          ANSIBLE_VERBOSITY=2 molecule test -s ${{ matrix.scenario }}
+          if [[ "${{ matrix.scenario }}" == *"/"* ]]; then
+            # For nested scenarios (with slashes in the name), move to the parent directory
+            # and run with the last part of the path as the scenario name
+            parent_dir="molecule/$(dirname ${{ matrix.scenario }})"
+            scenario_name="$(basename ${{ matrix.scenario }})"
+            cd "$parent_dir" && ANSIBLE_VERBOSITY=2 molecule test -s "$scenario_name"
+          else
+            # For non-nested scenarios, run from the root directory
+            ANSIBLE_VERBOSITY=2 molecule test -s ${{ matrix.scenario }}
+          fi
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
