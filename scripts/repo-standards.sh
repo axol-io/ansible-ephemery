@@ -282,7 +282,6 @@ function normalize_task_names {
     local file_modified=0
     local temp_file
     temp_file=$(mktemp)
-    local in_task=0
     local line_num=0
     local task_line_num=0
     local task_name=""
@@ -293,7 +292,6 @@ function normalize_task_names {
 
       # Check if we're entering a task
       if [[ "$line" =~ ^[[:space:]]*-[[:space:]]name: ]]; then
-        in_task=1
         task_line_num=$line_num
         task_name=$(echo "$line" | sed -E 's/^[[:space:]]*-[[:space:]]name:[[:space:]]*(.*)/\1/')
 
@@ -350,7 +348,7 @@ function normalize_task_names {
 
         total_tasks=$((total_tasks + 1))
       else
-        # in_task=0  # Removing unused variable
+        true  # No-op to prevent empty else clause
       fi
 
       # Write line to temp file

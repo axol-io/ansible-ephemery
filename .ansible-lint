@@ -14,4 +14,4 @@ warn_list:
   - unnamed-task
 
 use_default_rules: true
-parseable: true 
+parseable: true

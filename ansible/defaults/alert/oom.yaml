@@ -1,22 +1,22 @@
 ---
-apiVersion: 1
-orgId: 1
+api_version: 1
+org_id: 1
 folder: monitoring
-name: monitoring
+alert_name: monitoring
 interval: 5m
 rules:
-  - uid: c4c5849a-640a-43e5-9908-fb7f403f9e75
-    title: Container OOM
-    for: 0s
+  - uid: e253066f-d9b5-4d5c-a82b-ef833d2ebf16
+    title: OOM Killer
+    for: 10m
     severity: critical
-    summary: Container {{ $labels.container }} ran out of memory and was killed
+    summary: "Container {{ '{{' }} $labels.container {{ '}}' }} ran out of memory and was killed"
     condition: C
     annotations:
-      execErrState: OK
-      noDataState: OK
+      execErrState: Error
+      noDataState: NoData
     data:
       - refId: A
-        expr: increase(node_vmstat_oom_kill[2m])
+        expr: sum(changes(node_vmstat_oom_kill[10m])) > 0
         intervalMs: 1000
         maxDataPoints: 43200
         datasourceUid: PBFA97CFB590B2093
@@ -25,32 +25,29 @@ rules:
           conditions:
             - uid: __expr__
               type: __expr__
+              mode: dropNN
               expression: A
-              mode: replaceNN
-              replaceWithValue: 0
               from: 600
               to: 0
-              reducer: max
+              reducer: mean
             - uid: __expr__
               type: __expr__
+              mode: dropNN
               expression: B
-              mode: replaceNN
-              replaceWithValue: 0
               from: 600
               to: 0
-              reducer: max
+              reducer: mean
             - uid: __expr__
-              type: threshold
+              type: __expr__
+              mode: dropNN
               expression: C
-              mode: replaceNN
-              replaceWithValue: 0
               from: 600
               to: 0
-              reducer: max
+              reducer: mean
         settings:
           legendFormat: __auto
-          instant: true
-          range: false
+          instant: false
+          range: true
           relativeTimeRange:
             from: 600
             to: 0

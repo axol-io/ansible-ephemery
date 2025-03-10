@@ -1,22 +1,22 @@
 ---
-apiVersion: 1
-orgId: 1
+api_version: 1
+org_id: 1
 folder: monitoring
-name: monitoring
+alert_name: monitoring
 interval: 5m
 rules:
-  - uid: 5d2f7756-31fb-4fc1-84c3-c892751c07c0
-    title: Disk Space critically low
+  - uid: e253066f-d9b5-4d5c-a82b-ef833d2ebf16
+    title: Disk space critically low
     for: 10m
     severity: critical
-    summary: Disk space critically low on {{ $labels.mountpoint }} for {{ $labels.instance }}, {{ $values.B }} percent free
+    summary: "Disk space critically low on {{ '{{' }} $labels.mountpoint {{ '}}' }} for {{ '{{' }} $labels.instance {{ '}}' }}, {{ '{{' }} $values.B {{ '}}' }} percent free"
     condition: C
     annotations:
       execErrState: Error
       noDataState: NoData
     data:
       - refId: A
-        expr: round((node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100)
+        expr: 100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes)
         intervalMs: 1000
         maxDataPoints: 43200
         datasourceUid: PBFA97CFB590B2093
@@ -24,27 +24,30 @@ rules:
           type: query
           conditions:
             - uid: __expr__
-              type: reduce
+              type: __expr__
+              mode: dropNN
               expression: A
               from: 600
               to: 0
-              reducer: last
+              reducer: mean
             - uid: __expr__
-              type: reduce
+              type: __expr__
+              mode: dropNN
               expression: B
               from: 600
               to: 0
-              reducer: last
+              reducer: mean
             - uid: __expr__
-              type: threshold
+              type: __expr__
+              mode: dropNN
               expression: C
               from: 600
               to: 0
-              reducer: last
+              reducer: mean
         settings:
           legendFormat: __auto
-          instant: true
-          range: false
+          instant: false
+          range: true
           relativeTimeRange:
             from: 600
             to: 0

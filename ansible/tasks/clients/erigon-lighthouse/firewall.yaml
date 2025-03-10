@@ -1,18 +1,5 @@
 ---
 # Firewall rules for Erigon (execution client) and Lighthouse
 # (consensus client) combination
-
-firewall_allowed_tcp_ports:
-  - 22      # SSH
-  - 80      # HTTP
-  - 443     # HTTPS
-  - 30303   # Erigon P2P
-  - 30304   # Erigon P2P
-  - 8551    # Erigon Engine API
-  - 9000    # Lighthouse P2P
-  - 5052    # Lighthouse metrics
-
-firewall_allowed_udp_ports:
-  - 30303   # Erigon P2P
-  - 30304   # Erigon P2P
-  - 9000    # Lighthouse P2P
+- name: Set firewall ports for erigon-lighthouse
+  ansible.builtin.set_fact:

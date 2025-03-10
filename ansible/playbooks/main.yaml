@@ -6,26 +6,29 @@
     - '{{ playbook_dir }}/../defaults/main.yaml'
     - '{{ playbook_dir }}/../vars/main.yaml'
   tasks:
-    - block:
+    - name: Load host-specific variables block
+      block:
         - name: Load host-specific variables
           ansible.builtin.include_vars:
-            ansible.builtin.file: '{{ playbook_dir }}/../host_vars/{{ inventory_hostname }}.yaml'
+            file: '{{ playbook_dir }}/../host_vars/{{ inventory_hostname }}.yaml'
           tags: [always]
-          ignore_errors: true
+          failed_when: false
       rescue:
         - name: Handle missing host vars
-          debug:
+          ansible.builtin.debug:
             msg: Host vars file not found for '{{ inventory_hostname }}', using defaults only.
           tags: [always]
 
-    - block:
+    - name: Load secrets block
+      block:
         - name: Load secrets (if available)
           ansible.builtin.include_vars:
-            ansible.builtin.file: '{{ playbook_dir }}/../host_vars/secrets.yaml'
+            file: '{{ playbook_dir }}/../host_vars/secrets.yaml'
           tags: [always, secrets]
+          failed_when: false
       rescue:
         - name: Handle missing secrets
-          debug:
+          ansible.builtin.debug:
             msg: Secrets file not found. Using any secrets defined in host vars.
           tags: [always]
 

@@ -3,7 +3,7 @@
 
 
 - name: Set default variables if not defined
-  set_fact:
+  ansible.builtin.set_fact:
     validator_keys_password_file: '{{ playbook_dir }}/files/passwords/validators.txt'
   when: validator_keys_password_file is not defined
 

@@ -37,7 +37,7 @@
 
     # Add post-deployment monitoring
     - name: Check sync status after deployment
-      ansible.builtin.shell: "{{ ephemery_scripts_dir }}/check_sync_status.sh"
+      ansible.builtin.command: "{{ ephemery_scripts_dir }}/check_sync_status.sh"
       register: sync_status
       failed_when: false
       changed_when: false

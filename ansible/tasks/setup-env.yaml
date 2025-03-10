@@ -1,6 +1,5 @@
 ---
 - name: 🏖️ Create cozy axolotl home directory 🏖️
-
   ansible.builtin.command:
     cmd: mkdir -p {{ home_dir }}
   args:
@@ -17,13 +16,24 @@
   when: not test_mode | default(false) | bool
 
 - name: 🔑 Add Docker GPG apt key
-  ansible.builtin.shell: |
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
-    https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
-  args:
-    creates: /usr/share/keyrings/docker-archive-keyring.gpg
-  when: ansible_facts['os_family'] == 'Debian' and not test_mode | default(false) | bool
+  when: not test_mode | default(false) | bool
+  block:
+    - name: Download Docker GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /tmp/docker.gpg
+        mode: '0644'
+
+    - name: Dearmor Docker GPG key
+      ansible.builtin.shell: set -o pipefail && cat /tmp/docker.gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/docker-archive-keyring.gpg
+
+    - name: Add Docker repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch={{ ansible_architecture }} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        filename: docker
 
 - name: 📦 Install Docker
   ansible.builtin.apt:

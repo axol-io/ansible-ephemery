@@ -1,16 +1,16 @@
 ---
 # Firewall rules for Nethermind (execution client) and Prysm
 # (consensus client) combination
-
-firewall_allowed_tcp_ports:
-  - 22      # SSH
-  - 80      # HTTP
-  - 443     # HTTPS
-  - 30303   # Nethermind P2P
-  - 8551    # Nethermind Engine API
-  - 13000   # Prysm P2P
-  - 8080    # Prysm metrics
-
-firewall_allowed_udp_ports:
-  - 30303   # Nethermind P2P
-  - 13000   # Prysm P2P
+- name: Set firewall ports for nethermind-prysm
+  ansible.builtin.set_fact:
+    firewall_allowed_tcp_ports:
+      - 22      # SSH
+      - 80      # HTTP
+      - 443     # HTTPS
+      - 30303   # Nethermind P2P
+      - 8551    # Nethermind Engine API
+      - 13000   # Prysm P2P
+      - 8080    # Prysm API
+    firewall_allowed_udp_ports:
+      - 30303   # Nethermind P2P
+      - 13000   # Prysm P2P

@@ -10,7 +10,7 @@
     - name: Load host-specific variables
       ansible.builtin.include_vars:
         file: '{{ playbook_dir }}/../host_vars/{{ inventory_hostname }}.yaml'
-      ignore_errors: true
+      failed_when: false
       tags: [always]
 
     - name: Pull latest execution client Docker image

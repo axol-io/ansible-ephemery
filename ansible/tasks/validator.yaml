@@ -111,7 +111,10 @@
   community.docker.docker_container:
     name: '{{ network }}-validator-{{ cl }}'
     state: stopped
-  ignore_errors: true
+  register: stop_validator_result
+  failed_when:
+    - stop_validator_result.failed
+    - "'No such container' not in stop_validator_result.msg"
   when: not validator_skip and not test_mode | default(false) | bool
 
 - name: Check if zip file exists

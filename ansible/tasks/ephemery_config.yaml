@@ -22,7 +22,7 @@
   ansible.builtin.unarchive:
     src: '{{ ephemery_dir }}/config/ephemery_network/testnet-all.tar.gz'
     dest: '{{ ephemery_dir }}/config/ephemery_network'
-    remote_src: yes
+    remote_src: true
     mode: '0755'
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
