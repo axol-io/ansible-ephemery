@@ -20,18 +20,18 @@ parse_local_inventory() {
     # Check if yq is available
     if command_exists yq; then
         # Parse with yq
-        BASE_DIR=$(yq '.local.base_dir // ""' "$inventory_file")
-        DATA_DIR=$(yq '.local.data_dir // ""' "$inventory_file")
-        LOGS_DIR=$(yq '.local.logs_dir // ""' "$inventory_file")
+        BASE_DIR=$(yq '.local.base_dir // ""' "$inventory_file" | tr -d '"')
+        DATA_DIR=$(yq '.local.data_dir // ""' "$inventory_file" | tr -d '"')
+        LOGS_DIR=$(yq '.local.logs_dir // ""' "$inventory_file" | tr -d '"')
 
         # Geth configuration
-        GETH_IMAGE=$(yq '.local.geth.image // ""' "$inventory_file")
-        GETH_CACHE=$(yq '.local.geth.cache // ""' "$inventory_file")
-        GETH_MAX_PEERS=$(yq '.local.geth.max_peers // ""' "$inventory_file")
+        GETH_IMAGE=$(yq '.local.geth.image // ""' "$inventory_file" | tr -d '"')
+        GETH_CACHE=$(yq '.local.geth.cache // ""' "$inventory_file" | tr -d '"')
+        GETH_MAX_PEERS=$(yq '.local.geth.max_peers // ""' "$inventory_file" | tr -d '"')
 
         # Lighthouse configuration
-        LIGHTHOUSE_IMAGE=$(yq '.local.lighthouse.image // ""' "$inventory_file")
-        LIGHTHOUSE_TARGET_PEERS=$(yq '.local.lighthouse.target_peers // ""' "$inventory_file")
+        LIGHTHOUSE_IMAGE=$(yq '.local.lighthouse.image // ""' "$inventory_file" | tr -d '"')
+        LIGHTHOUSE_TARGET_PEERS=$(yq '.local.lighthouse.target_peers // ""' "$inventory_file" | tr -d '"')
     else
         echo "Warning: 'yq' command not found. Using fallback method with grep (less reliable)" >&2
 
@@ -51,22 +51,22 @@ parse_local_inventory() {
     fi
 
     # Export variables
-    EPHEMERY_BASE_DIR=$(echo "$BASE_DIR" | tr -d '"')
+    EPHEMERY_BASE_DIR="$BASE_DIR"
     export EPHEMERY_BASE_DIR
     
-    EPHEMERY_DATA_DIR=$(echo "$DATA_DIR" | tr -d '"')
+    EPHEMERY_DATA_DIR="$DATA_DIR"
     export EPHEMERY_DATA_DIR
     
-    EPHEMERY_LOGS_DIR=$(echo "$LOGS_DIR" | tr -d '"')
+    EPHEMERY_LOGS_DIR="$LOGS_DIR"
     export EPHEMERY_LOGS_DIR
     
-    GETH_IMAGE=$(echo "$GETH_IMAGE" | tr -d '"')
+    GETH_IMAGE="$GETH_IMAGE"
     export GETH_IMAGE
     
     export GETH_CACHE="$GETH_CACHE"
     export GETH_MAX_PEERS="$GETH_MAX_PEERS"
     
-    LIGHTHOUSE_IMAGE=$(echo "$LIGHTHOUSE_IMAGE" | tr -d '"')
+    LIGHTHOUSE_IMAGE="$LIGHTHOUSE_IMAGE"
     export LIGHTHOUSE_IMAGE
     
     export LIGHTHOUSE_TARGET_PEERS="$LIGHTHOUSE_TARGET_PEERS"
@@ -87,16 +87,16 @@ parse_remote_inventory() {
     # Check if yq is available
     if command_exists yq; then
         # Parse with yq
-        REMOTE_HOST=$(yq '.hosts[0].host // ""' "$inventory_file")
-        REMOTE_USER=$(yq '.hosts[0].user // ""' "$inventory_file")
-        REMOTE_PORT=$(yq '.hosts[0].port // "22"' "$inventory_file")
+        REMOTE_HOST=$(yq '.hosts[0].host // ""' "$inventory_file" | tr -d '"')
+        REMOTE_USER=$(yq '.hosts[0].user // ""' "$inventory_file" | tr -d '"')
+        REMOTE_PORT=$(yq '.hosts[0].port // "22"' "$inventory_file" | tr -d '"')
     else
         echo "Warning: 'yq' command not found. Using fallback method with grep (less reliable)" >&2
 
         # Fallback to grep (less reliable)
-        REMOTE_HOST=$(grep -o 'host:.*' "$inventory_file" | head -1 | cut -d: -f2 | tr -d ' ')
-        REMOTE_USER=$(grep -o 'user:.*' "$inventory_file" | head -1 | cut -d: -f2 | tr -d ' ')
-        REMOTE_PORT=$(grep -o 'port:.*' "$inventory_file" 2>/dev/null | head -1 | cut -d: -f2 | tr -d ' ' || echo "22")
+        REMOTE_HOST=$(grep -o 'host:.*' "$inventory_file" | head -1 | cut -d: -f2 | tr -d ' ' | tr -d '"')
+        REMOTE_USER=$(grep -o 'user:.*' "$inventory_file" | head -1 | cut -d: -f2 | tr -d ' ' | tr -d '"')
+        REMOTE_PORT=$(grep -o 'port:.*' "$inventory_file" 2>/dev/null | head -1 | cut -d: -f2 | tr -d ' ' | tr -d '"' || echo "22")
     fi
 
     # Validate extracted values
