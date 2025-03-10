@@ -54,6 +54,7 @@ required_collections=(
   "community/general"
   "ansible/netcommon"
   "ansible/utils"
+  "ansible/posix"
 )
 
 missing_collections=0
