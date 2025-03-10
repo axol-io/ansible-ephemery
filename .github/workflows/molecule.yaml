@@ -28,7 +28,10 @@ jobs:
           echo "ANSIBLE_COLLECTIONS_PATH=$PWD/collections" >> $GITHUB_ENV
 
           # Verify collections were installed correctly
-          find collections -type d -name "docker" | grep -v '__pycache__'
+          chmod +x scripts/verify-collections.sh
+          ./scripts/verify-collections.sh
+        env:
+          ANSIBLE_COLLECTIONS_PATH: $PWD/collections
       - name: Check YAML file extensions
         run: |
           chmod +x scripts/check-yaml-extensions.sh
@@ -96,7 +99,10 @@ jobs:
           echo "ANSIBLE_COLLECTIONS_PATH=$PWD/collections" >> $GITHUB_ENV
 
           # Verify collections were installed correctly
-          find collections -type d -name "docker" | grep -v '__pycache__'
+          chmod +x scripts/verify-collections.sh
+          ./scripts/verify-collections.sh
+        env:
+          ANSIBLE_COLLECTIONS_PATH: $PWD/collections
       - name: Verify Docker
         run: |
           docker --version

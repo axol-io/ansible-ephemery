@@ -8,10 +8,24 @@ set -e
 # Determine the root of the repository
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 
-# Define collections directory
-COLLECTIONS_DIR="$REPO_ROOT/collections"
+# Check if ANSIBLE_COLLECTIONS_PATH is set, use it if available
+if [ -n "$ANSIBLE_COLLECTIONS_PATH" ]; then
+  echo "Using ANSIBLE_COLLECTIONS_PATH from environment: $ANSIBLE_COLLECTIONS_PATH"
+  COLLECTIONS_DIR="$ANSIBLE_COLLECTIONS_PATH"
+else
+  # Define collections directory
+  COLLECTIONS_DIR="$REPO_ROOT/collections"
+  echo "ANSIBLE_COLLECTIONS_PATH not set, using default: $COLLECTIONS_DIR"
+fi
 
 echo "Verifying collections at: $COLLECTIONS_DIR"
+
+# Ensure collection directory exists
+if [ ! -d "$COLLECTIONS_DIR" ]; then
+  echo "Error: Collections directory $COLLECTIONS_DIR does not exist."
+  echo "Has ansible-galaxy collection install been run?"
+  exit 1
+fi
 
 # Array of required collections
 required_collections=(

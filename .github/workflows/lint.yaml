@@ -51,6 +51,8 @@ jobs:
           # Use the new verification script for more reliable collection verification
           chmod +x scripts/verify-collections.sh
           ./scripts/verify-collections.sh
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
       - name: Install pre-commit
         run: pip3 install pre-commit
