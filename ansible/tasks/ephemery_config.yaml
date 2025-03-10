@@ -17,9 +17,15 @@
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   register: ephemery_download
-  notify: Extract Ephemery network configuration
 
 - name: Set fact that Ephemery network configuration was updated
   ansible.builtin.set_fact:
     ephemery_config_updated: true
   when: ephemery_download.changed
+
+- name: Extract Ephemery network configuration
+  ansible.builtin.shell: |
+    cd {{ ephemery_dir }}/config/ephemery_network && \
+    tar -xzf testnet-all.tar.gz
+  args:
+    creates: "{{ ephemery_dir }}/config/ephemery_network/genesis.ssz"

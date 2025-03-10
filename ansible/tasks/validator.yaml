@@ -1,6 +1,5 @@
 ---
 - name: Check if validator is enabled
-
   ansible.builtin.set_fact:
     validator_skip: '{{ not validator_enabled | default(true) | bool }}'
   tags:
@@ -44,10 +43,22 @@
     group: '{{ ansible_user | default("root") }}'
   loop:
     - '{{ ephemery_data_dir }}/validator'
+    - '{{ ephemery_data_dir }}/validator/keys'
+    - '{{ ephemery_data_dir }}/validator/secrets'
     - '{{ ephemery_secrets_dir }}/validator'
     - '{{ ephemery_secrets_dir }}/validator/keys'
     - '{{ ephemery_secrets_dir }}/validator/passwords'
+    - '{{ ephemery_base_dir }}/tmp'  # Temporary directory for processing
   when: not validator_skip and not use_custom_keys | default(false) | bool
+  tags:
+    - validator
+
+- name: Check if validator keys already exist
+  ansible.builtin.find:
+    paths: '{{ ephemery_secrets_dir }}/validator/keys'
+    patterns: 'keystore-*.json'
+  register: existing_keys
+  when: not validator_skip
   tags:
     - validator
 
@@ -64,7 +75,36 @@
     fi
   args:
     creates: '{{ ephemery_secrets_dir }}/validator/keys_generated'
-  when: not validator_skip and validator_enabled | default(true) | bool
+  when: >
+    not validator_skip and
+    validator_enabled | default(true) | bool and
+    not use_custom_keys | default(false) | bool and
+    (existing_keys.matched | default(0) == 0)
+  tags:
+    - validator
+
+- name: Create password file for validator
+  ansible.builtin.copy:
+    content: "ephemery"
+    dest: "{{ ephemery_secrets_dir }}/validator/passwords/password.txt"
+    mode: '0600'
+    owner: '{{ ansible_user | default("root") }}'
+    group: '{{ ansible_user | default("root") }}'
+  when: not validator_skip and not use_custom_keys | default(false) | bool
+  tags:
+    - validator
+
+- name: Extract Ephemery network configuration
+  ansible.builtin.shell: |
+    mkdir -p {{ ephemery_base_dir }}/config/ephemery_network
+    cd {{ ephemery_base_dir }}/config/ephemery_network
+    if [ ! -f "genesis.ssz" ]; then
+      wget -q https://ephemery.pk910.de/testnet-all.tar.gz -O testnet-all.tar.gz
+      tar -xzf testnet-all.tar.gz
+    fi
+  args:
+    creates: "{{ ephemery_base_dir }}/config/ephemery_network/genesis.ssz"
+  when: not validator_skip
   tags:
     - validator
 
@@ -72,31 +112,8 @@
   ansible.builtin.set_fact:
     beacon_api_endpoint: >
       {% if cl_client_name == 'prysm' %}localhost:4000
-      {% else %}http://127.0.0.1:{{ cl_client_port }} {% endif %}
+      {% else %}http://127.0.0.1:{{ cl_client_port | default(5052) }} {% endif %}
   when: not validator_skip
-  tags:
-    - validator
-
-- name: Start Validator client
-  community.docker.docker_container:
-    name: '{{ network }}-validator-{{ cl }}'
-    image: '{{ client_images.validator }}'
-    state: started
-    restart_policy: unless-stopped
-    memory: '{{ validator_memory_limit }}'
-    network_mode: host
-    volumes:
-      - '{{ ephemery_data_dir }}/validator:/data:rw'
-      - '{{ ephemery_secrets_dir }}/validator/keys:/secrets/keys:ro'
-      - '{{ ephemery_secrets_dir }}/validator/passwords:/secrets/passwords:ro'
-      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
-    command: >
-      lighthouse validator_client
-      --beacon-nodes {{ beacon_api_endpoint }}
-      --validators-dir /secrets/keys
-      --secrets-dir /secrets/passwords
-      --testnet-dir /ephemery_config
-  when: not validator_skip and not use_custom_keys | default(false) | bool and not test_mode | default(false) | bool
   tags:
     - validator
 
@@ -110,10 +127,54 @@
     - "'No such container' not in stop_validator_result.msg"
   when: not validator_skip and not test_mode | default(false) | bool
 
-- name: Check if zip file exists
-  ansible.builtin.stat:
-    path: files/validator_keys/validator_keys.zip
-  delegate_to: localhost
-  register: zip_stat
-  become: false
-  when: not validator_skip and use_custom_keys | default(false) | bool
+- name: Remove existing validator container
+  community.docker.docker_container:
+    name: '{{ network }}-validator-{{ cl }}'
+    state: absent
+  when: not validator_skip and not test_mode | default(false) | bool
+
+- name: Ensure validator keys directory is not empty (non-custom keys)
+  ansible.builtin.shell: |
+    if [ ! "$(ls -A {{ ephemery_secrets_dir }}/validator/keys/)" ]; then
+      echo "Warning: No validator keys found in {{ ephemery_secrets_dir }}/validator/keys/"
+      echo "Please ensure you have validator keys in the correct location"
+      exit 1
+    fi
+  changed_when: false
+  register: validator_keys_check
+  ignore_errors: true
+  when: not validator_skip and not use_custom_keys | default(false) | bool
+  tags:
+    - validator
+
+- name: Report validator keys check result
+  ansible.builtin.debug:
+    msg: "{{ validator_keys_check.stdout_lines }}"
+  when: validator_keys_check is defined and validator_keys_check.stdout_lines is defined
+  tags:
+    - validator
+
+- name: Start Validator client
+  community.docker.docker_container:
+    name: '{{ network }}-validator-{{ cl }}'
+    image: '{{ client_images.validator }}'
+    state: started
+    restart_policy: unless-stopped
+    memory: '{{ validator_memory_limit | default("1g") }}'
+    network_mode: host
+    volumes:
+      - '{{ ephemery_data_dir }}/validator:/data:rw'
+      - '{{ ephemery_secrets_dir }}/validator/keys:/secrets/keys:ro'
+      - '{{ ephemery_secrets_dir }}/validator/passwords:/secrets/passwords:ro'
+      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
+      - '{{ ephemery_base_dir }}/config/ephemery_network:/ephemery_config:ro'
+    command: >
+      lighthouse validator_client
+      --beacon-nodes {{ beacon_api_endpoint }}
+      --datadir /data
+      --testnet-dir /ephemery_config
+      --validators-dir /secrets/keys
+      --secrets-dir /secrets/passwords
+  when: not validator_skip and not use_custom_keys | default(false) | bool and not test_mode | default(false) | bool
+  tags:
+    - validator

@@ -144,16 +144,15 @@ jobs:
           done
       - name: Run Molecule tests for ${{ matrix.scenario }} scenario
         run: |
-          # The correct approach is to run molecule from the root directory
-          # with the full scenario path
+          # For all scenarios, run from the root directory
           if [[ "${{ matrix.scenario }}" == *"/"* ]]; then
-            # For nested scenarios (with slashes in the name), move to the parent directory
-            # and run with the last part of the path as the scenario name
-            parent_dir="molecule/$(dirname ${{ matrix.scenario }})"
-            scenario_name="$(basename ${{ matrix.scenario }})"
-            cd "$parent_dir" && ANSIBLE_VERBOSITY=2 molecule test -s "$scenario_name"
+            # For nested scenarios like "clients/geth-lighthouse", we need molecule to find
+            # the molecule.yml in the correct directory
+            echo "Running nested scenario: ${{ matrix.scenario }}"
+            ANSIBLE_VERBOSITY=2 molecule test -s "${{ matrix.scenario }}"
           else
             # For non-nested scenarios, run from the root directory
+            echo "Running standard scenario: ${{ matrix.scenario }}"
             ANSIBLE_VERBOSITY=2 molecule test -s ${{ matrix.scenario }}
           fi
         env:

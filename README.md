@@ -12,6 +12,20 @@ To run a simple local demo of an Ephemery node:
 
 This will start a local Ephemery node with Geth and Lighthouse in Docker containers.
 
+## Validator Support
+
+The playbook now includes improved validator support with:
+
+- Automatic validator key detection and mounting
+- Support for compressed validator key archives
+- Enhanced security and permission handling
+- Robust validation of key files
+
+For detailed validator setup instructions, see:
+
+- [Validator Guide](docs/VALIDATOR_README.md)
+- [Validator Key Management](docs/VALIDATOR_KEY_MANAGEMENT.md)
+
 ## Directory Structure
 
 - `run-ephemery-demo.sh` - Main demo script for local testing
@@ -30,6 +44,7 @@ For more advanced deployments, including remote server deployment and custom con
 - [Remote Deployment](docs/remote-deployment.md)
 - [Configuration](docs/configuration.md)
 - [Inventory Management](docs/inventory-management.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ## Inventory Management
 

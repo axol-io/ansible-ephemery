@@ -116,6 +116,101 @@ This document provides solutions for common issues when running Ephemery nodes, 
    docker inspect ephemery-lighthouse | grep jwt
    ```
 
+## Validator Issues
+
+### Validator Keys Not Found
+
+**Problem**: Validator fails to start with "no validator keys found" error.
+
+**Solutions**:
+
+1. **Verify key files exist in the correct location**:
+
+   ```bash
+   # Check if keys are present
+   ls -la /root/ephemery/secrets/validator/keys/
+   ```
+
+2. **Ensure key file format is correct** (should be keystore-*.json files):
+
+   ```bash
+   # Look for proper keystore files
+   find /root/ephemery/secrets/validator/keys/ -name "keystore-*.json"
+   ```
+
+3. **Verify file permissions**:
+
+   ```bash
+   # Check permissions - should be 0600
+   ls -la /root/ephemery/secrets/validator/keys/
+
+   # Fix permissions if needed
+   chmod -R 0600 /root/ephemery/secrets/validator/keys/
+   ```
+
+4. **Check validation key extraction results**:
+
+   ```bash
+   # If using compressed keys, verify extraction worked:
+   ls -la /root/ephemery/tmp/validator_keys/
+   ```
+
+### Password Issues
+
+**Problem**: Validator fails with "incorrect password" or "unable to decrypt" errors.
+
+**Solutions**:
+
+1. **Verify password file exists and has correct content**:
+
+   ```bash
+   cat /root/ephemery/secrets/validator/passwords/validators.txt
+   ```
+
+2. **Ensure password file has correct permissions**:
+
+   ```bash
+   chmod 600 /root/ephemery/secrets/validator/passwords/validators.txt
+   ```
+
+3. **Recreate password file if needed**:
+
+   ```bash
+   echo "ephemery" > /root/ephemery/secrets/validator/passwords/validators.txt
+   chmod 600 /root/ephemery/secrets/validator/passwords/validators.txt
+   ```
+
+### Validator Not Connecting to Beacon Node
+
+**Problem**: Validator starts but cannot connect to beacon node.
+
+**Solutions**:
+
+1. **Check if the beacon node is running**:
+
+   ```bash
+   docker ps | grep lighthouse
+   ```
+
+2. **Verify API endpoint is correct**:
+
+   ```bash
+   # For Lighthouse
+   curl -s http://127.0.0.1:5052/eth/v1/node/version
+   ```
+
+3. **Check validator logs for connection errors**:
+
+   ```bash
+   docker logs ephemery-validator-lighthouse
+   ```
+
+4. **Restart validator after ensuring beacon is synced**:
+
+   ```bash
+   docker restart ephemery-validator-lighthouse
+   ```
+
 ## Monitoring Sync Progress
 
 ### Real-time Sync Status Commands
@@ -184,18 +279,19 @@ For Geth:
    ```bash
    docker logs ephemery-geth
    docker logs ephemery-lighthouse
+   docker logs ephemery-validator-lighthouse
    ```
 
 2. Verify all required volumes are mounted correctly
 
    ```bash
-   docker inspect ephemery-geth | grep -A 10 Mounts
-   docker inspect ephemery-lighthouse | grep -A 10 Mounts
+   docker inspect ephemery-validator-lighthouse | grep -A 10 Mounts
    ```
 
 3. Ensure data directories exist and have correct permissions
 
    ```bash
-   mkdir -p /root/ephemery/data/geth /root/ephemery/data/lighthouse
+   mkdir -p /root/ephemery/data/validator /root/ephemery/secrets/validator/keys
    chmod 755 -R /root/ephemery/data
+   chmod 600 -R /root/ephemery/secrets/validator/keys
    ```

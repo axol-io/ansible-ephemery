@@ -39,7 +39,7 @@
 
 - name: 📝 Create health check script
   ansible.builtin.template:
-    src: 'templates/scripts/health_check.sh.j2'
+    src: "{{ lookup('env', 'PWD') }}/templates/scripts/health_check.sh.j2"
     dest: '{{ ephemery_scripts_dir }}/health_check.sh'
     force: true
     owner: '{{ ansible_user | default("root") }}'

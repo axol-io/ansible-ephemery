@@ -19,8 +19,8 @@ All methods include built-in protections against slashing by ensuring validators
 To enable a validator on your node:
 
 1. Set `validator_enabled: true` in your host vars file
-2. Place your validator keys in the appropriate location
-3. Configure your password file
+2. Place your validator keys in the appropriate location (see below for options)
+3. Configure your password file (default: `files/passwords/validators.txt`)
 4. Run the playbook with the validator tag
 
 ```bash
@@ -54,15 +54,17 @@ client_images:
 
 ### Password File
 
-The password file (e.g., `files/validator_keys/axol-node1.txt`) contains the validator keystore password. This file is copied to the validator container and used to decrypt the validator keys.
+The password file contains the validator keystore password. This file is copied to the validator container and used to decrypt the validator keys.
 
-Example password file structure:
+Default location: `files/passwords/validators.txt`
+
+Example password file content:
 
 ```plaintext
-!@6YMXVadbU
+StakeWithAxol
 ```
 
-The password file should be a plain text file containing only the password on a single line.
+The password file should be a plain text file containing only the password on a single line. If the password file doesn't exist, the playbook will automatically create it with the default password "ephemery".
 
 ### Using Default Key Generation
 
@@ -72,26 +74,29 @@ If you don't specify custom keys, the playbook will automatically generate valid
 
 For efficient deployment of many validators, you can use compressed archives:
 
-1. **Create a zip or tar.gz archive** of your validator keys
+1. **Create a zip archive** of your validator keys
    - You can compress all your `keystore-m_*.json` files into a single archive
-   - Either format is supported: `.zip` or `.tar.gz`
+   - Zip format is recommended: `.zip`
 
 2. **Place the archive in the ansible project**:
    - `files/validator_keys/validator_keys.zip` (preferred format)
-   - `files/validator_keys/validator_keys.tar.gz` (alternative format)
 
-3. **Create a password file**:
-   - Create a file like `files/validator_keys/validators.txt` with your keystore password
-
-4. **Configure your host vars file**:
+3. **Configure your host vars file**:
 
    ```yaml
    # In host_vars/your-node.yaml
    validator_enabled: true
-   validator_keys_password_file: 'files/validator_keys/validators.txt'  # Text file with password
+   validator_keys_password_file: 'files/passwords/validators.txt'  # Text file with password
    validator_fee_recipient: 0x0000000000000000000000000000000000000000  # Optional
    validator_graffiti: my-validator-name  # Optional
    ```
+
+The playbook will:
+
+- Automatically detect and use your zip file of validator keys
+- Create the passwords directory and file if they don't exist
+- Extract keys to a temporary directory before safely moving them to the final location
+- Set proper permissions on all key files
 
 ### Using Individual Validator Key Files
 
@@ -103,23 +108,24 @@ validator_enabled: true
 
 # Validator key paths and configuration
 validator_keys_src: 'files/validator_keys'  # Directory containing keystore-*.json files
-validator_keys_password_file: 'files/validator_keys/validators.txt'  # Password file
+validator_keys_password_file: 'files/passwords/validators.txt'  # Password file
 validator_fee_recipient: 0x0000000000000000000000000000000000000000  # Fee recipient address
 validator_graffiti: my-validator-name  # Custom graffiti text
 ```
 
-## File Structure
+## Directory Structure
 
 When using validator keys, the following directory structure will be created on the node:
 
 ```bash
 {{ ephemery_base_dir }}/ (typically /root/ephemery/)
 ├── data/
-│   └── validator/  # Validator client data
+│   └── validator/  # Validator client data for persistent state
 ├── secrets/
 │   └── validator/
 │       ├── keys/          # Your keystore files will be copied/extracted here
-│       └── passwords/     # Your password file will be copied here as validators.txt
+│       └── passwords/     # Your password file will be copied here
+├── tmp/                   # Temporary directory for safe key extraction
 ```
 
 ## Validator Client Configuration
@@ -127,14 +133,12 @@ When using validator keys, the following directory structure will be created on 
 The validator client will be configured with the following settings:
 
 - **Network**: Ephemery testnet
-- **Data Directory**: `/data` (container path)
+- **Data Directory**: `/data` (container path) for persistent data storage
 - **Beacon Node**: Automatically connected to the local consensus client via `--beacon-nodes` parameter
 - **Fee Recipient**: From `validator_fee_recipient` or default zero address
 - **Graffiti**: From `validator_graffiti` or hostname if not specified
 - **Keys**: Mounted from the copied keystores at `/secrets/keys`
 - **Passwords**: Mounted from the copied password file at `/secrets/passwords`
-
-Note: For Lighthouse validators, the parameter is `--beacon-nodes` (plural), not `--beacon-node`.
 
 ## Client-Specific Considerations
 
@@ -159,20 +163,44 @@ The playbook includes several safeguards to prevent slashing:
    - Keys are first extracted to a temporary location
    - Only after successful extraction are they moved to the final location
    - The original key directory is completely replaced to prevent duplicates
+   - Key files are validated to ensure they contain the required pubkey field
 
 ## Troubleshooting
 
 If your validator fails to start, check:
 
-1. Keystore files are in the correct format
-2. Password file (`validators.txt`) contains the correct password
-3. Consensus client is running and accessible
-4. Logs from the validator container: `docker logs ephemery-validator` or `docker logs {{ network }}-validator-{{ cl }}`
-5. For Prysm validators, ensure the `--accept-terms-of-use` flag is properly passed
+1. **Key Availability**:
+   - Verify that validator keys are present in the secrets directory
+   - The playbook now includes a validation step that will provide a warning if no keys are found
+
+2. **Password Configuration**:
+   - Ensure the password file (`validators.txt`) contains the correct password
+   - Default password is "ephemery" if not specified
+
+3. **Client Connectivity**:
+   - Verify the consensus client is running and accessible
+   - Check the beacon API endpoint configuration
+
+4. **Container Logs**:
+   - Check logs from the validator container:
+
+     ```bash
+     docker logs ephemery-validator
+     ```
+
+     or
+
+     ```bash
+     docker logs {{ network }}-validator-{{ cl }}
+     ```
+
+5. **Directory Structure**:
+   - Ensure all required directories are properly created
+   - Verify permissions on key directories (should be 600 for keys and passwords)
 
 ## Security Considerations
 
 - Your validator keys are sensitive information - handle them securely
 - For production-like environments, consider using an external secure storage solution
 - Ensure proper permissions on keystore files and password files
-- The playbook automatically sets 0600 permissions on key files
+- The playbook automatically sets 0600 permissions on key files and directories
