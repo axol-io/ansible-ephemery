@@ -27,6 +27,14 @@ jobs:
           ansible-galaxy collection install -r requirements.yaml -p collections --force
           echo "ANSIBLE_COLLECTIONS_PATH=${{ github.workspace }}/collections" >> $GITHUB_ENV
 
+          # Verify community.docker collection was installed correctly
+          if ls -la "${{ github.workspace }}/collections/ansible_collections/community/docker/" 2>/dev/null; then
+            echo "✅ community.docker installed successfully"
+          else
+            echo "❌ community.docker NOT installed - trying alternate method"
+            ansible-galaxy collection install community.docker:4.4.0 -p ${{ github.workspace }}/collections
+          fi
+
           # Verify collections were installed correctly
           chmod +x scripts/verify-collections.sh
           ./scripts/verify-collections.sh
@@ -97,6 +105,14 @@ jobs:
           mkdir -p collections
           ansible-galaxy collection install -r requirements.yaml -p collections --force
           echo "ANSIBLE_COLLECTIONS_PATH=${{ github.workspace }}/collections" >> $GITHUB_ENV
+
+          # Verify community.docker collection was installed correctly
+          if ls -la "${{ github.workspace }}/collections/ansible_collections/community/docker/" 2>/dev/null; then
+            echo "✅ community.docker installed successfully"
+          else
+            echo "❌ community.docker NOT installed - trying alternate method"
+            ansible-galaxy collection install community.docker:4.4.0 -p ${{ github.workspace }}/collections
+          fi
 
           # Verify collections were installed correctly
           chmod +x scripts/verify-collections.sh
