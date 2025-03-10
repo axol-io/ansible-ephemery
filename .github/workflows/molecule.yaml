@@ -25,13 +25,13 @@ jobs:
         run: |
           mkdir -p collections
           ansible-galaxy collection install -r requirements.yaml -p collections --force
-          echo "ANSIBLE_COLLECTIONS_PATH=$PWD/collections" >> $GITHUB_ENV
+          echo "ANSIBLE_COLLECTIONS_PATH=${{ github.workspace }}/collections" >> $GITHUB_ENV
 
           # Verify collections were installed correctly
           chmod +x scripts/verify-collections.sh
           ./scripts/verify-collections.sh
         env:
-          ANSIBLE_COLLECTIONS_PATH: $PWD/collections
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
       - name: Check YAML file extensions
         run: |
           chmod +x scripts/check-yaml-extensions.sh
@@ -40,12 +40,12 @@ jobs:
         run: |
           ansible-lint
         env:
-          ANSIBLE_COLLECTIONS_PATH: ${{ env.ANSIBLE_COLLECTIONS_PATH }}
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
       - name: Run yamllint
         run: |
           yamllint .
         env:
-          ANSIBLE_COLLECTIONS_PATH: ${{ env.ANSIBLE_COLLECTIONS_PATH }}
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
   molecule:
     runs-on: ubuntu-latest
@@ -96,13 +96,13 @@ jobs:
         run: |
           mkdir -p collections
           ansible-galaxy collection install -r requirements.yaml -p collections --force
-          echo "ANSIBLE_COLLECTIONS_PATH=$PWD/collections" >> $GITHUB_ENV
+          echo "ANSIBLE_COLLECTIONS_PATH=${{ github.workspace }}/collections" >> $GITHUB_ENV
 
           # Verify collections were installed correctly
           chmod +x scripts/verify-collections.sh
           ./scripts/verify-collections.sh
         env:
-          ANSIBLE_COLLECTIONS_PATH: $PWD/collections
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
       - name: Verify Docker
         run: |
           docker --version
@@ -128,7 +128,7 @@ jobs:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
           DOCKER_HOST: unix:///var/run/docker.sock
-          ANSIBLE_COLLECTIONS_PATH: ${{ env.ANSIBLE_COLLECTIONS_PATH }}
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v4
