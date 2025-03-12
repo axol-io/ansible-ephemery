@@ -1,0 +1,42 @@
+---
+# Deploy the checkpoint sync dashboard and related services
+
+- name: Deploy Checkpoint Sync Dashboard Services
+  hosts: ephemery
+  become: true
+  gather_facts: true
+
+  handlers:
+    - name: restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+      become: true
+
+  tasks:
+    - name: Check if Nginx is installed
+      ansible.builtin.package:
+        name: nginx
+        state: present
+
+    - name: Import dashboard deployment tasks
+      ansible.builtin.import_tasks: ../tasks/deploy-dashboard-services.yaml
+
+    - name: Display dashboard access information
+      ansible.builtin.debug:
+        msg: |
+          ✅ Dashboard deployment completed successfully!
+
+          You can access the dashboard at:
+            http://{{ ansible_host }}
+
+          The WebSocket server is running on port 5001
+          The API server is running on port 5000
+
+          To check the service status:
+            sudo systemctl status dashboard-api
+            sudo systemctl status sync-websocket
+
+          To view the logs:
+            sudo journalctl -u dashboard-api
+            sudo journalctl -u sync-websocket

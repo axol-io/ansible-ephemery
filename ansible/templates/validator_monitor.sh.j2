@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Validator monitoring script
+# Created as part of the Ephemery improvement plan
+
+VALIDATOR_DIR="{{ ephemery_base_dir }}"
+STATUS_FILE="${VALIDATOR_DIR}/data/validator/validator_status.json"
+BEACON_ENDPOINT="{{ beacon_api_endpoint }}"
+
+# Get validator sync status
+check_sync_status() {
+  if command -v curl >/dev/null 2>&1; then
+    SYNC_STATUS=$(curl -s -X GET "${BEACON_ENDPOINT}/eth/v1/node/syncing" -H "accept: application/json" || echo '{"data":{"is_syncing":true,"sync_distance":"unknown"}}')
+    IS_SYNCING=$(echo $SYNC_STATUS | grep -o '"is_syncing":[^,]*' | cut -d':' -f2 | tr -d '"}' || echo "true")
+    SYNC_DISTANCE=$(echo $SYNC_STATUS | grep -o '"sync_distance":[^,]*' | cut -d':' -f2 | tr -d '"}' || echo "unknown")
+
+    echo "{\"is_syncing\": $IS_SYNCING, \"sync_distance\": \"$SYNC_DISTANCE\"}"
+  else
+    echo "{\"is_syncing\":true, \"sync_distance\":\"unknown\"}"
+  fi
+}
+
+# Count validator keys
+count_keys() {
+  KEY_COUNT=$(find "${VALIDATOR_DIR}/secrets/validator/keys" -name "keystore*.json" | wc -l)
+  echo $KEY_COUNT
+}
+
+# Main status check
+main() {
+  SYNC_INFO=$(check_sync_status)
+  KEY_COUNT=$(count_keys)
+
+  # Create status JSON using individual echo statements to avoid syntax issues
+  echo "{" > "$STATUS_FILE"
+  echo "  \"timestamp\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> "$STATUS_FILE"
+  echo "  \"key_count\": $KEY_COUNT," >> "$STATUS_FILE"
+  echo "  \"sync_status\": $SYNC_INFO," >> "$STATUS_FILE"
+  echo "  \"validator_client\": \"{{ cl }}\"" >> "$STATUS_FILE"
+  echo "}" >> "$STATUS_FILE"
+
+  echo "Updated validator status at $(date)"
+  cat "$STATUS_FILE"
+}
+
+# Run the main function
+main

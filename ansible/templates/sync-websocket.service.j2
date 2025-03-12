@@ -1,0 +1,20 @@
+[Unit]
+Description=Ephemery Sync WebSocket Service
+After=network.target
+
+[Service]
+Type=simple
+User={{ ansible_user }}
+Group={{ ansible_user }}
+WorkingDirectory=/opt/ephemery/dashboard/api
+Environment="SCRIPTS_DIR=/opt/ephemery/scripts"
+Environment="DATA_DIR=/opt/ephemery/data"
+ExecStart=/usr/bin/python3 /opt/ephemery/dashboard/api/sync_websocket.py
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=sync-websocket
+
+[Install]
+WantedBy=multi-user.target

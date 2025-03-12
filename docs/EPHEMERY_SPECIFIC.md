@@ -49,6 +49,49 @@ This script:
 - Configures and starts optimized Docker containers
 - Includes all performance optimizations
 
+## Automatic Genesis Reset with Retention Script
+
+Ephemery testnet resets regularly (typically every 24 hours). Our implementation includes an automated retention system to handle these resets:
+
+### 1. Deploying Retention Script System
+
+```bash
+# Deploy retention script and set up cron job
+./scripts/deploy_ephemery_retention.sh
+```
+
+This will:
+- Install the retention script on the target server
+- Configure a cron job to run every 5 minutes
+- Perform an initial check and reset if needed
+
+### 2. How the Retention System Works
+
+The retention system consists of these components:
+
+1. **Retention Script** (`ephemery_retention.sh`):
+   - Checks if the testnet has been reset by examining genesis time
+   - Downloads the latest genesis files from the official repository
+   - Resets node data while preserving critical files like node keys
+   - Restarts clients with the new genesis state
+
+2. **Cron Job**:
+   - Runs the retention script every 5 minutes
+   - Ensures the node stays in sync with network resets
+   - Logs all activity for monitoring
+
+3. **Deployment Playbook**:
+   - Manages deployment across multiple servers
+   - Validates the environment before deployment
+   - Sets up monitoring and logging
+
+### 3. Key Features
+
+- **Automatic Detection**: Detects when the network has been reset
+- **Clean Resets**: Preserves important data while ensuring clean resets
+- **Monitoring**: Comprehensive logging of all reset activities
+- **Recovery**: Self-healing capabilities for failed resets
+
 ## Critical Optimizations
 
 ### Execution Client (Geth)
@@ -75,21 +118,19 @@ This script:
 
 ## Troubleshooting
 
-### Reset After Network Regenesis
+### Manual Reset When Automatic System Fails
 
-When Ephemery resets (every 24 hours), nodes may need manual intervention:
+If the automatic retention system fails, you can manually reset the node:
 
 ```bash
-# Stop containers
-docker stop ephemery-geth ephemery-lighthouse
+# Run the retention script manually with verbose output
+/root/ephemery/scripts/ephemery_retention.sh
 
-# Clear data directories
-rm -rf /root/ephemery/data/geth/* /root/ephemery/data/lighthouse/*
+# Check logs for errors
+tail -f /root/ephemery/logs/retention.log
 
-# Restart containers
-docker start ephemery-geth
-sleep 10
-docker start ephemery-lighthouse
+# Force a reset regardless of conditions
+cd /root/ephemery && ./scripts/ephemery_retention.sh
 ```
 
 ### Monitoring Sync Progress
@@ -102,6 +143,9 @@ curl -s http://localhost:5052/eth/v1/node/syncing | jq
 curl -s -X POST -H "Content-Type: application/json" \
   --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' \
   http://localhost:8545
+
+# Check retention script logs
+tail -f /root/ephemery/logs/retention.log
 ```
 
 ### Common Issues
@@ -121,8 +165,26 @@ curl -s -X POST -H "Content-Type: application/json" \
    - Check system resources (CPU, memory, disk I/O)
    - Ensure SSD storage is used
 
+4. **Retention Script Issues**
+   - Verify the script has execute permissions
+   - Check if cron is running properly with `crontab -l`
+   - Ensure paths in the script match your environment
+   - Check disk space for storing genesis files
+
+## Adding Validators
+
+To add validators to the Ephemery testnet:
+
+1. Generate validator keys with the correct fork version
+2. Format them according to Ephemery requirements
+3. Submit them to the validators folder in the ephemery-genesis repository
+
+For detailed instructions, see [EPHEMERY_SETUP.md](./EPHEMERY_SETUP.md).
+
 ## Resources
 
 - [Ephemery Official Site](https://ephemery.dev/)
 - [Ephemery Client Wrapper](https://github.com/pk910/ephemery-client-wrapper)
 - [Ephemery Resources](https://github.com/ephemery-testnet/ephemery-resources)
+- [Ephemery Genesis Repository](https://github.com/ephemery-testnet/ephemery-genesis)
+- [Ephemery Scripts Repository](https://github.com/ephemery-testnet/ephemery-scripts)

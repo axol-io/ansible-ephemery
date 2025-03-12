@@ -1,35 +1,69 @@
 ---
-  # Main tasks file for ansible-ephemery role
-
+  # Main tasks file for Ephemery Ansible
 
 - name: Include setup environment tasks
-  ansible.builtin.import_tasks: setup-env.yaml
-  tags: [setup, always]
+  ansible.builtin.include_tasks:
+    file: setup-env.yaml
+  tags:
+    - always
 
-- name: Configure security (JWT and firewall)
-  ansible.builtin.import_tasks: security.yaml
-  tags: [security, jwt, firewall, always]
+- name: Include security setup tasks
+  ansible.builtin.include_tasks:
+    file: security.yaml
+  tags:
+    - security
 
-- name: Include ephemery tasks
-  ansible.builtin.import_tasks: ephemery.yaml
-  tags: [ephemery, always]
+- name: Include JWT Secret Generation tasks
+  ansible.builtin.include_tasks:
+    file: jwt-secret.yaml
+  tags:
+    - jwt
+    - startup
 
-- name: Setup validator if enabled
-  ansible.builtin.import_tasks: validator.yaml
-  when: validator_enabled | default(true) | bool
-  tags: [validator]
+- name: Setup Ephemery Network Configuration
+  ansible.builtin.include_tasks:
+    file: ephemery_config.yaml
+  tags:
+    - config
+    - startup
 
-- name: Include monitoring tasks
-  ansible.builtin.import_tasks: monitoring.yaml
+- name: Execute Client specific tasks
+  ansible.builtin.include_tasks:
+    file: ephemery.yaml
+  tags:
+    - startup
+
+- name: Setup Validator
+  ansible.builtin.include_tasks:
+    file: validator.yaml
+  tags:
+    - validator
+
+- name: Set up synchronization status monitoring
+  ansible.builtin.include_tasks:
+    file: sync-status-monitor.yaml
+  tags:
+    - monitoring
+    - sync
+  when: sync_monitoring_enabled | default(true) | bool
+
+- name: Setup monitoring tools
+  ansible.builtin.include_tasks:
+    file: monitoring.yaml
+  tags:
+    - monitoring
   when: monitoring_enabled | default(true) | bool
-  tags: [monitoring, always]
 
-- name: Install Cadvisor
-  ansible.builtin.import_tasks: cadvisor.yaml
-  when: cadvisor_enabled | default(true) | bool
-  tags: [cadvisor, monitoring]
+- name: Setup periodic reset tasks
+  ansible.builtin.include_tasks:
+    file: periodic_reset.yaml
+  tags:
+    - maintenance
+  when: reset_enabled | default(false) | bool
 
-- name: Setup automatic backups
-  ansible.builtin.import_tasks: backup.yaml
-  when: backup_enabled | default(true) | bool
-  tags: [backup]
+- name: Setup backup tasks
+  ansible.builtin.include_tasks:
+    file: backup.yaml
+  tags:
+    - backup
+  when: backup_enabled | default(false) | bool

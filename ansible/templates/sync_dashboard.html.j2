@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ephemery Synchronization Status</title>
+    <meta http-equiv="refresh" content="300">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .status-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h3 {
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .client-name {
+            font-weight: bold;
+            color: #3498db;
+        }
+        .status-item {
+            margin: 15px 0;
+        }
+        .status-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 130px;
+        }
+        .progress-container {
+            height: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #2ecc71;
+            border-radius: 10px;
+            transition: width 0.5s;
+            position: relative;
+        }
+        .progress-text {
+            position: absolute;
+            right: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8em;
+            line-height: 20px;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+        }
+        .syncing {
+            background-color: #f39c12;
+        }
+        .error {
+            background-color: #e74c3c;
+        }
+        .completed {
+            background-color: #2ecc71;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .history-section {
+            margin-top: 30px;
+        }
+        .history-chart {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+        .auto-refresh {
+            text-align: right;
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .node-info {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .node-info h3 {
+            margin-top: 0;
+        }
+        /* Add checkpoint sync visualization styles */
+        #checkpoint-sync-card {
+            margin-top: 25px;
+            margin-bottom: 25px;
+            background-color: #f8f9fa;
+        }
+
+        .checkpoint-grid {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 30px 0;
+            padding: 0 20px;
+        }
+
+        .checkpoint-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .checkpoint-stage.active {
+            background-color: #e1f5fe;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-5px);
+        }
+
+        .checkpoint-stage.completed {
+            background-color: #e8f5e9;
+        }
+
+        .checkpoint-stage.error {
+            background-color: #ffebee;
+        }
+
+        .checkpoint-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #7f8c8d;
+        }
+
+        .checkpoint-stage.active .checkpoint-icon {
+            color: #2196f3;
+        }
+
+        .checkpoint-stage.completed .checkpoint-icon {
+            color: #4caf50;
+        }
+
+        .checkpoint-stage.error .checkpoint-icon {
+            color: #f44336;
+        }
+
+        .checkpoint-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .checkpoint-status {
+            font-size: 0.8em;
+            color: #7f8c8d;
+        }
+
+        .checkpoint-connector {
+            flex-grow: 1;
+            height: 2px;
+            background-color: #ddd;
+            position: relative;
+        }
+
+        .checkpoint-connector::after {
+            content: "▶";
+            position: absolute;
+            right: -5px;
+            top: -8px;
+            color: #ddd;
+        }
+
+        .checkpoint-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.1);
+        }
+
+        .checkpoint-detail-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Ephemery Synchronization Status</h1>
+            <div>
+                <div id="current-time" class="timestamp">Loading...</div>
+                <div class="auto-refresh">Auto-refreshes every 5 minutes</div>
+            </div>
+        </div>
+
+        <div class="status-cards">
+            <div class="card" id="consensus-card">
+                <h3>
+                    Consensus Client
+                    <span class="client-name">{{ cl }}</span>
+                </h3>
+                <div class="status-item">
+                    <div>
+                        <span class="status-label">Sync Status:</span>
+                        <span id="consensus-sync-status">Loading...</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div>
+                        <span class="status-label">Sync Distance:</span>
+                        <span id="consensus-sync-distance">Loading...</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div>
+                        <span class="status-label">Head Slot:</span>
+                        <span id="consensus-head-slot">Loading...</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Sync Progress:</span>
+                    <div class="progress-container">
+                        <div id="consensus-progress-bar" class="progress-bar" style="width: 0%;">
+                            <span class="progress-text">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="execution-card">
+                <h3>
+                    Execution Client
+                    <span class="client-name">{{ el }}</span>
+                </h3>
+                <div class="status-item">
+                    <div>
+                        <span class="status-label">Sync Status:</span>
+                        <span id="execution-sync-status">Loading...</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div>
+                        <span class="status-label">Current Block:</span>
+                        <span id="execution-current-block">Loading...</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div>
+                        <span class="status-label">Highest Block:</span>
+                        <span id="execution-highest-block">Loading...</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Sync Progress:</span>
+                    <div class="progress-container">
+                        <div id="execution-progress-bar" class="progress-bar" style="width: 0%;">
+                            <span class="progress-text">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add checkpoint sync visualization section -->
+        <div class="card" id="checkpoint-sync-card">
+            <h3>Checkpoint Synchronization Progress</h3>
+
+            <div class="checkpoint-grid">
+                <div class="checkpoint-stage" id="stage-download">
+                    <div class="checkpoint-icon">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div class="checkpoint-label">Download</div>
+                    <div class="checkpoint-status" id="download-status">Pending</div>
+                </div>
+
+                <div class="checkpoint-connector"></div>
+
+                <div class="checkpoint-stage" id="stage-verification">
+                    <div class="checkpoint-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="checkpoint-label">Verification</div>
+                    <div class="checkpoint-status" id="verification-status">Pending</div>
+                </div>
+
+                <div class="checkpoint-connector"></div>
+
+                <div class="checkpoint-stage" id="stage-import">
+                    <div class="checkpoint-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="checkpoint-label">Import</div>
+                    <div class="checkpoint-status" id="import-status">Pending</div>
+                </div>
+
+                <div class="checkpoint-connector"></div>
+
+                <div class="checkpoint-stage" id="stage-finalization">
+                    <div class="checkpoint-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="checkpoint-label">Finalization</div>
+                    <div class="checkpoint-status" id="finalization-status">Pending</div>
+                </div>
+            </div>
+
+            <div class="checkpoint-details">
+                <div class="checkpoint-detail-item">
+                    <span class="detail-label">Source URL:</span>
+                    <span id="checkpoint-url">Loading...</span>
+                </div>
+                <div class="checkpoint-detail-item">
+                    <span class="detail-label">Checkpoint Slot:</span>
+                    <span id="checkpoint-slot">Loading...</span>
+                </div>
+                <div class="checkpoint-detail-item">
+                    <span class="detail-label">Estimated Time Remaining:</span>
+                    <span id="checkpoint-eta">Calculating...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="node-info">
+            <h3>Node Information</h3>
+            <div><strong>Hostname:</strong> {{ ansible_hostname }}</div>
+            <div><strong>IP Address:</strong> {{ ansible_default_ipv4.address | default('N/A') }}</div>
+            <div><strong>Ephemery Network:</strong> {{ network }}</div>
+            <div><strong>Data Directory:</strong> {{ ephemery_base_dir }}</div>
+        </div>
+
+        <div class="history-section">
+            <h2>Synchronization History</h2>
+            <div class="history-chart">
+                <canvas id="sync-history-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update current time
+        function updateCurrentTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent =
+                `Last Updated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+        }
+        updateCurrentTime();
+
+        // Fetch and display current sync status
+        async function fetchSyncStatus() {
+            try {
+                const response = await fetch('data/current_status.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                // Update consensus client info
+                const consensusStatus = data.consensus_status;
+                document.getElementById('consensus-sync-status').innerHTML =
+                    `<span class="status-indicator ${consensusStatus.is_syncing ? 'syncing' : 'completed'}"></span>` +
+                    `${consensusStatus.is_syncing ? 'Syncing' : 'Synced'}`;
+                document.getElementById('consensus-sync-distance').textContent = consensusStatus.sync_distance;
+                document.getElementById('consensus-head-slot').textContent = consensusStatus.head_slot;
+
+                // Update consensus progress bar
+                let consensusPercentage = 0;
+                if (consensusStatus.sync_percentage && consensusStatus.sync_percentage !== "unknown") {
+                    consensusPercentage = parseFloat(consensusStatus.sync_percentage);
+                    if (isNaN(consensusPercentage)) consensusPercentage = 0;
+                    if (consensusPercentage > 100) consensusPercentage = 100;
+                }
+                const consensusProgressBar = document.getElementById('consensus-progress-bar');
+                consensusProgressBar.style.width = `${consensusPercentage}%`;
+                consensusProgressBar.querySelector('.progress-text').textContent = `${consensusPercentage.toFixed(1)}%`;
+
+                if (consensusPercentage < 50) {
+                    consensusProgressBar.className = 'progress-bar syncing';
+                } else if (consensusPercentage >= 99.5) {
+                    consensusProgressBar.className = 'progress-bar completed';
+                } else {
+                    consensusProgressBar.className = 'progress-bar';
+                }
+
+                // Update execution client info
+                const executionStatus = data.execution_status;
+                document.getElementById('execution-sync-status').innerHTML =
+                    `<span class="status-indicator ${executionStatus.is_syncing ? 'syncing' : 'completed'}"></span>` +
+                    `${executionStatus.is_syncing ? 'Syncing' : 'Synced'}`;
+                document.getElementById('execution-current-block').textContent = executionStatus.current_block;
+                document.getElementById('execution-highest-block').textContent = executionStatus.highest_block;
+
+                // Update execution progress bar
+                let executionPercentage = 0;
+                if (executionStatus.sync_percentage && executionStatus.sync_percentage !== "unknown") {
+                    executionPercentage = parseFloat(executionStatus.sync_percentage);
+                    if (isNaN(executionPercentage)) executionPercentage = 0;
+                    if (executionPercentage > 100) executionPercentage = 100;
+                }
+                const executionProgressBar = document.getElementById('execution-progress-bar');
+                executionProgressBar.style.width = `${executionPercentage}%`;
+                executionProgressBar.querySelector('.progress-text').textContent = `${executionPercentage.toFixed(1)}%`;
+
+                if (executionPercentage < 50) {
+                    executionProgressBar.className = 'progress-bar syncing';
+                } else if (executionPercentage >= 99.5) {
+                    executionProgressBar.className = 'progress-bar completed';
+                } else {
+                    executionProgressBar.className = 'progress-bar';
+                }
+
+                // Also update checkpoint visualization
+                updateCheckpointSync();
+            } catch (error) {
+                console.error('Error fetching sync status:', error);
+                document.getElementById('consensus-sync-status').innerHTML =
+                    '<span class="status-indicator error"></span>Error fetching data';
+                document.getElementById('execution-sync-status').innerHTML =
+                    '<span class="status-indicator error"></span>Error fetching data';
+            }
+        }
+
+        // Fetch historical data and draw chart
+        async function fetchHistoryData() {
+            try {
+                const response = await fetch('data/history.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                if (!data.sync_history || data.sync_history.length === 0) {
+                    document.getElementById('sync-history-chart').parentElement.innerHTML =
+                        '<p style="text-align: center; padding: 20px;">No historical data available yet</p>';
+                    return;
+                }
+
+                // Process chart data
+                const history = data.sync_history;
+                const timestamps = [];
+                const executionProgress = [];
+                const consensusProgress = [];
+
+                history.forEach(entry => {
+                    // Format timestamp for display
+                    const date = new Date(entry.timestamp * 1000);
+                    const formattedTime = `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+                    timestamps.push(formattedTime);
+
+                    // Get progress percentages
+                    let exProgress = parseFloat(entry.execution_status?.sync_percentage || 0);
+                    let conProgress = parseFloat(entry.consensus_status?.sync_percentage || 0);
+
+                    // Validate data
+                    exProgress = isNaN(exProgress) ? 0 : Math.min(exProgress, 100);
+                    conProgress = isNaN(conProgress) ? 0 : Math.min(conProgress, 100);
+
+                    executionProgress.push(exProgress);
+                    consensusProgress.push(conProgress);
+                });
+
+                // Create chart
+                const ctx = document.getElementById('sync-history-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: timestamps,
+                        datasets: [{
+                            label: 'Execution Client Progress',
+                            data: executionProgress,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        }, {
+                            label: 'Consensus Client Progress',
+                            data: consensusProgress,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Sync Progress (%)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Time'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw.toFixed(1)}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching history data:', error);
+                document.getElementById('sync-history-chart').parentElement.innerHTML =
+                    '<p style="text-align: center; padding: 20px;">Error loading historical data</p>';
+            }
+        }
+
+        // Update checkpoint sync visualization
+        async function updateCheckpointSync() {
+            try {
+                const response = await fetch('data/current_status.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                // Check if checkpoint data exists
+                if (!data.checkpoint_sync) {
+                    document.getElementById('checkpoint-sync-card').style.display = 'none';
+                    return;
+                }
+
+                const checkpoint = data.checkpoint_sync;
+
+                // Update checkpoint details
+                document.getElementById('checkpoint-url').textContent = checkpoint.source_url || 'N/A';
+                document.getElementById('checkpoint-slot').textContent = checkpoint.slot || 'Unknown';
+
+                // Calculate and update ETA
+                let etaText = 'Completed';
+                if (checkpoint.eta_seconds) {
+                    const etaMinutes = Math.floor(checkpoint.eta_seconds / 60);
+                    const etaHours = Math.floor(etaMinutes / 60);
+
+                    if (etaHours > 0) {
+                        etaText = `${etaHours} hours ${etaMinutes % 60} minutes`;
+                    } else {
+                        etaText = `${etaMinutes} minutes`;
+                    }
+                }
+                document.getElementById('checkpoint-eta').textContent = etaText;
+
+                // Update stage statuses
+                updateStageStatus('download', checkpoint.stages?.download);
+                updateStageStatus('verification', checkpoint.stages?.verification);
+                updateStageStatus('import', checkpoint.stages?.import);
+                updateStageStatus('finalization', checkpoint.stages?.finalization);
+
+            } catch (error) {
+                console.error('Error updating checkpoint sync:', error);
+                document.getElementById('checkpoint-sync-card').style.display = 'none';
+            }
+        }
+
+        function updateStageStatus(stage, status) {
+            const stageElement = document.getElementById(`stage-${stage}`);
+            const statusElement = document.getElementById(`${stage}-status`);
+
+            if (!stageElement || !statusElement) return;
+
+            // Reset classes
+            stageElement.classList.remove('active', 'completed', 'error');
+
+            if (!status) {
+                statusElement.textContent = 'Pending';
+                return;
+            }
+
+            statusElement.textContent = status.message || status.state || 'Unknown';
+
+            switch (status.state) {
+                case 'in_progress':
+                    stageElement.classList.add('active');
+                    break;
+                case 'completed':
+                    stageElement.classList.add('completed');
+                    break;
+                case 'error':
+                    stageElement.classList.add('error');
+                    break;
+                default:
+                    // No class needed for pending
+                    break;
+            }
+        }
+
+        // Initial fetch
+        fetchSyncStatus();
+        fetchHistoryData();
+
+        // Set up auto-refresh
+        setInterval(fetchSyncStatus, 60000);
+        setInterval(updateCurrentTime, 1000);
+        setInterval(fetchHistoryData, 300000); // Refresh chart every 5 minutes
+    </script>
+
+    <!-- Add Font Awesome for icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</body>
+</html>

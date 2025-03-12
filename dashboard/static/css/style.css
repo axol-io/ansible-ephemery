@@ -1,0 +1,119 @@
+/* Main styles for Ephemery Checkpoint Sync Dashboard */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    background-color: #343a40;
+    color: white;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.status-card {
+    padding: 15px;
+    text-align: center;
+    height: 100%;
+}
+
+.status-indicator {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+}
+
+.status-syncing {
+    background-color: #ffc107; /* Yellow */
+}
+
+.status-synced {
+    background-color: #28a745; /* Green */
+}
+
+.status-error {
+    background-color: #dc3545; /* Red */
+}
+
+.status-unknown {
+    background-color: #6c757d; /* Gray */
+}
+
+.status-details {
+    text-align: left;
+    margin-top: 20px;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.nav-link:hover, .nav-link.active {
+    color: white;
+}
+
+/* Alert styles */
+.alert {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+.alert-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.alert-time {
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+/* Progress bar styles */
+.progress {
+    height: 10px;
+    margin-top: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .status-card {
+        margin-bottom: 20px;
+    }
+}
+
+/* Action buttons */
+.btn {
+    margin-bottom: 10px;
+}

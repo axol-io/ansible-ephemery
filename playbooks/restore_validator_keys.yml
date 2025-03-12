@@ -1,0 +1,118 @@
+---
+# Playbook for restoring validator keys from backup
+- name: Restore Validator Keys from Backup
+  hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    backup_timestamp: "latest"  # Default to latest backup
+    force_restore: no          # Default to interactive mode (using yes/no for explicit boolean)
+    container_name: "{{ network }}-validator-{{ cl }}"  # Default based on network and CL variables
+
+  tasks:
+    - name: Set default variables if not defined
+      ansible.builtin.set_fact:
+        network: "{{ network | default('ephemery') }}"
+        cl: "{{ cl | default('lighthouse') }}"
+        ephemery_base_dir: "{{ ephemery_base_dir | default(ansible_env.HOME + '/ephemery') }}"
+
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "{{ ephemery_base_dir }}/backups/validator/keys"
+        state: directory
+        mode: '0755'
+
+    - name: Check if backups exist
+      ansible.builtin.find:
+        paths: "{{ ephemery_base_dir }}/backups/validator/keys"
+        file_type: directory
+      register: backup_check
+
+    - name: Fail if no backups found
+      ansible.builtin.fail:
+        msg: "No validator key backups found in {{ ephemery_base_dir }}/backups/validator/keys"
+      when: backup_check.matched == 0
+
+    - name: Copy restore script to remote server
+      ansible.builtin.copy:
+        src: "../scripts/restore_validator_keys.sh"
+        dest: "{{ ephemery_base_dir }}/scripts/restore_validator_keys.sh"
+        mode: '0755'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: List available backups
+      ansible.builtin.shell: |
+        {{ ephemery_base_dir }}/scripts/restore_validator_keys.sh --list
+      register: backup_list
+      changed_when: no
+
+    - name: Display available backups
+      ansible.builtin.debug:
+        msg: "{{ backup_list.stdout_lines }}"
+
+    - name: Confirm restore operation
+      ansible.builtin.pause:
+        prompt: |
+          You are about to restore validator keys from backup.
+          This will replace all existing validator keys!
+
+          Backup to restore: {{ backup_timestamp }}
+          Force mode: {{ force_restore }}
+
+          Press ENTER to continue or Ctrl+C to abort
+      when: not force_restore
+
+    - name: Execute restore operation
+      ansible.builtin.shell: |
+        {% if backup_timestamp == 'latest' %}
+        {{ ephemery_base_dir }}/scripts/restore_validator_keys.sh --restore-latest {{ '--force' if force_restore else '' }} --container "{{ container_name }}"
+        {% else %}
+        {{ ephemery_base_dir }}/scripts/restore_validator_keys.sh --backup "{{ backup_timestamp }}" {{ '--force' if force_restore else '' }} --container "{{ container_name }}"
+        {% endif %}
+      register: restore_result
+
+    - name: Display restore results
+      ansible.builtin.debug:
+        msg: "{{ restore_result.stdout_lines }}"
+
+    - name: Check validator container status
+      community.docker.docker_container_info:
+        name: "{{ container_name }}"
+      register: container_info
+      ignore_errors: true
+
+    - name: Display validator container status
+      ansible.builtin.debug:
+        msg: |
+          Validator container status:
+          - Name: {{ container_name }}
+          - Status: {{ container_info.container.State.Status if container_info.exists else 'Not found' }}
+      when: container_info.exists
+
+    - name: Verify keys after restore
+      ansible.builtin.find:
+        paths: "{{ ephemery_base_dir }}/secrets/validator/keys"
+        patterns: "keystore-*.json"
+      register: restored_keys
+
+    - name: Display key count after restore
+      ansible.builtin.debug:
+        msg: "Found {{ restored_keys.matched }} validator keys after restore operation"
+
+    - name: Success message
+      ansible.builtin.debug:
+        msg: |
+          =================================================================
+          Validator key restore operation completed successfully!
+          =================================================================
+
+          Restored keys: {{ restored_keys.matched }}
+
+          Next steps:
+          1. Verify that the validator client is running properly
+          2. Check validator status in monitoring dashboard
+          3. Verify validator performance over the next few hours
+
+          To manually manage validator keys, use:
+          {{ ephemery_base_dir }}/scripts/restore_validator_keys.sh

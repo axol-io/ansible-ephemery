@@ -1,0 +1,25 @@
+[Unit]
+Description=Ephemery Validator Performance Monitoring
+After=network.target
+Requires=network.target
+
+[Service]
+Type=simple
+User={{ ansible_user }}
+Group={{ ansible_user }}
+WorkingDirectory={{ ephemery_base_dir }}
+ExecStart={{ ephemery_base_dir }}/scripts/validator_performance_monitor.sh
+Restart=always
+RestartSec=60
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=validator-performance
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="BASE_DIR={{ ephemery_base_dir }}"
+Environment="CLIENT_TYPE={{ cl }}"
+Environment="BEACON_NODE_ENDPOINT=http://localhost:5052"
+Environment="VALIDATOR_ENDPOINT=http://localhost:5062"
+Environment="VALIDATOR_METRICS_PORT={{ validator_metrics_port | default('8009') }}"
+
+[Install]
+WantedBy=multi-user.target

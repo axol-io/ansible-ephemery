@@ -1,0 +1,99 @@
+---
+# Improved Validator Setup and Monitoring Playbook
+# Implements enhancements from the improvement plan
+
+- name: Improve Validator Key Loading and Synchronization
+  hosts: validators
+  gather_facts: true
+  become: "{{ ansible_become | default(true) }}"
+
+  tasks:
+    - name: Display playbook execution information
+      ansible.builtin.debug:
+        msg: |
+          Starting validator improvement playbook
+          Host: {{ inventory_hostname }}
+          Validator Client: {{ cl | default('lighthouse') }}
+          Execution Client: {{ el | default('geth') }}
+          Expected Key Count: {{ validator_expected_key_count | default(0) }}
+
+    - name: Ensure required directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_user | default('root') }}"
+        group: "{{ ansible_user | default('root') }}"
+      loop:
+        - "{{ ephemery_base_dir | default('/root/ephemery') }}/backups/validator/keys"
+        - "{{ ephemery_base_dir | default('/root/ephemery') }}/tmp/extraction"
+        - "{{ ephemery_base_dir | default('/root/ephemery') }}/logs"
+        - "{{ ephemery_base_dir | default('/root/ephemery') }}/scripts"
+      tags:
+        - validator
+        - setup
+
+    # Include core custom-validator-setup tasks
+    - name: Setup custom validators with improved key loading
+      ansible.builtin.include_tasks:
+        file: ../tasks/custom-validator-setup.yaml
+      when: validator_enabled | default(true) | bool
+      tags:
+        - validator
+        - key_loading
+
+    # Setup synchronization monitoring
+    - name: Setup synchronization monitoring
+      ansible.builtin.include_tasks:
+        file: sync-status-monitor.yaml
+      tags:
+        - sync
+        - monitoring
+
+    # Report results
+    - name: Generate initial sync report
+      ansible.builtin.shell: |
+        if [ -f "{{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-report-generator.py" ]; then
+          python3 {{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-report-generator.py
+          echo "Initial sync report generated."
+        else
+          echo "Sync report generator not found."
+        fi
+      register: report_result
+      changed_when: false
+      failed_when: false
+      tags:
+        - sync
+        - monitoring
+
+    - name: Display improvement results
+      ansible.builtin.debug:
+        msg: |
+          Validator Improvement Completed
+
+          Key Loading:
+          {% if actual_key_count is defined %}
+          - Found {{ actual_key_count.stdout | trim }} validator keys
+          - Expected {{ validator_expected_key_count | default(0) }} keys
+          {% if validator_expected_key_count | int > 0 and actual_key_count.stdout | int != validator_expected_key_count | int %}
+          - WARNING: Key count mismatch detected!
+          {% elif validator_expected_key_count | int == 0 %}
+          - NOTE: No expected key count was specified.
+          {% else %}
+          - Success: Found expected number of validator keys.
+          {% endif %}
+          {% else %}
+          - Key count validation not performed
+          {% endif %}
+
+          Synchronization Monitoring:
+          - Status: {{ "ENABLED" if report_result.rc | default(1) == 0 else "NOT ENABLED" }}
+          - Report location: {{ ephemery_base_dir | default('/root/ephemery') }}/logs/sync_report.html
+
+          Backup Information:
+          - Backup location: {{ ephemery_base_dir | default('/root/ephemery') }}/backups/validator/keys
+
+          Next Steps:
+          1. Check the sync status report at the location shown above
+          2. Verify the validator keys were loaded correctly
+          3. Monitor validator performance using the tools now in place

@@ -1,0 +1,127 @@
+---
+# Synchronization Status Monitoring Playbook
+# Provides comprehensive monitoring of execution and consensus client sync status
+
+- name: Monitor Ethereum Node Synchronization Status
+  hosts: ephemery
+  gather_facts: true
+  become: "{{ ansible_become | default(true) }}"
+
+  vars:
+    status_check_interval: 60  # seconds between status checks
+    log_dir: "{{ ephemery_base_dir | default('/root/ephemery') }}/logs"
+    output_file: "{{ log_dir }}/sync_status.log"
+    report_file: "{{ log_dir }}/sync_report.html"
+    history_file: "{{ log_dir }}/sync_history.json"
+    monitor_duration: 3600  # duration to run monitor in seconds (1 hour)
+
+  tasks:
+    - name: Ensure log directory exists
+      ansible.builtin.file:
+        path: "{{ log_dir }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_user | default('root') }}"
+        group: "{{ ansible_user | default('root') }}"
+
+    - name: Create sync status monitoring script
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../templates/sync-monitor.sh.j2"
+        dest: "{{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-monitor.sh"
+        mode: '0755'
+        owner: "{{ ansible_user | default('root') }}"
+        group: "{{ ansible_user | default('root') }}"
+      vars:
+        el_client: "{{ el | default('geth') }}"
+        cl_client: "{{ cl | default('lighthouse') }}"
+        check_interval: "{{ status_check_interval }}"
+        log_file: "{{ output_file }}"
+        history_path: "{{ history_file }}"
+        monitor_time: "{{ monitor_duration }}"
+        el_container_name: "{{ network }}-{{ el | default('geth') }}"
+        cl_container_name: "{{ network }}-{{ cl | default('lighthouse') }}"
+        host_data_dir: "{{ ephemery_base_dir | default('/root/ephemery') }}/data"
+
+    - name: Create HTML report generator script
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../templates/sync-report-generator.py.j2"
+        dest: "{{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-report-generator.py"
+        mode: '0755'
+        owner: "{{ ansible_user | default('root') }}"
+        group: "{{ ansible_user | default('root') }}"
+      vars:
+        history_path: "{{ history_file }}"
+        report_path: "{{ report_file }}"
+        el_client: "{{ el | default('geth') }}"
+        cl_client: "{{ cl | default('lighthouse') }}"
+
+    - name: Check if monitor script is already running
+      ansible.builtin.shell: pgrep -f "sync-monitor.sh" || echo "not_running"
+      register: monitor_status
+      changed_when: false
+
+    - name: Start sync status monitor in background
+      ansible.builtin.shell: nohup {{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-monitor.sh > /dev/null 2>&1 &
+      when: monitor_status.stdout == "not_running"
+
+    - name: Setup periodic report generation via cron
+      ansible.builtin.cron:
+        name: "Generate sync status report"
+        minute: "*/10"
+        job: "python3 {{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-report-generator.py"
+        user: "{{ ansible_user | default('root') }}"
+
+    - name: Wait for initial data collection
+      ansible.builtin.pause:
+        seconds: 10
+      when: monitor_status.stdout == "not_running"
+
+    - name: Check if data is being collected
+      ansible.builtin.stat:
+        path: "{{ output_file }}"
+      register: log_file_status
+
+    - name: Display data collection status
+      ansible.builtin.debug:
+        msg: |
+          Sync status monitoring:
+          - Script: {{ 'RUNNING' if monitor_status.stdout != 'not_running' else 'STARTED' }}
+          - Log file: {{ 'EXISTS' if log_file_status.stat.exists else 'NOT CREATED YET' }}
+          - Monitor script: {{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-monitor.sh
+          - Report generator: {{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-report-generator.py
+          - Report location: {{ report_file }}
+
+          You can view the HTML report at {{ report_file }} after 10 minutes,
+          or examine raw logs at {{ output_file }}
+
+          To manually generate a report immediately, run:
+          python3 {{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-report-generator.py
+
+    - name: Check execution client sync status
+      ansible.builtin.shell: |
+        set -o pipefail
+        docker exec {{ network }}-{{ el | default('geth') }} \
+          geth --exec 'eth.syncing' attach /data/geth.ipc | tr -d '\r\n'
+      register: el_sync_status
+      changed_when: false
+      failed_when: false
+
+    - name: Check consensus client sync status
+      ansible.builtin.shell: |
+        set -o pipefail
+        docker exec {{ network }}-{{ cl | default('lighthouse') }} \
+          lighthouse bn sync_status | grep -A 5 'Sync' | tr '\n' ' '
+      register: cl_sync_status
+      changed_when: false
+      failed_when: false
+
+    - name: Display current sync status
+      ansible.builtin.debug:
+        msg: |
+          Current Synchronization Status:
+
+          Execution Client ({{ el | default('geth') }}):
+          {{ el_sync_status.stdout if el_sync_status.stdout != 'false' else 'SYNCED' }}
+
+          Consensus Client ({{ cl | default('lighthouse') }}):
+          {{ cl_sync_status.stdout }}

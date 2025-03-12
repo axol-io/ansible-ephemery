@@ -9,6 +9,8 @@ This directory contains comprehensive documentation for the Ephemery testnet dep
 - [Local Deployment](local-deployment.md) - Running nodes locally
 - [Remote Deployment](remote-deployment.md) - Deploying to remote servers
 - [Inventory Management](inventory-management.md) - Managing node inventories
+- [Roadmap](ROADMAP.md) - Current development status and future plans
+- [Implementation Details](IMPLEMENTATION_DETAILS.md) - Technical details of implemented features
 
 ## Validator Documentation
 
@@ -24,11 +26,12 @@ This directory contains comprehensive documentation for the Ephemery testnet dep
 - [Variable Structure](VARIABLE_STRUCTURE.md) - Structure of configuration variables
 - [Repository Structure](REPOSITORY_STRUCTURE.md) - Layout of the repository
 
-## Specific Technologies
+## Monitoring & Performance
 
+- [Monitoring](MONITORING.md) - Setting up monitoring infrastructure
+- [Sync Monitoring](SYNC_MONITORING.md) - Detailed sync status monitoring system
 - [Lighthouse Optimization](LIGHTHOUSE_OPTIMIZATION.md) - Optimizing Lighthouse client
 - [Ephemery Specific](EPHEMERY_SPECIFIC.md) - Ephemery-specific configurations
-- [Monitoring](MONITORING.md) - Setting up monitoring
 
 ## Developer Documentation
 
@@ -43,4 +46,5 @@ This directory contains comprehensive documentation for the Ephemery testnet dep
 ## Support Documentation
 
 - [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
+- [Known Issues](KNOWN_ISSUES.md) - Current and resolved issues
 - [Security](SECURITY.md) - Security considerations

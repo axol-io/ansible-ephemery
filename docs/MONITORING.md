@@ -109,3 +109,4 @@ Custom Grafana dashboards can be added by placing JSON dashboard files in the `f
 - [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)
 - [Grafana Documentation](https://grafana.com/docs/)
 - [Ethereum Client Metrics Documentation](https://ethereum.org/en/developers/docs/nodes-and-clients/)
+- [Sync Monitoring Documentation](SYNC_MONITORING.md) - Detailed information about our synchronization monitoring system

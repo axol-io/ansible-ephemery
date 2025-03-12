@@ -1,0 +1,17 @@
+[Unit]
+Description=Ephemery Checkpoint Sync Alert Service
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User={{ ansible_user }}
+ExecStart={{ directories.scripts }}/checkpoint_sync_alert.sh
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=checkpoint-sync-alert
+
+[Install]
+WantedBy=multi-user.target
