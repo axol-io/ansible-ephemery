@@ -279,3 +279,54 @@ docker restart ephemery-geth ephemery-lighthouse ephemery-validator
 - [Ephemery Official Documentation](https://ephemery.dev/)
 - [Geth Documentation](https://geth.ethereum.org/docs/)
 - [Lighthouse Documentation](https://lighthouse-book.sigmaprime.io/)
+
+## Repository Maintenance
+
+### Linting and Formatting
+
+To maintain code quality and consistency in the repository, a comprehensive linting and formatting script is provided. This script fixes common issues:
+
+- Trailing whitespace
+- Missing end-of-file newlines
+- YAML file extensions (converts .yml to .yaml)
+- Python code formatting (using isort and black)
+
+To run the linting script:
+
+```bash
+# Navigate to the repository root
+cd ansible-ephemery
+
+# Run the linting script
+./scripts/maintenance/fix-repository-linting.sh
+```
+
+If you don't have Python formatting tools installed (isort, black), you can run:
+
+```bash
+./scripts/maintenance/fix-repository-linting.sh --no-python-format
+```
+
+After the script runs, review the changes and commit them if satisfactory.
+
+### Pre-commit Hooks
+
+This repository uses pre-commit hooks to ensure code quality. The hooks check for issues like:
+
+- Trailing whitespace
+- End-of-file newlines
+- YAML syntax
+- Python formatting
+
+When you encounter a pre-commit hook failure, you can either:
+
+1. Fix the issues manually
+2. Use the linting script to automatically fix common issues
+3. Use `git commit --no-verify` to bypass the hooks (not recommended for regular use)
+
+Install the pre-commit hooks with:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
