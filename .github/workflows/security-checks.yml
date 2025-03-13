@@ -1,0 +1,59 @@
+name: Security Checks
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip install ansible ansible-lint
+
+      - name: Scan for hardcoded secrets
+        run: |
+          echo "Checking for personal paths..."
+          if grep -r "/Users/" --include="*.yml" --include="*.yaml" .; then
+            echo "ERROR: Found personal paths in files! Please remove them before committing."
+            exit 1
+          else
+            echo "No personal paths found."
+          fi
+          
+          echo "Checking for potentially hardcoded secrets..."
+          # Check for strings that might be secrets, excluding variables and comments
+          if grep -r "password\|secret\|token\|key" --include="*.yml" --include="*.yaml" . | grep -v -E '\{\{\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\}\}' | grep -v -E '^[^:]*:\s*community\.'; then
+            echo "WARNING: Potentially hardcoded secrets found. Please verify these are not actual secrets."
+            # Don't fail the workflow, just warn
+          else
+            echo "No hardcoded secrets found."
+          fi
+
+      - name: Run Ansible Lint
+        run: |
+          ansible-lint || true  # Don't fail the workflow on lint failures initially
+          
+      - name: Check file permissions
+        run: |
+          # Find files with potentially unsafe permissions for sensitive content
+          find . -name "*.key" -o -name "*.pem" -o -name "*jwt*" -o -name "*secret*" -o -name "vault*" | xargs ls -la || true
+
+      - name: Security Recommendations
+        run: |
+          echo "Security scan completed. Recommendations:"
+          echo "1. Ensure all secrets are managed securely using Ansible Vault"
+          echo "2. Use environment variables or secure vaults for sensitive data"
+          echo "3. Review file permissions for sensitive files"
+          echo "4. Verify network configurations are secure"
+          echo "5. Keep all dependencies up to date" 

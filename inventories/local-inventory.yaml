@@ -30,13 +30,13 @@ ephemery:
           total: 8192
 
       # Define explicit directories to avoid recursive templating errors
-      ephemery_base_dir: "/Users/{{ ansible_user }}/ephemery"
-      ephemery_data_dir: "/Users/{{ ansible_user }}/ephemery/data"
-      ephemery_secrets_dir: "/Users/{{ ansible_user }}/ephemery/secrets"
-      ephemery_logs_dir: "/Users/{{ ansible_user }}/ephemery/logs"
-      ephemery_scripts_dir: "/Users/{{ ansible_user }}/ephemery/scripts"
-      ephemery_backup_dir: "/Users/{{ ansible_user }}/ephemery/backups"
-      jwt_secret_path: "/Users/{{ ansible_user }}/ephemery/jwt.hex"
+      ephemery_base_dir: "{{ lookup('env', 'EPHEMERY_BASE_DIR') | default(ansible_env.HOME + '/ephemery', true) }}"
+      ephemery_data_dir: "{{ lookup('env', 'EPHEMERY_DATA_DIR') | default(ansible_env.HOME + '/ephemery/data', true) }}"
+      ephemery_secrets_dir: "{{ lookup('env', 'EPHEMERY_SECRETS_DIR') | default(ansible_env.HOME + '/ephemery/secrets', true) }}"
+      ephemery_logs_dir: "{{ lookup('env', 'EPHEMERY_LOGS_DIR') | default(ansible_env.HOME + '/ephemery/logs', true) }}"
+      ephemery_scripts_dir: "{{ lookup('env', 'EPHEMERY_SCRIPTS_DIR') | default(ansible_env.HOME + '/ephemery/scripts', true) }}"
+      ephemery_backup_dir: "{{ lookup('env', 'EPHEMERY_BACKUP_DIR') | default(ansible_env.HOME + '/ephemery/backups', true) }}"
+      jwt_secret_path: "{{ lookup('env', 'JWT_SECRET_PATH') | default(ansible_env.HOME + '/ephemery/jwt.hex', true) }}"
 
 # Group nodes by type (for organization)
 validators:

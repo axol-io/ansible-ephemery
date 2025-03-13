@@ -4,9 +4,9 @@
 # Example: cp local-inventory.yaml.example my-local-inventory.yaml
 
 local:
-  base_dir: /Users/droo/ephemery-test # Base directory for all Ephemery files
-  data_dir: /Users/droo/ephemery-test/data # Data directory (default: base_dir/data)
-  logs_dir: /Users/droo/ephemery-test/logs # Logs directory (default: base_dir/logs)
+  base_dir: "{{ lookup('env', 'EPHEMERY_BASE_DIR') | default('/tmp/ephemery-test', true) }}" # Base directory for all Ephemery files
+  data_dir: "{{ lookup('env', 'EPHEMERY_DATA_DIR') | default('/tmp/ephemery-test/data', true) }}" # Data directory (default: base_dir/data)
+  logs_dir: "{{ lookup('env', 'EPHEMERY_LOGS_DIR') | default('/tmp/ephemery-test/logs', true) }}" # Logs directory (default: base_dir/logs)
 
   # Optional advanced configuration
   geth:

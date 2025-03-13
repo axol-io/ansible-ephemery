@@ -64,10 +64,10 @@ We've completed an initial production deployment attempt of our Ephemery node. T
 2. **Network Directory Setup**
    ```bash
    # Create Ephemery testnet config directory
-   ssh root@103.214.23.174 "mkdir -p /opt/ephemery/config/ephemery_network"
+   ssh root@REMOTE_HOST_IP "mkdir -p /opt/ephemery/config/ephemery_network"
 
    # Download latest Ephemery network configuration
-   ssh root@103.214.23.174 "cd /opt/ephemery/config/ephemery_network && \
+   ssh root@REMOTE_HOST_IP "cd /opt/ephemery/config/ephemery_network && \
      wget https://ephemery.dev/ephemery-143/testnet-all.tar.gz && \
      tar -xzf testnet-all.tar.gz"
    ```
@@ -132,7 +132,7 @@ We've completed an initial production deployment attempt of our Ephemery node. T
 
 ### Production Server Overview
 
-- **Server IP**: 103.214.23.174
+- **Server IP**: REMOTE_HOST_IP
 - **Base Directory**: /opt/ephemery
 - **Client Configuration**:
   - Execution Layer: Geth

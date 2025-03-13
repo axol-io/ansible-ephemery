@@ -6,7 +6,7 @@ ephemery:
     geth_lighthouse:
       hosts:
         ephemery-node1:
-          ansible_host: 103.214.23.174
+          ansible_host: REMOTE_HOST_IP
           el: geth
           cl: lighthouse
           # Validator Configuration
@@ -55,7 +55,7 @@ ephemery:
 validators:
   hosts:
     ephemery-node1:
-      ansible_host: 103.214.23.174
+      ansible_host: REMOTE_HOST_IP
       el: geth
       cl: lighthouse
       # Validator Configuration

@@ -63,7 +63,7 @@ show_help() {
   echo ""
   echo -e "Examples:"
   echo -e "  $0 --inventory production-inventory.yaml   # Fix using inventory file"
-  echo -e "  $0 --host 103.214.23.174                   # Direct fix via SSH"
+  echo -e "  $0 --host REMOTE_HOST_IP                   # Direct fix via SSH"
   echo -e ""
 }
 

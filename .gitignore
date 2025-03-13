@@ -33,3 +33,168 @@ collections/
 
 # venv files
 .venv/
+
+# Ansible inventory files (except examples)
+inventory.yaml
+/inventories/*-inventory.yaml
+!/inventories/*-inventory.yaml.example
+
+# Validator keys and passwords
+/files/validator_keys/
+/files/passwords/
+
+# JWT secrets and other sensitive files
+*.hex
+*.secret
+*secret*
+*password*
+*credential*
+*token*
+
+# Local environment files
+.env
+.env.*
+.envrc
+
+# Local test directories
+/ephemery*/
+/ephemery-*/
+
+# Ansible retry files
+*.retry
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker volumes
+docker-volumes/
+
+# Mac specific files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux specific files
+*~
+.directory
+.Trash-*
+
+# Windows specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Ansible related
+*.retry
+ansible.cfg
+.vault_pass
+vault.key
+vault_pass.txt
+*vault_pass*
+*vaultpass*
+*.vaultpass*
+
+# Environment variables
+.env
+.envrc
+*.env
+
+# Private keys, certificates, etc.
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.p12
+id_rsa*
+*.gpg
+*.pgp
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python related
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Temporary files
+.tmp/
+.temp/
+tmp/
+temp/
+*.tmp
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Add these lines to .gitignore
+test-ephemery-inventory-*.yaml
+inventory_backups/

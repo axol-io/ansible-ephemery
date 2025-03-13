@@ -18,7 +18,7 @@ echo ""
 if [ $# -lt 1 ]; then
   echo -e "${RED}Error: Missing required parameters${NC}"
   echo -e "Usage: $0 <server_address> [ssh_key_path]"
-  echo -e "Example: $0 user@103.214.23.174 ~/.ssh/id_rsa"
+  echo -e "Example: $0 user@REMOTE_HOST_IP ~/.ssh/id_rsa"
   exit 1
 fi
 

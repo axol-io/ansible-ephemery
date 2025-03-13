@@ -330,3 +330,35 @@ Install the pre-commit hooks with:
 pip install pre-commit
 pre-commit install
 ```
+
+## Security Best Practices
+
+To maintain the security of your Ephemery node and the entire system, follow these best practices:
+
+### Configuration Security
+- Never commit sensitive information like passwords, private keys, or JWT secrets to version control
+- Use environment variables or secure vault solutions for sensitive data
+- Avoid using default or weak passwords for any component
+- Keep your host system updated with security patches
+
+### Network Security
+- Use firewalls to restrict access to only necessary ports (8545, 8551, 30303, 5052, 9000, 8008)
+- Consider using a reverse proxy with TLS for API endpoints if they need to be publicly accessible
+- Configure execution and consensus client APIs to be accessible only from trusted sources
+- Use secure, unique JWT secrets for execution-consensus client authentication
+
+### File System Security
+- Set appropriate permissions on all configuration files and directories
+- Ensure JWT secrets and validator keys have strict file permissions (e.g., `chmod 600`)
+- Regularly backup validator keys and slashing protection data securely
+- Encrypt backups containing sensitive data
+
+### Monitoring & Maintenance
+- Regularly check logs for suspicious activity
+- Monitor resource usage to detect unexpected patterns
+- Keep all client software up-to-date with security patches
+- Regularly run the included health check script to identify issues
+
+For more comprehensive security guidelines, see the [SECURITY.md](SECURITY.md) file in this repository.
+
+## Contributing

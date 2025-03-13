@@ -7,7 +7,7 @@ dependency:
 driver:
   name: docker
   options:
-    docker_host: unix:///Users/droo/Library/Containers/com.docker.docker/Data/docker-cli.sock
+    docker_host: "{{ lookup('env', 'DOCKER_HOST') | default('unix:///var/run/docker.sock', true) }}"
 platforms:
   - name: instance
     image: docker.io/pycontribs/ubuntu:latest
