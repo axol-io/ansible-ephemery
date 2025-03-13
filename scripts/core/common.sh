@@ -78,9 +78,9 @@ error_handler() {
   local err_code=$1
   local err_line=$2
   local command="${BASH_COMMAND}"
-  
+
   log_error "Command '${command}' failed with error code ${err_code} on line ${err_line}"
-  
+
   # Exit if not in interactive mode and not explicitly told to continue
   if [[ "${-}" != *"i"* && "${EPHEMERY_CONTINUE_ON_ERROR:-false}" != "true" ]]; then
     exit "${err_code}"
@@ -100,7 +100,7 @@ setup_error_handling() {
 cleanup() {
   # Reset error trap
   trap - ERR
-  
+
   # Add other cleanup actions here
   log_debug "Cleanup completed"
 }
@@ -113,10 +113,10 @@ cleanup() {
 # Usage: ensure_base_dir
 ensure_base_dir() {
   local base_dir="${EPHEMERY_BASE_DIR:-${HOME}/ephemery}"
-  
+
   # Standardize path (remove trailing slashes, resolve symbolic links)
   base_dir="$(cd "$(dirname "${base_dir}")" &>/dev/null && pwd)/$(basename "${base_dir}")"
-  
+
   # Create if it doesn't exist
   if [[ ! -d "${base_dir}" ]]; then
     log_info "Creating base directory: ${base_dir}"
@@ -125,10 +125,10 @@ ensure_base_dir() {
       return 1
     }
   fi
-  
+
   # Export standardized path
   export EPHEMERY_BASE_DIR="${base_dir}"
-  
+
   return 0
 }
 
@@ -137,7 +137,7 @@ ensure_base_dir() {
 get_component_path() {
   local component="$1"
   local base_dir="${EPHEMERY_BASE_DIR:-${HOME}/ephemery}"
-  
+
   case "${component}" in
     config)
       echo "${base_dir}/config"
@@ -159,7 +159,7 @@ get_component_path() {
       return 1
       ;;
   esac
-  
+
   return 0
 }
 
@@ -167,10 +167,10 @@ get_component_path() {
 # Usage: ensure_standard_dirs
 ensure_standard_dirs() {
   local base_dir="${EPHEMERY_BASE_DIR:-${HOME}/ephemery}"
-  
+
   # First ensure base directory exists
   ensure_base_dir || return 1
-  
+
   # Create standard subdirectories
   local dirs=(
     "$(get_component_path "config")"
@@ -181,7 +181,7 @@ ensure_standard_dirs() {
     "$(get_component_path "scripts")"
     "$(get_component_path "secrets")"
   )
-  
+
   for dir in "${dirs[@]}"; do
     if [[ ! -d "${dir}" ]]; then
       log_info "Creating directory: ${dir}"
@@ -191,7 +191,7 @@ ensure_standard_dirs() {
       }
     fi
   done
-  
+
   return 0
 }
 
@@ -204,7 +204,7 @@ ensure_standard_dirs() {
 parse_bool_flag() {
   local arg="$1"
   local flag="$2"
-  
+
   [[ "${arg}" == "${flag}" ]]
   return $?
 }
@@ -215,18 +215,18 @@ parse_flag_value() {
   local arg="$1"
   local next_arg="$2"
   local flag="$3"
-  
+
   if [[ "${arg}" == "${flag}" ]]; then
     echo "${next_arg}"
     return 0
   fi
-  
+
   # Check for --flag=value format
   if [[ "${arg}" == "${flag}="* ]]; then
     echo "${arg#*=}"
     return 0
   fi
-  
+
   return 1
 }
 
@@ -241,12 +241,12 @@ check_docker() {
     log_error "Docker is not installed. Please install Docker and try again."
     return 1
   fi
-  
+
   if ! docker info &> /dev/null; then
     log_error "Docker daemon is not running. Please start Docker and try again."
     return 1
   fi
-  
+
   return 0
 }
 
@@ -254,16 +254,16 @@ check_docker() {
 # Usage: is_container_running "container-name" && echo "Container is running"
 is_container_running() {
   local container_name="$1"
-  
+
   if [[ -z "${container_name}" ]]; then
     log_error "Container name is required"
     return 2
   fi
-  
+
   # Check if container exists and is running
   if docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
     return 0
   fi
-  
+
   return 1
-} 
+}

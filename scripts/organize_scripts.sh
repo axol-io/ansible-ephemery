@@ -82,13 +82,13 @@ echo -e "${GREEN}Created backup directory: $backup_dir${NC}"
 for script in "${scripts_to_move[@]}"; do
     if [ -f "$script" ]; then
         target_dir=$(find_target_directory "$script")
-        
+
         # Create backup
         cp "$script" "$backup_dir/"
-        
+
         # Ensure target directory exists
         mkdir -p "$target_dir"
-        
+
         # Check if the script already exists in the target directory
         if [ -f "$target_dir/$script" ]; then
             # Compare the files
@@ -125,7 +125,7 @@ This directory contains scripts related to ${dir} operations for the Ephemery No
 
 ## Scripts
 
-$(for script in ${script_categories[$dir]}; do 
+$(for script in ${script_categories[$dir]}; do
     if [ -f "$dir/$script" ]; then
         echo "- \`$script\`: $(head -n 3 "$dir/$script" | grep -o "#.*" | head -n 1 | sed 's/# *//')"
     fi
@@ -138,4 +138,4 @@ EOF
     fi
 done
 
-echo -e "${GREEN}Script organization complete. Please test the functionality to ensure everything works correctly.${NC}" 
+echo -e "${GREEN}Script organization complete. Please test the functionality to ensure everything works correctly.${NC}"

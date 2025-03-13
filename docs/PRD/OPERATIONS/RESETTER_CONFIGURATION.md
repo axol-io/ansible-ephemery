@@ -176,11 +176,11 @@ If your validators need special handling during resets:
 function handle_validator_keys() {
   # Backup validator keys before reset
   cp -r /path/to/validator/keys /path/to/backup/
-  
+
   # Restore after initialization
   mkdir -p /path/to/validator/keys
   cp -r /path/to/backup/* /path/to/validator/keys/
-  
+
   # Set proper permissions
   chmod 700 /path/to/validator/keys
 }
@@ -338,7 +338,7 @@ function send_webhook_alert() {
 2. **Check Specific Function Operation**
 
    Create a test script:
-   
+
    ```bash
    #!/bin/bash
    source ./retention.sh
@@ -351,7 +351,7 @@ function send_webhook_alert() {
    ```bash
    # Check if genesis file was downloaded
    ls -la /path/to/genesis.json
-   
+
    # Validate JSON format
    jq . /path/to/genesis.json
    ```
@@ -397,7 +397,7 @@ Add checkpoint sync support to speed up restarts:
 ```bash
 function initialize_cl_with_checkpoint() {
   rm -rf /path/to/consensus/data
-  
+
   # Try checkpoint sync first
   if lighthouse beacon_node --network ephemery --checkpoint-sync-url https://checkpoint.example.com; then
     log_message "Checkpoint sync successful"
@@ -509,11 +509,11 @@ main() {
   mkdir -p "$DATA_DIR"
   log_message "Starting Ephemery reset check"
   update_status "checking"
-  
+
   # Get current genesis time
   GENESIS_TIME=$(get_last_reset_time)
   log_message "Current genesis time: $GENESIS_TIME"
-  
+
   # Check if we need to reset
   if [ -f "$DATA_DIR/last_genesis_time.txt" ]; then
     LAST_GENESIS_TIME=$(cat "$DATA_DIR/last_genesis_time.txt")
@@ -523,26 +523,26 @@ main() {
       exit 0
     fi
   fi
-  
+
   # Reset needed
   log_message "Reset detected, initializing for genesis time: $GENESIS_TIME"
   update_status "resetting"
-  
+
   # Download latest genesis files
   log_message "Downloading latest genesis files"
   curl -s "https://raw.githubusercontent.com/ephemery-testnet/ephemery-genesis/master/genesis.json" > "$DATA_DIR/genesis.json" || handle_error "Failed to download genesis.json"
   curl -s "https://raw.githubusercontent.com/ephemery-testnet/ephemery-genesis/master/genesis.ssz" > "$DATA_DIR/genesis.ssz" || handle_error "Failed to download genesis.ssz"
-  
+
   # Initialize clients
   initialize_el
   initialize_cl
-  
+
   # Restart services
   restart_clients
-  
+
   # Update last genesis time
   echo "$GENESIS_TIME" > "$DATA_DIR/last_genesis_time.txt"
-  
+
   log_message "Reset completed successfully"
   update_status "reset_completed"
 }
@@ -561,4 +561,4 @@ main
 
 - **v1.0.0** - Initial guide creation
 - **v1.0.1** - Added advanced monitoring recommendations
-- **v1.1.0** - Added multi-client configuration examples 
+- **v1.1.0** - Added multi-client configuration examples

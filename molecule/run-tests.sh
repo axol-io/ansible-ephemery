@@ -10,12 +10,12 @@ MOLECULE_DRIVER=${MOLECULE_DRIVER:-docker}
 if [ "$MOLECULE_DRIVER" = "docker" ]; then
     # Try to detect the Docker socket path or use the provided one
     DEFAULT_DOCKER_SOCK="/var/run/docker.sock"  # Default Linux path
-    
+
     # Check for Mac-specific Docker socket
     if [ -S "/Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker-cli.sock" ]; then
         DEFAULT_DOCKER_SOCK="/Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker-cli.sock"
     fi
-    
+
     # Allow override via environment variable
     DOCKER_HOST_SOCK=${DOCKER_HOST_SOCK:-$DEFAULT_DOCKER_SOCK}
     export DOCKER_HOST="unix://${DOCKER_HOST_SOCK}"
@@ -39,7 +39,7 @@ run_test() {
 
     # Set environment variables for molecule
     export MOLECULE_DRIVER=$MOLECULE_DRIVER
-    
+
     # Try to run the test with explicit molecule.yml path
     MOLECULE_FILE="$(dirname "$0")/$scenario/molecule.yml" molecule test -s "$scenario" || {
         echo "❌ Scenario $scenario failed"

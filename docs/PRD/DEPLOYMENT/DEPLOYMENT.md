@@ -205,4 +205,4 @@ journalctl -u ephemery-reset -f
 - [Remote Deployment Guide](../DEVELOPMENT/remote-deployment.md)
 - [Inventory Management](../DEVELOPMENT/inventory-management.md)
 - [Monitoring Configuration](../FEATURES/MONITORING.md)
-- [Validator Setup](../FEATURES/VALIDATOR_SETUP.md) 
+- [Validator Setup](../FEATURES/VALIDATOR_SETUP.md)

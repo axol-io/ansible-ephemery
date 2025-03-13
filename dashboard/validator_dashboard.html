@@ -339,15 +339,15 @@
             .dashboard-summary {
                 grid-template-columns: 1fr;
             }
-            
+
             .charts-row {
                 grid-template-columns: 1fr;
             }
-            
+
             .search-box input {
                 width: 100%;
             }
-            
+
             .dashboard-actions {
                 flex-direction: column;
             }
@@ -478,7 +478,7 @@
                     <input type="text" id="validator-search" placeholder="Search validators...">
                 </div>
             </div>
-            
+
             <table id="validators-table">
                 <thead>
                     <tr>
@@ -596,25 +596,25 @@
             document.getElementById('missed-attestations').textContent = data.missed_attestations + ' missed';
             document.getElementById('validator-trend-value').textContent = '+' + data.validator_trend;
             document.getElementById('balance-trend-value').textContent = '+' + data.balance_trend.toFixed(3) + ' ETH';
-            
+
             // Update progress bars
             document.getElementById('attestation-progress').style.width = data.attestation_rate + '%';
             document.getElementById('proposal-progress').style.width = data.proposal_rate + '%';
-            
+
             // Update last updated timestamp
             document.getElementById('last-updated').textContent = new Date(data.timestamp).toLocaleString();
-            
+
             // Update validators table
             const tableBody = document.getElementById('validators-body');
             tableBody.innerHTML = '';
-            
+
             data.validators.forEach(validator => {
                 const row = document.createElement('tr');
-                
+
                 let statusClass = 'status-active';
                 if (validator.status === 'pending') statusClass = 'status-pending';
                 if (validator.status === 'error') statusClass = 'status-error';
-                
+
                 row.innerHTML = `
                     <td>${validator.index}</td>
                     <td><span class="status-indicator ${statusClass}"></span> ${validator.status}</td>
@@ -628,14 +628,14 @@
                         </button>
                     </td>
                 `;
-                
+
                 tableBody.appendChild(row);
             });
-            
+
             // Update alerts
             const alertsContainer = document.getElementById('alerts-container');
             alertsContainer.innerHTML = '';
-            
+
             if (data.alerts.length === 0) {
                 alertsContainer.innerHTML = `
                     <div class="alert-card" style="background-color: #e8f5e9; border-left-color: #4caf50;">
@@ -652,7 +652,7 @@
                 data.alerts.forEach(alert => {
                     const alertCard = document.createElement('div');
                     alertCard.className = 'alert-card';
-                    
+
                     alertCard.innerHTML = `
                         <div class="alert-header">
                             <div class="alert-title">${alert.title}</div>
@@ -662,11 +662,11 @@
                             ${alert.message}
                         </div>
                     `;
-                    
+
                     alertsContainer.appendChild(alertCard);
                 });
             }
-            
+
             // Update charts
             updateBalanceChart(data.balance_history);
             updateAttestationChart(data.attestation_history);
@@ -675,7 +675,7 @@
         // Initialize and update balance history chart
         function updateBalanceChart(data) {
             const ctx = document.getElementById('balance-chart').getContext('2d');
-            
+
             // Check if chart already exists
             if (window.balanceChart) {
                 window.balanceChart.data.labels = data.map(item => item.date);
@@ -683,7 +683,7 @@
                 window.balanceChart.update();
                 return;
             }
-            
+
             window.balanceChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -717,7 +717,7 @@
         // Initialize and update attestation chart
         function updateAttestationChart(data) {
             const ctx = document.getElementById('attestation-chart').getContext('2d');
-            
+
             // Check if chart already exists
             if (window.attestationChart) {
                 window.attestationChart.data.labels = data.map(item => item.date);
@@ -725,7 +725,7 @@
                 window.attestationChart.update();
                 return;
             }
-            
+
             window.attestationChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -758,11 +758,11 @@
         // Set up refresh countdown
         let countdown = 30;
         const countdownElement = document.getElementById('refresh-countdown');
-        
+
         setInterval(() => {
             countdown--;
             countdownElement.textContent = countdown;
-            
+
             if (countdown <= 0) {
                 // In a real implementation, this would fetch fresh data
                 updateDashboard({
@@ -785,7 +785,7 @@
         document.getElementById('validator-search').addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#validators-body tr');
-            
+
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
@@ -806,4 +806,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

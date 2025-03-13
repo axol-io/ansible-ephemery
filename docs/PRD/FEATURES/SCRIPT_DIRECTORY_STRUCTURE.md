@@ -13,7 +13,7 @@ scripts/
 ├── core/                 # Core ephemery functionality scripts
 ├── deployment/           # Scripts for deploying ephemery nodes
 │   ├── common/           # Shared deployment utilities
-│   ├── local/            # Local deployment scripts 
+│   ├── local/            # Local deployment scripts
 │   └── remote/           # Remote deployment scripts
 ├── development/          # Scripts for development environment setup and testing
 ├── examples/             # Example scripts and usage patterns
@@ -88,7 +88,7 @@ When referencing scripts in documentation or other scripts, use the full path fr
 # Correct path reference
 ./scripts/deployment/deploy-ephemery.sh
 
-# Legacy path that needs updating 
+# Legacy path that needs updating
 ./scripts/deploy-ephemery.sh
 ```
 
@@ -140,4 +140,4 @@ When creating new scripts for the Ephemery project:
 
 - [Project Roadmap](../PROJECT_MANAGEMENT/ROADMAP.md)
 - [Contributing Guide](../DEVELOPMENT/CONTRIBUTING.md)
-- [Script Reference](./EPHEMERY_SCRIPT_REFERENCE.md) 
+- [Script Reference](./EPHEMERY_SCRIPT_REFERENCE.md)

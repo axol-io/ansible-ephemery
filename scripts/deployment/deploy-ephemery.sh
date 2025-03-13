@@ -203,10 +203,10 @@ get_remote_details() {
       # Prompt for remote host with validation
       while true; do
         read -p "Enter remote host (IP or hostname): " input_host
-        
+
         # Sanitize input: remove leading/trailing whitespace
         REMOTE_HOST=$(echo "$input_host" | xargs)
-        
+
         # Validate hostname/IP format
         if [[ -z "$REMOTE_HOST" ]]; then
           echo -e "${RED}Error: Hostname cannot be empty${NC}"
@@ -252,10 +252,10 @@ get_remote_details() {
       echo -e ""
       echo -e "${BLUE}Recommendation${NC}: Use a regular user with proper Docker permissions for production environments."
       echo -e ""
-      
+
       read -p "Enter remote user (default: ubuntu): " REMOTE_USER
       REMOTE_USER=${REMOTE_USER:-ubuntu}
-      
+
       # If user entered 'root', show an additional confirmation
       if [[ "$REMOTE_USER" == "root" ]]; then
         echo -e "${YELLOW}Warning: You are deploying as root user. This is not recommended for production environments.${NC}"
@@ -319,7 +319,7 @@ generate_inventory() {
 
     # Use new naming convention with name parameter
     GEN_CMD="$PROJECT_ROOT/scripts/utils/generate_inventory.sh --type $DEPLOYMENT_TYPE"
-    
+
     # Add name parameter based on deployment type and host if applicable
     if [[ "$DEPLOYMENT_TYPE" == "remote" ]]; then
       GEN_CMD="$GEN_CMD --name ${REMOTE_HOST}-ephemery"
@@ -335,11 +335,11 @@ generate_inventory() {
     # Add feature flags
     if [[ "$ENABLE_VALIDATOR" == true ]]; then
       GEN_CMD="$GEN_CMD --enable-validator"
-      
+
       # Prompt for additional validator configuration if not in skip prompts mode
       if [[ "$SKIP_PROMPTS" == false ]]; then
         echo -e "${BLUE}Configuring validator settings:${NC}"
-        
+
         # Validator client selection
         echo -e "Select validator client (default: same as consensus client):"
         echo -e "1) Same as consensus client"
@@ -348,7 +348,7 @@ generate_inventory() {
         echo -e "4) Teku"
         echo -e "5) Nimbus"
         read -p "Enter your choice (1-5): " validator_client_choice
-        
+
         case $validator_client_choice in
           2) GEN_CMD="$GEN_CMD --validator-client lighthouse" ;;
           3) GEN_CMD="$GEN_CMD --validator-client prysm" ;;
@@ -356,24 +356,24 @@ generate_inventory() {
           5) GEN_CMD="$GEN_CMD --validator-client nimbus" ;;
           *) echo -e "${GREEN}Using consensus client for validation${NC}" ;;
         esac
-        
+
         # Validator graffiti
         read -p "Enter validator graffiti (default: Ephemery): " validator_graffiti
         if [[ ! -z "$validator_graffiti" ]]; then
           GEN_CMD="$GEN_CMD --validator-graffiti \"$validator_graffiti\""
         fi
-        
+
         # Fee recipient
         read -p "Enter fee recipient address (default: 0x0000000000000000000000000000000000000000): " fee_recipient
         if [[ ! -z "$fee_recipient" ]]; then
           GEN_CMD="$GEN_CMD --fee-recipient \"$fee_recipient\""
         fi
-        
+
         # MEV-Boost
         read -p "Enable MEV-Boost? (y/n, default: n): " enable_mev
         if [[ "$enable_mev" == "y" || "$enable_mev" == "Y" ]]; then
           GEN_CMD="$GEN_CMD --enable-mev-boost"
-          
+
           # MEV-Boost relays
           echo -e "${YELLOW}Enter MEV-Boost relays (one per line, empty line to finish):${NC}"
           while true; do
@@ -419,7 +419,7 @@ extract_inventory_info() {
   INV_HOST=""
   INV_USER=""
   INV_PORT=""
-  
+
   # Check inventory format and extract current values
   if grep -q "ansible_host:" "$INVENTORY_FILE"; then
     # New format
@@ -432,7 +432,7 @@ extract_inventory_info() {
     INV_USER=$(grep -A 3 "hosts:" "$INVENTORY_FILE" | grep "user:" | awk '{print $3}')
     INV_PORT=$(grep -A 3 "hosts:" "$INVENTORY_FILE" | grep "port:" | awk '{print $3}')
   fi
-  
+
   # Use inventory values if available, or defaults
   REMOTE_HOST=${INV_HOST:-$REMOTE_HOST}
   REMOTE_USER=${INV_USER:-$REMOTE_USER}
@@ -442,7 +442,7 @@ extract_inventory_info() {
 # Run deployment
 run_deployment() {
   echo -e "${BLUE}Starting deployment...${NC}"
-  
+
   # Create deployment log
   TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
   LOG_DIR="$PROJECT_ROOT/logs"
@@ -455,7 +455,7 @@ run_deployment() {
   echo "Monitoring Enabled: $ENABLE_MONITORING" >> "$DEPLOYMENT_LOG"
   echo "Dashboard Enabled: $ENABLE_DASHBOARD" >> "$DEPLOYMENT_LOG"
   echo "=================================" >> "$DEPLOYMENT_LOG"
-  
+
   # Create backup of current state for rollback
   if [[ -f "$INVENTORY_FILE" ]]; then
     echo -e "${BLUE}Creating backup of current inventory for potential rollback...${NC}"
@@ -469,62 +469,62 @@ run_deployment() {
   if [[ "$DEPLOYMENT_TYPE" == "local" ]]; then
     echo -e "${BLUE}Running local deployment...${NC}"
     echo "Starting local deployment..." >> "$DEPLOYMENT_LOG"
-    
+
     # Run the playbook with error handling
     ansible-playbook "$PROJECT_ROOT/ansible/playbooks/main.yaml" -i "$INVENTORY_FILE" 2>&1 | tee -a "$DEPLOYMENT_LOG"
     ANSIBLE_EXIT_CODE=${PIPESTATUS[0]}
-    
+
     if [[ $ANSIBLE_EXIT_CODE -ne 0 ]]; then
       echo -e "${RED}Error: Ansible playbook failed with exit code $ANSIBLE_EXIT_CODE${NC}"
       echo -e "${YELLOW}Check the deployment log at $DEPLOYMENT_LOG for details${NC}"
       echo "Ansible playbook failed with exit code $ANSIBLE_EXIT_CODE" >> "$DEPLOYMENT_LOG"
-      
+
       handle_deployment_failure
       return 1
     fi
   elif [[ "$DEPLOYMENT_TYPE" == "remote" ]]; then
     echo -e "${BLUE}Running remote deployment...${NC}"
     echo "Starting remote deployment to $REMOTE_USER@$REMOTE_HOST:$REMOTE_PORT..." >> "$DEPLOYMENT_LOG"
-    
+
     # Verify SSH connection before proceeding
     echo -e "${BLUE}Verifying SSH connection to $REMOTE_USER@$REMOTE_HOST:$REMOTE_PORT...${NC}"
     ssh -p "$REMOTE_PORT" -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE_USER@$REMOTE_HOST" "echo SSH connection successful" >> "$DEPLOYMENT_LOG" 2>&1
-    
+
     if [[ $? -ne 0 ]]; then
       echo -e "${RED}Error: Failed to establish SSH connection to $REMOTE_USER@$REMOTE_HOST:$REMOTE_PORT${NC}"
       echo -e "${YELLOW}Please check your SSH credentials and ensure the remote host is reachable${NC}"
       echo "SSH connection test failed" >> "$DEPLOYMENT_LOG"
-      
+
       # Provide specific error handling for common SSH issues
       ssh -p "$REMOTE_PORT" -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE_USER@$REMOTE_HOST" "echo" 2>&1 | tee -a "$DEPLOYMENT_LOG" | grep -q "Permission denied"
       if [[ $? -eq 0 ]]; then
         echo -e "${YELLOW}Permission denied. SSH key may not be properly set up.${NC}"
         echo -e "Try: ssh-copy-id -p $REMOTE_PORT $REMOTE_USER@$REMOTE_HOST"
       fi
-      
+
       handle_deployment_failure
       return 1
     fi
-    
+
     echo -e "${GREEN}✓ SSH connection successful${NC}"
     echo "SSH connection successful" >> "$DEPLOYMENT_LOG"
-    
+
     # Ensure host and user variables are sanitized (remove any whitespace)
     REMOTE_HOST=$(echo "$REMOTE_HOST" | xargs)
     REMOTE_USER=$(echo "$REMOTE_USER" | xargs)
-    
+
     # Extract current inventory values
     extract_inventory_info
-    
+
     # Get current values with whitespace removed
     CURRENT_HOST=$(echo "$INV_HOST" | xargs)
     CURRENT_USER=$(echo "$INV_USER" | xargs)
-    
+
     # Update host if different
     if [[ ! -z "$CURRENT_HOST" && "$CURRENT_HOST" != "$REMOTE_HOST" ]]; then
       echo -e "${YELLOW}Updating remote host in inventory file from $CURRENT_HOST to $REMOTE_HOST...${NC}"
       echo "Updating remote host in inventory from $CURRENT_HOST to $REMOTE_HOST" >> "$DEPLOYMENT_LOG"
-      
+
       if grep -q "ansible_host:" "$INVENTORY_FILE"; then
         # New format - Ansible style
         if [[ "$(uname)" == "Darwin" ]]; then
@@ -541,12 +541,12 @@ run_deployment() {
         fi
       fi
     fi
-    
+
     # Update user if different
     if [[ ! -z "$CURRENT_USER" && "$CURRENT_USER" != "$REMOTE_USER" ]]; then
       echo -e "${YELLOW}Updating remote user in inventory file from $CURRENT_USER to $REMOTE_USER...${NC}"
       echo "Updating remote user in inventory from $CURRENT_USER to $REMOTE_USER" >> "$DEPLOYMENT_LOG"
-      
+
       if grep -q "ansible_user:" "$INVENTORY_FILE"; then
         # New format - Ansible style
         if [[ "$(uname)" == "Darwin" ]]; then
@@ -563,16 +563,16 @@ run_deployment() {
         fi
       fi
     fi
-    
+
     # Run the playbook with error handling
     ansible-playbook "$PROJECT_ROOT/ansible/playbooks/main.yaml" -i "$INVENTORY_FILE" --ssh-common-args="-p $REMOTE_PORT" 2>&1 | tee -a "$DEPLOYMENT_LOG"
     ANSIBLE_EXIT_CODE=${PIPESTATUS[0]}
-    
+
     if [[ $ANSIBLE_EXIT_CODE -ne 0 ]]; then
       echo -e "${RED}Error: Ansible playbook failed with exit code $ANSIBLE_EXIT_CODE${NC}"
       echo -e "${YELLOW}Check the deployment log at $DEPLOYMENT_LOG for details${NC}"
       echo "Ansible playbook failed with exit code $ANSIBLE_EXIT_CODE" >> "$DEPLOYMENT_LOG"
-      
+
       handle_deployment_failure
       return 1
     fi
@@ -588,14 +588,14 @@ run_deployment() {
 handle_deployment_failure() {
   echo -e "${RED}Deployment has failed. Taking recovery actions...${NC}"
   echo "Deployment failure detected. Taking recovery actions..." >> "$DEPLOYMENT_LOG"
-  
+
   # Ask user whether to attempt recovery
   if [[ "$SKIP_PROMPTS" == false ]]; then
     echo -e "${YELLOW}Select recovery option:${NC}"
     echo -e "1) Try to fix issues and continue"
     echo -e "2) Rollback to previous state"
     echo -e "3) Exit without further action"
-    
+
     read -p "Enter your choice (1/2/3): " recovery_choice
     case $recovery_choice in
       1) attempt_deployment_recovery ;;
@@ -604,7 +604,7 @@ handle_deployment_failure() {
       *) echo -e "${RED}Invalid choice. Exiting.${NC}" ;;
     esac
   else
-    # Auto recovery in --yes mode 
+    # Auto recovery in --yes mode
     echo -e "${YELLOW}Automatically attempting recovery...${NC}"
     attempt_deployment_recovery
   fi
@@ -614,15 +614,15 @@ handle_deployment_failure() {
 attempt_deployment_recovery() {
   echo -e "${BLUE}Attempting to recover from deployment failure...${NC}"
   echo "Attempting recovery from deployment failure..." >> "$DEPLOYMENT_LOG"
-  
+
   # Check for common issues
   ISSUE_FOUND=false
-  
+
   # Check for Docker issues
   if grep -q "docker" "$DEPLOYMENT_LOG" && grep -q "failed" "$DEPLOYMENT_LOG"; then
     echo -e "${YELLOW}Detected potential Docker issues. Checking Docker service...${NC}"
     echo "Detected potential Docker issues" >> "$DEPLOYMENT_LOG"
-    
+
     if [[ "$DEPLOYMENT_TYPE" == "local" ]]; then
       # Check local Docker service
       if ! command -v docker &> /dev/null || ! docker info &> /dev/null; then
@@ -641,7 +641,7 @@ attempt_deployment_recovery() {
       fi
     fi
   fi
-  
+
   # Check for disk space issues
   if grep -q "No space left on device" "$DEPLOYMENT_LOG"; then
     echo -e "${RED}Detected disk space issues.${NC}"
@@ -653,7 +653,7 @@ attempt_deployment_recovery() {
     echo -e "${YELLOW}Consider freeing up disk space before retrying deployment.${NC}"
     ISSUE_FOUND=true
   fi
-  
+
   # Check for permission issues
   if grep -q "Permission denied" "$DEPLOYMENT_LOG"; then
     echo -e "${RED}Detected permission issues.${NC}"
@@ -661,7 +661,7 @@ attempt_deployment_recovery() {
     echo "Permission issues detected" >> "$DEPLOYMENT_LOG"
     ISSUE_FOUND=true
   fi
-  
+
   # If no specific issues found or after addressing them, offer to retry
   if [[ "$ISSUE_FOUND" == true ]]; then
     echo -e "${BLUE}Would you like to retry the deployment after addressing these issues?${NC}"
@@ -683,7 +683,7 @@ attempt_deployment_recovery() {
   else
     echo -e "${YELLOW}No specific issues identified. Consider checking the deployment log for details.${NC}"
     echo "No specific issues identified for recovery" >> "$DEPLOYMENT_LOG"
-    
+
     if [[ "$SKIP_PROMPTS" == false ]]; then
       read -p "Would you like to retry the deployment anyway? (y/n): " retry
       if [[ "$retry" == "y" || "$retry" == "Y" ]]; then
@@ -702,30 +702,30 @@ attempt_deployment_recovery() {
 rollback_deployment() {
   echo -e "${BLUE}Attempting to rollback deployment...${NC}"
   echo "Attempting to rollback deployment..." >> "$DEPLOYMENT_LOG"
-  
+
   # Find the latest backup
   BACKUP_DIR="$PROJECT_ROOT/inventory_backups"
   LATEST_BACKUP=$(find "$BACKUP_DIR" -name "inventory_backup_*.yaml" -type f -printf "%T@ %p\n" | sort -n | tail -1 | cut -d' ' -f2-)
-  
+
   if [[ -z "$LATEST_BACKUP" ]]; then
     echo -e "${RED}No backup inventory found for rollback.${NC}"
     echo "No backup inventory found for rollback" >> "$DEPLOYMENT_LOG"
     return 1
   fi
-  
+
   echo -e "${BLUE}Found backup inventory: $LATEST_BACKUP${NC}"
   echo "Found backup inventory: $LATEST_BACKUP" >> "$DEPLOYMENT_LOG"
-  
+
   # Restore the inventory file
   cp "$LATEST_BACKUP" "$INVENTORY_FILE"
   echo -e "${GREEN}✓ Restored inventory file from backup${NC}"
   echo "Restored inventory file from backup" >> "$DEPLOYMENT_LOG"
-  
+
   # For remote deployment, stop any running services
   if [[ "$DEPLOYMENT_TYPE" == "remote" ]]; then
     echo -e "${BLUE}Attempting to stop any running services on remote host...${NC}"
     echo "Attempting to stop services on remote host" >> "$DEPLOYMENT_LOG"
-    
+
     # Try to connect and stop services safely
     ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "
       if command -v docker &> /dev/null; then
@@ -736,7 +736,7 @@ rollback_deployment() {
         echo 'Docker not found on remote system'
       fi
     " >> "$DEPLOYMENT_LOG" 2>&1
-    
+
     if [[ $? -ne 0 ]]; then
       echo -e "${YELLOW}Warning: Could not stop services on remote host.${NC}"
       echo "Warning: Failed to stop services on remote host" >> "$DEPLOYMENT_LOG"
@@ -745,10 +745,10 @@ rollback_deployment() {
       echo "Successfully stopped services on remote host" >> "$DEPLOYMENT_LOG"
     fi
   fi
-  
+
   echo -e "${GREEN}Rollback completed.${NC}"
   echo "Rollback completed" >> "$DEPLOYMENT_LOG"
-  
+
   # Ask if user wants to retry deployment
   if [[ "$SKIP_PROMPTS" == false ]]; then
     read -p "Would you like to retry the deployment with the rolled back configuration? (y/n): " retry
@@ -789,7 +789,7 @@ verify_deployment() {
     if [[ "$DEPLOYMENT_TYPE" == "local" ]]; then
       # Local verification
       echo -e "${YELLOW}Checking Docker containers...${NC}"
-      
+
       # Check execution and consensus clients
       if docker ps | grep -q "ephemery-geth" && docker ps | grep -q "ephemery-lighthouse"; then
         echo -e "${GREEN}✓ Core Docker containers running${NC}"
@@ -797,13 +797,13 @@ verify_deployment() {
         echo -e "${RED}✗ Some core Docker containers are not running${NC}"
         echo -e "${YELLOW}Troubleshooting: Check logs with 'docker logs ephemery-geth' and 'docker logs ephemery-lighthouse'${NC}"
       fi
-      
+
       # Check validator if enabled
       if [[ "$ENABLE_VALIDATOR" == true ]]; then
         echo -e "${YELLOW}Checking validator container...${NC}"
         if docker ps | grep -q "ephemery-validator"; then
           echo -e "${GREEN}✓ Validator container running${NC}"
-          
+
           # Check validator keys
           if docker exec ephemery-validator ls -la /var/lib/lighthouse/validators/keys/ 2>/dev/null | grep -q ".json"; then
             echo -e "${GREEN}✓ Validator keys found${NC}"
@@ -816,7 +816,7 @@ verify_deployment() {
           echo -e "${YELLOW}Troubleshooting: Check logs with 'docker logs ephemery-validator'${NC}"
         fi
       fi
-      
+
       # Check monitoring if enabled
       if [[ "$ENABLE_MONITORING" == true ]]; then
         echo -e "${YELLOW}Checking monitoring containers...${NC}"
@@ -827,21 +827,21 @@ verify_deployment() {
           echo -e "${YELLOW}Troubleshooting: Check logs with 'docker logs ephemery-prometheus' and 'docker logs ephemery-grafana'${NC}"
         fi
       fi
-      
+
     elif [[ "$DEPLOYMENT_TYPE" == "remote" ]]; then
       # Remote verification
       echo -e "${YELLOW}Checking remote services...${NC}"
-      
+
       # Use a timeout to prevent hanging on SSH connection issues
       if timeout 10 ssh -o ConnectTimeout=5 -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "docker ps | grep -q ephemery-geth && docker ps | grep -q ephemery-lighthouse"; then
         echo -e "${GREEN}✓ Core remote services running${NC}"
-        
+
         # Check validator if enabled
         if [[ "$ENABLE_VALIDATOR" == true ]]; then
           echo -e "${YELLOW}Checking remote validator container...${NC}"
           if timeout 10 ssh -o ConnectTimeout=5 -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "docker ps | grep -q ephemery-validator"; then
             echo -e "${GREEN}✓ Remote validator container running${NC}"
-            
+
             # Check validator keys
             if timeout 10 ssh -o ConnectTimeout=5 -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "docker exec ephemery-validator ls -la /var/lib/lighthouse/validators/keys/ 2>/dev/null | grep -q '.json'"; then
               echo -e "${GREEN}✓ Remote validator keys found${NC}"
@@ -854,7 +854,7 @@ verify_deployment() {
             echo -e "${YELLOW}Troubleshooting: Check logs with 'ssh $REMOTE_USER@$REMOTE_HOST -p $REMOTE_PORT \"docker logs ephemery-validator\"'${NC}"
           fi
         fi
-        
+
         # Check monitoring if enabled
         if [[ "$ENABLE_MONITORING" == true ]]; then
           echo -e "${YELLOW}Checking remote monitoring containers...${NC}"
@@ -899,7 +899,7 @@ show_final_info() {
   if [[ "$DEPLOYMENT_TYPE" == "local" ]]; then
     echo -e "Geth API: http://localhost:8545"
     echo -e "Lighthouse API: http://localhost:5052"
-    
+
     if [[ "$ENABLE_VALIDATOR" == true ]]; then
       echo -e "Validator API: http://localhost:5062"
       echo -e "Validator Metrics: http://localhost:5064/metrics"
@@ -908,7 +908,7 @@ show_final_info() {
     if [[ "$ENABLE_DASHBOARD" == true ]]; then
       echo -e "Dashboard: http://localhost/ephemery-status/"
     fi
-    
+
     if [[ "$ENABLE_MONITORING" == true ]]; then
       echo -e "Prometheus: http://localhost:9090"
       echo -e "Grafana: http://localhost:3000 (admin/admin)"
@@ -917,7 +917,7 @@ show_final_info() {
     echo -e "\nTo monitor the sync status:"
     echo -e "  docker logs -f ephemery-geth"
     echo -e "  docker logs -f ephemery-lighthouse"
-    
+
     if [[ "$ENABLE_VALIDATOR" == true ]]; then
       echo -e "\nTo monitor validator status:"
       echo -e "  docker logs -f ephemery-validator"
@@ -926,7 +926,7 @@ show_final_info() {
   elif [[ "$DEPLOYMENT_TYPE" == "remote" ]]; then
     echo -e "Geth API: http://$REMOTE_HOST:8545"
     echo -e "Lighthouse API: http://$REMOTE_HOST:5052"
-    
+
     if [[ "$ENABLE_VALIDATOR" == true ]]; then
       echo -e "Validator API: http://$REMOTE_HOST:5062"
       echo -e "Validator Metrics: http://$REMOTE_HOST:5064/metrics"
@@ -935,7 +935,7 @@ show_final_info() {
     if [[ "$ENABLE_DASHBOARD" == true ]]; then
       echo -e "Dashboard: http://$REMOTE_HOST/ephemery-status/"
     fi
-    
+
     if [[ "$ENABLE_MONITORING" == true ]]; then
       echo -e "Prometheus: http://$REMOTE_HOST:9090"
       echo -e "Grafana: http://$REMOTE_HOST:3000 (admin/admin)"
@@ -945,7 +945,7 @@ show_final_info() {
     echo -e "  ssh $REMOTE_USER@$REMOTE_HOST -p $REMOTE_PORT"
     echo -e "  docker logs -f ephemery-geth"
     echo -e "  docker logs -f ephemery-lighthouse"
-    
+
     if [[ "$ENABLE_VALIDATOR" == true ]]; then
       echo -e "\nTo monitor validator status:"
       echo -e "  ssh $REMOTE_USER@$REMOTE_HOST -p $REMOTE_PORT"
@@ -963,7 +963,7 @@ show_final_info() {
   if [[ "$SETUP_RETENTION" == true ]]; then
     echo -e "\nEphemery retention is enabled. The system will automatically detect and handle weekly resets."
   fi
-  
+
   if [[ "$ENABLE_VALIDATOR" == true ]]; then
     echo -e "\nValidator is enabled. To check validator status:"
     if [[ "$DEPLOYMENT_TYPE" == "local" ]]; then
@@ -999,7 +999,7 @@ main() {
 
   # Get remote connection details
   get_remote_details
-  
+
   # Validate remote host is specified
   if [[ "$DEPLOYMENT_TYPE" == "remote" && -z "$REMOTE_HOST" ]]; then
     echo -e "${RED}Error: Remote host is required for remote deployment${NC}"
@@ -1021,15 +1021,15 @@ main() {
 
   # Run deployment
   run_deployment
-  
+
   # Setup retention if enabled
   setup_retention
-  
+
   # Verify deployment
   if [[ "$VERIFY_DEPLOYMENT" == true ]]; then
     verify_deployment
   fi
-  
+
   # Show final information
   show_final_info
 }

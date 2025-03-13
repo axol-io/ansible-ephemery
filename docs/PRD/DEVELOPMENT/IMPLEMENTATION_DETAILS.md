@@ -13,4 +13,4 @@ The Ephemery Node implementation details cover how various components interact, 
 - [Troubleshooting](./TROUBLESHOOTING.md)
 - [Testing Guide](./TESTING_GUIDE.md) (pending)
 
-*Note: This document is a placeholder based on the existing IMPLEMENTATION_DETAILS.md file and will be fully migrated with comprehensive content in a future update.* 
+*Note: This document is a placeholder based on the existing IMPLEMENTATION_DETAILS.md file and will be fully migrated with comprehensive content in a future update.*

@@ -182,4 +182,4 @@ curl -s http://localhost:9090/api/v1/targets | jq
 
 - [Validator Monitoring](VALIDATOR_MONITORING.md)
 - [Sync Monitoring](SYNC_MONITORING.md)
-- [Prometheus Integration](PROMETHEUS_INTEGRATION.md) 
+- [Prometheus Integration](PROMETHEUS_INTEGRATION.md)

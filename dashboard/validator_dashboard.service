@@ -21,4 +21,4 @@ Environment="EPHEMERY_BASE_DIR=/opt/ephemery"
 Environment="EPHEMERY_CONFIG_PATH=/opt/ephemery/config/ephemery_paths.conf"
 
 [Install]
-WantedBy=multi-user.target 
+WantedBy=multi-user.target

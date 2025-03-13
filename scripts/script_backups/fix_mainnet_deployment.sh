@@ -167,21 +167,21 @@ check_ssh_connection() {
 # Function to check container issues
 check_container_issues() {
   echo -e "${YELLOW}Checking container issues...${NC}"
-  
+
   # Check if Docker is installed
   if ! ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "command -v docker &> /dev/null"; then
     echo -e "${RED}Error: Docker not installed on remote host.${NC}"
     return 1
   fi
-  
+
   # Check container status
   local container_status=$(ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "docker ps -a --format '{{.Names}} {{.Image}} {{.Status}}' | grep -E 'ephemery|geth|lighthouse'" || echo "")
-  
+
   if [[ -z "$container_status" ]]; then
     echo -e "${RED}No Ephemery containers found.${NC}"
     return 1
   fi
-  
+
   echo -e "${YELLOW}Container status:${NC}"
   echo "$container_status" | while read line; do
     if [[ "$line" == *"Restarting"* ]]; then
@@ -190,30 +190,30 @@ check_container_issues() {
       echo -e "${GREEN}$line${NC}"
     fi
   done
-  
+
   # Check for specific container image issues
   if [[ "$container_status" != *"pk910/ephemery-geth"* ]]; then
     echo -e "${RED}Issue detected: Not using pk910/ephemery-geth image${NC}"
   fi
-  
+
   if [[ "$container_status" != *"pk910/ephemery-lighthouse"* ]]; then
     echo -e "${RED}Issue detected: Not using pk910/ephemery-lighthouse image${NC}"
   fi
-  
+
   # Check container logs for specific errors
   echo -e "${YELLOW}Checking container logs for errors...${NC}"
-  
+
   # Check Lighthouse logs
   local lighthouse_errors=$(ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "docker logs \$(docker ps -a --format '{{.Names}}' | grep -E 'ephemery-lighthouse|lighthouse' | head -1) 2>&1 | grep -E 'invalid value|--network' | tail -5" || echo "")
-  
+
   if [[ -n "$lighthouse_errors" ]]; then
     echo -e "${RED}Lighthouse errors found:${NC}"
     echo "$lighthouse_errors"
   fi
-  
+
   # Check Geth logs
   local geth_errors=$(ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "docker logs \$(docker ps -a --format '{{.Names}}' | grep -E 'ephemery-geth|geth' | head -1) 2>&1 | grep -E 'invalid command|geth' | tail -5" || echo "")
-  
+
   if [[ -n "$geth_errors" ]]; then
     echo -e "${RED}Geth errors found:${NC}"
     echo "$geth_errors"
@@ -223,25 +223,25 @@ check_container_issues() {
 # Function to fix container configuration
 fix_container_configuration() {
   echo -e "${YELLOW}Fixing container configuration...${NC}"
-  
+
   if [[ "$APPLY_FIXES" != "true" ]]; then
     echo -e "${YELLOW}Check-only mode: Skipping container configuration fixes${NC}"
     return 0
   fi
-  
+
   if [[ -n "$INVENTORY_FILE" ]]; then
     # Update inventory file with correct images
     if [[ -f "$INVENTORY_FILE" ]]; then
       echo -e "${YELLOW}Updating inventory file with correct images...${NC}"
-      
+
       # Create backup of inventory file
       cp "$INVENTORY_FILE" "${INVENTORY_FILE}.bak.$(date +%Y%m%d%H%M%S)"
-      
+
       # Update image configurations in inventory file
       sed -i 's|geth_image:.*|geth_image: "pk910/ephemery-geth:v1.15.3"|g' "$INVENTORY_FILE"
       sed -i 's|lighthouse_image:.*|lighthouse_image: "pk910/ephemery-lighthouse:v5.3.0"|g' "$INVENTORY_FILE"
       sed -i 's|validator_image:.*|validator_image: "pk910/ephemery-lighthouse:v5.3.0"|g' "$INVENTORY_FILE"
-      
+
       echo -e "${GREEN}Updated inventory file with correct images.${NC}"
     else
       echo -e "${RED}Error: Inventory file not found: $INVENTORY_FILE${NC}"
@@ -251,14 +251,14 @@ fix_container_configuration() {
     # Direct SSH approach to fix containers
     echo -e "${YELLOW}Stopping existing containers...${NC}"
     ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "docker stop \$(docker ps -a --format '{{.Names}}' | grep -E 'ephemery|geth|lighthouse') || true"
-    
+
     echo -e "${YELLOW}Removing existing containers...${NC}"
     ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "docker rm \$(docker ps -a --format '{{.Names}}' | grep -E 'ephemery|geth|lighthouse') || true"
-    
+
     echo -e "${YELLOW}Pulling correct images...${NC}"
     ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "docker pull pk910/ephemery-geth:v1.15.3"
     ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "docker pull pk910/ephemery-lighthouse:v5.3.0"
-    
+
     echo -e "${GREEN}Container images updated.${NC}"
   fi
 }
@@ -266,20 +266,20 @@ fix_container_configuration() {
 # Function to setup network directory
 setup_network_directory() {
   echo -e "${YELLOW}Setting up Ephemery network directory...${NC}"
-  
+
   if [[ "$APPLY_FIXES" != "true" ]]; then
     echo -e "${YELLOW}Check-only mode: Skipping network directory setup${NC}"
     return 0
   fi
-  
+
   # Create network config directory
   ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "mkdir -p $TESTNET_CONFIG_DIR"
-  
+
   # Get the latest iteration if 'current' is specified
   if [[ "$EPHEMERY_ITERATION" == "current" ]]; then
     echo -e "${YELLOW}Determining latest Ephemery iteration...${NC}"
     LATEST_URL=$(ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "curl -s https://ephemery.dev/ | grep -o 'ephemery-[0-9]*' | sort -Vr | head -1" || echo "")
-    
+
     if [[ -n "$LATEST_URL" ]]; then
       EPHEMERY_ITERATION="$LATEST_URL"
       echo -e "${GREEN}Latest iteration: $EPHEMERY_ITERATION${NC}"
@@ -289,37 +289,37 @@ setup_network_directory() {
       EPHEMERY_ITERATION="ephemery-143"
     fi
   fi
-  
+
   # Download and extract network configuration
   echo -e "${YELLOW}Downloading Ephemery network configuration for $EPHEMERY_ITERATION...${NC}"
   ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "cd $TESTNET_CONFIG_DIR && \
     wget -q https://ephemery.dev/$EPHEMERY_ITERATION/testnet-all.tar.gz && \
     tar -xzf testnet-all.tar.gz && \
     rm testnet-all.tar.gz"
-  
+
   echo -e "${GREEN}Network directory setup complete.${NC}"
 }
 
 # Function to fix container parameters
 fix_container_parameters() {
   echo -e "${YELLOW}Fixing container parameters...${NC}"
-  
+
   if [[ "$APPLY_FIXES" != "true" ]]; then
     echo -e "${YELLOW}Check-only mode: Skipping container parameter fixes${NC}"
     return 0
   fi
-  
+
   if [[ -n "$INVENTORY_FILE" ]]; then
     # Update inventory file with correct parameters
     if [[ -f "$INVENTORY_FILE" ]]; then
       echo -e "${YELLOW}Updating inventory file with correct parameters...${NC}"
-      
+
       # Update lighthouse parameters
       sed -i "s|cl_extra_opts:.*|cl_extra_opts: \"--testnet-dir=$TESTNET_CONFIG_DIR --target-peers=100 --execution-timeout-multiplier=5 --allow-insecure-genesis-sync --genesis-backfill --disable-backfill-rate-limiting\"|g" "$INVENTORY_FILE"
-      
+
       # Update execution client parameters if needed
       sed -i "s|el_extra_opts:.*|el_extra_opts: \"--cache=4096 --txlookuplimit=0 --syncmode=snap --maxpeers=100 --db.engine=pebble\"|g" "$INVENTORY_FILE"
-      
+
       echo -e "${GREEN}Updated inventory file with correct parameters.${NC}"
     else
       echo -e "${RED}Error: Inventory file not found: $INVENTORY_FILE${NC}"
@@ -328,7 +328,7 @@ fix_container_parameters() {
   else
     # Direct SSH approach
     echo -e "${YELLOW}Creating/updating docker-compose.yml with correct parameters...${NC}"
-    
+
     # Create docker-compose.yml with correct parameters
     ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "cat > $BASE_DIR/docker-compose.yml << 'EOF'
 version: '3'
@@ -371,9 +371,9 @@ services:
       - $TESTNET_CONFIG_DIR:$TESTNET_CONFIG_DIR
     command: validator --testnet-dir=$TESTNET_CONFIG_DIR
 EOF"
-    
+
     echo -e "${GREEN}docker-compose.yml updated with correct parameters.${NC}"
-    
+
     # Create JWT token if it doesn't exist
     ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "mkdir -p $BASE_DIR/config && \
       if [ ! -f $BASE_DIR/config/jwt.hex ]; then \
@@ -386,16 +386,16 @@ EOF"
 # Function to fix checkpoint sync
 fix_checkpoint_sync() {
   echo -e "${YELLOW}Fixing checkpoint sync...${NC}"
-  
+
   if [[ "$APPLY_FIXES" != "true" ]]; then
     echo -e "${YELLOW}Check-only mode: Skipping checkpoint sync fixes${NC}"
     return 0
   fi
-  
+
   if [[ -n "$INVENTORY_FILE" ]]; then
     # Use the existing fix_checkpoint_sync.sh script with the inventory file
     echo -e "${YELLOW}Running checkpoint sync fix script...${NC}"
-    
+
     if [[ -f "$SCRIPT_DIR/fix_checkpoint_sync.sh" ]]; then
       "$SCRIPT_DIR/fix_checkpoint_sync.sh" --inventory "$INVENTORY_FILE"
     else
@@ -405,24 +405,24 @@ fix_checkpoint_sync() {
   else
     # Direct SSH approach to fix checkpoint sync
     echo -e "${YELLOW}Checking available checkpoint sync options...${NC}"
-    
+
     # Test checkpoint sync URLs
     local checkpoint_urls=(
       "https://checkpoint.ephemery.dev/checkpoint"
       "https://checkpoint.pk910.de/ephemery/checkpoint"
       "https://ephemery.pk910.de/checkpoint"
     )
-    
+
     local best_url=""
     local best_response_time=9999
-    
+
     for url in "${checkpoint_urls[@]}"; do
       echo -e "${YELLOW}Testing checkpoint URL: $url${NC}"
       local start_time=$(date +%s.%N)
       local response=$(ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "curl -s -o /dev/null -w '%{http_code}' -m 10 $url" || echo "000")
       local end_time=$(date +%s.%N)
       local response_time=$(echo "$end_time - $start_time" | bc)
-      
+
       if [[ "$response" == "200" ]]; then
         echo -e "${GREEN}URL $url is working (response time: $response_time seconds)${NC}"
         if (( $(echo "$response_time < $best_response_time" | bc -l) )); then
@@ -433,14 +433,14 @@ fix_checkpoint_sync() {
         echo -e "${RED}URL $url is not working (HTTP code: $response)${NC}"
       fi
     done
-    
+
     if [[ -n "$best_url" ]]; then
       echo -e "${GREEN}Best checkpoint URL: $best_url (response time: $best_response_time seconds)${NC}"
-      
+
       # Update lighthouse parameters to include checkpoint sync
       echo -e "${YELLOW}Updating lighthouse parameters for checkpoint sync...${NC}"
       ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "sed -i 's|--testnet-dir=$TESTNET_CONFIG_DIR|--testnet-dir=$TESTNET_CONFIG_DIR --checkpoint-sync-url=$best_url|g' $BASE_DIR/docker-compose.yml"
-      
+
       echo -e "${GREEN}Checkpoint sync configuration updated.${NC}"
     else
       echo -e "${RED}Error: No working checkpoint sync URL found.${NC}"
@@ -452,12 +452,12 @@ fix_checkpoint_sync() {
 # Function to restart services
 restart_services() {
   echo -e "${YELLOW}Restarting services...${NC}"
-  
+
   if [[ "$APPLY_FIXES" != "true" ]]; then
     echo -e "${YELLOW}Check-only mode: Skipping service restart${NC}"
     return 0
   fi
-  
+
   if [[ -n "$INVENTORY_FILE" ]]; then
     # Use Ansible playbook to restart services
     echo -e "${YELLOW}Running Ansible playbook to restart services...${NC}"
@@ -470,7 +470,7 @@ restart_services() {
     echo -e "${YELLOW}Restarting Docker containers...${NC}"
     ssh -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "cd $BASE_DIR && docker-compose down && docker-compose up -d"
   fi
-  
+
   echo -e "${GREEN}Services restarted.${NC}"
 }
 
@@ -478,16 +478,16 @@ restart_services() {
 main() {
   parse_args "$@"
   validate_args
-  
+
   # Extract host and user from inventory file if needed
   extract_from_inventory
-  
+
   # Check SSH connection
   check_ssh_connection
-  
+
   # Check for container issues
   check_container_issues
-  
+
   # Ask for confirmation before proceeding with fixes
   if [[ "$SKIP_PROMPTS" != "true" && "$APPLY_FIXES" == "true" ]]; then
     echo ""
@@ -501,14 +501,14 @@ main() {
       exit 0
     fi
   fi
-  
+
   # Apply fixes
   fix_container_configuration
   setup_network_directory
   fix_container_parameters
   fix_checkpoint_sync
   restart_services
-  
+
   echo ""
   echo -e "${GREEN}================================================================${NC}"
   echo -e "${GREEN}          Ephemery Mainnet Deployment Fix Complete              ${NC}"
@@ -521,7 +521,7 @@ main() {
   echo -e "   ${YELLOW}docker logs ephemery-lighthouse${NC}"
   echo -e "3. Verify node is syncing: ${YELLOW}./scripts/check_sync_status.sh${NC}"
   echo ""
-  
+
   if [[ "$APPLY_FIXES" != "true" ]]; then
     echo -e "${YELLOW}This was a check-only run. No changes were made.${NC}"
     echo -e "${YELLOW}Run without --check-only to apply the fixes.${NC}"
@@ -530,4 +530,4 @@ main() {
 }
 
 # Run the script
-main "$@" 
+main "$@"

@@ -87,7 +87,7 @@ function check_requirements {
 # Start the dashboard
 function start_dashboard {
   echo -e "${BLUE}Starting Ephemery validator dashboard...${NC}"
-  
+
   # Check if validator scripts directory exists
   VALIDATOR_SCRIPTS_DIR="${EPHEMERY_BASE_DIR}/scripts/validator"
   if [[ ! -d "${VALIDATOR_SCRIPTS_DIR}" ]]; then
@@ -95,22 +95,22 @@ function start_dashboard {
     echo -e "${YELLOW}Using repository scripts instead${NC}"
     VALIDATOR_SCRIPTS_DIR="${REPO_ROOT}/scripts/validator"
   fi
-  
+
   # Check if monitor_validator.sh exists
   if [[ ! -f "${VALIDATOR_SCRIPTS_DIR}/monitor_validator.sh" ]]; then
     echo -e "${RED}Error: monitor_validator.sh not found at ${VALIDATOR_SCRIPTS_DIR}${NC}"
     exit 1
   fi
-  
+
   # Start the dashboard
   if [[ "${FULLSCREEN}" == "true" ]]; then
     # Clear screen and hide cursor
     clear
     echo -e "\033[?25l"
-    
+
     # Trap to restore cursor on exit
     trap 'echo -e "\033[?25h"; clear' EXIT
-    
+
     # Start dashboard in fullscreen mode
     "${VALIDATOR_SCRIPTS_DIR}/monitor_validator.sh" dashboard --continuous --interval "${INTERVAL}"
   else
@@ -127,4 +127,4 @@ function main {
 }
 
 # Execute main function
-main "$@" 
+main "$@"

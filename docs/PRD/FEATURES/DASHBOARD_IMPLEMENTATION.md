@@ -130,4 +130,4 @@ Beyond the current roadmap, future enhancements could include:
 - Dashboard account system with saved preferences
 - Mobile app integration using the same data sources
 
-For more information on sync monitoring, see the [SYNC_MONITORING.md](../FEATURES/SYNC_MONITORING.md) document. 
+For more information on sync monitoring, see the [SYNC_MONITORING.md](../FEATURES/SYNC_MONITORING.md) document.

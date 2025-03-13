@@ -119,4 +119,4 @@ The following issues have been resolved in recent updates:
 
 - [Project Roadmap](./ROADMAP.md)
 - [Troubleshooting Guide](../DEVELOPMENT/TROUBLESHOOTING.md)
-- [Validator Key Management](../FEATURES/VALIDATOR_KEY_MANAGEMENT.md) 
+- [Validator Key Management](../FEATURES/VALIDATOR_KEY_MANAGEMENT.md)

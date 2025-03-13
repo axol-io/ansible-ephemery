@@ -15,14 +15,14 @@ else
   RED='\033[0;31m'
   BLUE='\033[0;34m'
   NC='\033[0m' # No Color
-  
+
   # Define default settings
   EPHEMERY_BASE_DIR=~/ephemery
   EPHEMERY_GETH_CACHE=4096
   EPHEMERY_TARGET_PEERS=100
   EPHEMERY_EXECUTION_TIMEOUT=10
   EPHEMERY_DOCKER_NETWORK="ephemery-net"
-  
+
   # Default checkpoint sync URLs in order of preference
   EPHEMERY_CHECKPOINT_URLS=(
     "https://checkpoint-sync.holesky.ethpandaops.io"
@@ -142,7 +142,7 @@ fi
 # Checkpoint sync setup
 if [ "$USE_CHECKPOINT_SYNC" = true ]; then
     echo -e "${BLUE}Setting up checkpoint sync...${NC}"
-    
+
     # If no custom URL specified, test default URLs and find best one
     if [ -z "$CHECKPOINT_URL" ]; then
         echo -e "${YELLOW}Testing checkpoint sync URLs for availability...${NC}"
@@ -156,7 +156,7 @@ if [ "$USE_CHECKPOINT_SYNC" = true ]; then
                 echo -e "${RED}✗ URL is not accessible${NC}"
             fi
         done
-        
+
         if [ -z "$CHECKPOINT_URL" ]; then
             echo -e "${RED}No accessible checkpoint sync URL found. Falling back to genesis sync.${NC}"
             USE_CHECKPOINT_SYNC=false
@@ -253,4 +253,4 @@ echo -e "${BLUE}Monitor logs:${NC}"
 echo "- Geth: docker logs -f ephemery-geth"
 echo "- Lighthouse: docker logs -f ephemery-lighthouse"
 echo ""
-echo -e "${YELLOW}Initial sync may take several hours. During this time, it's normal to see errors related to execution payload.${NC}" 
+echo -e "${YELLOW}Initial sync may take several hours. During this time, it's normal to see errors related to execution payload.${NC}"

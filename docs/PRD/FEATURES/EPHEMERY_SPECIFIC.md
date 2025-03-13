@@ -209,4 +209,4 @@ For detailed instructions, see [Ephemery Setup](./EPHEMERY_SETUP.md).
 - [Ephemery Client Wrapper](https://github.com/pk910/ephemery-client-wrapper)
 - [Ephemery Resources](https://github.com/ephemery-testnet/ephemery-resources)
 - [Ephemery Genesis Repository](https://github.com/ephemery-testnet/ephemery-genesis)
-- [Ephemery Scripts Repository](https://github.com/ephemery-testnet/ephemery-scripts) 
+- [Ephemery Scripts Repository](https://github.com/ephemery-testnet/ephemery-scripts)

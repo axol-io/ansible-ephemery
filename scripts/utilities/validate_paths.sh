@@ -26,7 +26,7 @@ echo -e "${YELLOW}Using workspace directory: ${WORKSPACE_DIR}${NC}"
 # Check if the standard config exists
 if [ ! -f "$STANDARD_CONFIG" ]; then
     echo -e "${RED}Standard configuration file not found at $STANDARD_CONFIG${NC}"
-    
+
     # Check if it exists in the workspace
     WORKSPACE_CONFIG="${WORKSPACE_DIR}/config/ephemery_paths.conf"
     if [ -f "$WORKSPACE_CONFIG" ]; then
@@ -48,19 +48,19 @@ declare -a NON_COMPLIANT_FILES
 check_script() {
     local file="$1"
     local basename=$(basename "$file")
-    
+
     # Skip if we've already checked this file
     if [[ " ${COMPLIANT_FILES[*]} " =~ " ${basename} " ]] || [[ " ${NON_COMPLIANT_FILES[*]} " =~ " ${basename} " ]]; then
         return
     fi
-    
+
     echo -e "${BLUE}Checking $basename...${NC}"
-    
+
     # Check for existence of config loading code
     if grep -q "ephemery_paths.conf" "$file"; then
         # Check if the file sources the config file properly
         # Look for either direct sourcing or sourcing through a variable
-        if grep -q "source.*ephemery_paths.conf" "$file" || grep -q "\. .*ephemery_paths.conf" "$file" || 
+        if grep -q "source.*ephemery_paths.conf" "$file" || grep -q "\. .*ephemery_paths.conf" "$file" ||
            (grep -q "CONFIG_FILE.*ephemery_paths.conf" "$file" && grep -q "source.*CONFIG_FILE" "$file"); then
             echo -e "${GREEN}✓ $basename sources the config file${NC}"
             COMPLIANT_FILES+=("$basename")
@@ -83,9 +83,9 @@ check_script() {
 check_yaml() {
     local file="$1"
     local basename=$(basename "$file")
-    
+
     echo -e "${BLUE}Checking $basename...${NC}"
-    
+
     # For YAML files, check if they reference the config file or use the standardized variable names
     if grep -q "ephemery_paths.conf" "$file"; then
         echo -e "${GREEN}✓ $basename references the config file${NC}"
@@ -163,4 +163,4 @@ else
     echo -e "\n${YELLOW}⚠ Some files need to be updated to use standardized paths${NC}"
     echo -e "${YELLOW}Please update the listed non-compliant files to source ${STANDARD_CONFIG}${NC}"
     exit 1
-fi 
+fi

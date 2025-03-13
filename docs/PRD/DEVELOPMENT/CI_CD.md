@@ -140,4 +140,4 @@ For the complete CI/CD configuration, see:
 - [Coding Standards](./CODING_STANDARDS.md)
 - [Linting](./LINTING.md)
 - [Testing Guide](./TESTING_GUIDE.md)
-- [Contributing](./CONTRIBUTING.md) 
+- [Contributing](./CONTRIBUTING.md)

@@ -199,4 +199,4 @@ If the dashboard is not updating:
 
 - [Validator Management Documentation](../../../scripts/validator/README.md)
 - [Ephemery Deployment Guide](../DEPLOYMENT/DEPLOYMENT_GUIDE.md)
-- [Lighthouse Validator Documentation](https://lighthouse-book.sigmaprime.io/validator-management.html) 
+- [Lighthouse Validator Documentation](https://lighthouse-book.sigmaprime.io/validator-management.html)

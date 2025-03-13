@@ -27,7 +27,7 @@ ephemery_dirs:
   validator_keys: "{{ ephemery_base_dir }}/data/validator-keys"
   validator_passwords: "{{ ephemery_base_dir }}/secrets/validator-passwords"
 
-# File paths 
+# File paths
 ephemery_files:
   jwt_secret: "{{ ephemery_base_dir }}/jwt.hex"
   paths_config: "{{ ephemery_dirs.config }}/ephemery_paths.conf"
@@ -35,7 +35,7 @@ ephemery_files:
   lighthouse_config: "{{ ephemery_dirs.config }}/lighthouse.toml"
   validator_config: "{{ ephemery_dirs.config }}/validator.toml"
   prometheus_config: "{{ ephemery_dirs.config }}/prometheus.yaml"
-  
+
 # Docker network name
 ephemery_docker_network: "ephemery-net"
 
@@ -65,4 +65,4 @@ ephemery_images:
   geth: "pk910/ephemery-geth:latest"
   lighthouse: "pk910/ephemery-lighthouse:latest"
   prometheus: "prom/prometheus:v2.43.0"
-  grafana: "grafana/grafana:9.4.3" 
+  grafana: "grafana/grafana:9.4.3"

@@ -10,7 +10,7 @@ We've completed an initial production deployment attempt of our Ephemery node. T
 
 1. **Infrastructure Deployment**
    - Successfully deployed base infrastructure using Ansible
-   - Created all required directories and file structures 
+   - Created all required directories and file structures
    - Proper JWT secret generation and configuration
    - Validator client configuration completed
 
@@ -22,7 +22,7 @@ We've completed an initial production deployment attempt of our Ephemery node. T
 
 1. **Client Container Failures**
    - **Lighthouse Client**: Error `invalid value 'ephemery' for '--network <network>'` indicates the client doesn't recognize Ephemery as a valid network
-   - **Geth Client**: Failures in startup with `invalid command: "geth"` errors 
+   - **Geth Client**: Failures in startup with `invalid command: "geth"` errors
    - Containers continually restart due to these configuration issues
 
 2. **Monitoring System**
@@ -30,7 +30,7 @@ We've completed an initial production deployment attempt of our Ephemery node. T
    - Missing configuration for datasources (template file not found)
 
 3. **Network Configuration**
-   - Special Ephemery network configuration not properly initialized 
+   - Special Ephemery network configuration not properly initialized
    - Checkpoint sync working but not with correct genesis data
 
 ## Root Cause Analysis
@@ -65,7 +65,7 @@ We've completed an initial production deployment attempt of our Ephemery node. T
    ```bash
    # Create Ephemery testnet config directory
    ssh root@103.214.23.174 "mkdir -p /opt/ephemery/config/ephemery_network"
-   
+
    # Download latest Ephemery network configuration
    ssh root@103.214.23.174 "cd /opt/ephemery/config/ephemery_network && \
      wget https://ephemery.dev/ephemery-143/testnet-all.tar.gz && \
@@ -185,7 +185,7 @@ e1f74e602f3d   pk910/ephemery-lighthouse:latest   Restarting (1) 52s ago   ephem
 | Monitoring template missing | Monitoring system fails | Manual template creation | Include templates in package |
 | Container restart loop | Service unavailable | Manual container configuration | Fix deployment playbooks |
 
-This documentation will be updated as we implement fixes and gather more information about the production deployment process. 
+This documentation will be updated as we implement fixes and gather more information about the production deployment process.
 
 ## Recent Deployment Fixes (March 2025)
 
@@ -195,11 +195,11 @@ This documentation will be updated as we implement fixes and gather more informa
    - **Problem**: Lighthouse container was unable to authenticate with Geth using JWT token, showing `ERRO Failed jwt authorization error: InvalidToken` errors
    - **Root Cause**: Container name resolution issues between Lighthouse and Geth containers
    - **Solution**: Reconfigured Lighthouse container to use Geth's IP address directly instead of container name
-   
+
    ```bash
    # Get Geth IP address
    GETH_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ephemery-geth)
-   
+
    # Recreate Lighthouse container with Geth IP
    docker run -d --name ephemery-lighthouse \
        --network ephemery-net \
@@ -226,38 +226,38 @@ This documentation will be updated as we implement fixes and gather more informa
    - **Problem**: Prometheus and Grafana containers were continuously restarting
    - **Root Cause**: YAML syntax error in Prometheus configuration file
    - **Solution**: Created a valid Prometheus configuration file and recreated the containers
-   
+
    ```bash
    # Create proper Prometheus configuration
    cat > /root/ephemery/config/prometheus/prometheus.yml << EOF
    global:
      scrape_interval: 15s
      evaluation_interval: 15s
-   
+
    scrape_configs:
      - job_name: 'prometheus'
        static_configs:
          - targets: ['localhost:9090']
-   
+
      - job_name: 'node_exporter'
        static_configs:
          - targets: ['node-exporter:9100']
-   
+
      - job_name: 'geth'
        metrics_path: /debug/metrics/prometheus
        static_configs:
          - targets: ['ephemery-geth:6060']
-   
+
      - job_name: 'lighthouse'
        static_configs:
          - targets: ['ephemery-lighthouse:5054']
    EOF
-   
+
    # Recreate Prometheus container
    docker run -d --name prometheus --network host \
        -v /root/ephemery/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
        prom/prometheus:v2.47.2
-   
+
    # Recreate Grafana container
    docker run -d --name grafana --network host \
        -e GF_SECURITY_ADMIN_USER=admin \
@@ -291,4 +291,4 @@ The Ephemery node is now fully operational with both Geth and Lighthouse contain
 3. **Troubleshooting Tools**:
    - Deploy the `troubleshoot_ephemery.sh` script to all production servers
    - Add comprehensive logging for all deployment steps
-   - Implement automated health checks for early detection of issues 
+   - Implement automated health checks for early detection of issues

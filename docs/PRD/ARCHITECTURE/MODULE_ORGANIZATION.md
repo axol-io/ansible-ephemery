@@ -23,4 +23,4 @@ The codebase is organized into the following primary modules:
 - [Component Architecture](./COMPONENT_ARCHITECTURE.md)
 - [Repository Structure](../DEVELOPMENT/REPOSITORY_STRUCTURE.md) (pending)
 
-*Note: This is a placeholder document that will be expanded with comprehensive content in a future update.* 
+*Note: This is a placeholder document that will be expanded with comprehensive content in a future update.*

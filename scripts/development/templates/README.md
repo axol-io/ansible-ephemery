@@ -41,4 +41,4 @@ All scripts should follow this general structure:
 - Validate all inputs and prerequisites
 - Use meaningful variable and function names
 - Add comments for complex operations
-- Follow the principle of least privilege 
+- Follow the principle of least privilege

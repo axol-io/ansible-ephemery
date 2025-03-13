@@ -39,7 +39,7 @@ NC='\033[0m' # No Color
 # Print usage information
 function print_usage() {
     echo -e "${BLUE}Ephemery Validator Key Restore Wrapper${NC}"
-    echo 
+    echo
     echo "This script provides a simplified interface for restoring validator keys in Ephemery setups."
     echo
     echo -e "${YELLOW}Usage:${NC}"
@@ -79,37 +79,37 @@ function print_usage() {
 # List available backups
 function list_backups() {
     local backup_dir="${1:-${DEFAULT_BACKUP_DIR}}"
-    
+
     if [[ ! -d "${backup_dir}" ]]; then
         echo -e "${RED}Backup directory not found: ${backup_dir}${NC}"
         exit 1
     fi
-    
+
     echo -e "${BLUE}Available backups in ${backup_dir}:${NC}"
-    
+
     # List directories that match the backup pattern
     backup_count=0
     while IFS= read -r backup; do
         if [[ -d "${backup}" ]]; then
             # Extract timestamp or name from path
             name=$(basename "${backup}")
-            
+
             # Count JSON files in the backup
             json_count=$(find "${backup}" -name "*.json" | wc -l)
-            
+
             # Display with file count
             echo -e "  ${YELLOW}${name}${NC} (${json_count} key files)"
-            
+
             ((backup_count++))
         fi
     done < <(find "${backup_dir}" -maxdepth 1 -type d -name "validator_keys_backup_*" | sort)
-    
+
     # Check for latest symlink
     if [[ -L "${backup_dir}/latest" ]]; then
         latest_target=$(readlink "${backup_dir}/latest")
         echo -e "${GREEN}Latest backup symlink:${NC} points to $(basename "${latest_target}")"
     fi
-    
+
     if [[ ${backup_count} -eq 0 ]]; then
         echo -e "${YELLOW}No backups found matching the expected pattern.${NC}"
     else
@@ -214,12 +214,12 @@ elif [[ -L "${BACKUP_DIR}/latest" ]]; then
 else
     # Find most recent backup
     latest_backup=$(find "${BACKUP_DIR}" -maxdepth 1 -type d -name "validator_keys_backup_*" | sort | tail -n 1)
-    
+
     if [[ -z "${latest_backup}" ]]; then
         echo -e "${RED}No backups found in ${BACKUP_DIR}${NC}"
         exit 1
     fi
-    
+
     FINAL_BACKUP_PATH="${latest_backup}"
     echo -e "${YELLOW}No 'latest' symlink found. Using most recent backup: $(basename "${FINAL_BACKUP_PATH}")${NC}"
 fi
@@ -300,13 +300,13 @@ fi
 # Final status
 if [[ "${restore_status}" -eq 0 ]]; then
     echo -e "${GREEN}Validator key restore operation completed successfully.${NC}"
-    
+
     if [[ "${DRY_RUN}" == "true" ]]; then
         echo -e "${YELLOW}This was a dry run. No actual changes were made.${NC}"
     fi
-    
+
     exit 0
 else
     echo -e "${RED}Validator key restore operation failed.${NC}"
     exit 1
-fi 
+fi

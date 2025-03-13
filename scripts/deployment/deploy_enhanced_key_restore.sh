@@ -28,7 +28,7 @@ NC='\033[0m' # No Color
 # Print usage information
 function print_usage() {
     echo -e "${BLUE}Deploy Enhanced Validator Key Restore System${NC}"
-    echo 
+    echo
     echo "This script deploys the enhanced validator key restore system using Ansible."
     echo
     echo -e "${YELLOW}Usage:${NC}"
@@ -165,4 +165,4 @@ if [[ ${exit_code} -eq 0 ]]; then
 else
     echo -e "${RED}Deployment failed with exit code ${exit_code}${NC}"
     exit ${exit_code}
-fi 
+fi

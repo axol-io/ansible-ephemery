@@ -30,7 +30,7 @@ NC='\033[0m' # No Color
 # Print usage information
 function print_usage() {
     echo -e "${BLUE}Ephemery Cron Setup${NC}"
-    echo 
+    echo
     echo "This script sets up a cron job to periodically run the Ephemery reset handler."
     echo
     echo -e "${YELLOW}Usage:${NC}"
@@ -166,4 +166,4 @@ if crontab -l | grep -q "${RESET_HANDLER}"; then
 else
     echo -e "${RED}Error: Failed to install cron job.${NC}"
     exit 1
-fi 
+fi

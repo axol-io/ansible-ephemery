@@ -82,17 +82,17 @@ find_inventory_files() {
 list_inventory_files() {
     echo -e "${BLUE}Generated Inventory Files:${NC}"
     local files=($(find_inventory_files))
-    
+
     if [ ${#files[@]} -eq 0 ]; then
         echo -e "${YELLOW}No inventory files found.${NC}"
         return
     fi
-    
+
     echo -e "${GREEN}Found ${#files[@]} inventory files:${NC}"
     echo ""
     printf "%-50s %-25s %-15s\n" "FILENAME" "CREATED" "SIZE"
     echo "----------------------------------------------------------------------------------------"
-    
+
     for file in "${files[@]}"; do
         local filename=$(basename "$file")
         local created=$(stat -c "%y" "$file" 2>/dev/null || stat -f "%Sm" "$file" 2>/dev/null)
@@ -104,10 +104,10 @@ list_inventory_files() {
 # Function to clean old inventory files
 clean_inventory_files() {
     echo -e "${BLUE}Cleaning inventory files older than ${DAYS_TO_KEEP} days...${NC}"
-    
+
     # Use find to locate old files
     local old_files=()
-    
+
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
         old_files=($(find "$PROJECT_ROOT" -maxdepth 1 -type f -name "$INVENTORY_PATTERN" -mtime +${DAYS_TO_KEEP} -print))
@@ -115,21 +115,21 @@ clean_inventory_files() {
         # Linux
         old_files=($(find "$PROJECT_ROOT" -maxdepth 1 -type f -name "$INVENTORY_PATTERN" -mtime +${DAYS_TO_KEEP} -print))
     fi
-    
+
     if [ ${#old_files[@]} -eq 0 ]; then
         echo -e "${GREEN}No old inventory files to clean.${NC}"
         return
     fi
-    
+
     echo -e "${YELLOW}The following ${#old_files[@]} files will be deleted:${NC}"
     for file in "${old_files[@]}"; do
         echo "- $(basename "$file")"
     done
-    
+
     echo ""
     read -p "Are you sure you want to delete these files? (y/N) " -n 1 -r
     echo ""
-    
+
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         for file in "${old_files[@]}"; do
             rm -f "$file"
@@ -144,29 +144,29 @@ clean_inventory_files() {
 # Function to backup inventory files
 backup_inventory_files() {
     echo -e "${BLUE}Backing up inventory files to ${BACKUP_DIR}...${NC}"
-    
+
     # Create backup directory if it doesn't exist
     mkdir -p "$BACKUP_DIR"
-    
+
     # Get list of inventory files
     local files=($(find_inventory_files))
-    
+
     if [ ${#files[@]} -eq 0 ]; then
         echo -e "${YELLOW}No inventory files found to backup.${NC}"
         return
     fi
-    
+
     # Create timestamped backup directory
     local backup_timestamp=$(date +"%Y-%m-%d-%H-%M")
     local backup_path="${BACKUP_DIR}/inventory-backup-${backup_timestamp}"
     mkdir -p "$backup_path"
-    
+
     # Copy files to backup directory
     for file in "${files[@]}"; do
         cp "$file" "$backup_path/"
         echo -e "${GREEN}Backed up: $(basename "$file")${NC}"
     done
-    
+
     echo -e "${GREEN}Backup complete: ${backup_path}${NC}"
     echo -e "${GREEN}Total files backed up: ${#files[@]}${NC}"
 }
@@ -189,4 +189,4 @@ case $ACTION in
         usage
         exit 1
         ;;
-esac 
+esac

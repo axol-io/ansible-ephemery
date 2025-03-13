@@ -48,7 +48,7 @@ should_log() {
   local msg_level=$1
   local current_level=${LOG_LEVELS[$LOG_LEVEL]}
   local requested_level=${LOG_LEVELS[$msg_level]}
-  
+
   if [[ $requested_level -ge $current_level ]]; then
     return 0
   else
@@ -167,4 +167,4 @@ export -f log_warn
 export -f log_error
 export -f log_critical
 export -f log_success
-export -f set_log_level 
+export -f set_log_level

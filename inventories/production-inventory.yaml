@@ -42,17 +42,17 @@ ephemery:
       validator_client: "lighthouse" # Default is the CL client, can be overridden for separate validator client
       validator_image: "" # Optional: Override default validator client image
       validator_graffiti: "Ephemery" # Custom graffiti for validator blocks
-      
+
       # Validator key management
       validator_keys_password_file: 'files/passwords/validators.txt'
       validator_keys_src: 'files/validator_keys'
       validator_expected_key_count: 1000 # Expected key count for validation - set to 0 to skip validation
-      
+
       # Validator performance settings
       validator_memory_limit: "2g" # Memory limit for validator container
       validator_cpu_limit: "2" # CPU limit for validator container
       validator_extra_opts: "--suggested-fee-recipient=0x0000000000000000000000000000000000000000" # Extra options for validator client
-      
+
       # MEV configuration
       mev_boost_enabled: false # Whether to enable MEV-Boost
       mev_boost_relays: [] # List of MEV-Boost relays to use

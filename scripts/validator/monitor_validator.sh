@@ -152,21 +152,21 @@ function check_validator_container {
 # Get validator status
 function get_validator_status {
   echo -e "${BLUE}Checking validator status...${NC}"
-  
+
   # Check if validator container is running
   check_validator_container
-  
+
   # Get validator metrics
   echo -e "${BLUE}Validator metrics:${NC}"
   if curl -s "${VALIDATOR_METRICS_API}" > /dev/null; then
     # Extract key metrics
     ACTIVE_VALIDATORS=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_active | grep -v process | awk '{print $2}')
     TOTAL_VALIDATORS=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_total | grep -v process | awk '{print $2}')
-    
+
     if [[ -n "${ACTIVE_VALIDATORS}" && -n "${TOTAL_VALIDATORS}" ]]; then
       echo -e "${GREEN}Active validators: ${ACTIVE_VALIDATORS}${NC}"
       echo -e "${GREEN}Total validators: ${TOTAL_VALIDATORS}${NC}"
-      
+
       # Calculate percentage
       if [[ "${TOTAL_VALIDATORS}" -gt 0 ]]; then
         PERCENTAGE=$(echo "scale=2; ${ACTIVE_VALIDATORS} * 100 / ${TOTAL_VALIDATORS}" | bc)
@@ -175,7 +175,7 @@ function get_validator_status {
     else
       echo -e "${YELLOW}Could not extract validator counts from metrics${NC}"
     fi
-    
+
     # Show more detailed metrics if verbose
     if [[ "${VERBOSE}" == "true" ]]; then
       echo -e "${BLUE}Detailed metrics:${NC}"
@@ -184,13 +184,13 @@ function get_validator_status {
   else
     echo -e "${RED}Could not connect to validator metrics API at ${VALIDATOR_METRICS_API}${NC}"
   fi
-  
+
   # Check beacon node sync status
   echo -e "\n${BLUE}Beacon node sync status:${NC}"
   if curl -s "${BEACON_API}/eth/v1/node/syncing" > /dev/null; then
     SYNC_STATUS=$(curl -s "${BEACON_API}/eth/v1/node/syncing")
     IS_SYNCING=$(echo "${SYNC_STATUS}" | jq -r '.data.is_syncing')
-    
+
     if [[ "${IS_SYNCING}" == "false" ]]; then
       echo -e "${GREEN}Beacon node is fully synced${NC}"
     else
@@ -205,43 +205,43 @@ function get_validator_status {
 # Get validator performance
 function get_validator_performance {
   echo -e "${BLUE}Checking validator performance...${NC}"
-  
+
   # Use advanced_validator_monitoring.sh if available
   ADVANCED_MONITORING="${REPO_ROOT}/scripts/monitoring/advanced_validator_monitoring.sh"
   if [[ -f "${ADVANCED_MONITORING}" && -x "${ADVANCED_MONITORING}" ]]; then
     echo -e "${BLUE}Using advanced validator monitoring...${NC}"
-    
+
     # Build command
     CMD="${ADVANCED_MONITORING} --validator-api ${VALIDATOR_API} --beacon-api ${BEACON_API}"
-    
+
     if [[ "${VERBOSE}" == "true" ]]; then
       CMD="${CMD} --verbose"
     fi
-    
+
     # Execute command
     eval "${CMD}"
   else
     echo -e "${YELLOW}Advanced validator monitoring script not found at ${ADVANCED_MONITORING}${NC}"
     echo -e "${YELLOW}Using basic performance monitoring...${NC}"
-    
+
     # Basic performance monitoring
     if curl -s "${VALIDATOR_METRICS_API}" > /dev/null; then
       # Extract performance metrics
       ATTESTATION_HITS=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_attestation_hits | awk '{print $2}')
       ATTESTATION_MISSES=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_attestation_misses | awk '{print $2}')
-      
+
       if [[ -n "${ATTESTATION_HITS}" && -n "${ATTESTATION_MISSES}" ]]; then
         TOTAL_ATTESTATIONS=$((ATTESTATION_HITS + ATTESTATION_MISSES))
-        
+
         echo -e "${GREEN}Attestation hits: ${ATTESTATION_HITS}${NC}"
         echo -e "${GREEN}Attestation misses: ${ATTESTATION_MISSES}${NC}"
         echo -e "${GREEN}Total attestations: ${TOTAL_ATTESTATIONS}${NC}"
-        
+
         # Calculate percentage
         if [[ "${TOTAL_ATTESTATIONS}" -gt 0 ]]; then
           PERCENTAGE=$(echo "scale=2; ${ATTESTATION_HITS} * 100 / ${TOTAL_ATTESTATIONS}" | bc)
           echo -e "${GREEN}Attestation effectiveness: ${PERCENTAGE}%${NC}"
-          
+
           # Check against threshold
           if (( $(echo "${PERCENTAGE} < ${ALERT_THRESHOLD}" | bc -l) )); then
             echo -e "${RED}⚠ Attestation effectiveness below threshold (${ALERT_THRESHOLD}%)${NC}"
@@ -259,13 +259,13 @@ function get_validator_performance {
 # Check validator health
 function check_validator_health {
   echo -e "${BLUE}Checking validator health...${NC}"
-  
+
   # Check if validator container is running
   if ! check_validator_container; then
     echo -e "${RED}Validator container is not running. Health check failed.${NC}"
     return 1
   fi
-  
+
   # Check if validator is connected to beacon node
   echo -e "${BLUE}Checking connection to beacon node...${NC}"
   if curl -s "${VALIDATOR_API}/lighthouse/health" > /dev/null; then
@@ -278,7 +278,7 @@ function check_validator_health {
   else
     echo -e "${RED}✗ Could not connect to validator API at ${VALIDATOR_API}${NC}"
   fi
-  
+
   # Check validator logs for errors
   echo -e "${BLUE}Checking validator logs for errors...${NC}"
   if docker logs ephemery-validator 2>&1 | grep -i error | tail -5 > /dev/null; then
@@ -287,7 +287,7 @@ function check_validator_health {
   else
     echo -e "${GREEN}✓ No recent errors found in validator logs${NC}"
   fi
-  
+
   # Check validator metrics for warnings
   echo -e "${BLUE}Checking validator metrics for warnings...${NC}"
   if curl -s "${VALIDATOR_METRICS_API}" | grep -i warning > /dev/null; then
@@ -302,18 +302,18 @@ function check_validator_health {
 function show_dashboard {
   echo -e "${BLUE}Validator Dashboard${NC}"
   echo -e "${BLUE}==================${NC}"
-  
+
   # Check if validator container is running
   check_validator_container
-  
+
   # Get validator status
   echo -e "\n${BLUE}Validator Status:${NC}"
   ACTIVE_VALIDATORS=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_active | grep -v process | awk '{print $2}')
   TOTAL_VALIDATORS=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_total | grep -v process | awk '{print $2}')
-  
+
   if [[ -n "${ACTIVE_VALIDATORS}" && -n "${TOTAL_VALIDATORS}" ]]; then
     echo -e "${GREEN}Active validators: ${ACTIVE_VALIDATORS}/${TOTAL_VALIDATORS}${NC}"
-    
+
     # Calculate percentage
     if [[ "${TOTAL_VALIDATORS}" -gt 0 ]]; then
       PERCENTAGE=$(echo "scale=2; ${ACTIVE_VALIDATORS} * 100 / ${TOTAL_VALIDATORS}" | bc)
@@ -322,23 +322,23 @@ function show_dashboard {
   else
     echo -e "${YELLOW}Could not extract validator counts from metrics${NC}"
   fi
-  
+
   # Get performance metrics
   echo -e "\n${BLUE}Performance Metrics:${NC}"
   ATTESTATION_HITS=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_attestation_hits | awk '{print $2}')
   ATTESTATION_MISSES=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_attestation_misses | awk '{print $2}')
-  
+
   if [[ -n "${ATTESTATION_HITS}" && -n "${ATTESTATION_MISSES}" ]]; then
     TOTAL_ATTESTATIONS=$((ATTESTATION_HITS + ATTESTATION_MISSES))
-    
+
     echo -e "${GREEN}Attestation hits: ${ATTESTATION_HITS}${NC}"
     echo -e "${GREEN}Attestation misses: ${ATTESTATION_MISSES}${NC}"
-    
+
     # Calculate percentage
     if [[ "${TOTAL_ATTESTATIONS}" -gt 0 ]]; then
       PERCENTAGE=$(echo "scale=2; ${ATTESTATION_HITS} * 100 / ${TOTAL_ATTESTATIONS}" | bc)
       echo -e "${GREEN}Attestation effectiveness: ${PERCENTAGE}%${NC}"
-      
+
       # Check against threshold
       if (( $(echo "${PERCENTAGE} < ${ALERT_THRESHOLD}" | bc -l) )); then
         echo -e "${RED}⚠ Attestation effectiveness below threshold (${ALERT_THRESHOLD}%)${NC}"
@@ -347,27 +347,27 @@ function show_dashboard {
   else
     echo -e "${YELLOW}Could not extract attestation metrics${NC}"
   fi
-  
+
   # Get beacon node sync status
   echo -e "\n${BLUE}Beacon Node Status:${NC}"
   SYNC_STATUS=$(curl -s "${BEACON_API}/eth/v1/node/syncing")
   IS_SYNCING=$(echo "${SYNC_STATUS}" | jq -r '.data.is_syncing')
-  
+
   if [[ "${IS_SYNCING}" == "false" ]]; then
     echo -e "${GREEN}Beacon node is fully synced${NC}"
   else
     SYNC_DISTANCE=$(echo "${SYNC_STATUS}" | jq -r '.data.sync_distance')
     echo -e "${YELLOW}Beacon node is syncing (${SYNC_DISTANCE} slots behind)${NC}"
   fi
-  
+
   # Get system resources
   echo -e "\n${BLUE}System Resources:${NC}"
   VALIDATOR_CPU=$(docker stats ephemery-validator --no-stream --format "{{.CPUPerc}}")
   VALIDATOR_MEM=$(docker stats ephemery-validator --no-stream --format "{{.MemUsage}}")
-  
+
   echo -e "${GREEN}Validator CPU: ${VALIDATOR_CPU}${NC}"
   echo -e "${GREEN}Validator Memory: ${VALIDATOR_MEM}${NC}"
-  
+
   # Show timestamp
   echo -e "\n${BLUE}Last updated: $(date)${NC}"
 }
@@ -376,12 +376,12 @@ function show_dashboard {
 function main {
   parse_args "$@"
   ensure_directories
-  
+
   # Execute requested operation
   if [[ "${CONTINUOUS}" == "true" ]]; then
     echo -e "${BLUE}Starting continuous monitoring (interval: ${INTERVAL}s)...${NC}"
     echo -e "${BLUE}Press Ctrl+C to stop${NC}"
-    
+
     while true; do
       clear
       case "${OPERATION}" in
@@ -398,7 +398,7 @@ function main {
           show_dashboard
           ;;
       esac
-      
+
       echo -e "\n${BLUE}Next update in ${INTERVAL} seconds...${NC}"
       sleep "${INTERVAL}"
     done
@@ -421,4 +421,4 @@ function main {
 }
 
 # Execute main function
-main "$@" 
+main "$@"

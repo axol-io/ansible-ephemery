@@ -24,4 +24,4 @@ This section will detail how components communicate with each other, including p
 - [Module Organization](./MODULE_ORGANIZATION.md) (pending)
 - [Design Principles](../DESIGN/DESIGN_PRINCIPLES.md)
 
-*Note: This is a placeholder document that will be expanded with comprehensive content in a future update.* 
+*Note: This is a placeholder document that will be expanded with comprehensive content in a future update.*

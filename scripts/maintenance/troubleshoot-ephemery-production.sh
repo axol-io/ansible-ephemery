@@ -79,13 +79,13 @@ else
   echo -e "${YELLOW}Creating dedicated ephemery-net network...${NC}"
   docker network create ephemery-net
   echo -e "${GREEN}✓ Dedicated ephemery-net network created${NC}"
-  
+
   # Connect containers to the new network if they exist
   if [ -n "$GETH_RUNNING" ]; then
     docker network connect ephemery-net ephemery-geth
     echo -e "${GREEN}✓ Connected Geth to ephemery-net${NC}"
   fi
-  
+
   if [ -n "$LIGHTHOUSE_RUNNING" ]; then
     docker network connect ephemery-net ephemery-lighthouse
     echo -e "${GREEN}✓ Connected Lighthouse to ephemery-net${NC}"
@@ -96,7 +96,7 @@ fi
 echo -e "\n${YELLOW}Step 4: Checking JWT token${NC}"
 if [ -f "$EPHEMERY_JWT_SECRET" ]; then
   echo -e "${GREEN}✓ JWT token file exists${NC}"
-  
+
   # Check file permissions
   FILE_PERMS=$(stat -c "%a" "$EPHEMERY_JWT_SECRET")
   if [ "$FILE_PERMS" == "600" ]; then
@@ -107,14 +107,14 @@ if [ -f "$EPHEMERY_JWT_SECRET" ]; then
     chmod 600 "$EPHEMERY_JWT_SECRET"
     echo -e "${GREEN}✓ Permissions corrected${NC}"
   fi
-  
+
   # Check token format
   TOKEN=$(cat "$EPHEMERY_JWT_SECRET")
   TOKEN_LENGTH=${#TOKEN}
-  
+
   echo -e "${BLUE}Token value (first 10 chars): ${TOKEN:0:10}...${NC}"
   echo -e "${BLUE}Token length: $TOKEN_LENGTH characters${NC}"
-  
+
   if [[ $TOKEN == 0x* ]] && [ $TOKEN_LENGTH -eq 66 ]; then
     echo -e "${GREEN}✓ Token format appears correct (0x + 64 hex chars)${NC}"
   else
@@ -140,28 +140,28 @@ echo -e "\n${YELLOW}Step 5: Verifying container networking${NC}"
 if [ -n "$GETH_RUNNING" ] && [ -n "$LIGHTHOUSE_RUNNING" ]; then
   GETH_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ephemery-geth)
   LIGHTHOUSE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ephemery-lighthouse)
-  
+
   # Get IPs from dedicated network if available
   GETH_DEDICATED_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if eq .NetworkID "ephemery-net"}}{{.IPAddress}}{{end}}{{end}}' ephemery-geth)
   LIGHTHOUSE_DEDICATED_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if eq .NetworkID "ephemery-net"}}{{.IPAddress}}{{end}}{{end}}' ephemery-lighthouse)
-  
+
   echo -e "${BLUE}Geth container IP (default network): $GETH_IP${NC}"
   echo -e "${BLUE}Lighthouse container IP (default network): $LIGHTHOUSE_IP${NC}"
-  
+
   if [ -n "$GETH_DEDICATED_IP" ]; then
     echo -e "${BLUE}Geth container IP (dedicated network): $GETH_DEDICATED_IP${NC}"
   fi
-  
+
   if [ -n "$LIGHTHOUSE_DEDICATED_IP" ]; then
     echo -e "${BLUE}Lighthouse container IP (dedicated network): $LIGHTHOUSE_DEDICATED_IP${NC}"
   fi
-  
+
   echo -e "${YELLOW}Testing network connectivity from Lighthouse to Geth...${NC}"
   if docker exec ephemery-lighthouse ping -c 2 ephemery-geth &>/dev/null; then
     echo -e "${GREEN}✓ Lighthouse can ping Geth by container name${NC}"
   else
     echo -e "${RED}✗ Lighthouse cannot ping Geth by container name${NC}"
-    
+
     if docker exec ephemery-lighthouse ping -c 2 "$GETH_IP" &>/dev/null; then
       echo -e "${GREEN}✓ Lighthouse can ping Geth by IP address${NC}"
     else
@@ -169,7 +169,7 @@ if [ -n "$GETH_RUNNING" ] && [ -n "$LIGHTHOUSE_RUNNING" ]; then
       echo -e "${YELLOW}This indicates a network configuration issue${NC}"
     fi
   fi
-  
+
   # Test API endpoint connectivity
   echo -e "${YELLOW}Testing API endpoint connectivity...${NC}"
   if docker exec ephemery-lighthouse curl -s http://ephemery-geth:8551 &>/dev/null; then
@@ -187,10 +187,10 @@ echo -e "\n${YELLOW}Step 6: Checking container configurations${NC}"
 if [ -n "$GETH_RUNNING" ]; then
   echo -e "${BLUE}Geth container configuration:${NC}"
   docker inspect ephemery-geth | grep -A 10 -B 2 "Cmd"
-  
+
   echo -e "${BLUE}Geth JWT path in container:${NC}"
   docker exec ephemery-geth ls -la /config/jwt-secret
-  
+
   if docker exec ephemery-geth cat /config/jwt-secret &>/dev/null; then
     echo -e "${GREEN}✓ Geth can access JWT token in container${NC}"
     GETH_TOKEN=$(docker exec ephemery-geth cat /config/jwt-secret)
@@ -203,10 +203,10 @@ fi
 if [ -n "$LIGHTHOUSE_RUNNING" ]; then
   echo -e "${BLUE}Lighthouse container configuration:${NC}"
   docker inspect ephemery-lighthouse | grep -A 20 -B 2 "Cmd"
-  
+
   echo -e "${BLUE}Lighthouse JWT path in container:${NC}"
   docker exec ephemery-lighthouse ls -la /config/jwt-secret
-  
+
   if docker exec ephemery-lighthouse cat /config/jwt-secret &>/dev/null; then
     echo -e "${GREEN}✓ Lighthouse can access JWT token in container${NC}"
     LIGHTHOUSE_TOKEN=$(docker exec ephemery-lighthouse cat /config/jwt-secret)
@@ -214,11 +214,11 @@ if [ -n "$LIGHTHOUSE_RUNNING" ]; then
   else
     echo -e "${RED}✗ Lighthouse cannot access JWT token in container${NC}"
   fi
-  
+
   # Check execution endpoint configuration
   EXECUTION_ENDPOINT=$(docker inspect ephemery-lighthouse | grep -A 1 "execution-endpoint" | grep -v "execution-endpoint" | tr -d '", ' | head -1)
   echo -e "${BLUE}Lighthouse execution endpoint: $EXECUTION_ENDPOINT${NC}"
-  
+
   if [[ "$EXECUTION_ENDPOINT" == *"ephemery-geth"* ]]; then
     echo -e "${YELLOW}⚠ Lighthouse is using container name for execution endpoint${NC}"
     echo -e "${YELLOW}Consider using IP address instead if experiencing JWT authentication issues${NC}"
@@ -231,7 +231,7 @@ fi
 if [ -n "$GETH_RUNNING" ] && [ -n "$LIGHTHOUSE_RUNNING" ]; then
   GETH_TOKEN=$(docker exec ephemery-geth cat /config/jwt-secret)
   LIGHTHOUSE_TOKEN=$(docker exec ephemery-lighthouse cat /config/jwt-secret)
-  
+
   if [ "$GETH_TOKEN" == "$LIGHTHOUSE_TOKEN" ]; then
     echo -e "${GREEN}✓ JWT tokens match between containers${NC}"
   else
@@ -250,7 +250,7 @@ fi
 if [ -n "$LIGHTHOUSE_RUNNING" ]; then
   echo -e "${BLUE}Recent Lighthouse logs:${NC}"
   docker logs --tail 20 ephemery-lighthouse
-  
+
   # Check for specific JWT errors
   JWT_ERRORS=$(docker logs ephemery-lighthouse 2>&1 | grep -c "Failed jwt authorization")
   if [ "$JWT_ERRORS" -gt 0 ]; then
@@ -269,14 +269,14 @@ if [ -n "$PROMETHEUS_RUNNING" ]; then
   echo -e "${GREEN}✓ Prometheus container is running${NC}"
 else
   echo -e "${RED}✗ Prometheus container is not running${NC}"
-  
+
   # Check Prometheus configuration
   if [ -f "$EPHEMERY_CONFIG_DIR/prometheus/prometheus.yml" ]; then
     echo -e "${GREEN}✓ Prometheus configuration file exists${NC}"
   else
     echo -e "${RED}✗ Prometheus configuration file does not exist${NC}"
     echo -e "${YELLOW}Creating Prometheus configuration...${NC}"
-    
+
     mkdir -p "$EPHEMERY_CONFIG_DIR/prometheus"
     cat > "$EPHEMERY_CONFIG_DIR/prometheus/prometheus.yml" << EOF
 global:
@@ -318,24 +318,24 @@ read -p "Proceed? " PROCEED
 if [ "$PROCEED" == "y" ] || [ "$PROCEED" == "Y" ]; then
   echo -e "${BLUE}Stopping containers...${NC}"
   docker stop ephemery-geth ephemery-lighthouse
-  
+
   echo -e "${BLUE}Regenerating JWT token...${NC}"
   echo "0x$(openssl rand -hex 32)" > "$EPHEMERY_JWT_SECRET"
   chmod 600 "$EPHEMERY_JWT_SECRET"
-  
+
   echo -e "${BLUE}Starting Geth container...${NC}"
   docker start ephemery-geth
   sleep 10
-  
+
   # Get Geth IP from dedicated network
   GETH_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if eq .NetworkID "ephemery-net"}}{{.IPAddress}}{{end}}{{end}}' ephemery-geth)
   if [ -z "$GETH_IP" ]; then
     GETH_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ephemery-geth)
   fi
-  
+
   echo -e "${BLUE}Recreating Lighthouse container with Geth IP ($GETH_IP)...${NC}"
   docker rm ephemery-lighthouse
-  
+
   docker run -d --name ephemery-lighthouse \
     --network ephemery-net \
     --restart unless-stopped \
@@ -355,14 +355,14 @@ if [ "$PROCEED" == "y" ] || [ "$PROCEED" == "Y" ]; then
     --genesis-backfill \
     --disable-backfill-rate-limiting \
     --disable-deposit-contract-sync
-  
+
   echo -e "${GREEN}✓ Containers restarted with new JWT token and IP-based configuration${NC}"
   echo -e "${YELLOW}Check logs after 30 seconds to verify the issue is resolved${NC}"
-  
+
   # Fix monitoring if needed
   if [ -z "$PROMETHEUS_RUNNING" ] || [ -z "$GRAFANA_RUNNING" ]; then
     echo -e "${BLUE}Fixing monitoring stack...${NC}"
-    
+
     if [ -z "$PROMETHEUS_RUNNING" ]; then
       docker rm prometheus 2>/dev/null || true
       docker run -d --name prometheus --network host \
@@ -370,7 +370,7 @@ if [ "$PROCEED" == "y" ] || [ "$PROCEED" == "Y" ]; then
         prom/prometheus:v2.47.2
       echo -e "${GREEN}✓ Prometheus container recreated${NC}"
     fi
-    
+
     if [ -z "$GRAFANA_RUNNING" ]; then
       docker rm grafana 2>/dev/null || true
       docker run -d --name grafana --network host \
@@ -395,4 +395,4 @@ echo -e "3. Review container configurations for compatibility"
 echo -e "4. Consider recreating the Docker network"
 echo -e "5. Check for firewall rules blocking container communication"
 
-# Script end 
+# Script end

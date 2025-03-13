@@ -181,7 +181,7 @@ all:
         # Base directory for Ephemery
         ephemery_base_dir: "$BASE_DIR"
         jwt_secret_path: "$BASE_DIR/jwt.hex"
-        
+
         # Directories structure
         directories:
           base: "$BASE_DIR"
@@ -190,25 +190,25 @@ all:
           logs: "$LOGS_DIR"
           scripts: "$BASE_DIR/scripts"
           backups: "$BASE_DIR/backups"
-        
+
         # Security configuration
         security:
           jwt_secure_generation: true
           firewall_enabled: true
           firewall_default_policy: "deny"
-          
+
         # Client selection
         clients:
           execution: "geth"
           consensus: "lighthouse"
           validator: "lighthouse"
-          
+
           # Docker images
           images:
             geth: "$GETH_IMAGE"
             lighthouse: "$LIGHTHOUSE_IMAGE"
             validator: "$LIGHTHOUSE_IMAGE"
-          
+
         # Geth Configuration
         geth:
           config_dir: "$DATA_DIR/geth"
@@ -227,7 +227,7 @@ all:
           use_checkpoint: true
           checkpoint_url: "https://checkpoint-sync.ephemery.ethpandaops.io"
           clear_database_on_start: true
-          
+
         # Feature flags
         features:
           validator:
@@ -238,7 +238,7 @@ all:
             enabled: $ENABLE_DASHBOARD
           backup:
             enabled: false
-            
+
         # Network configuration
         network_mode: "host"
 EOF
@@ -259,7 +259,7 @@ all:
         # Base directory for Ephemery
         ephemery_base_dir: "$BASE_DIR"
         jwt_secret_path: "$BASE_DIR/jwt.hex"
-        
+
         # Directories structure
         directories:
           base: "$BASE_DIR"
@@ -268,25 +268,25 @@ all:
           logs: "$LOGS_DIR"
           scripts: "$BASE_DIR/scripts"
           backups: "$BASE_DIR/backups"
-        
+
         # Security configuration
         security:
           jwt_secure_generation: true
           firewall_enabled: true
           firewall_default_policy: "deny"
-          
+
         # Client selection
         clients:
           execution: "geth"
           consensus: "lighthouse"
           validator: "lighthouse"
-          
+
           # Docker images
           images:
             geth: "$GETH_IMAGE"
             lighthouse: "$LIGHTHOUSE_IMAGE"
             validator: "$LIGHTHOUSE_IMAGE"
-          
+
         # Geth Configuration
         geth:
           config_dir: "$DATA_DIR/geth"
@@ -305,7 +305,7 @@ all:
           use_checkpoint: true
           checkpoint_url: "https://checkpoint-sync.ephemery.ethpandaops.io"
           clear_database_on_start: true
-          
+
         # Feature flags
         features:
           validator:
@@ -316,7 +316,7 @@ all:
             enabled: $ENABLE_DASHBOARD
           backup:
             enabled: false
-            
+
         # Network configuration
         network_mode: "host"
 EOF

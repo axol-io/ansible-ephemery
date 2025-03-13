@@ -286,4 +286,4 @@ curl -s http://ephemery-geth:6060/debug/metrics/prometheus | head
 
 - [Dashboard Integration](DASHBOARD_INTEGRATION.md)
 - [Validator Monitoring](VALIDATOR_MONITORING.md)
-- [Sync Monitoring](SYNC_MONITORING.md) 
+- [Sync Monitoring](SYNC_MONITORING.md)

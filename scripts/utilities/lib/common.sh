@@ -18,7 +18,7 @@ print_banner() {
     local message="$1"
     local length=${#message}
     local padding=$((length + 10))
-    
+
     echo -e "${BLUE}"
     printf '=%.0s' $(seq 1 $padding)
     echo -e "\n    $message    \n"
@@ -31,7 +31,7 @@ log_message() {
     local level="$1"
     local message="$2"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
+
     case "$level" in
         "INFO")
             echo -e "${GREEN}[$timestamp] [INFO] $message${NC}"
@@ -62,7 +62,7 @@ check_command() {
 run_command() {
     local cmd="$1"
     local error_msg="${2:-Command failed}"
-    
+
     log_message "INFO" "Running: $cmd"
     if ! eval "$cmd"; then
         log_message "ERROR" "$error_msg"
@@ -93,15 +93,15 @@ check_ansible() {
 get_inventory_value() {
     local key="$1"
     local default="${2:-}"
-    
+
     if [[ ! -f "$EPHEMERY_BASE_DIR/inventory.yaml" ]]; then
         echo "$default"
         return
     fi
-    
+
     # Try to extract the value using grep and sed
     local value=$(grep -E "^[[:space:]]*$key:" "$EPHEMERY_BASE_DIR/inventory.yaml" | sed -E "s/^[[:space:]]*$key:[[:space:]]*(.*)/\1/")
-    
+
     if [[ -z "$value" ]]; then
         echo "$default"
     else
@@ -121,7 +121,7 @@ is_service_running() {
 # Prompt user for confirmation
 confirm_action() {
     local message="${1:-Are you sure you want to continue?}"
-    
+
     echo -e "${YELLOW}$message (y/n)${NC}"
     read -r response
     if [[ "$response" =~ ^[Yy]$ ]]; then

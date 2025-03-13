@@ -51,7 +51,7 @@ log() {
 # Print usage information
 function print_usage() {
     echo -e "${BLUE}Ephemery Reset Handler${NC}"
-    echo 
+    echo
     echo "This script detects and handles Ephemery network resets, including validator key restoration."
     echo
     echo -e "${YELLOW}Usage:${NC}"
@@ -105,20 +105,20 @@ done
 # Function to check for network reset
 check_for_reset() {
     log "Checking for Ephemery network reset..."
-    
+
     # Check if config directory exists
     if [[ ! -d "${CONFIG_DIR}" ]]; then
         log "Error: Config directory not found: ${CONFIG_DIR}"
         return 1
     fi
-    
+
     # Get current genesis time from configuration
     local genesis_file="${CONFIG_DIR}/genesis.json"
     if [[ ! -f "${genesis_file}" ]]; then
         log "Error: Genesis file not found: ${genesis_file}"
         return 1
     }
-    
+
     # Extract genesis time with proper fallback
     local current_genesis_time
     if command -v jq >/dev/null 2>&1; then
@@ -127,45 +127,45 @@ check_for_reset() {
         # Fallback to grep and sed if jq not available
         current_genesis_time=$(grep -o '"genesis_time":"[^"]*"' "${genesis_file}" | sed 's/"genesis_time":"//;s/"//g' || echo "0")
     fi
-    
+
     if [[ -z "${current_genesis_time}" || "${current_genesis_time}" == "0" || "${current_genesis_time}" == "null" ]]; then
         log "Error: Could not extract genesis time from ${genesis_file}"
         return 1
     fi
-    
+
     # Check if we have a record of the last genesis time
     if [[ ! -f "${LAST_GENESIS_TIME_FILE}" ]]; then
         log "No previous genesis time recorded. Recording current genesis time: ${current_genesis_time}"
         echo "${current_genesis_time}" > "${LAST_GENESIS_TIME_FILE}"
         return 1
     }
-    
+
     # Compare with last recorded genesis time
     local last_genesis_time
     last_genesis_time=$(cat "${LAST_GENESIS_TIME_FILE}")
-    
+
     if [[ "${current_genesis_time}" != "${last_genesis_time}" ]]; then
         log "Ephemery network reset detected!"
         log "Old genesis time: ${last_genesis_time}"
         log "New genesis time: ${current_genesis_time}"
-        
+
         # Update the last genesis time
         echo "${current_genesis_time}" > "${LAST_GENESIS_TIME_FILE}"
-        
+
         # Create reset detection file
         touch "${RESET_DETECTED_FILE}"
-        
+
         return 0 # Reset detected
     else
         log "No network reset detected. Genesis time unchanged: ${current_genesis_time}"
-        
+
         # If force option is used, treat as reset
         if [[ "${FORCE}" == "true" ]]; then
             log "Force option used. Treating as reset."
             touch "${RESET_DETECTED_FILE}"
             return 0
         fi
-        
+
         return 1 # No reset detected
     fi
 }
@@ -173,7 +173,7 @@ check_for_reset() {
 # Function to handle reset
 handle_reset() {
     log "Handling Ephemery network reset..."
-    
+
     if [[ "${DRY_RUN}" == "true" ]]; then
         log "DRY RUN: Would handle network reset here"
     else
@@ -182,7 +182,7 @@ handle_reset() {
             log "Stopping Ephemery containers..."
             docker stop "${BEACON_CONTAINER}" "${VALIDATOR_CONTAINER}" 2>/dev/null || log "Warning: Failed to stop containers (may not be running)"
         fi
-        
+
         # Step 2: Restore validator keys if requested
         if [[ "${RESTORE_KEYS}" == "true" ]]; then
             log "Restoring validator keys..."
@@ -197,7 +197,7 @@ handle_reset() {
                 fi
                 # Don't restart container since we'll do it ourselves
                 restore_opts+=("--no-start")
-                
+
                 # Run key restore
                 "${KEY_RESTORE_WRAPPER}" "${restore_opts[@]}" || {
                     log "Error: Validator key restore failed"
@@ -208,7 +208,7 @@ handle_reset() {
                 return 1
             fi
         fi
-        
+
         # Step 3: Restart containers if requested
         if [[ "${RESTART_CONTAINERS}" == "true" ]]; then
             log "Starting Ephemery containers..."
@@ -217,7 +217,7 @@ handle_reset() {
                 return 1
             }
         fi
-        
+
         # Mark reset as handled
         touch "${RESET_HANDLED_FILE}"
         log "Network reset handling complete"
@@ -252,4 +252,4 @@ elif check_for_reset; then
 else
     log "No network reset detected. Nothing to do."
     exit 0
-fi 
+fi

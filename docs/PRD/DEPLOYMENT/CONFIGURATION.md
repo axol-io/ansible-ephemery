@@ -51,9 +51,9 @@ All components of the Ephemery system load configuration in a standardized way:
    ```python
    def load_config():
        config = {}
-       config_path = os.environ.get('EPHEMERY_CONFIG_PATH', 
+       config_path = os.environ.get('EPHEMERY_CONFIG_PATH',
                                    '/opt/ephemery/config/ephemery_paths.conf')
-       
+
        if os.path.exists(config_path):
            logger.info(f"Loading configuration from {config_path}")
            with open(config_path, 'r') as f:

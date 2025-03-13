@@ -32,4 +32,4 @@ The project follows these design processes:
 ## Related Documentation
 
 - [Architecture Documentation](../ARCHITECTURE/README.md)
-- [Development Guidelines](../DEVELOPMENT/README.md) 
+- [Development Guidelines](../DEVELOPMENT/README.md)

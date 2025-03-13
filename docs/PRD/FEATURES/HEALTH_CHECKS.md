@@ -189,4 +189,4 @@ The health check script can be integrated with monitoring systems:
 - [Monitoring](./MONITORING.md)
 - [Validator Performance Monitoring](./VALIDATOR_PERFORMANCE_MONITORING.md)
 - [Troubleshooting](../DEVELOPMENT/TROUBLESHOOTING.md)
-- [Operations Guide](../OPERATIONS/OPERATIONS_GUIDE.md) 
+- [Operations Guide](../OPERATIONS/OPERATIONS_GUIDE.md)

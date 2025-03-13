@@ -140,4 +140,4 @@ export -f is_command_available
 export -f check_dependencies
 export -f confirm_action
 export -f get_script_name
-export -f get_absolute_path 
+export -f get_absolute_path

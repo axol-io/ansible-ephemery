@@ -109,33 +109,33 @@ mkdir -p "$BACKUP_DIR"
 check_validator_container() {
   if ! docker ps | grep -q ${EPHEMERY_VALIDATOR_CONTAINER}; then
     echo -e "${YELLOW}Validator container is not running.${NC}"
-    
+
     # For backup, we can proceed if validator data exists
     if [ "$MODE" = "backup" ] && [ -d "${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators" ]; then
       echo -e "${YELLOW}Proceeding with backup using data on disk.${NC}"
       return 0
     fi
-    
+
     # For restore, we need to warn but can still proceed
     if [ "$MODE" = "restore" ]; then
       echo -e "${YELLOW}Warning: Validator container is not running.${NC}"
       echo -e "${YELLOW}Keys will be restored to disk, but you will need to restart the validator container.${NC}"
       return 0
     fi
-    
+
     echo -e "${RED}Error: Cannot proceed without a validator container or valid validator data.${NC}"
     exit 1
   fi
-  
+
   return 0
 }
 
 # Function to export slashing protection data
 export_slashing_protection() {
   echo -e "${BLUE}Exporting slashing protection data...${NC}"
-  
+
   local protection_file="${BACKUP_DIR}/slashing_protection_${TIMESTAMP}.json"
-  
+
   if docker ps | grep -q ${EPHEMERY_VALIDATOR_CONTAINER}; then
     # Container is running, use it to export
     docker exec ${EPHEMERY_VALIDATOR_CONTAINER} lighthouse \
@@ -143,7 +143,7 @@ export_slashing_protection() {
       account validator slashing-protection export \
       --datadir=/validatordata \
       --output-path=/tmp/slashing_protection.json
-    
+
     # Copy from container to host
     docker cp ${EPHEMERY_VALIDATOR_CONTAINER}:/tmp/slashing_protection.json "$protection_file"
   else
@@ -158,7 +158,7 @@ export_slashing_protection() {
       return 1
     fi
   fi
-  
+
   if [ -f "$protection_file" ]; then
     echo -e "${GREEN}Slashing protection data exported to: $protection_file${NC}"
     echo "$protection_file"
@@ -172,28 +172,28 @@ export_slashing_protection() {
 # Function to create backup
 create_backup() {
   echo -e "${BLUE}Creating validator backup...${NC}"
-  
+
   # Check if validator data exists
   if [ ! -d "${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators" ]; then
     echo -e "${RED}Error: No validator data found at ${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators${NC}"
     exit 1
   fi
-  
+
   # Create temporary directory for backup
   local backup_tmp=$(mktemp -d)
-  
+
   # Copy validator keystores
   echo -e "${BLUE}Copying validator keystores...${NC}"
   mkdir -p "${backup_tmp}/validators"
   cp -r ${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators/* "${backup_tmp}/validators/"
-  
+
   # Copy validator password files
   if [ -d "${EPHEMERY_BASE_DIR}/secrets/validator-passwords" ]; then
     echo -e "${BLUE}Copying validator password files...${NC}"
     mkdir -p "${backup_tmp}/passwords"
     cp -r ${EPHEMERY_BASE_DIR}/secrets/validator-passwords/* "${backup_tmp}/passwords/"
   fi
-  
+
   # Export slashing protection if required
   local protection_file=""
   if [ "$INCLUDE_SLASHING_PROTECTION" = true ]; then
@@ -203,15 +203,15 @@ create_backup() {
       cp "$protection_file" "${backup_tmp}/slashing_protection/$(basename $protection_file)"
     fi
   fi
-  
+
   # Create backup file name
   local backup_name="ephemery_validator_backup_${TIMESTAMP}"
   local backup_path="${BACKUP_DIR}/${backup_name}.zip"
-  
+
   # Create zip archive
   echo -e "${BLUE}Creating backup archive...${NC}"
   (cd "$backup_tmp" && zip -r "$backup_path" .)
-  
+
   # Encrypt if requested
   if [ "$ENCRYPT_BACKUP" = true ]; then
     echo -e "${BLUE}Encrypting backup...${NC}"
@@ -220,7 +220,7 @@ create_backup() {
     else
       echo -e "${YELLOW}Enter password for encryption:${NC}"
       openssl enc -aes-256-cbc -salt -in "$backup_path" -out "${backup_path}.enc"
-      
+
       if [ $? -eq 0 ]; then
         rm "$backup_path"
         backup_path="${backup_path}.enc"
@@ -230,10 +230,10 @@ create_backup() {
       fi
     fi
   fi
-  
+
   # Cleanup
   rm -rf "$backup_tmp"
-  
+
   echo -e "${GREEN}Backup created successfully at: $backup_path${NC}"
   echo -e "${YELLOW}Keep this backup secure as it contains private keys!${NC}"
 }
@@ -241,17 +241,17 @@ create_backup() {
 # Function to restore from backup
 restore_from_backup() {
   echo -e "${BLUE}Restoring validator from backup...${NC}"
-  
+
   # Check if backup file is specified
   if [ -z "$BACKUP_FILE" ]; then
     # List available backups
     echo -e "${BLUE}Available backups:${NC}"
     ls -la "$BACKUP_DIR" | grep -E "ephemery_validator_backup_.*\.zip"
-    
+
     echo -e "${YELLOW}Please specify a backup file with --file option.${NC}"
     exit 1
   fi
-  
+
   # Construct full path to backup file
   local backup_path=""
   if [[ "$BACKUP_FILE" = /* ]]; then
@@ -261,49 +261,49 @@ restore_from_backup() {
     # Relative to backup directory
     backup_path="${BACKUP_DIR}/${BACKUP_FILE}"
   fi
-  
+
   # Check if backup file exists
   if [ ! -f "$backup_path" ]; then
     echo -e "${RED}Error: Backup file not found: $backup_path${NC}"
     exit 1
   fi
-  
+
   # Check if it's an encrypted backup
   if [[ "$backup_path" == *.enc ]]; then
     echo -e "${BLUE}Encrypted backup detected. Decrypting...${NC}"
-    
+
     local decrypted_path="${backup_path%.enc}"
     echo -e "${YELLOW}Enter password for decryption:${NC}"
     openssl enc -aes-256-cbc -d -in "$backup_path" -out "$decrypted_path"
-    
+
     if [ $? -ne 0 ]; then
       echo -e "${RED}Decryption failed.${NC}"
       exit 1
     fi
-    
+
     backup_path="$decrypted_path"
   fi
-  
+
   # Create temporary directory for extraction
   local restore_tmp=$(mktemp -d)
-  
+
   # Extract backup
   echo -e "${BLUE}Extracting backup...${NC}"
   unzip -q "$backup_path" -d "$restore_tmp"
-  
+
   # Stop the validator container if running
   if docker ps | grep -q ${EPHEMERY_VALIDATOR_CONTAINER}; then
     echo -e "${BLUE}Stopping validator container...${NC}"
     docker stop ${EPHEMERY_VALIDATOR_CONTAINER}
   fi
-  
+
   # Backup existing validator data if any
   if [ -d "${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators" ]; then
     echo -e "${BLUE}Backing up existing validator data...${NC}"
     mv "${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators" \
        "${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators.old.${TIMESTAMP}"
   fi
-  
+
   # Restore validator keystores
   if [ -d "${restore_tmp}/validators" ]; then
     echo -e "${BLUE}Restoring validator keystores...${NC}"
@@ -312,28 +312,28 @@ restore_from_backup() {
   else
     echo -e "${RED}Error: No validator data found in backup.${NC}"
   fi
-  
+
   # Restore validator password files
   if [ -d "${restore_tmp}/passwords" ]; then
     echo -e "${BLUE}Restoring validator password files...${NC}"
     mkdir -p "${EPHEMERY_BASE_DIR}/secrets/validator-passwords"
     cp -r "${restore_tmp}/passwords/"* "${EPHEMERY_BASE_DIR}/secrets/validator-passwords/"
   fi
-  
+
   # Import slashing protection if available
   if [ -d "${restore_tmp}/slashing_protection" ]; then
     echo -e "${BLUE}Restoring slashing protection data...${NC}"
     local protection_file=$(find "${restore_tmp}/slashing_protection" -name "*.json" | head -1)
-    
+
     if [ -n "$protection_file" ]; then
       if docker ps -a | grep -q ${EPHEMERY_VALIDATOR_CONTAINER}; then
         # Copy to container and import
         docker cp "$protection_file" ${EPHEMERY_VALIDATOR_CONTAINER}:/tmp/slashing_protection.json
-        
+
         echo -e "${BLUE}Starting validator container to import slashing protection...${NC}"
         docker start ${EPHEMERY_VALIDATOR_CONTAINER}
         sleep 5
-        
+
         docker exec ${EPHEMERY_VALIDATOR_CONTAINER} lighthouse \
           --testnet-dir=/ephemery_config \
           account validator slashing-protection import \
@@ -355,7 +355,7 @@ restore_from_backup() {
       fi
     fi
   fi
-  
+
   # Start validator container if stopped
   if docker ps -a | grep -q ${EPHEMERY_VALIDATOR_CONTAINER} && ! docker ps | grep -q ${EPHEMERY_VALIDATOR_CONTAINER}; then
     echo -e "${BLUE}Starting validator container...${NC}"
@@ -363,15 +363,15 @@ restore_from_backup() {
   else
     echo -e "${YELLOW}Note: You may need to start the validator container manually.${NC}"
   fi
-  
+
   # Cleanup
   rm -rf "$restore_tmp"
-  
+
   # Remove decrypted file if it was created
   if [[ "$backup_path" != "$BACKUP_FILE" && "$backup_path" != "$BACKUP_DIR/$BACKUP_FILE" ]]; then
     rm -f "$backup_path"
   fi
-  
+
   echo -e "${GREEN}Validator keys and data restored successfully!${NC}"
 }
 
@@ -397,4 +397,4 @@ case $MODE in
     ;;
 esac
 
-echo -e "${GREEN}===== Operation Complete =====${NC}" 
+echo -e "${GREEN}===== Operation Complete =====${NC}"

@@ -54,7 +54,7 @@ for arg in "$@"; do
     export EPHEMERY_DEBUG=true
     continue
   fi
-  
+
   # Handle flags with values
   value=$(parse_flag_value "${arg}" "${1:-}" "--base-dir")
   if [[ $? -eq 0 ]]; then
@@ -109,20 +109,20 @@ To use the standardized paths in your Ansible playbooks:
   hosts: all
   vars_files:
     - "../vars/paths.yaml"
-  
+
   tasks:
     - name: Ensure config directory exists
       ansible.builtin.file:
         path: "{{ ephemery_dirs.config }}"
         state: directory
         mode: '0755'
-      
+
     - name: Copy configuration file
       ansible.builtin.template:
         src: templates/config.j2
         dest: "{{ ephemery_files.geth_config }}"
         mode: '0644'
-      
+
     - name: Start Geth container
       community.docker.docker_container:
         name: "{{ ephemery_containers.geth }}"
@@ -164,7 +164,7 @@ To migrate an existing shell script to use the common library:
    # Before
    GREEN='\033[0;32m'
    YELLOW='\033[1;33m'
-   
+
    # After
    # (No need to define colors as they're in the common library)
    ```
@@ -174,7 +174,7 @@ To migrate an existing shell script to use the common library:
    # Before
    echo -e "${GREEN}Success${NC}: Container started"
    echo -e "${RED}Error${NC}: Failed to start container" >&2
-   
+
    # After
    log_success "Container started"
    log_error "Failed to start container"
@@ -185,7 +185,7 @@ To migrate an existing shell script to use the common library:
    # Before
    EPHEMERY_BASE_DIR=~/ephemery
    CONFIG_DIR="${EPHEMERY_BASE_DIR}/config"
-   
+
    # After
    # Base dir is set by common library
    CONFIG_DIR=$(get_component_path "config")
@@ -195,7 +195,7 @@ To migrate an existing shell script to use the common library:
    ```bash
    # After your source line
    setup_error_handling
-   
+
    # At the end of your script
    trap cleanup EXIT
    ```
@@ -214,7 +214,7 @@ To migrate an existing Ansible playbook to use standardized paths:
    ```yaml
    # Before
    path: "/opt/ephemery/config"
-   
+
    # After
    path: "{{ ephemery_dirs.config }}"
    ```
@@ -224,7 +224,7 @@ To migrate an existing Ansible playbook to use standardized paths:
    # Before
    name: "ephemery-geth"
    image: "pk910/ephemery-geth:latest"
-   
+
    # After
    name: "{{ ephemery_containers.geth }}"
    image: "{{ ephemery_images.geth }}"
@@ -253,4 +253,4 @@ Before submitting changes:
 1. Run unit tests if available
 2. Test in a staging/development environment
 3. Verify that paths are consistent across all components
-4. Ensure no hardcoded paths remain in your changes 
+4. Ensure no hardcoded paths remain in your changes

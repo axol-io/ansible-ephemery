@@ -14,4 +14,4 @@ Variable management in our Ansible-based deployment follows a hierarchical struc
 - [Inventory Management](./INVENTORY_MANAGEMENT.md)
 - [Configuration](./CONFIGURATION.md)
 
-*Note: This document is a placeholder based on the existing VARIABLE_MANAGEMENT.md file and will be fully migrated with comprehensive content in a future update.* 
+*Note: This document is a placeholder based on the existing VARIABLE_MANAGEMENT.md file and will be fully migrated with comprehensive content in a future update.*

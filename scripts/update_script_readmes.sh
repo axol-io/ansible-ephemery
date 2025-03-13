@@ -27,12 +27,12 @@ DEVELOPMENT_DESC="Scripts for development environment setup and testing"
 for dir in core deployment monitoring maintenance utilities development; do
     if [ -d "$dir" ]; then
         readme_file="$dir/README.md"
-        
+
         # Get a list of scripts in the directory
         scripts=$(find "$dir" -maxdepth 1 -type f -name "*.sh" | sort)
-        
+
         echo -e "${YELLOW}Updating README for $dir directory...${NC}"
-        
+
         # Get directory description
         dir_desc=""
         case "$dir" in
@@ -43,7 +43,7 @@ for dir in core deployment monitoring maintenance utilities development; do
             "utilities") dir_desc="$UTILITIES_DESC" ;;
             "development") dir_desc="$DEVELOPMENT_DESC" ;;
         esac
-        
+
         # Create or update the README file
         echo "# $(echo $dir | tr '[:lower:]' '[:upper:]' | head -c 1)$(echo $dir | cut -c 2-) Scripts" > "$readme_file"
         echo "" >> "$readme_file"
@@ -51,7 +51,7 @@ for dir in core deployment monitoring maintenance utilities development; do
         echo "" >> "$readme_file"
         echo "## Scripts" >> "$readme_file"
         echo "" >> "$readme_file"
-        
+
         # Add script descriptions
         for script in $scripts; do
             script_name=$(basename "$script")
@@ -61,13 +61,13 @@ for dir in core deployment monitoring maintenance utilities development; do
             fi
             echo "- \`$script_name\`: $description" >> "$readme_file"
         done
-        
+
         # Add usage section
         echo "" >> "$readme_file"
         echo "## Usage" >> "$readme_file"
         echo "" >> "$readme_file"
         echo "Please refer to the individual script comments or the main project documentation for usage information." >> "$readme_file"
-        
+
         echo -e "${GREEN}Updated $readme_file${NC}"
     fi
 done
@@ -121,4 +121,4 @@ For a complete list of all available scripts and their purposes, see the README 
 EOF
 
 echo -e "${GREEN}Updated main README at $readme_file${NC}"
-echo -e "${GREEN}Script README update complete!${NC}" 
+echo -e "${GREEN}Script README update complete!${NC}"

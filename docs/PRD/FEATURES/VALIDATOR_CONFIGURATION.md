@@ -202,4 +202,4 @@ For more detailed troubleshooting, use:
 
 - [Validator Key Management](VALIDATOR_KEY_MANAGEMENT.md)
 - [Validator Performance Monitoring](VALIDATOR_PERFORMANCE_MONITORING.md)
-- [Validator Status Dashboard](VALIDATOR_STATUS_DASHBOARD.md) 
+- [Validator Status Dashboard](VALIDATOR_STATUS_DASHBOARD.md)

@@ -71,4 +71,4 @@ While the current implementation provides a comprehensive solution for validator
 
 ## Conclusion
 
-The validator key restore implementation addresses a critical need for Ephemery validators, providing a robust, secure, and user-friendly solution for maintaining validator continuity through network resets. The comprehensive approach ensures that validators can recover quickly from resets with minimal manual intervention, improving overall network stability and validator experience. 
+The validator key restore implementation addresses a critical need for Ephemery validators, providing a robust, secure, and user-friendly solution for maintaining validator continuity through network resets. The comprehensive approach ensures that validators can recover quickly from resets with minimal manual intervention, improving overall network stability and validator experience.

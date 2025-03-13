@@ -43,23 +43,23 @@ fi
 # Function to analyze scripts and provide categorization suggestions
 analyze_scripts() {
     echo -e "\n${GREEN}Analyzing loose scripts and suggesting categorization...${NC}"
-    
+
     for script in $loose_scripts; do
         script_name=$(basename "$script")
         content=$(head -n 20 "$script")
-        
+
         echo -e "${YELLOW}Script: $script_name${NC}"
-        
+
         # Extract script description
         description=$(grep -m 1 "^#" "$script" | sed 's/^#//' | sed 's/^ *//')
         if [ -z "$description" ]; then
             description="No description found"
         fi
         echo -e "  Description: $description"
-        
+
         # Suggest category based on filename and content
         suggested_category="utilities" # Default category
-        
+
         if [[ "$script_name" == *deploy* || "$script_name" == *setup* || "$script_name" == *install* ]]; then
             suggested_category="deployment"
         elif [[ "$script_name" == *monitor* || "$script_name" == *check* || "$script_name" == *status* ]]; then
@@ -71,7 +71,7 @@ analyze_scripts() {
         elif [[ "$script_name" == *ephemery* || "$script_name" == *validator* ]]; then
             suggested_category="core"
         fi
-        
+
         echo -e "  Suggested category: ${BLUE}$suggested_category${NC}"
         echo ""
     done
@@ -80,7 +80,7 @@ analyze_scripts() {
 # Step 1: Manually organize scripts
 organize_scripts_manually() {
     echo -e "\n${GREEN}Manual script organization...${NC}"
-    
+
     echo -e "${YELLOW}Please use the following guidelines to organize scripts:${NC}"
     echo -e "- core/: Core ephemery functionality scripts (ephemery_*.sh, validator core functionality)"
     echo -e "- deployment/: Scripts for deploying ephemery nodes (deploy-*.sh, setup-*.sh)"
@@ -88,15 +88,15 @@ organize_scripts_manually() {
     echo -e "- maintenance/: Scripts for maintenance tasks (fix_*.sh, reset_*.sh, troubleshoot-*.sh)"
     echo -e "- utilities/: Helper utilities and shared functions (common tools, key management)"
     echo -e "- development/: Scripts for development environment setup and testing (dev-*.sh, test-*.sh)"
-    
+
     echo -e "\n${GREEN}Suggested actions for loose scripts:${NC}"
-    
+
     for script in $loose_scripts; do
         script_name=$(basename "$script")
-        
+
         # Suggest category based on filename
         target_dir="utilities" # Default category
-        
+
         if [[ "$script_name" == *deploy* || "$script_name" == *setup* || "$script_name" == *install* ]]; then
             target_dir="deployment"
         elif [[ "$script_name" == *monitor* || "$script_name" == *check* || "$script_name" == *status* ]]; then
@@ -108,21 +108,21 @@ organize_scripts_manually() {
         elif [[ "$script_name" == *ephemery* || "$script_name" == *validator* ]]; then
             target_dir="core"
         fi
-        
+
         echo -e "${YELLOW}Move $script_name to $target_dir/${NC}"
-        
+
         # Create directory if it doesn't exist
         mkdir -p "$target_dir"
-        
+
         # Ask whether to move the script
         echo -e "${GREEN}Move $script_name to $target_dir/? (y/n)${NC}"
         read -r answer
-        
+
         if [[ "$answer" =~ ^[Yy]$ ]]; then
             # Create backup
             mkdir -p "script_backups"
             cp "$script" "script_backups/"
-            
+
             # Move the script
             mv "$script" "$target_dir/"
             echo -e "${GREEN}Moved $script_name to $target_dir/${NC}"
@@ -135,10 +135,10 @@ organize_scripts_manually() {
 # Step 2: Create a shared library for common functions
 create_shared_library() {
     echo -e "\n${GREEN}Creating shared library for common functions...${NC}"
-    
+
     common_lib_dir="utilities/lib"
     mkdir -p "$common_lib_dir"
-    
+
     # Create the common library file
     cat > "$common_lib_dir/common.sh" << 'EOF'
 #!/bin/bash
@@ -161,7 +161,7 @@ print_banner() {
     local message="$1"
     local length=${#message}
     local padding=$((length + 10))
-    
+
     echo -e "${BLUE}"
     printf '=%.0s' $(seq 1 $padding)
     echo -e "\n    $message    \n"
@@ -174,7 +174,7 @@ log_message() {
     local level="$1"
     local message="$2"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
+
     case "$level" in
         "INFO")
             echo -e "${GREEN}[$timestamp] [INFO] $message${NC}"
@@ -205,7 +205,7 @@ check_command() {
 run_command() {
     local cmd="$1"
     local error_msg="${2:-Command failed}"
-    
+
     log_message "INFO" "Running: $cmd"
     if ! eval "$cmd"; then
         log_message "ERROR" "$error_msg"
@@ -236,15 +236,15 @@ check_ansible() {
 get_inventory_value() {
     local key="$1"
     local default="${2:-}"
-    
+
     if [[ ! -f "$EPHEMERY_BASE_DIR/inventory.yaml" ]]; then
         echo "$default"
         return
     fi
-    
+
     # Try to extract the value using grep and sed
     local value=$(grep -E "^[[:space:]]*$key:" "$EPHEMERY_BASE_DIR/inventory.yaml" | sed -E "s/^[[:space:]]*$key:[[:space:]]*(.*)/\1/")
-    
+
     if [[ -z "$value" ]]; then
         echo "$default"
     else
@@ -264,7 +264,7 @@ is_service_running() {
 # Prompt user for confirmation
 confirm_action() {
     local message="${1:-Are you sure you want to continue?}"
-    
+
     echo -e "${YELLOW}$message (y/n)${NC}"
     read -r response
     if [[ "$response" =~ ^[Yy]$ ]]; then
@@ -274,10 +274,10 @@ confirm_action() {
     fi
 }
 EOF
-    
+
     chmod +x "$common_lib_dir/common.sh"
     echo -e "${GREEN}Created common library at $common_lib_dir/common.sh${NC}"
-    
+
     # Create a README for the common library
     cat > "$common_lib_dir/README.md" << 'EOF'
 # Common Script Library
@@ -316,24 +316,24 @@ log_message "INFO" "Starting script execution"
 
 - `EPHEMERY_BASE_DIR` - Base directory of the Ephemery installation
 EOF
-    
+
     echo -e "${GREEN}Created README for common library${NC}"
 }
 
 # Step 3: Update README files for each script directory
 update_readmes() {
     echo -e "\n${GREEN}Updating README files for script directories...${NC}"
-    
+
     # Process each directory
     for dir in core deployment monitoring maintenance utilities development; do
         if [ -d "$dir" ]; then
             readme_file="$dir/README.md"
-            
+
             # Get a list of scripts in the directory
             scripts=$(find "$dir" -maxdepth 1 -type f -name "*.sh" | sort)
-            
+
             echo -e "${YELLOW}Updating README for $dir directory...${NC}"
-            
+
             # Get directory description
             dir_desc=""
             case "$dir" in
@@ -344,7 +344,7 @@ update_readmes() {
                 "utilities") dir_desc="$UTILITIES_DESC" ;;
                 "development") dir_desc="$DEVELOPMENT_DESC" ;;
             esac
-            
+
             # Create or update the README file
             cat > "$readme_file" << EOF
 # ${dir^} Scripts
@@ -354,7 +354,7 @@ $dir_desc
 ## Scripts
 
 EOF
-            
+
             # Add script descriptions
             for script in $scripts; do
                 script_name=$(basename "$script")
@@ -364,7 +364,7 @@ EOF
                 fi
                 echo "- \`$script_name\`: $description" >> "$readme_file"
             done
-            
+
             # Add usage section
             cat >> "$readme_file" << EOF
 
@@ -372,7 +372,7 @@ EOF
 
 Please refer to the individual script comments or the main project documentation for usage information.
 EOF
-            
+
             echo -e "${GREEN}Updated $readme_file${NC}"
         fi
     done
@@ -381,15 +381,15 @@ EOF
 # Step 4: Create standardization template for script development
 create_script_template() {
     echo -e "\n${GREEN}Creating standardized script template...${NC}"
-    
+
     mkdir -p "development/templates"
     template_file="development/templates/script_template.sh"
-    
+
     cat > "$template_file" << 'EOF'
 #!/bin/bash
 #
 # [SCRIPT PURPOSE]: Brief description of what this script does
-# 
+#
 # Usage: ./script_name.sh [options]
 #
 # Options:
@@ -449,19 +449,19 @@ is_ephemery_environment || {
 # Main function
 main() {
     log_message "INFO" "Starting script execution"
-    
+
     # TODO: Implement script logic here
-    
+
     log_message "INFO" "Script completed successfully"
 }
 
 # Run the main function
 main
 EOF
-    
+
     chmod +x "$template_file"
     echo -e "${GREEN}Created standardized script template at $template_file${NC}"
-    
+
     # Create a README for the template
     cat > "development/templates/README.md" << 'EOF'
 # Script Templates
@@ -509,16 +509,16 @@ All scripts should follow this general structure:
 - Add comments for complex operations
 - Follow the principle of least privilege
 EOF
-    
+
     echo -e "${GREEN}Created README for templates directory${NC}"
 }
 
 # Step 5: Update main scripts README
 update_main_readme() {
     echo -e "\n${GREEN}Updating main scripts README...${NC}"
-    
+
     readme_file="README.md"
-    
+
     cat > "$readme_file" << 'EOF'
 # Ephemery Scripts
 
@@ -563,7 +563,7 @@ For more detailed information about specific scripts, please refer to the README
 
 For a complete list of all available scripts and their purposes, see the README files in each subdirectory.
 EOF
-    
+
     echo -e "${GREEN}Updated main README at $readme_file${NC}"
 }
 
@@ -581,4 +581,4 @@ echo -e "1. Review all scripts to ensure they're properly categorized"
 echo -e "2. Update any scripts that need to use the common library"
 echo -e "3. Update the main project documentation to reference the new script structure"
 echo -e "4. Consider creating a migration guide for users of the old script structure"
-echo -e "\n${BLUE}Thank you for implementing the roadmap priorities!${NC}" 
+echo -e "\n${BLUE}Thank you for implementing the roadmap priorities!${NC}"

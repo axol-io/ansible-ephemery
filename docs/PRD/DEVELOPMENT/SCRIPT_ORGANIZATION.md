@@ -10,27 +10,27 @@ The scripts have been reorganized into the following directory structure to impr
   - Scripts that provide essential Ephemery network functionality
   - Reset detection and handling
   - Network maintenance routines
-  
+
 - `/scripts/deployment/` - Scripts for deploying Ephemery nodes
   - Unified deployment system scripts
   - Environment setup scripts
   - Configuration generators
-  
+
 - `/scripts/monitoring/` - Monitoring and alerting scripts
   - Validator performance monitoring
   - Sync status monitoring
   - Health checks and alerting
-  
+
 - `/scripts/maintenance/` - Scripts for maintenance tasks
   - Checkpoint synchronization tools
   - Troubleshooting utilities
   - Performance benchmarking
-  
+
 - `/scripts/development/` - Scripts for development environment setup and testing
   - Repository standardization
   - Collection management
   - Development environment setup
-  
+
 - `/scripts/utilities/` - Helper utilities and shared functions
   - Key management tools
   - Shared libraries and functions
@@ -142,4 +142,4 @@ The following improvements are planned for future script organization efforts:
 
 - [Project Roadmap](../PROJECT_MANAGEMENT/ROADMAP.md)
 - [Development Guide](./DEVELOPMENT_SETUP.md)
-- [Contributing Guidelines](./CONTRIBUTING.md) 
+- [Contributing Guidelines](./CONTRIBUTING.md)

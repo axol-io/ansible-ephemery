@@ -78,4 +78,4 @@ If you encounter issues, check:
 3. Firewall settings
 4. Remote server resource usage
 
-For more help, see the [Configuration Guide](./CONFIGURATION.md) and [Troubleshooting Guide](../OPERATIONS/TROUBLESHOOTING.md). 
+For more help, see the [Configuration Guide](./CONFIGURATION.md) and [Troubleshooting Guide](../OPERATIONS/TROUBLESHOOTING.md).

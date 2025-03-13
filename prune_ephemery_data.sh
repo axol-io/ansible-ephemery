@@ -108,21 +108,21 @@ done
 # Function to check disk usage
 check_disk_usage() {
   echo -e "${BLUE}Current disk usage:${NC}"
-  
+
   # Get disk usage for Ephemery data directory
   echo -e "${BLUE}Total Ephemery data:${NC}"
   du -sh ${EPHEMERY_BASE_DIR} 2>/dev/null || echo "N/A"
-  
+
   if [ -d "${EPHEMERY_BASE_DIR}/data/geth" ]; then
     echo -e "${BLUE}Execution (Geth) data:${NC}"
     du -sh ${EPHEMERY_BASE_DIR}/data/geth 2>/dev/null || echo "N/A"
   fi
-  
+
   if [ -d "${EPHEMERY_BASE_DIR}/data/lighthouse" ]; then
     echo -e "${BLUE}Consensus (Lighthouse) data:${NC}"
     du -sh ${EPHEMERY_BASE_DIR}/data/lighthouse 2>/dev/null || echo "N/A"
   fi
-  
+
   # Check available disk space
   echo -e "${BLUE}Available disk space:${NC}"
   df -h ${EPHEMERY_BASE_DIR} | grep -v "Filesystem"
@@ -131,10 +131,10 @@ check_disk_usage() {
 # Function to stop containers
 stop_containers() {
   local needed=$1
-  
+
   if [ "$needed" = true ]; then
     echo -e "${BLUE}Stopping containers for pruning...${NC}"
-    
+
     if [ "$DRY_RUN" = false ]; then
       echo -e "${YELLOW}Stopping containers...${NC}"
       docker stop ${EPHEMERY_VALIDATOR_CONTAINER} 2>/dev/null || true
@@ -152,7 +152,7 @@ stop_containers() {
 # Function to start containers
 start_containers() {
   local needed=$1
-  
+
   if [ "$needed" = true ] && [ "$DRY_RUN" = false ]; then
     echo -e "${BLUE}Starting containers after pruning...${NC}"
     docker start ${EPHEMERY_GETH_CONTAINER} 2>/dev/null || true
@@ -173,13 +173,13 @@ prune_execution_data() {
   if [ "$PRUNE_EXECUTION" = false ]; then
     return
   fi
-  
+
   echo -e "${BLUE}===== Execution Layer (Geth) Pruning =====${NC}"
-  
+
   case $PRUNE_TYPE in
     safe)
       echo -e "${YELLOW}Safe pruning for Geth:${NC}"
-      
+
       # Check if container is running
       if docker ps | grep -q ${EPHEMERY_GETH_CONTAINER}; then
         if [ "$DRY_RUN" = false ]; then
@@ -192,13 +192,13 @@ prune_execution_data() {
         echo -e "${YELLOW}Geth container not running, skipping garbage collection${NC}"
       fi
       ;;
-      
+
     aggressive)
       echo -e "${YELLOW}Aggressive pruning for Geth:${NC}"
-      
+
       # Need to stop containers for aggressive pruning
       stop_containers true
-      
+
       if [ "$DRY_RUN" = false ]; then
         echo -e "${BLUE}Removing ancient and state trie data...${NC}"
         rm -rf ${EPHEMERY_BASE_DIR}/data/geth/geth/chaindata/ancient/receipts/*
@@ -209,17 +209,17 @@ prune_execution_data() {
         echo "  - Ancient receipts and block bodies"
         echo "  - Trie cache data"
       fi
-      
+
       # Start containers after pruning
       start_containers true
       ;;
-      
+
     full)
       echo -e "${RED}Full pruning for Geth:${NC}"
-      
+
       # Need to stop containers for full pruning
       stop_containers true
-      
+
       if [ "$DRY_RUN" = false ]; then
         echo -e "${RED}Removing all Geth data (will require full resync)...${NC}"
         rm -rf ${EPHEMERY_BASE_DIR}/data/geth/*
@@ -227,7 +227,7 @@ prune_execution_data() {
         echo -e "${YELLOW}[DRY RUN] Would remove:${NC}"
         echo "  - All Geth data (requires full resync)"
       fi
-      
+
       # Start containers after pruning
       start_containers true
       ;;
@@ -239,13 +239,13 @@ prune_consensus_data() {
   if [ "$PRUNE_CONSENSUS" = false ]; then
     return
   fi
-  
+
   echo -e "${BLUE}===== Consensus Layer (Lighthouse) Pruning =====${NC}"
-  
+
   case $PRUNE_TYPE in
     safe)
       echo -e "${YELLOW}Safe pruning for Lighthouse:${NC}"
-      
+
       # Remove freezer database states (archived states that aren't needed for normal operation)
       if [ "$DRY_RUN" = false ]; then
         if [ -d "${EPHEMERY_BASE_DIR}/data/lighthouse/freezer_db" ]; then
@@ -257,13 +257,13 @@ prune_consensus_data() {
         echo "  - Older state files from freezer database"
       fi
       ;;
-      
+
     aggressive)
       echo -e "${YELLOW}Aggressive pruning for Lighthouse:${NC}"
-      
+
       # Need to stop containers for aggressive pruning
       stop_containers true
-      
+
       if [ "$DRY_RUN" = false ]; then
         echo -e "${BLUE}Removing freezer database and hot database...${NC}"
         rm -rf ${EPHEMERY_BASE_DIR}/data/lighthouse/freezer_db/*
@@ -273,17 +273,17 @@ prune_consensus_data() {
         echo "  - Freezer database (archived blockchain data)"
         echo "  - Hot database (recent blockchain data)"
       fi
-      
+
       # Start containers after pruning
       start_containers true
       ;;
-      
+
     full)
       echo -e "${RED}Full pruning for Lighthouse:${NC}"
-      
+
       # Need to stop containers for full pruning
       stop_containers true
-      
+
       if [ "$DRY_RUN" = false ]; then
         echo -e "${RED}Removing all Lighthouse data (will require full resync)...${NC}"
         rm -rf ${EPHEMERY_BASE_DIR}/data/lighthouse/*
@@ -291,7 +291,7 @@ prune_consensus_data() {
         echo -e "${YELLOW}[DRY RUN] Would remove:${NC}"
         echo "  - All Lighthouse data (requires full resync)"
       fi
-      
+
       # Start containers after pruning
       start_containers true
       ;;
@@ -311,13 +311,13 @@ if [ "$CONFIRM" = false ] && [ "$DRY_RUN" = false ]; then
   echo ""
   echo -e "${RED}WARNING: This will prune data from your Ephemery node${NC}"
   echo -e "Pruning mode: ${YELLOW}${PRUNE_TYPE}${NC}"
-  
+
   if [ "$PRUNE_TYPE" = "aggressive" ]; then
     echo -e "${YELLOW}Aggressive pruning may temporarily affect node performance${NC}"
   elif [ "$PRUNE_TYPE" = "full" ]; then
     echo -e "${RED}Full pruning will require a complete resync of your node${NC}"
   fi
-  
+
   read -p "Continue with pruning? (y/n) " -n 1 -r
   echo
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -339,4 +339,4 @@ else
   echo -e "To actually perform the pruning, run again without the --dry-run flag."
 fi
 
-echo -e "${GREEN}===== Pruning Operation Complete =====${NC}" 
+echo -e "${GREEN}===== Pruning Operation Complete =====${NC}"

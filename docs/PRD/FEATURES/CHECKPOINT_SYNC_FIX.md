@@ -182,7 +182,7 @@ You can modify the list of checkpoint URLs in the script to include your own tru
 ```bash
 CHECKPOINT_URLS=(
   "https://checkpoint-sync.holesky.ethpandaops.io"
-  "https://beaconstate-holesky.chainsafe.io" 
+  "https://beaconstate-holesky.chainsafe.io"
   "https://checkpoint-sync.ephemery.dev"
   "https://checkpoint.ephemery.eth.limo"
   "https://your-custom-checkpoint-url.example.com"

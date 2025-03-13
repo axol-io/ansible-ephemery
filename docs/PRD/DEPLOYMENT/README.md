@@ -27,4 +27,4 @@ This directory contains documentation for deploying Ephemery nodes using Ansible
 ## Related Documentation
 
 - [Architecture Documentation](../ARCHITECTURE/README.md)
-- [Operations Documentation](../OPERATIONS/README.md) 
+- [Operations Documentation](../OPERATIONS/README.md)

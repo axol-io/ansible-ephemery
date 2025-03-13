@@ -246,10 +246,10 @@ function check_validator_container {
 # Generate validator keys
 function generate_keys {
   echo -e "${BLUE}Generating ${KEY_COUNT} validator keys...${NC}"
-  
+
   # Create temporary directory for key generation
   TMP_DIR=$(mktemp -d)
-  
+
   # Determine client-specific command
   case "${CLIENT}" in
     lighthouse)
@@ -259,7 +259,7 @@ function generate_keys {
         --base-dir /keys \
         --network ${NETWORK} \
         --withdrawal-address ${WITHDRAWAL_ADDRESS}"
-      
+
       if [[ -n "${MNEMONIC}" ]]; then
         DOCKER_CMD="${DOCKER_CMD} --mnemonic-phrase \"${MNEMONIC}\""
       fi
@@ -292,22 +292,22 @@ function generate_keys {
       exit 1
       ;;
   esac
-  
+
   # Execute key generation command
   if [[ "${DRY_RUN}" != "true" ]]; then
     eval "${DOCKER_CMD}"
-    
+
     # Copy generated keys to validator keys directory
     cp -r "${TMP_DIR}"/* "${VALIDATOR_KEYS_DIR}/"
-    
+
     # Create password file if it doesn't exist
     if [[ ! -f "${VALIDATOR_PASSWORDS_DIR}/validators.txt" ]]; then
       echo "ephemery" > "${VALIDATOR_PASSWORDS_DIR}/validators.txt"
     fi
-    
+
     # Clean up temporary directory
     rm -rf "${TMP_DIR}"
-    
+
     echo -e "${GREEN}Successfully generated ${KEY_COUNT} validator keys${NC}"
   else
     echo -e "${YELLOW}[DRY RUN] Would execute: ${DOCKER_CMD}${NC}"
@@ -318,17 +318,17 @@ function generate_keys {
 # Import validator keys
 function import_keys {
   echo -e "${BLUE}Importing validator keys from ${SOURCE_PATH}...${NC}"
-  
+
   # Count keys in source directory
   KEY_COUNT=$(find "${SOURCE_PATH}" -name "*.json" | wc -l)
   echo -e "${BLUE}Found ${KEY_COUNT} keys to import${NC}"
-  
+
   # Backup existing keys
   if [[ -d "${VALIDATOR_KEYS_DIR}" && "$(ls -A "${VALIDATOR_KEYS_DIR}" 2>/dev/null)" ]]; then
     echo -e "${YELLOW}Existing keys found. Creating backup...${NC}"
     BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
     BACKUP_PATH="${VALIDATOR_BACKUP_DIR}/${BACKUP_TIMESTAMP}"
-    
+
     if [[ "${DRY_RUN}" != "true" ]]; then
       mkdir -p "${BACKUP_PATH}"
       cp -r "${VALIDATOR_KEYS_DIR}"/* "${BACKUP_PATH}/"
@@ -337,7 +337,7 @@ function import_keys {
       echo -e "${YELLOW}[DRY RUN] Would create backup at ${BACKUP_PATH}${NC}"
     fi
   fi
-  
+
   # Copy keys from source to validator keys directory
   if [[ "${DRY_RUN}" != "true" ]]; then
     cp -r "${SOURCE_PATH}"/* "${VALIDATOR_KEYS_DIR}/"
@@ -350,11 +350,11 @@ function import_keys {
 # List validator keys
 function list_keys {
   echo -e "${BLUE}Listing validator keys...${NC}"
-  
+
   if [[ -d "${VALIDATOR_KEYS_DIR}" ]]; then
     KEY_COUNT=$(find "${VALIDATOR_KEYS_DIR}" -name "*.json" | wc -l)
     echo -e "${GREEN}Found ${KEY_COUNT} validator keys${NC}"
-    
+
     if [[ "${VERBOSE}" == "true" ]]; then
       echo -e "${BLUE}Key details:${NC}"
       for key_file in "${VALIDATOR_KEYS_DIR}"/*.json; do
@@ -373,21 +373,21 @@ function list_keys {
 # Backup validator keys
 function backup_keys {
   echo -e "${BLUE}Backing up validator keys...${NC}"
-  
+
   if [[ -d "${VALIDATOR_KEYS_DIR}" && "$(ls -A "${VALIDATOR_KEYS_DIR}" 2>/dev/null)" ]]; then
     KEY_COUNT=$(find "${VALIDATOR_KEYS_DIR}" -name "*.json" | wc -l)
     echo -e "${BLUE}Found ${KEY_COUNT} keys to backup${NC}"
-    
+
     BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
     BACKUP_PATH="${VALIDATOR_BACKUP_DIR}/${BACKUP_TIMESTAMP}"
-    
+
     if [[ "${DRY_RUN}" != "true" ]]; then
       mkdir -p "${BACKUP_PATH}"
       cp -r "${VALIDATOR_KEYS_DIR}"/* "${BACKUP_PATH}/"
-      
+
       # Create latest_backup symlink
       ln -sf "${BACKUP_TIMESTAMP}" "${VALIDATOR_BACKUP_DIR}/latest"
-      
+
       echo -e "${GREEN}Backup created at ${BACKUP_PATH}${NC}"
       echo -e "${GREEN}Updated 'latest' symlink to point to this backup${NC}"
     else
@@ -402,7 +402,7 @@ function backup_keys {
 # Restore validator keys from backup
 function restore_keys {
   echo -e "${BLUE}Restoring validator keys from backup...${NC}"
-  
+
   # Determine backup path
   if [[ "${BACKUP_TIMESTAMP}" == "latest" ]]; then
     if [[ -L "${VALIDATOR_BACKUP_DIR}/latest" ]]; then
@@ -413,23 +413,23 @@ function restore_keys {
       exit 1
     fi
   fi
-  
+
   BACKUP_PATH="${VALIDATOR_BACKUP_DIR}/${BACKUP_TIMESTAMP}"
-  
+
   if [[ ! -d "${BACKUP_PATH}" ]]; then
     echo -e "${RED}Error: Backup directory '${BACKUP_PATH}' does not exist${NC}"
     exit 1
   fi
-  
+
   KEY_COUNT=$(find "${BACKUP_PATH}" -name "*.json" | wc -l)
   echo -e "${BLUE}Found ${KEY_COUNT} keys in backup${NC}"
-  
+
   # Backup current keys before restoring
   if [[ -d "${VALIDATOR_KEYS_DIR}" && "$(ls -A "${VALIDATOR_KEYS_DIR}" 2>/dev/null)" ]]; then
     echo -e "${YELLOW}Existing keys found. Creating backup before restore...${NC}"
     CURRENT_BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
     CURRENT_BACKUP_PATH="${VALIDATOR_BACKUP_DIR}/${CURRENT_BACKUP_TIMESTAMP}-pre-restore"
-    
+
     if [[ "${DRY_RUN}" != "true" ]]; then
       mkdir -p "${CURRENT_BACKUP_PATH}"
       cp -r "${VALIDATOR_KEYS_DIR}"/* "${CURRENT_BACKUP_PATH}/"
@@ -438,7 +438,7 @@ function restore_keys {
       echo -e "${YELLOW}[DRY RUN] Would create pre-restore backup at ${CURRENT_BACKUP_PATH}${NC}"
     fi
   fi
-  
+
   # Restore keys from backup
   if [[ "${DRY_RUN}" != "true" ]]; then
     rm -rf "${VALIDATOR_KEYS_DIR}"/*
@@ -452,27 +452,27 @@ function restore_keys {
 # Validate key integrity
 function validate_keys {
   echo -e "${BLUE}Validating validator keys...${NC}"
-  
+
   if [[ ! -d "${VALIDATOR_KEYS_DIR}" ]]; then
     echo -e "${RED}Error: Validator keys directory '${VALIDATOR_KEYS_DIR}' does not exist${NC}"
     exit 1
   fi
-  
+
   KEY_COUNT=$(find "${VALIDATOR_KEYS_DIR}" -name "*.json" | wc -l)
   echo -e "${BLUE}Found ${KEY_COUNT} validator keys${NC}"
-  
+
   if [[ "${KEY_COUNT}" -eq 0 ]]; then
     echo -e "${YELLOW}No validator keys found to validate${NC}"
     return
   fi
-  
+
   VALID_COUNT=0
   INVALID_COUNT=0
-  
+
   for key_file in "${VALIDATOR_KEYS_DIR}"/*.json; do
     if [[ -f "${key_file}" ]]; then
       key_name=$(basename "${key_file}")
-      
+
       # Check if file is valid JSON
       if jq . "${key_file}" >/dev/null 2>&1; then
         # Check if file contains required fields
@@ -491,7 +491,7 @@ function validate_keys {
       fi
     fi
   done
-  
+
   echo -e "${BLUE}Validation summary:${NC}"
   echo -e "${GREEN}Valid keys: ${VALID_COUNT}${NC}"
   if [[ "${INVALID_COUNT}" -gt 0 ]]; then
@@ -518,10 +518,10 @@ function main {
   parse_args "$@"
   validate_params
   ensure_directories
-  
+
   # Check if validator container is running
   check_validator_container
-  
+
   # Execute requested operation
   case "${OPERATION}" in
     generate)
@@ -543,10 +543,10 @@ function main {
       validate_keys
       ;;
   esac
-  
+
   # Restart validator container if it was running
   restart_validator_container
 }
 
 # Execute main function
-main "$@" 
+main "$@"

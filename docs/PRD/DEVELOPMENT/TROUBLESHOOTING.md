@@ -174,11 +174,11 @@ g7h8i9j0k1l2   ethereum/client-go:latest    "geth --datadir=/dat…"   2 hours a
    # Get container IPs
    GETH_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ephemery-geth)
    LIGHTHOUSE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ephemery-lighthouse)
-   
+
    # Test connectivity from Lighthouse to Geth
    docker exec ephemery-lighthouse ping -c 2 ephemery-geth
    docker exec ephemery-lighthouse ping -c 2 $GETH_IP
-   
+
    # Test API endpoint connectivity
    docker exec ephemery-lighthouse curl -v http://ephemery-geth:8551
    ```
@@ -190,11 +190,11 @@ g7h8i9j0k1l2   ethereum/client-go:latest    "geth --datadir=/dat…"   2 hours a
    ```bash
    # Get Geth IP address
    GETH_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if eq .NetworkID "ephemery-net"}}{{.IPAddress}}{{end}}{{end}}' ephemery-geth)
-   
+
    # Stop and remove Lighthouse container
    docker stop ephemery-lighthouse
    docker rm ephemery-lighthouse
-   
+
    # Recreate Lighthouse container with Geth IP
    docker run -d --name ephemery-lighthouse \
        --network ephemery \
@@ -224,14 +224,14 @@ g7h8i9j0k1l2   ethereum/client-go:latest    "geth --datadir=/dat…"   2 hours a
    ```bash
    # Create a new network
    docker network create ephemery-net
-   
+
    # Connect both containers to the new network
    docker network connect ephemery-net ephemery-geth
    docker network connect ephemery-net ephemery-lighthouse
-   
+
    # Get the new IP addresses
    GETH_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if eq .NetworkID "ephemery-net"}}{{.IPAddress}}{{end}}{{end}}' ephemery-geth)
-   
+
    # Update Lighthouse configuration to use the new IP
    docker stop ephemery-lighthouse
    docker rm ephemery-lighthouse
@@ -430,4 +430,4 @@ If you encounter issues not covered in this troubleshooting guide, please:
 
 1. Check the [Known Issues](../PROJECT_MANAGEMENT/KNOWN_ISSUES.md) document
 2. Open an issue on the GitHub repository with detailed information about your problem
-3. Join the Ephemery community Discord channel for real-time assistance 
+3. Join the Ephemery community Discord channel for real-time assistance

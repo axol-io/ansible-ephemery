@@ -182,4 +182,4 @@ curl -s http://localhost:8009/metrics | head
 - [Validator Monitoring](VALIDATOR_MONITORING.md)
 - [Dashboard Integration](DASHBOARD_INTEGRATION.md)
 - [Prometheus Integration](PROMETHEUS_INTEGRATION.md)
-- [Validator Integration Tests](VALIDATOR_INTEGRATION_TESTS.md) 
+- [Validator Integration Tests](VALIDATOR_INTEGRATION_TESTS.md)

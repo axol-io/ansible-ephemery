@@ -12,7 +12,7 @@ The [Ephemery Genesis repository](https://github.com/ephemery-testnet/ephemery-g
 
 The Ephemery Genesis repository contains several core configuration files that are essential for node operation:
 
-1. **cl-config.yaml**: Consensus layer configuration 
+1. **cl-config.yaml**: Consensus layer configuration
 2. **el-config.yaml**: Execution layer configuration
 3. **el-bootnodes.txt**: List of execution layer bootnodes
 4. **values.env**: Environment variables for the testnet
@@ -119,4 +119,4 @@ The reset process can be monitored through:
 - [Genesis Validator Guide](../OPERATIONS/GENESIS_VALIDATOR.md)
 - [Resetter Configuration Guide](../OPERATIONS/RESETTER_CONFIGURATION.md)
 - [Validator Key Management](./VALIDATOR_KEY_MANAGEMENT.md)
-- [Ephemery-Specific Configuration](./EPHEMERY_SPECIFIC.md) 
+- [Ephemery-Specific Configuration](./EPHEMERY_SPECIFIC.md)

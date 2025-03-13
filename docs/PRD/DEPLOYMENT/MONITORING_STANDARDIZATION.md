@@ -127,7 +127,7 @@ The standardized Prometheus configuration is deployed through Ansible:
       global:
         scrape_interval: 15s
         evaluation_interval: 15s
-      
+
       scrape_configs:
         # ... standardized configuration ...
     dest: "{{ prometheus_config_dir }}/prometheus.yaml"
@@ -194,4 +194,4 @@ Planned enhancements to the monitoring standardization include:
 
 - [Configuration Standardization](./CONFIGURATION_STANDARDIZATION.md)
 - [Dashboard Implementation](../FEATURES/DASHBOARD_IMPLEMENTATION.md)
-- [Validator Performance Monitoring](../FEATURES/VALIDATOR_PERFORMANCE_MONITORING.md) 
+- [Validator Performance Monitoring](../FEATURES/VALIDATOR_PERFORMANCE_MONITORING.md)

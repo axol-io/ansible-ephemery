@@ -20,4 +20,4 @@ The design principles of Ephemery Node prioritize reliability, security, maintai
 - [Component Architecture](../ARCHITECTURE/COMPONENT_ARCHITECTURE.md) (pending)
 - [Module Organization](../ARCHITECTURE/MODULE_ORGANIZATION.md) (pending)
 
-*Note: This is a placeholder document that will be expanded with comprehensive content in a future update.* 
+*Note: This is a placeholder document that will be expanded with comprehensive content in a future update.*

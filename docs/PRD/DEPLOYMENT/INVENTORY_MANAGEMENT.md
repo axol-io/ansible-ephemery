@@ -14,4 +14,4 @@ The inventory system in our Ansible-based deployment uses a hierarchical structu
 - [Variable Management](./VARIABLE_MANAGEMENT.md)
 - [Configuration](./CONFIGURATION.md)
 
-*Note: This document is a placeholder based on the existing inventory-management.md file and will be fully migrated with comprehensive content in a future update.* 
+*Note: This document is a placeholder based on the existing inventory-management.md file and will be fully migrated with comprehensive content in a future update.*

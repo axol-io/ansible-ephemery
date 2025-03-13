@@ -158,4 +158,4 @@ It's a good practice to back up:
 
 - [Validator Key Management](./VALIDATOR_KEY_MANAGEMENT.md)
 - [Monitoring Guide](./MONITORING.md)
-- [Troubleshooting](../DEVELOPMENT/TROUBLESHOOTING.md) 
+- [Troubleshooting](../DEVELOPMENT/TROUBLESHOOTING.md)

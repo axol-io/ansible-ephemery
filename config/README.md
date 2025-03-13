@@ -19,7 +19,7 @@ The configuration files in this directory are loaded by various components of th
    ```python
    # The configuration loading function is included in each API script
    config = load_config()
-   
+
    # Access configuration values
    base_dir = config['EPHEMERY_BASE_DIR']
    ```
@@ -43,4 +43,4 @@ By default, Ephemery is installed in `/opt/ephemery` with the following structur
 - `/opt/ephemery/config`: Configuration files
 - `/opt/ephemery/data`: Data files (validator keys, metrics, etc.)
 - `/opt/ephemery/logs`: Log files
-- `/opt/ephemery/scripts`: Scripts for deployment, maintenance, etc. 
+- `/opt/ephemery/scripts`: Scripts for deployment, maintenance, etc.

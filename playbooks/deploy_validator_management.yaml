@@ -201,4 +201,4 @@
           "${VALIDATOR_SCRIPTS_DIR}/monitor_validator.sh" dashboard --continuous --interval 30
         dest: "{{ ephemery_scripts_dir }}/start-validator-dashboard.sh"
         mode: '0755'
-      when: validator_dashboard_enabled | default(true) | bool 
+      when: validator_dashboard_enabled | default(true) | bool

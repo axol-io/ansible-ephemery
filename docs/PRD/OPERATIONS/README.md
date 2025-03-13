@@ -49,4 +49,4 @@ If you'd like to contribute to the operational documentation, please follow our 
 
 ## Feedback
 
-We welcome feedback on operational procedures and documentation. If you encounter issues or have suggestions for improvement, please submit them through our issue tracking system. 
+We welcome feedback on operational procedures and documentation. If you encounter issues or have suggestions for improvement, please submit them through our issue tracking system.

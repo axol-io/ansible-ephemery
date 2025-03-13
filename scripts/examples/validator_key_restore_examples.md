@@ -176,22 +176,22 @@ To setup a scheduled restore after network resets, you can create a cron script:
 if [[ -f /home/ephemery/last_genesis_update ]]; then
   LAST_UPDATE=$(cat /home/ephemery/last_genesis_update)
   CURRENT_TIME=$(date +%s)
-  
+
   # If update was less than 1 hour ago, restore keys
   if (( CURRENT_TIME - LAST_UPDATE < 3600 )); then
     echo "Recent network reset detected. Restoring validator keys..."
-    
+
     # Stop validator container
     docker stop ephemery-validator-lighthouse
-    
+
     # Restore keys
     /home/ephemery/scripts/utilities/enhanced_key_restore.sh \
       --backup-dir /home/ephemery/backups/validators/latest \
       --target-dir /home/ephemery/validators/keys
-      
+
     # Start validator container
     docker start ephemery-validator-lighthouse
-    
+
     echo "Key restore completed at $(date)"
   fi
 fi
@@ -231,4 +231,4 @@ In extreme cases where you need to bypass all validation:
 
 ## Conclusion
 
-The Enhanced Validator Key Restore script provides a flexible and robust way to manage validator key restores in different scenarios. By using the appropriate options for your situation, you can ensure a secure and reliable key restore process. 
+The Enhanced Validator Key Restore script provides a flexible and robust way to manage validator key restores in different scenarios. By using the appropriate options for your situation, you can ensure a secure and reliable key restore process.

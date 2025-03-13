@@ -25,17 +25,17 @@ local:
   validator_image: "" # Optional: Override default validator client image
   validator_graffiti: "Ephemery-Test" # Custom graffiti for validator blocks
   validator_fee_recipient: "0x0000000000000000000000000000000000000000" # Fee recipient address
-  
+
   # Validator key management (not used when validator_enabled is false)
   validator_keys_password_file: 'files/passwords/validators.txt'
   validator_keys_src: 'files/validator_keys'
   validator_expected_key_count: 0 # Set to 0 to skip validation in test environment
-  
+
   # Validator performance settings
   validator_memory_limit: "512m" # Reduced memory for test environment
   validator_cpu_limit: "1" # Reduced CPU for test environment
   validator_extra_opts: "" # No extra options for test environment
-  
+
   # MEV configuration
   mev_boost_enabled: false
   mev_boost_relays: []

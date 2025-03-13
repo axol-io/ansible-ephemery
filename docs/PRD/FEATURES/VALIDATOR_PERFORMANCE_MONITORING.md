@@ -148,13 +148,13 @@ The alert system monitors for the following conditions:
 
 1. **Underperforming Validators**
    - Validators with balance below the specified threshold percentage of the average
-   
+
 2. **Missed Attestations**
    - Validators missing consecutive attestations
-   
+
 3. **Balance Decline**
    - Validators with consistently declining balance
-   
+
 4. **Status Changes**
    - Validators changing status (e.g., from active to exiting)
 
@@ -175,10 +175,10 @@ The validator performance monitoring system can be extended through:
 
 1. **Custom Alert Handlers**
    - Add custom alert handlers in the configuration
-   
+
 2. **Additional Metrics Collection**
    - Implement custom metrics collectors
-   
+
 3. **Integration with External Systems**
    - Forward metrics to external monitoring systems
 

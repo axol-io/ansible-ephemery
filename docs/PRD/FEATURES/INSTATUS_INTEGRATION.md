@@ -172,4 +172,4 @@ Specific thresholds will be defined for each component based on service-specific
 
 - [Monitoring](./MONITORING.md)
 - [Validator Status Dashboard](./VALIDATOR_STATUS_DASHBOARD.md)
-- [Checkpoint Sync Dashboard](./CHECKPOINT_SYNC_DASHBOARD.md) 
+- [Checkpoint Sync Dashboard](./CHECKPOINT_SYNC_DASHBOARD.md)

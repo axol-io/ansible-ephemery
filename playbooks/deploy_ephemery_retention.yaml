@@ -186,7 +186,7 @@
           # Main function to check for network reset
           check_for_reset() {
               log "Checking for Ephemery network reset..."
-              
+
               # For demo purposes, we'll just check if the reset_detected file exists
               if [[ -f "${RESET_DETECTED_FILE}" ]]; then
                   log "Reset detected!"
@@ -203,7 +203,7 @@
           # Function to handle the reset
           handle_reset() {
               log "Handling Ephemery network reset..."
-              
+
               if [[ "${DRY_RUN}" == "true" ]]; then
                   log "DRY RUN: Would handle network reset here"
               else
@@ -212,7 +212,7 @@
                       log "Stopping Ephemery containers..."
                       docker stop "${BEACON_CONTAINER}" "${VALIDATOR_CONTAINER}" 2>/dev/null || log "Warning: Failed to stop containers (may not be running)"
                   fi
-                  
+
                   # Step 2: Restore validator keys if requested
                   if [[ "${RESTORE_KEYS}" == "true" ]]; then
                       log "Restoring validator keys..."
@@ -227,7 +227,7 @@
                           return 1
                       fi
                   fi
-                  
+
                   # Step 3: Restart containers if requested
                   if [[ "${RESTART_CONTAINERS}" == "true" ]]; then
                       log "Starting Ephemery containers..."
@@ -236,7 +236,7 @@
                           return 1
                       }
                   fi
-                  
+
                   # Mark reset as handled
                   touch "${RESET_HANDLED_FILE}"
                   log "Network reset handling complete"

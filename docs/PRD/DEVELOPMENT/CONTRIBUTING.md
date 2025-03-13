@@ -155,4 +155,4 @@ If you need help with your contribution:
 2. Open an issue with questions
 3. Reach out on our communication channels
 
-Thank you for contributing to Ephemery Node! 
+Thank you for contributing to Ephemery Node!

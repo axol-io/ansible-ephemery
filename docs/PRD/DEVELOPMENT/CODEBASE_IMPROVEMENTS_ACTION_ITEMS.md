@@ -149,4 +149,4 @@ All changes should be documented in:
 2. Script headers
 3. README.md updates
 4. PRD documentation updates
-5. CHANGELOG.md updates 
+5. CHANGELOG.md updates

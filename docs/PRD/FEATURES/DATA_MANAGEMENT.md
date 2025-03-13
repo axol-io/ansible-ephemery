@@ -135,4 +135,4 @@ Options:
 
 - [Validator Key Management](./VALIDATOR_KEY_MANAGEMENT.md)
 - [Ephemery Setup Guide](./EPHEMERY_SETUP.md)
-- [Troubleshooting](../DEVELOPMENT/TROUBLESHOOTING.md) 
+- [Troubleshooting](../DEVELOPMENT/TROUBLESHOOTING.md)

@@ -253,4 +253,4 @@ ansible-playbook -i inventory.yaml ansible/playbooks/deploy_validator_dashboard.
 - [Validator Performance Monitoring](./VALIDATOR_PERFORMANCE_MONITORING.md)
 - [Checkpoint Sync Dashboard](./CHECKPOINT_SYNC_DASHBOARD.md)
 - [Advanced Validator Configuration](../OPERATIONS/ADVANCED_VALIDATOR_CONFIGURATION.md)
-- [Monitoring](./MONITORING.md) 
+- [Monitoring](./MONITORING.md)

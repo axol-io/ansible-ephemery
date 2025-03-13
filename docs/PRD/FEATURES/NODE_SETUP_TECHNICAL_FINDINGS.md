@@ -7,7 +7,7 @@ This document captures technical findings, observations, and improvement recomme
 The Ephemery node deployment utilizes a multi-container Docker architecture with the following components:
 
 1. **Execution Layer**: `ephemery-geth` container running Geth
-2. **Consensus Layer**: `ephemery-lighthouse` beacon node container 
+2. **Consensus Layer**: `ephemery-lighthouse` beacon node container
 3. **Validator Client**: `ephemery-validator` container using Lighthouse
 
 These components communicate through a Docker network with JWT authentication securing the execution-consensus layer communication.
@@ -161,4 +161,4 @@ Based on the technical findings, the following implementation priorities are rec
 - [Checkpoint Sync](./CHECKPOINT_SYNC.md)
 - [Enhanced Checkpoint Sync](./ENHANCED_CHECKPOINT_SYNC.md)
 - [Validator Key Management](./VALIDATOR_KEY_MANAGEMENT.md)
-- [Sync Monitoring](./SYNC_MONITORING.md) 
+- [Sync Monitoring](./SYNC_MONITORING.md)

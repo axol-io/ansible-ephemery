@@ -116,4 +116,4 @@ If you encounter Docker-related issues, try:
 - [Troubleshooting](./TROUBLESHOOTING.md)
 - [CI/CD](./CI_CD.md)
 
-*Note: This document is a placeholder based on the existing TESTING.md file and will be fully migrated with comprehensive content in a future update.* 
+*Note: This document is a placeholder based on the existing TESTING.md file and will be fully migrated with comprehensive content in a future update.*

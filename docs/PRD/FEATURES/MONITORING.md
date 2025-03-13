@@ -159,4 +159,4 @@ To export an existing dashboard:
 
 - [Ephemery Setup Guide](./EPHEMERY_SETUP.md)
 - [Validator Key Management](./VALIDATOR_KEY_MANAGEMENT.md)
-- [Troubleshooting](../DEVELOPMENT/TROUBLESHOOTING.md) 
+- [Troubleshooting](../DEVELOPMENT/TROUBLESHOOTING.md)

@@ -33,4 +33,4 @@ Ansible Ephemery is designed to:
 
 - [Deployment Documentation](../DEPLOYMENT/README.md)
 - [Feature Documentation](../FEATURES/README.md)
-- [Development Guidelines](../DEVELOPMENT/README.md) 
+- [Development Guidelines](../DEVELOPMENT/README.md)

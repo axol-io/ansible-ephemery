@@ -78,35 +78,35 @@ jobs:
           mkdir -p /tmp/ephemery-test/config
           mkdir -p /tmp/ephemery-test/scripts/validator
           mkdir -p /tmp/ephemery-test/scripts/core
-          
+
           # Create mock validator scripts for testing
           cat > /tmp/ephemery-test/scripts/validator/manage_validator_keys.sh << 'EOF'
           #!/bin/bash
           echo "Mock manage_validator_keys.sh called with args: $@"
           exit 0
           EOF
-          
+
           cat > /tmp/ephemery-test/scripts/validator/monitor_validator.sh << 'EOF'
           #!/bin/bash
           echo "Mock monitor_validator.sh called with args: $@"
           exit 0
           EOF
-          
+
           cat > /tmp/ephemery-test/scripts/validator/test_validator_config.sh << 'EOF'
           #!/bin/bash
           echo "Mock test_validator_config.sh called with args: $@"
           exit 0
           EOF
-          
+
           cat > /tmp/ephemery-test/scripts/core/ephemery_reset_handler.sh << 'EOF'
           #!/bin/bash
           echo "Mock ephemery_reset_handler.sh called with args: $@"
           exit 0
           EOF
-          
+
           chmod +x /tmp/ephemery-test/scripts/validator/*.sh
           chmod +x /tmp/ephemery-test/scripts/core/*.sh
-          
+
           # Create paths configuration
           cat > /tmp/ephemery-test/config/ephemery_paths.conf << 'EOF'
           EPHEMERY_BASE_DIR="/tmp/ephemery-test"
@@ -121,22 +121,22 @@ jobs:
         run: |
           # Copy the wrapper script to the test environment
           cp playbooks/deploy_validator_management.yaml /tmp/validator_management.yaml
-          
+
           # Modify the playbook to use the test environment
           sed -i 's|ephemery_base_dir: "{{ ephemery_dir | default('\''/opt/ephemery'\'') }}"|ephemery_base_dir: "/tmp/ephemery-test"|g' /tmp/validator_management.yaml
-          
+
           # Run the playbook to create the wrapper script
           ansible-playbook -i localhost, -c local /tmp/validator_management.yaml
-          
+
           # Test the wrapper script
           echo "Testing validator management wrapper script..."
           /tmp/ephemery-test/scripts/manage-validator.sh keys list
           /tmp/ephemery-test/scripts/manage-validator.sh monitor
           /tmp/ephemery-test/scripts/manage-validator.sh test
-          
+
           # Test help command
           /tmp/ephemery-test/scripts/manage-validator.sh help
-          
+
           # Test invalid command
           if /tmp/ephemery-test/scripts/manage-validator.sh invalid 2>/dev/null; then
             echo "Error: Invalid command should have failed"
@@ -148,26 +148,26 @@ jobs:
         run: |
           # Copy the wrapper script to the test environment
           cp playbooks/deploy_ephemery_retention.yaml /tmp/ephemery_retention.yaml
-          
+
           # Modify the playbook to use the test environment
           sed -i 's|ephemery_base_dir: "{{ ephemery_dir | default('\''/opt/ephemery'\'') }}"|ephemery_base_dir: "/tmp/ephemery-test"|g' /tmp/ephemery_retention.yaml
-          
+
           # Create data directory for status test
           mkdir -p /tmp/ephemery-test/data
           touch /tmp/ephemery-test/data/reset_handled
-          
+
           # Run the playbook to create the wrapper script
           ansible-playbook -i localhost, -c local /tmp/ephemery_retention.yaml
-          
+
           # Test the wrapper script
           echo "Testing retention wrapper script..."
           /tmp/ephemery-test/scripts/manage-retention.sh check
           /tmp/ephemery-test/scripts/manage-retention.sh reset
           /tmp/ephemery-test/scripts/manage-retention.sh status
-          
+
           # Test help command
           /tmp/ephemery-test/scripts/manage-retention.sh help
-          
+
           # Test invalid command
           if /tmp/ephemery-test/scripts/manage-retention.sh invalid 2>/dev/null; then
             echo "Error: Invalid command should have failed"

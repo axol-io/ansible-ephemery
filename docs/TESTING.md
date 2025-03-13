@@ -157,4 +157,4 @@ After successful testing:
 
 1. Update any documentation that references the old scripts to use the wrapper scripts instead
 2. Train users on the new wrapper scripts
-3. Consider deprecating direct usage of the individual scripts in favor of the wrapper scripts 
+3. Consider deprecating direct usage of the individual scripts in favor of the wrapper scripts

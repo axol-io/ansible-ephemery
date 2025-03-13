@@ -15,7 +15,7 @@ The standardized configuration is defined in a central location:
 This file defines all path variables used throughout the Ephemery system, including:
 
 - Base directories
-- Data directories 
+- Data directories
 - Configuration directories
 - Log directories
 - JWT secrets
@@ -115,4 +115,4 @@ To migrate existing scripts to use the standardized configuration:
 
 ## Conclusion
 
-The standardized configuration approach ensures that Ephemery components maintain consistent path definitions, improving maintainability and flexibility of the system. All new components should follow these guidelines, and existing components should be migrated to use the standardized configuration. 
+The standardized configuration approach ensures that Ephemery components maintain consistent path definitions, improving maintainability and flexibility of the system. All new components should follow these guidelines, and existing components should be migrated to use the standardized configuration.

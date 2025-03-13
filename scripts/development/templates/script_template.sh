@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # [SCRIPT PURPOSE]: Brief description of what this script does
-# 
+#
 # Usage: ./script_name.sh [options]
 #
 # Options:
@@ -61,11 +61,11 @@ is_ephemery_environment || {
 # Main function
 main() {
     log_message "INFO" "Starting script execution"
-    
+
     # TODO: Implement script logic here
-    
+
     log_message "INFO" "Script completed successfully"
 }
 
 # Run the main function
-main 
+main

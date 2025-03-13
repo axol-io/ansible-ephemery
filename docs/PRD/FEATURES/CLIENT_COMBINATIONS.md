@@ -152,4 +152,4 @@ molecule/shared/scripts/demo_scenario.sh -e nethermind -c lighthouse
 - [Ephemery-Specific Configuration](./EPHEMERY_SPECIFIC.md)
 - [Client Optimization](../OPERATIONS/CLIENT_OPTIMIZATION.md)
 - [Lighthouse Optimization](../OPERATIONS/LIGHTHOUSE_OPTIMIZATION.md)
-- [Deployment Configuration](../DEPLOYMENT/CONFIGURATION.md) 
+- [Deployment Configuration](../DEPLOYMENT/CONFIGURATION.md)

@@ -124,7 +124,7 @@ get_validator_balance() {
     echo "$balance"
 }
 
-# Get validator index 
+# Get validator index
 get_validator_index() {
     local pubkey="$1"
     local index_json
@@ -145,7 +145,7 @@ get_validator_effectiveness() {
         lighthouse)
             # Get validator-specific metrics from Lighthouse API
             local validator_data=$(curl -s "${VALIDATOR_ENDPOINT}/lighthouse/validators/info/${validator_index}" || echo '{}')
-            
+
             # Extract attestation performance
             local attestation_hits=$(echo "$validator_data" | jq -r '.attestation_hits // 0')
             local attestation_misses=$(echo "$validator_data" | jq -r '.attestation_misses // 0')
@@ -188,11 +188,11 @@ EOF
             # This is a simplification as Teku doesn't expose per-validator metrics directly
             local total_validators=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/beacon/states/head/validators" | \
                                  jq '.data | length' || echo "1")
-            
+
             if [[ "$total_validators" -lt 1 ]]; then
                 total_validators=1
             fi
-            
+
             if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" > /tmp/teku_metrics.txt; then
                 local attestation_published=$(grep 'beacon_attestation_published_total' /tmp/teku_metrics.txt | awk '{print $2}' || echo "0")
                 local attestation_failed=$(grep 'beacon_attestation_failed_total' /tmp/teku_metrics.txt | awk '{print $2}' || echo "0")
@@ -245,7 +245,7 @@ EOF
                 local index_filter="index=\"${validator_index}\""
                 local attestation_sent=$(grep "validator_attestation_sent_total.*${index_filter}" /tmp/prysm_metrics.txt | awk '{print $2}' || echo "0")
                 local attestation_missed=$(grep "validator_attestation_missed_total.*${index_filter}" /tmp/prysm_metrics.txt | awk '{print $2}' || echo "0")
-                
+
                 # If no specific validator metrics found, use aggregate and prorate
                 if [[ -z "$attestation_sent" || -z "$attestation_missed" ]]; then
                     local total_validators=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/beacon/states/head/validators" | \
@@ -253,14 +253,14 @@ EOF
                     if [[ "$total_validators" -lt 1 ]]; then
                         total_validators=1
                     fi
-                    
+
                     attestation_sent=$(grep 'validator_attestation_sent_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
                     attestation_sent=$(echo "scale=4; ${attestation_sent}/${total_validators}" | bc)
-                    
+
                     attestation_missed=$(grep 'validator_attestation_missed_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
                     attestation_missed=$(echo "scale=4; ${attestation_missed}/${total_validators}" | bc)
                 fi
-                
+
                 local attestation_total=$(echo "${attestation_sent} + ${attestation_missed}" | bc)
                 local attestation_rate=0
                 if (( $(echo "$attestation_total > 0" | bc -l) )); then
@@ -270,21 +270,21 @@ EOF
                 # Similar approach for proposal metrics
                 local proposals_hit=$(grep "validator_proposal_sent_total.*${index_filter}" /tmp/prysm_metrics.txt | awk '{print $2}' || echo "0")
                 local proposals_miss=$(grep "validator_proposal_missed_total.*${index_filter}" /tmp/prysm_metrics.txt | awk '{print $2}' || echo "0")
-                
+
                 if [[ -z "$proposals_hit" || -z "$proposals_miss" ]]; then
                     local total_validators=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/beacon/states/head/validators" | \
                                          jq '.data | length' || echo "1")
                     if [[ "$total_validators" -lt 1 ]]; then
                         total_validators=1
                     fi
-                    
+
                     proposals_hit=$(grep 'validator_proposal_sent_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
                     proposals_hit=$(echo "scale=4; ${proposals_hit}/${total_validators}" | bc)
-                    
+
                     proposals_miss=$(grep 'validator_proposal_missed_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
                     proposals_miss=$(echo "scale=4; ${proposals_miss}/${total_validators}" | bc)
                 fi
-                
+
                 local proposals_total=$(echo "${proposals_hit} + ${proposals_miss}" | bc)
                 local proposal_rate=0
                 if (( $(echo "$proposals_total > 0" | bc -l) )); then
@@ -319,7 +319,7 @@ EOF
                 if [[ "$total_validators" -lt 1 ]]; then
                     total_validators=1
                 fi
-                
+
                 local attestation_published=$(grep 'validator_attestations_sent_total' /tmp/nimbus_metrics.txt | awk '{print $2}' || echo "0")
                 local attestation_failed=$(grep 'validator_attestations_missed_total' /tmp/nimbus_metrics.txt | awk '{print $2}' || echo "0")
                 local attestation_total=$((attestation_published + attestation_failed))
@@ -377,19 +377,19 @@ EOF
 get_validator_rewards() {
     local pubkey="$1"
     local rewards_json="{}"
-    
+
     # Try to get rewards from beacon API
     local rewards_data=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/validators/${pubkey}/rewards" || echo '{}')
-    
+
     # If API doesn't support rewards endpoint, calculate from balance change
     if [[ "$(echo "$rewards_data" | jq -r 'has("data")')" != "true" ]]; then
         local previous_metrics_file="${KEY_METRICS_DIR}/history/$(ls -t "${KEY_METRICS_DIR}/history" | head -n 1)"
-        
+
         if [[ -f "$previous_metrics_file" ]]; then
             local previous_balance=$(jq -r ".validators.\"${pubkey}\".balance // 0" "$previous_metrics_file")
             local current_balance=$(get_validator_balance "$pubkey")
             local balance_change=$((current_balance - previous_balance))
-            
+
             rewards_json=$(cat <<EOF
 {
   "balance_change": ${balance_change},
@@ -418,7 +418,7 @@ EOF
         local attestation_rewards=$(echo "$rewards_data" | jq -r '.data.attestation_rewards // 0')
         local proposal_rewards=$(echo "$rewards_data" | jq -r '.data.proposal_rewards // 0')
         local sync_committee_rewards=$(echo "$rewards_data" | jq -r '.data.sync_committee_rewards // 0')
-        
+
         rewards_json=$(cat <<EOF
 {
   "balance_change": ${total_rewards},
@@ -430,14 +430,14 @@ EOF
 EOF
         )
     fi
-    
+
     echo "$rewards_json"
 }
 
 # Analyze validator performance
 analyze_validator_performance() {
     local pubkey="$1"
-    local status="$2" 
+    local status="$2"
     local balance="$3"
     local effectiveness_data="$4"
     local rewards_data="$5"
@@ -447,17 +447,17 @@ analyze_validator_performance() {
     # Extract effectiveness metrics
     local attestation_rate=$(echo "$effectiveness_data" | jq -r '.attestation_effectiveness.rate // 0')
     local proposal_rate=$(echo "$effectiveness_data" | jq -r '.proposal_effectiveness.rate // 0')
-    
+
     # Extract rewards metrics
     local balance_change=$(echo "$rewards_data" | jq -r '.balance_change // 0')
-    
+
     # Performance scoring (0-100)
     local attestation_score=$(echo "scale=2; ${attestation_rate} * 100" | bc)
     local proposal_score=$(echo "scale=2; ${proposal_rate} * 100" | bc)
-    
+
     # Overall performance score (weighted average)
     local overall_score=$(echo "scale=2; (${attestation_score} * 0.7) + (${proposal_score} * 0.3)" | bc)
-    
+
     # Performance status
     local performance_status="unknown"
     if (( $(echo "$overall_score >= 95" | bc -l) )); then
@@ -471,24 +471,24 @@ analyze_validator_performance() {
     else
         performance_status="critical"
     fi
-    
+
     # Check for alerts
     local alerts=()
     if (( $(echo "$attestation_rate < $ATTESTATION_THRESHOLD" | bc -l) )); then
         alerts+=("Low attestation effectiveness: $(echo "scale=2; ${attestation_rate} * 100" | bc)%")
         log "WARN" "Validator ${pubkey} has low attestation effectiveness: $(echo "scale=2; ${attestation_rate} * 100" | bc)%"
     fi
-    
+
     if (( $(echo "$proposal_rate < $PROPOSAL_THRESHOLD" | bc -l) )); then
         alerts+=("Low proposal effectiveness: $(echo "scale=2; ${proposal_rate} * 100" | bc)%")
         log "WARN" "Validator ${pubkey} has low proposal effectiveness: $(echo "scale=2; ${proposal_rate} * 100" | bc)%"
     fi
-    
+
     if (( balance_change < 0 )) && (( $(echo "scale=4; (-1 * ${balance_change}) / ${balance} > ${BALANCE_DECREASE_THRESHOLD}" | bc -l) )); then
         alerts+=("Significant balance decrease: ${balance_change}")
         log "WARN" "Validator ${pubkey} has significant balance decrease: ${balance_change}"
     fi
-    
+
     analysis_json=$(cat <<EOF
 {
   "performance_scores": {
@@ -501,23 +501,23 @@ analyze_validator_performance() {
 }
 EOF
     )
-    
+
     echo "$analysis_json"
 }
 
 # Main function to collect and analyze metrics
 collect_metrics() {
     detect_client_type
-    
+
     local pubkeys=($(get_validator_pubkeys))
     local all_metrics="{}"
     local summary_metrics="{}"
-    
+
     # Initialize the validators object
     all_metrics=$(echo '{"validators": {}, "summary": {"total_count": 0, "active_count": 0, "total_balance": 0, "performance_status": {}}}' | jq .)
-    
+
     log "INFO" "Collecting metrics for ${#pubkeys[@]} validators"
-    
+
     # Performance status counters
     local excellent_count=0
     local good_count=0
@@ -530,38 +530,38 @@ collect_metrics() {
     local total_overall_score=0
     local active_count=0
     local total_balance=0
-    
+
     # Process each validator key
     for pubkey in "${pubkeys[@]}"; do
         log "INFO" "Processing validator ${pubkey}"
-        
+
         # Get basic validator info
         local status=$(get_validator_status "$pubkey")
         local balance=$(get_validator_balance "$pubkey")
         local validator_index=$(get_validator_index "$pubkey")
-        
+
         # Get performance metrics
         local effectiveness_data=$(get_validator_effectiveness "$validator_index")
         local rewards_data=$(get_validator_rewards "$pubkey")
-        
+
         # Analyze performance
         local analysis_data=$(analyze_validator_performance "$pubkey" "$status" "$balance" "$effectiveness_data" "$rewards_data" "$validator_index")
-        
+
         # Update counters for summary
         if [[ "$status" == "active" || "$status" == "active_ongoing" || "$status" == "active_exiting" ]]; then
             ((active_count++))
             total_balance=$((total_balance + balance))
-            
+
             # Extract scores for calculating averages
             local attestation_score=$(echo "$analysis_data" | jq -r '.performance_scores.attestation_score')
             local proposal_score=$(echo "$analysis_data" | jq -r '.performance_scores.proposal_score')
             local overall_score=$(echo "$analysis_data" | jq -r '.performance_scores.overall_score')
             local performance_status=$(echo "$analysis_data" | jq -r '.performance_status')
-            
+
             total_attestation_score=$(echo "${total_attestation_score} + ${attestation_score}" | bc)
             total_proposal_score=$(echo "${total_proposal_score} + ${proposal_score}" | bc)
             total_overall_score=$(echo "${total_overall_score} + ${overall_score}" | bc)
-            
+
             # Increment the appropriate counter
             case "$performance_status" in
                 "excellent") ((excellent_count++)) ;;
@@ -572,7 +572,7 @@ collect_metrics() {
                 *) ((unknown_count++)) ;;
             esac
         fi
-        
+
         # Create the validator metrics JSON
         local validator_json=$(cat <<EOF
 {
@@ -587,22 +587,22 @@ collect_metrics() {
 }
 EOF
         )
-        
+
         # Add to the all_metrics object
         all_metrics=$(echo "$all_metrics" | jq --arg pubkey "$pubkey" --argjson validator "$validator_json" '.validators[$pubkey] = $validator')
     done
-    
+
     # Calculate averages
     local avg_attestation_score=0
     local avg_proposal_score=0
     local avg_overall_score=0
-    
+
     if [[ $active_count -gt 0 ]]; then
         avg_attestation_score=$(echo "scale=2; ${total_attestation_score} / ${active_count}" | bc)
         avg_proposal_score=$(echo "scale=2; ${total_proposal_score} / ${active_count}" | bc)
         avg_overall_score=$(echo "scale=2; ${total_overall_score} / ${active_count}" | bc)
     fi
-    
+
     # Create the summary JSON
     local summary_json=$(cat <<EOF
 {
@@ -627,20 +627,20 @@ EOF
 }
 EOF
     )
-    
+
     # Update the summary section
     all_metrics=$(echo "$all_metrics" | jq --argjson summary "$summary_json" '.summary = $summary')
-    
+
     # Write metrics to file
     echo "$all_metrics" > "${METRICS_OUTPUT}"
     echo "$summary_json" > "${METRICS_SUMMARY}"
     cp "${METRICS_OUTPUT}" "${METRICS_HISTORY}"
-    
+
     # Clean up old history files (keep only the last X days)
     find "${HISTORY_DIR}" -type f -name "key_metrics_*.json" -mtime +${RETENTION_DAYS} -delete
-    
+
     log "INFO" "Metrics collection completed successfully"
-    
+
     # Output summary to stdout
     echo "$summary_json" | jq .
 }
@@ -651,13 +651,13 @@ export_to_prometheus() {
         log "ERROR" "Metrics file not found: ${METRICS_OUTPUT}"
         return 1
     fi
-    
+
     local prom_dir="${METRICS_DIR}/prometheus"
     mkdir -p "${prom_dir}"
     local prom_file="${prom_dir}/key_metrics.prom"
-    
+
     log "INFO" "Exporting metrics to Prometheus format at ${prom_file}"
-    
+
     # Create the Prometheus file
     cat > "${prom_file}" <<EOF
 # HELP validator_key_count Total number of validator keys
@@ -699,10 +699,10 @@ validator_performance_status{status="unknown"} $(jq -r '.summary.performance_sta
 
 # Individual validator metrics
 EOF
-    
+
     # Add individual validator metrics
     jq -r '.validators | to_entries[] | @text "#HELP validator_balance_\(.key) Balance for validator \(.key) (in Gwei)\n#TYPE validator_balance_\(.key) gauge\nvalidator_balance{pubkey=\"\(.key)\"} \(.value.balance)\n\n#HELP validator_attestation_score_\(.key) Attestation score for validator \(.key) (0-100)\n#TYPE validator_attestation_score_\(.key) gauge\nvalidator_attestation_score{pubkey=\"\(.key)\"} \(.value.analysis.performance_scores.attestation_score)\n\n#HELP validator_proposal_score_\(.key) Proposal score for validator \(.key) (0-100)\n#TYPE validator_proposal_score_\(.key) gauge\nvalidator_proposal_score{pubkey=\"\(.key)\"} \(.value.analysis.performance_scores.proposal_score)\n\n#HELP validator_overall_score_\(.key) Overall performance score for validator \(.key) (0-100)\n#TYPE validator_overall_score_\(.key) gauge\nvalidator_overall_score{pubkey=\"\(.key)\"} \(.value.analysis.performance_scores.overall_score)"' "${METRICS_OUTPUT}" >> "${prom_file}"
-    
+
     log "INFO" "Exported metrics to Prometheus format successfully"
 }
 
@@ -713,4 +713,4 @@ export_to_prometheus
 log "INFO" "Key performance metrics collection completed"
 echo "Metrics available at: ${METRICS_OUTPUT}"
 echo "Summary available at: ${METRICS_SUMMARY}"
-echo "Prometheus metrics available at: ${METRICS_DIR}/prometheus/key_metrics.prom" 
+echo "Prometheus metrics available at: ${METRICS_DIR}/prometheus/key_metrics.prom"

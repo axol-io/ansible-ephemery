@@ -150,4 +150,4 @@ echo -e "\n${GREEN}Pruning complete!${NC}"
 echo -e "${YELLOW}Remember to commit these changes to git with an appropriate message.${NC}"
 echo -e "Suggested commit message: \"docs: Remove migrated documentation files\""
 
-exit 0 
+exit 0

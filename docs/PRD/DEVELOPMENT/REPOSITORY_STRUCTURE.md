@@ -21,4 +21,4 @@ The Ephemery Node repository is organized to promote maintainability, discoverab
 - [Development Setup](./DEVELOPMENT_SETUP.md)
 - [Contributing](./CONTRIBUTING.md)
 
-*Note: This is a placeholder document that will be expanded with comprehensive content in a future update.* 
+*Note: This is a placeholder document that will be expanded with comprehensive content in a future update.*

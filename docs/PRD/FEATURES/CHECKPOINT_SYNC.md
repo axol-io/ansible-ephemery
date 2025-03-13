@@ -20,7 +20,7 @@ For details on the enhanced checkpoint sync system, see [Checkpoint Sync Fix](./
 Checkpoint sync has been implemented in the following components:
 
 1. **Ansible Playbooks**: Fully implemented with automated URL testing and fallback
-2. **Standalone Scripts**: 
+2. **Standalone Scripts**:
    - `setup_ephemery.sh` now includes checkpoint sync by default
    - `setup_ephemery_validator.sh` coordinates with checkpoint sync settings
    - Command-line options for enabling/disabling checkpoint sync in all scripts
@@ -111,7 +111,7 @@ The following flags are recommended for Lighthouse to optimize sync performance:
 We recommend using our enhanced checkpoint sync system which:
 
 1. Automatically tests multiple checkpoint sync URLs
-2. Selects the fastest responding URL 
+2. Selects the fastest responding URL
 3. Configures clients with optimized parameters
 4. Monitors synchronization progress
 5. Provides recovery mechanisms for stalled syncs
@@ -154,4 +154,4 @@ For more detailed findings, refer to [Node Setup Technical Findings](./NODE_SETU
 
 ## Support
 
-If you continue to experience sync issues after trying these recommendations, please reach out to the Ephemery community for assistance. 
+If you continue to experience sync issues after trying these recommendations, please reach out to the Ephemery community for assistance.

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Enhanced Checkpoint Sync - Implements multi-provider fallback and improved monitoring
-# 
+#
 # This script implements the "Enhanced Checkpoint Sync" priority item from the roadmap
 # It adds multi-provider fallback, improved monitoring, and better sync performance
 
@@ -36,18 +36,18 @@ else
     RED='\033[0;31m'
     BLUE='\033[0;34m'
     NC='\033[0m' # No Color
-    
+
     print_banner() {
         local message="$1"
         echo -e "${BLUE}==================================================${NC}"
         echo -e "${BLUE}    $message${NC}"
         echo -e "${BLUE}==================================================${NC}"
     }
-    
+
     log_message() {
         local level="$1"
         local message="$2"
-        
+
         case "$level" in
             "INFO")
                 echo -e "${GREEN}[INFO] $message${NC}"
@@ -63,7 +63,7 @@ else
                 ;;
         esac
     }
-    
+
     check_command() {
         local cmd="$1"
         if ! command -v "$cmd" &> /dev/null; then
@@ -72,10 +72,10 @@ else
         fi
         return 0
     }
-    
+
     confirm_action() {
         local message="${1:-Are you sure you want to continue?}"
-        
+
         echo -e "${YELLOW}$message (y/n)${NC}"
         read -r response
         if [[ "$response" =~ ^[Yy]$ ]]; then
@@ -177,11 +177,11 @@ log_message "INFO" "Backed up inventory.yaml to $BACKUP_DIR/inventory.yaml.backu
 check_url() {
     local url="$1"
     local timeout="${2:-10}"
-    
+
     if $VERBOSE; then
         log_message "INFO" "Checking URL: $url (timeout: ${timeout}s)"
     fi
-    
+
     if curl --silent --fail --max-time "$timeout" --output /dev/null "$url"; then
         return 0
     else
@@ -192,7 +192,7 @@ check_url() {
 # Function to find a working checkpoint sync URL
 find_working_checkpoint_url() {
     log_message "INFO" "Testing checkpoint sync URLs..."
-    
+
     for url in "${DEFAULT_CHECKPOINT_URLS[@]}"; do
         log_message "INFO" "Testing URL: $url"
         if check_url "$url" 20; then
@@ -203,7 +203,7 @@ find_working_checkpoint_url() {
             log_message "WARN" "URL is not accessible: $url"
         fi
     done
-    
+
     log_message "ERROR" "No working checkpoint sync URL found"
     return 1
 }
@@ -213,7 +213,7 @@ update_inventory() {
     local backup_file="${BACKUP_DIR}/inventory.yaml.pre_update"
     cp "$CONFIG_FILE" "$backup_file"
     log_message "INFO" "Backed up inventory file to $backup_file"
-    
+
     # Use sed to update the inventory file with the working URL and other optimizations
     sed -i.bak \
         -e 's/use_checkpoint_sync: false/use_checkpoint_sync: true/' \
@@ -221,7 +221,7 @@ update_inventory() {
         -e 's/cl_extra_opts: .*/cl_extra_opts: "--target-peers=100 --execution-timeout-multiplier=5 --allow-insecure-genesis-sync --genesis-backfill --disable-backfill-rate-limiting"/' \
         -e 's/el_extra_opts: .*/el_extra_opts: "--cache=4096 --txlookuplimit=0 --syncmode=snap --maxpeers=100"/' \
         "$CONFIG_FILE"
-    
+
     # Check if sed command succeeded
     if [[ $? -eq 0 ]]; then
         log_message "INFO" "Updated inventory.yaml with checkpoint sync configuration"
@@ -235,11 +235,11 @@ update_inventory() {
 # Function to create the fallback script
 create_fallback_script() {
     local script_file="${EPHEMERY_BASE_DIR}/scripts/utilities/checkpoint_sync_fallback.sh"
-    
+
     log_message "INFO" "Creating checkpoint sync fallback script at $script_file"
-    
+
     mkdir -p "$(dirname "$script_file")"
-    
+
     # Create the fallback script
     cat > "$script_file" << EOL
 #!/bin/bash
@@ -271,7 +271,7 @@ log() {
 check_url() {
     local url="\$1"
     local timeout="\${2:-10}"
-    
+
     if curl --silent --fail --max-time "\$timeout" --output /dev/null "\$url"; then
         return 0
     else
@@ -288,30 +288,30 @@ get_current_url() {
 update_url() {
     local new_url="\$1"
     local current_url=\$(get_current_url)
-    
+
     if [[ "\$current_url" == "\$new_url" ]]; then
         log "URL already set to \$new_url, no update needed"
         return 0
     fi
-    
+
     log "Updating checkpoint URL from \$current_url to \$new_url"
-    
+
     # Create backup
     cp "\$INVENTORY_FILE" "\$INVENTORY_FILE.bak-\$(date +%Y%m%d%H%M%S)"
-    
+
     # Update the URL
     sed -i.tmp -E "s|(checkpoint_sync_url:)[[:space:]]*[\"']?.*[\"']?|\\1 \"\$new_url\"|" "\$INVENTORY_FILE"
-    
+
     # Check if update was successful
     if grep -q "\$new_url" "\$INVENTORY_FILE"; then
         log "Successfully updated checkpoint URL to \$new_url"
-        
+
         # Restart lighthouse service if it exists
         if systemctl is-active --quiet lighthouse.service; then
             log "Restarting lighthouse service..."
             systemctl restart lighthouse.service
         fi
-        
+
         return 0
     else
         log "Failed to update checkpoint URL"
@@ -330,7 +330,7 @@ find_working_url() {
             log "URL is not accessible: \$url"
         fi
     done
-    
+
     log "No working checkpoint URL found"
     return 1
 }
@@ -343,10 +343,10 @@ log "Check interval: \$CHECK_INTERVAL seconds"
 while true; do
     current_url=\$(get_current_url)
     log "Current checkpoint URL: \$current_url"
-    
+
     if ! check_url "\$current_url" 30; then
         log "Current checkpoint URL is not accessible, finding alternative..."
-        
+
         for url in "\${CHECKPOINT_URLS[@]}"; do
             if [[ "\$url" != "\$current_url" ]] && check_url "\$url" 20; then
                 log "Found working alternative URL: \$url"
@@ -357,22 +357,22 @@ while true; do
     else
         log "Current checkpoint URL is accessible, no action needed"
     fi
-    
+
     log "Sleeping for \$CHECK_INTERVAL seconds"
     sleep "\$CHECK_INTERVAL"
 done
 EOL
-    
+
     # Make the script executable
     chmod +x "$script_file"
-    
+
     log_message "INFO" "Fallback script created successfully"
-    
+
     # Create systemd service for the fallback script
     local service_file="/etc/systemd/system/checkpoint-fallback.service"
-    
+
     log_message "INFO" "Creating systemd service at $service_file"
-    
+
     # Create the service file
     cat > "$service_file" << EOL
 [Unit]
@@ -393,23 +393,23 @@ SyslogIdentifier=checkpoint-fallback
 [Install]
 WantedBy=multi-user.target
 EOL
-    
+
     # Enable and start the service
     systemctl daemon-reload
     systemctl enable checkpoint-fallback.service
     systemctl start checkpoint-fallback.service
-    
+
     log_message "INFO" "Fallback service created, enabled, and started"
 }
 
 # Function to create the monitoring script
 create_monitoring_script() {
     local script_file="${EPHEMERY_BASE_DIR}/scripts/monitoring/checkpoint_sync_monitor.sh"
-    
+
     log_message "INFO" "Creating checkpoint sync monitoring script at $script_file"
-    
+
     mkdir -p "$(dirname "$script_file")"
-    
+
     # Create the monitoring script
     cat > "$script_file" << EOL
 #!/bin/bash
@@ -441,16 +441,16 @@ get_sync_status() {
         log "Error: Could not fetch Lighthouse metrics"
         return 1
     fi
-    
+
     # Extract sync information
     SYNC_DISTANCE=\$(grep 'sync_eth2_fallback_distance{sync_type="Optimistic"}' /tmp/lighthouse_metrics | awk '{print \$2}')
     SYNC_SPEED=\$(grep 'sync_eth2_slots_per_second{sync_type="Optimistic"}' /tmp/lighthouse_metrics | awk '{print \$2}')
-    
+
     if [[ -z "\$SYNC_DISTANCE" || -z "\$SYNC_SPEED" ]]; then
         log "Error: Could not parse sync metrics"
         return 1
     fi
-    
+
     echo "\$SYNC_DISTANCE \$SYNC_SPEED"
 }
 
@@ -458,9 +458,9 @@ get_sync_status() {
 send_alert() {
     local message="\$1"
     local level="\${2:-warning}"
-    
+
     log "[ALERT-\$level] \$message"
-    
+
     # Add your preferred alert mechanism here (email, SMS, etc.)
     # For example, you could use the 'mail' command:
     # echo "\$message" | mail -s "Ephemery Sync Alert: \$level" your-email@example.com
@@ -471,7 +471,7 @@ record_progress() {
     local distance="\$1"
     local speed="\$2"
     local timestamp=\$(date +%s)
-    
+
     echo "\$timestamp \$distance \$speed" >> "\$PROGRESS_HISTORY_FILE"
 }
 
@@ -479,29 +479,29 @@ record_progress() {
 check_progress() {
     local current_distance="\$1"
     local samples=\${2:-\$ALERT_THRESHOLD}
-    
+
     # We need at least N+1 samples to compare
     local lines=\$(tail -n \$((\$samples + 1)) "\$PROGRESS_HISTORY_FILE" 2>/dev/null || echo "")
-    
+
     if [[ -z "\$lines" || \$(echo "\$lines" | wc -l) -lt \$((\$samples + 1)) ]]; then
         log "Not enough history to check progress"
         return 0
     fi
-    
+
     # Get the first sample from our window
     local first_sample=\$(echo "\$lines" | head -n 1)
     local first_distance=\$(echo "\$first_sample" | awk '{print \$2}')
-    
+
     # Calculate progress
     local progress=\$(echo "\$first_distance - \$current_distance" | bc)
-    
+
     log "Progress over last monitoring period: \$progress slots"
-    
+
     if (( \$(echo "\$progress < 10" | bc -l) )); then
         log "WARNING: Sync progress is very slow or stalled"
         return 1
     fi
-    
+
     return 0
 }
 
@@ -509,16 +509,16 @@ check_progress() {
 estimate_completion() {
     local distance="\$1"
     local speed="\$2"
-    
+
     if (( \$(echo "\$speed <= 0" | bc -l) )); then
         echo "Unknown"
         return
     fi
-    
+
     local seconds=\$(echo "\$distance / \$speed" | bc)
     local hours=\$(echo "\$seconds / 3600" | bc)
     local minutes=\$(echo "(\$seconds % 3600) / 60" | bc)
-    
+
     echo "\${hours}h \${minutes}m"
 }
 
@@ -537,22 +537,22 @@ while true; do
         sleep "\$CHECK_INTERVAL"
         continue
     fi
-    
+
     distance=\$(echo "\$status" | awk '{print \$1}')
     speed=\$(echo "\$status" | awk '{print \$2}')
-    
+
     # Record progress
     record_progress "\$distance" "\$speed"
-    
+
     # Estimate completion time
     estimate=\$(estimate_completion "\$distance" "\$speed")
-    
+
     log "Sync status: \$distance slots behind, syncing at \$speed slots/sec, estimated completion: \$estimate"
-    
+
     # Check if sync is making progress
     if ! check_progress "\$distance"; then
         slow_count=\$((\$slow_count + 1))
-        
+
         if [[ \$slow_count -ge \$ALERT_THRESHOLD ]]; then
             send_alert "Sync has been stalled or very slow for \$slow_count checks. Current distance: \$distance slots"
             slow_count=0
@@ -566,26 +566,26 @@ while true; do
             slow_count=0
         fi
     fi
-    
+
     # If sync is complete, send a success alert
     if (( \$(echo "\$distance < 10" | bc -l) )); then
         send_alert "Sync is nearly complete! Current distance: \$distance slots" "info"
     fi
-    
+
     sleep "\$CHECK_INTERVAL"
 done
 EOL
-    
+
     # Make the script executable
     chmod +x "$script_file"
-    
+
     log_message "INFO" "Monitoring script created successfully"
-    
+
     # Create systemd service for the monitoring script
     local service_file="/etc/systemd/system/checkpoint-monitor.service"
-    
+
     log_message "INFO" "Creating systemd service at $service_file"
-    
+
     # Create the service file
     cat > "$service_file" << EOL
 [Unit]
@@ -606,12 +606,12 @@ SyslogIdentifier=checkpoint-monitor
 [Install]
 WantedBy=multi-user.target
 EOL
-    
+
     # Enable and start the service
     systemctl daemon-reload
     systemctl enable checkpoint-monitor.service
     systemctl start checkpoint-monitor.service
-    
+
     log_message "INFO" "Monitoring service created, enabled, and started"
 }
 
@@ -622,7 +622,7 @@ main() {
         log_message "ERROR" "Could not find a working checkpoint sync URL. Please check your network connection."
         exit 1
     fi
-    
+
     # Confirm changes
     if [[ "${FORCE:-false}" != "true" ]]; then
         if ! confirm_action "Ready to update checkpoint sync configuration with URL: $WORKING_URL. Continue?"; then
@@ -630,10 +630,10 @@ main() {
             exit 0
         fi
     fi
-    
+
     # Update inventory file
     update_inventory
-    
+
     # Create fallback script
     if [[ "${FORCE:-false}" != "true" ]]; then
         if confirm_action "Would you like to set up automatic fallback between checkpoint providers?"; then
@@ -644,7 +644,7 @@ main() {
     else
         create_fallback_script
     fi
-    
+
     # Set up monitoring if requested
     if [[ "${SETUP_MONITORING:-false}" == "true" ]]; then
         if [[ "${FORCE:-false}" != "true" ]]; then
@@ -657,51 +657,51 @@ main() {
             create_monitoring_script
         fi
     fi
-    
+
     # Optionally reset the database and restart services
     if [[ "${RESET_DATABASE:-false}" == "true" ]]; then
         if [[ "${FORCE:-false}" != "true" ]]; then
             if confirm_action "Would you like to reset the database and restart services?"; then
                 log_message "INFO" "Resetting database and restarting services..."
-                
+
                 # Stop services
                 systemctl stop lighthouse.service
                 systemctl stop execution-client.service
-                
+
                 # Reset database
                 rm -rf /var/lib/lighthouse/data
                 rm -rf /var/lib/execution-client/data
-                
+
                 # Start services
                 systemctl start execution-client.service
                 systemctl start lighthouse.service
-                
+
                 log_message "INFO" "Services restarted with fresh database"
             else
                 log_message "INFO" "Skipping database reset"
             fi
         else
             log_message "INFO" "Resetting database and restarting services..."
-            
+
             # Stop services
             systemctl stop lighthouse.service
             systemctl stop execution-client.service
-            
+
             # Reset database
             rm -rf /var/lib/lighthouse/data
             rm -rf /var/lib/execution-client/data
-            
+
             # Start services
             systemctl start execution-client.service
             systemctl start lighthouse.service
-            
+
             log_message "INFO" "Services restarted with fresh database"
         fi
     fi
-    
+
     log_message "INFO" "Enhanced checkpoint sync setup complete!"
     log_message "INFO" "Please monitor your node's sync status to ensure it's working correctly."
-    
+
     # Provide instructions to the user
     echo ""
     echo "========================================================"

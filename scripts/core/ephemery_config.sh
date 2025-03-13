@@ -79,7 +79,7 @@ ensure_directories() {
   mkdir -p "${EPHEMERY_LIGHTHOUSE_VALIDATOR_DIR}"
   mkdir -p "${EPHEMERY_VALIDATOR_KEYS_DIR}"
   mkdir -p "${EPHEMERY_VALIDATOR_PASSWORDS_DIR}"
-  
+
   # Create backup directory if enabled
   if [ ! -z "${EPHEMERY_BACKUP_DIR}" ]; then
     mkdir -p "${EPHEMERY_BACKUP_DIR}"
@@ -93,13 +93,13 @@ verify_docker() {
     echo -e "${YELLOW}Please install Docker before running Ephemery scripts.${NC}"
     return 1
   fi
-  
+
   if ! docker info &> /dev/null; then
     echo -e "${RED}Error: Docker daemon is not running or current user doesn't have permission.${NC}"
     echo -e "${YELLOW}Please start Docker daemon or add user to the docker group.${NC}"
     return 1
   fi
-  
+
   return 0
 }
 

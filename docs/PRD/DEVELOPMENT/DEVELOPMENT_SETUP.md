@@ -85,7 +85,7 @@ docker run hello-world
    ```bash
    # Run Molecule tests for specific scenarios
    molecule test -s default
-   
+
    # Or run a quick demo test
    molecule/shared/scripts/demo_scenario.sh --execution geth --consensus lighthouse
    ```
@@ -214,4 +214,4 @@ Now that you have your development environment set up, check out:
 
 - [Contributing Guidelines](./CONTRIBUTING.md)
 - [Testing Guide](./TESTING_GUIDE.md)
-- [Architecture Overview](../ARCHITECTURE/ARCHITECTURE.md) 
+- [Architecture Overview](../ARCHITECTURE/ARCHITECTURE.md)

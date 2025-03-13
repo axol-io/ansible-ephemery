@@ -48,7 +48,7 @@ The `scripts` directory contains specialized scripts organized into functional c
 - `core/`: Core functionality and common libraries
   - `ephemery_config.sh`: Common configuration file
   - `functions.sh`: Shared utility functions
-  
+
 - `deployment/`: Scripts for deploying and configuring Ephemery nodes
   - `deploy-ephemery.sh`: Deployment script
   - `setup-ephemery.sh`: Alternative setup script
@@ -188,4 +188,4 @@ Scripts should implement robust error handling:
 - [Script Directory Structure](./SCRIPT_DIRECTORY_STRUCTURE.md)
 - [Ephemery Script Reference](./EPHEMERY_SCRIPT_REFERENCE.md)
 - [Development Guidelines](../DEVELOPMENT/DEVELOPMENT_SETUP.md)
-- [Contributing](../DEVELOPMENT/CONTRIBUTING.md) 
+- [Contributing](../DEVELOPMENT/CONTRIBUTING.md)

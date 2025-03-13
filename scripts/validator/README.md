@@ -181,4 +181,4 @@ The following Ansible playbooks are available for validator management:
 - `ansible/playbooks/restore_validator_keys.yaml`: Restore validator keys from backup
 - `ansible/playbooks/setup_enhanced_key_restore.yaml`: Setup enhanced validator key restore system
 - `ansible/playbooks/deploy_validator_monitoring.yaml`: Deploy validator performance monitoring
-- `ansible/playbooks/deploy_key_performance_metrics.yaml`: Deploy key performance metrics 
+- `ansible/playbooks/deploy_key_performance_metrics.yaml`: Deploy key performance metrics
