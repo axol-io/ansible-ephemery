@@ -21,9 +21,10 @@ set -euo pipefail
 # Load standardized configuration if available
 CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"
 if [ -f "$CONFIG_FILE" ]; then
-  # Use quiet sourcing since this is a library file
+  echo "Loading configuration from $CONFIG_FILE"
   source "$CONFIG_FILE"
 else
+  echo "Configuration file not found, using default paths"
   # Default paths if config not available
   EPHEMERY_BASE_DIR="/opt/ephemery"
   EPHEMERY_SCRIPTS_DIR="${EPHEMERY_BASE_DIR}/scripts"

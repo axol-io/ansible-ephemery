@@ -3,6 +3,15 @@
 # Ephemery Common Configuration File
 # This file contains common configuration settings for all Ephemery scripts
 
+# Load standardized paths configuration if available
+CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"
+if [ -f "$CONFIG_FILE" ]; then
+  echo "Loading configuration from $CONFIG_FILE"
+  source "$CONFIG_FILE"
+else
+  echo "Configuration file not found, using default paths"
+fi
+
 # Visual formatting
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'

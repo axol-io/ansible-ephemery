@@ -8,6 +8,15 @@
 [[ -n "${_EPHEMERY_COMMON_LOADED}" ]] && return 0
 readonly _EPHEMERY_COMMON_LOADED=1
 
+# Load standardized paths configuration if available
+CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"
+if [ -f "$CONFIG_FILE" ]; then
+  echo "Loading configuration from $CONFIG_FILE"
+  source "$CONFIG_FILE"
+else
+  echo "Configuration file not found, using default paths"
+fi
+
 # Source configuration if available
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 if [[ -f "${SCRIPT_DIR}/ephemery_config.sh" ]]; then

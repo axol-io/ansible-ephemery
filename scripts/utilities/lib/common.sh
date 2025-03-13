@@ -3,6 +3,15 @@
 # Common utility functions for Ephemery scripts
 # This file should be sourced by other scripts
 
+# Load standardized paths configuration if available
+CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"
+if [ -f "$CONFIG_FILE" ]; then
+  echo "Loading configuration from $CONFIG_FILE"
+  source "$CONFIG_FILE"
+else
+  echo "Configuration file not found, using default paths"
+fi
+
 # Set default environment variables
 EPHEMERY_BASE_DIR="${EPHEMERY_BASE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && pwd)}"
 
