@@ -1,0 +1,25 @@
+---
+# Delegated driver configuration for Molecule testing
+# This uses the local machine to run tests without Docker
+
+dependency:
+  name: galaxy
+driver:
+  name: delegated
+  options:
+    managed: false
+    ansible_connection_options:
+      ansible_connection: local
+platforms:
+  - name: instance
+    # The delegated driver can work with your local machine
+    # No need for Docker images
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      instance:
+        ansible_connection: local
+        ansible_python_interpreter: "{{ ansible_playbook_python }}"
+verifier:
+  name: ansible 

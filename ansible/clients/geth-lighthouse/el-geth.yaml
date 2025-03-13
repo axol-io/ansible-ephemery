@@ -3,18 +3,18 @@
 
 - name: Set Geth-specific variables
   ansible.builtin.set_fact:
-    geth_data_dir: '{{ ephemery_data_dir }}/{{ el_client_name }}'
+    geth_data_dir: "{{ ephemery_data_dir }}/{{ el_client_name }}"
     geth_network_id: 3151908
-    geth_http_port: '{{ el_client_port }}'
-    geth_p2p_port: '{{ el_p2p_port }}'
-    geth_metrics_port: '{{ el_metrics_port }}'
+    geth_http_port: "{{ el_client_port }}"
+    geth_p2p_port: "{{ el_p2p_port }}"
+    geth_metrics_port: "{{ el_metrics_port }}"
     geth_authrpc_port: 8551
     geth_jwt_path: '{{ jwt_secret_path | default(ephemery_dir + "/jwt.hex") }}'
 
 - name: Create Geth data directory
   ansible.builtin.file:
-    path: '{{ geth_data_dir }}'
+    path: "{{ geth_data_dir }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'

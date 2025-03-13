@@ -1,7 +1,7 @@
 ---
 - name: Check if validator is enabled
   ansible.builtin.set_fact:
-    validator_skip: '{{ not validator_enabled | default(true) | bool }}'
+    validator_skip: "{{ not validator_enabled | default(true) | bool }}"
   tags:
     - validator
 
@@ -36,27 +36,27 @@
 
 - name: Ensure validator directories exist
   ansible.builtin.file:
-    path: '{{ item }}'
+    path: "{{ item }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   loop:
-    - '{{ ephemery_data_dir }}/validator'
-    - '{{ ephemery_data_dir }}/validator/keys'
-    - '{{ ephemery_data_dir }}/validator/secrets'
-    - '{{ ephemery_secrets_dir }}/validator'
-    - '{{ ephemery_secrets_dir }}/validator/keys'
-    - '{{ ephemery_secrets_dir }}/validator/passwords'
-    - '{{ ephemery_base_dir }}/tmp'  # Temporary directory for processing
+    - "{{ ephemery_data_dir }}/validator"
+    - "{{ ephemery_data_dir }}/validator/keys"
+    - "{{ ephemery_data_dir }}/validator/secrets"
+    - "{{ ephemery_secrets_dir }}/validator"
+    - "{{ ephemery_secrets_dir }}/validator/keys"
+    - "{{ ephemery_secrets_dir }}/validator/passwords"
+    - "{{ ephemery_base_dir }}/tmp" # Temporary directory for processing
   when: not validator_skip and not use_custom_keys | default(false) | bool
   tags:
     - validator
 
 - name: Check if validator keys already exist
   ansible.builtin.find:
-    paths: '{{ ephemery_secrets_dir }}/validator/keys'
-    patterns: 'keystore-*.json'
+    paths: "{{ ephemery_secrets_dir }}/validator/keys"
+    patterns: "keystore-*.json"
   register: existing_keys
   when: not validator_skip
   tags:
@@ -74,7 +74,7 @@
           '{{ ephemery_secrets_dir }}/validator/keys_generated'
     fi
   args:
-    creates: '{{ ephemery_secrets_dir }}/validator/keys_generated'
+    creates: "{{ ephemery_secrets_dir }}/validator/keys_generated"
   when: >
     not validator_skip and
     validator_enabled | default(true) | bool and
@@ -87,7 +87,7 @@
   ansible.builtin.copy:
     content: "ephemery"
     dest: "{{ ephemery_secrets_dir }}/validator/passwords/password.txt"
-    mode: '0600'
+    mode: "0600"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   when: not validator_skip and not use_custom_keys | default(false) | bool
@@ -119,7 +119,7 @@
 
 - name: Stop existing validator container to prevent slashing
   community.docker.docker_container:
-    name: '{{ network }}-validator-{{ cl }}'
+    name: "{{ network }}-validator-{{ cl }}"
     state: stopped
   register: stop_validator_result
   failed_when:
@@ -129,7 +129,7 @@
 
 - name: Remove existing validator container
   community.docker.docker_container:
-    name: '{{ network }}-validator-{{ cl }}'
+    name: "{{ network }}-validator-{{ cl }}"
     state: absent
   when: not validator_skip and not test_mode | default(false) | bool
 
@@ -156,18 +156,18 @@
 
 - name: Start Validator client
   community.docker.docker_container:
-    name: '{{ network }}-validator-{{ cl }}'
-    image: '{{ client_images.validator }}'
+    name: "{{ network }}-validator-{{ cl }}"
+    image: "{{ client_images.validator }}"
     state: started
     restart_policy: unless-stopped
     memory: '{{ validator_memory_limit | default("1g") }}'
     network_mode: host
     volumes:
-      - '{{ ephemery_data_dir }}/validator:/data:rw'
-      - '{{ ephemery_secrets_dir }}/validator/keys:/secrets/keys:ro'
-      - '{{ ephemery_secrets_dir }}/validator/passwords:/secrets/passwords:ro'
-      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
-      - '{{ ephemery_base_dir }}/config/ephemery_network:/ephemery_config:ro'
+      - "{{ ephemery_data_dir }}/validator:/data:rw"
+      - "{{ ephemery_secrets_dir }}/validator/keys:/secrets/keys:ro"
+      - "{{ ephemery_secrets_dir }}/validator/passwords:/secrets/passwords:ro"
+      - "{{ jwt_secret_path }}:/execution-auth.jwt:ro"
+      - "{{ ephemery_base_dir }}/config/ephemery_network:/ephemery_config:ro"
     command: >
       lighthouse validator_client
       --beacon-nodes {{ beacon_api_endpoint }}

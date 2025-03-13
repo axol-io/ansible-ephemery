@@ -8,27 +8,27 @@
   become: "{{ ansible_become | default(true) }}"
 
   vars:
-    status_check_interval: 60  # seconds between status checks
+    status_check_interval: 60 # seconds between status checks
     log_dir: "{{ ephemery_base_dir | default('/root/ephemery') }}/logs"
     output_file: "{{ log_dir }}/sync_status.log"
     report_file: "{{ log_dir }}/sync_report.html"
     history_file: "{{ log_dir }}/sync_history.json"
-    monitor_duration: 3600  # duration to run monitor in seconds (1 hour)
+    monitor_duration: 3600 # duration to run monitor in seconds (1 hour)
 
   tasks:
     - name: Ensure log directory exists
       ansible.builtin.file:
         path: "{{ log_dir }}"
         state: directory
-        mode: '0755'
+        mode: "0755"
         owner: "{{ ansible_user | default('root') }}"
         group: "{{ ansible_user | default('root') }}"
 
     - name: Create sync status monitoring script
       ansible.builtin.template:
-        src: "{{ playbook_dir }}/../templates/sync-monitor.sh.j2"
+        src: "{{ lookup('ansible.builtin.env', 'ANSIBLE_ROLES_PATH', default='/etc/ansible/roles') }}/templates/sync-monitor.sh.j2"
         dest: "{{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-monitor.sh"
-        mode: '0755'
+        mode: "0755"
         owner: "{{ ansible_user | default('root') }}"
         group: "{{ ansible_user | default('root') }}"
       vars:
@@ -44,9 +44,9 @@
 
     - name: Create HTML report generator script
       ansible.builtin.template:
-        src: "{{ playbook_dir }}/../templates/sync-report-generator.py.j2"
+        src: "{{ lookup('ansible.builtin.env', 'ANSIBLE_ROLES_PATH', default='/etc/ansible/roles') }}/templates/sync-report-generator.py.j2"
         dest: "{{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-report-generator.py"
-        mode: '0755'
+        mode: "0755"
         owner: "{{ ansible_user | default('root') }}"
         group: "{{ ansible_user | default('root') }}"
       vars:
@@ -61,7 +61,8 @@
       changed_when: false
 
     - name: Start sync status monitor in background
-      ansible.builtin.shell: nohup {{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-monitor.sh > /dev/null 2>&1 &
+      ansible.builtin.shell: nohup {{ ephemery_base_dir | default('/root/ephemery') }}/scripts/sync-monitor.sh > /dev/null
+        2>&1 &
       when: monitor_status.stdout == "not_running"
 
     - name: Setup periodic report generation via cron

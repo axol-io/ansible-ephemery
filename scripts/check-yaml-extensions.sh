@@ -1,44 +1,38 @@
 #!/bin/bash
-# Script to check for YAML files with inconsistent extensions
-# (excluding the molecule directory where .yml is standard)
+# check-yaml-extensions.sh
+# Script to ensure YAML files use .yaml extension (except in molecule directory)
+# This script is used as a pre-commit hook
 
-echo "Checking YAML file extensions for consistency..."
-echo "Rule: Use .yaml extension except in molecule/ directory"
-echo ""
+set -euo pipefail
 
-# Check for .yml files outside the molecule directory and collections directory
-yml_files=$(find . -name "*.yml" -not -path "./molecule/*" -not -path "./.github/*" -not -path "./collections/*" | sort)
+# Find all YAML files in the repository
+yaml_files=$(git ls-files | grep -E '\.ya?ml$')
 
-if [ -n "$yml_files" ]; then
-    echo "Found .yml files outside the molecule directory:"
-    echo "$yml_files"
-    echo ""
-    echo "These files should use .yaml extension instead. To fix them, run:"
-    echo "./scripts/fix-yaml-extensions.sh"
-else
-    echo "✅ No inconsistent .yml files found outside the molecule directory."
-fi
+# Check each file
+errors=0
+for file in $yaml_files; do
+    # Skip files in molecule directory
+    if [[ $file == molecule/* ]]; then
+        continue
+    fi
 
-# Check for .yaml files inside the molecule directory
-yaml_files=$(find ./molecule -name "*.yaml" | sort)
+    # Skip files in collections directory
+    if [[ $file == collections/* ]]; then
+        continue
+    fi
 
-if [ -n "$yaml_files" ]; then
-    echo "Found .yaml files inside the molecule directory:"
-    echo "$yaml_files"
-    echo ""
-    echo "These files should use .yml extension instead. To fix them, run:"
-    echo "./scripts/fix-yaml-extensions.sh --reverse"
-else
-    echo "✅ No inconsistent .yaml files found inside the molecule directory."
-fi
+    # Check if the file exists and has .yml extension
+    if [[ -f "$file" && $file == *.yml ]]; then
+        echo "Error: $file uses .yml extension instead of .yaml"
+        errors=$((errors + 1))
+    fi
+done
 
-# Summary
-if [ -n "$yml_files" ] || [ -n "$yaml_files" ]; then
-    echo ""
-    echo "❌ Found inconsistent YAML file extensions."
+# Return error if any files with wrong extension were found
+if [ $errors -gt 0 ]; then
+    echo "Found $errors YAML files with incorrect extension."
+    echo "Please rename them to use .yaml extension."
     exit 1
-else
-    echo ""
-    echo "✅ All YAML file extensions are consistent with the coding standards."
-    exit 0
 fi
+
+exit 0

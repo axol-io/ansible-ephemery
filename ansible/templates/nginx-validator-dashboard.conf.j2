@@ -1,0 +1,62 @@
+server {
+    listen 80;
+    server_name {{ server_name }};
+
+    access_log /var/log/nginx/validator-dashboard-access.log;
+    error_log /var/log/nginx/validator-dashboard-error.log;
+
+    # Dashboard UI location
+    location /validator-dashboard/ {
+        alias {{ dashboard_dir }}/;
+        index validator_dashboard.html;
+        try_files $uri $uri/ /validator_dashboard.html;
+    }
+
+    # API endpoints
+    location /validator-api/ {
+        proxy_pass http://127.0.0.1:{{ api_port }}/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Direct API access (for development)
+    location /api/ {
+        proxy_pass http://127.0.0.1:{{ api_port }}/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Health check endpoint
+    location /health {
+        proxy_pass http://127.0.0.1:{{ api_port }}/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Root redirect to dashboard
+    location = / {
+        return 301 /validator-dashboard/;
+    }
+
+    # Serve static files directly
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg)$ {
+        alias {{ dashboard_dir }}/;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+} 

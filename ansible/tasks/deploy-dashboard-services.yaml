@@ -115,14 +115,14 @@
   ansible.builtin.systemd:
     name: dashboard-api
     state: started
-    enabled: yes
-    daemon_reload: yes
+    enabled: true
+    daemon_reload: true
   become: true
 
 - name: Enable and start WebSocket service
   ansible.builtin.systemd:
     name: sync-websocket
     state: started
-    enabled: yes
-    daemon_reload: yes
+    enabled: true
+    daemon_reload: true
   become: true

@@ -4,11 +4,11 @@
 
 - name: Create temporary extraction directory
   ansible.builtin.file:
-    path: '{{ ephemery_base_dir }}/tmp/extraction'
+    path: "{{ ephemery_base_dir }}/tmp/extraction"
     state: directory
-    mode: '0700'  # More secure permissions
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0700" # More secure permissions
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
 
 - name: Check for zip format validator keys
   ansible.builtin.stat:
@@ -67,8 +67,8 @@
 
 - name: Check if backup should be created before extraction
   ansible.builtin.find:
-    paths: '{{ ephemery_base_dir }}/secrets/validator/keys'
-    patterns: 'keystore*.json'
+    paths: "{{ ephemery_base_dir }}/secrets/validator/keys"
+    patterns: "keystore*.json"
   register: existing_validator_keys
 
 - name: Create validator keys backup if they exist
@@ -106,9 +106,9 @@
   ansible.builtin.copy:
     src: "{{ archive_src_file }}"
     dest: "{{ ephemery_base_dir }}/tmp/validator_keys.{{ archive_format }}"
-    mode: '0600'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0600"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   register: archive_copied
 
 - name: Display progress message
@@ -119,10 +119,10 @@
   ansible.builtin.unarchive:
     src: "{{ ephemery_base_dir }}/tmp/validator_keys.zip"
     dest: "{{ ephemery_base_dir }}/tmp/extraction"
-    remote_src: yes
-    mode: '0600'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    remote_src: true
+    mode: "0600"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   register: extracted_zip
   when: archive_format == "zip" and archive_copied is defined and archive_copied.changed
   failed_when: false
@@ -131,10 +131,10 @@
   ansible.builtin.unarchive:
     src: "{{ ephemery_base_dir }}/tmp/validator_keys.tar.gz"
     dest: "{{ ephemery_base_dir }}/tmp/extraction"
-    remote_src: yes
-    mode: '0600'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    remote_src: true
+    mode: "0600"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   register: extracted_targz
   when: archive_format == "tar.gz" and archive_copied is defined and archive_copied.changed
   failed_when: false
@@ -150,6 +150,7 @@
 
 - name: Verify extraction success and count keys
   ansible.builtin.shell: |
+    set -o pipefail
     # Check if any files were extracted
     extracted_count=$(find {{ ephemery_base_dir }}/tmp/extraction -type f | wc -l)
     echo "Found ${extracted_count} files in extraction directory"
@@ -200,7 +201,7 @@
   when: extraction_success|bool
 
 - name: Set extracted key count fact
-  ansible.builtin.shell: cat "{{ ephemery_base_dir }}/tmp/extracted_key_count"
+  ansible.builtin.command: cat "{{ ephemery_base_dir }}/tmp/extracted_key_count"
   register: extracted_key_count_result
   changed_when: false
   when: extraction_success|bool and validation_result.rc == 0

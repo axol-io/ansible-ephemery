@@ -3,18 +3,18 @@
 
 - name: Set Lighthouse-specific variables
   ansible.builtin.set_fact:
-    lighthouse_data_dir: '{{ ephemery_data_dir }}/{{ cl_client_name }}'
-    lighthouse_http_port: '{{ cl_client_port }}'
-    lighthouse_p2p_port: '{{ cl_p2p_port }}'
+    lighthouse_data_dir: "{{ ephemery_data_dir }}/{{ cl_client_name }}"
+    lighthouse_http_port: "{{ cl_client_port }}"
+    lighthouse_p2p_port: "{{ cl_p2p_port }}"
     lighthouse_metrics_port: '{{ cl_metrics_port | default("5054") }}'
     lighthouse_jwt_path: '{{ jwt_secret_path | default(ephemery_dir + "/jwt.hex") }}'
-    lighthouse_execution_endpoint: 'http://127.0.0.1:8551'
+    lighthouse_execution_endpoint: "http://127.0.0.1:8551"
 
 - name: Create Lighthouse data directory
   ansible.builtin.file:
-    path: '{{ lighthouse_data_dir }}'
+    path: "{{ lighthouse_data_dir }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
 
@@ -38,9 +38,9 @@
 
 - name: Create heap profiles directory for memory analysis
   ansible.builtin.file:
-    path: '{{ lighthouse_data_dir }}/heap_profiles'
+    path: "{{ lighthouse_data_dir }}/heap_profiles"
     state: directory
-    mode: '0755'
+    mode: "0755"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
 

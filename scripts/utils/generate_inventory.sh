@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# Script to generate inventory files from templates
+# Script to generate inventory files with standardized naming convention
 
 # Set default values
 TEMPLATE_TYPE="local"
 OUTPUT_FILE=""
+INVENTORY_NAME=""
 BASE_DIR="$HOME/ephemery"
 DATA_DIR="$HOME/ephemery/data"
 LOGS_DIR="$HOME/ephemery/logs"
@@ -16,15 +17,19 @@ LIGHTHOUSE_TARGET_PEERS="30"
 REMOTE_HOST=""
 REMOTE_USER=""
 REMOTE_PORT="22"
+ENABLE_VALIDATOR=false
+ENABLE_MONITORING=false
+ENABLE_DASHBOARD=false
 
 # Function to display usage
 usage() {
     echo "Usage: $0 [OPTIONS]"
-    echo "Generate an inventory file from a template"
+    echo "Generate an inventory file from a template with standardized naming"
     echo ""
     echo "Options:"
     echo "  --type TYPE             Template type (local or remote) (default: local)"
-    echo "  --output FILE           Output file (required)"
+    echo "  --output FILE           Custom output file path (optional)"
+    echo "  --name NAME             Base name for inventory file (default: type name)"
     echo "  --base-dir DIR          Base directory for Ephemery (default: $HOME/ephemery)"
     echo "  --data-dir DIR          Data directory (default: \$BASE_DIR/data)"
     echo "  --logs-dir DIR          Logs directory (default: \$BASE_DIR/logs)"
@@ -36,13 +41,18 @@ usage() {
     echo "  --remote-host HOST      Remote host (required for remote type)"
     echo "  --remote-user USER      Remote user (required for remote type)"
     echo "  --remote-port PORT      Remote SSH port (default: 22)"
+    echo "  --enable-validator      Enable validator support"
+    echo "  --enable-monitoring     Enable sync monitoring"
+    echo "  --enable-dashboard      Enable web dashboard"
     echo "  --help                  Display this help and exit"
     echo ""
     echo "Example local inventory:"
-    echo "  $0 --type local --output my-local-inventory.yaml --base-dir /data/ephemery"
+    echo "  $0 --type local --name my-local --base-dir /data/ephemery"
+    echo "  # Generates: my-local-inventory-YYYY-MM-DD-HH-MM.yaml"
     echo ""
     echo "Example remote inventory:"
-    echo "  $0 --type remote --output my-remote-inventory.yaml --remote-host example.com --remote-user admin"
+    echo "  $0 --type remote --name production --remote-host example.com --remote-user admin"
+    echo "  # Generates: production-inventory-YYYY-MM-DD-HH-MM.yaml"
 }
 
 # Parse command line arguments
@@ -54,6 +64,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --output)
             OUTPUT_FILE="$2"
+            shift 2
+            ;;
+        --name)
+            INVENTORY_NAME="$2"
             shift 2
             ;;
         --base-dir)
@@ -100,6 +114,18 @@ while [[ $# -gt 0 ]]; do
             REMOTE_PORT="$2"
             shift 2
             ;;
+        --enable-validator)
+            ENABLE_VALIDATOR=true
+            shift
+            ;;
+        --enable-monitoring)
+            ENABLE_MONITORING=true
+            shift
+            ;;
+        --enable-dashboard)
+            ENABLE_DASHBOARD=true
+            shift
+            ;;
         --help)
             usage
             exit 0
@@ -111,13 +137,6 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-
-# Validate required parameters
-if [ -z "$OUTPUT_FILE" ]; then
-    echo "Error: Output file is required" >&2
-    usage
-    exit 1
-fi
 
 # Validate template type
 if [ "$TEMPLATE_TYPE" != "local" ] && [ "$TEMPLATE_TYPE" != "remote" ]; then
@@ -135,62 +154,171 @@ if [ "$TEMPLATE_TYPE" = "remote" ]; then
     fi
 fi
 
+# Set default inventory name if not provided
+if [ -z "$INVENTORY_NAME" ]; then
+    INVENTORY_NAME="$TEMPLATE_TYPE"
+fi
+
+# Generate standardized filename with timestamp if output file not specified
+if [ -z "$OUTPUT_FILE" ]; then
+    TIMESTAMP=$(date +"%Y-%m-%d-%H-%M")
+    OUTPUT_FILE="$(pwd)/${INVENTORY_NAME}-inventory-${TIMESTAMP}.yaml"
+fi
+
 # Generate the inventory file
 if [ "$TEMPLATE_TYPE" = "local" ]; then
-    # Generate local inventory file
+    # Generate local inventory file with Ansible-compatible format
     cat > "$OUTPUT_FILE" << EOF
 # Local Ephemery Node Configuration
-local:
-  # Base directory for Ephemery
-  base_dir: "$BASE_DIR"
+# Generated on: $(date)
+all:
+  children:
+    ephemery:
+      hosts:
+        localhost:
+          ansible_connection: local
+      vars:
+        # Base directory for Ephemery
+        ephemery_base_dir: "$BASE_DIR"
+        jwt_secret_path: "$BASE_DIR/jwt.hex"
+        
+        # Directories structure
+        directories:
+          base: "$BASE_DIR"
+          data: "$DATA_DIR"
+          secrets: "$BASE_DIR/secrets"
+          logs: "$LOGS_DIR"
+          scripts: "$BASE_DIR/scripts"
+          backups: "$BASE_DIR/backups"
+        
+        # Security configuration
+        security:
+          jwt_secure_generation: true
+          firewall_enabled: true
+          firewall_default_policy: "deny"
+          
+        # Client selection
+        clients:
+          execution: "geth"
+          consensus: "lighthouse"
+          validator: "lighthouse"
+          
+          # Docker images
+          images:
+            geth: "$GETH_IMAGE"
+            lighthouse: "$LIGHTHOUSE_IMAGE"
+            validator: "$LIGHTHOUSE_IMAGE"
+          
+        # Geth Configuration
+        geth:
+          config_dir: "$DATA_DIR/geth"
+          cache: $GETH_CACHE
+          max_peers: $GETH_MAX_PEERS
+          extra_opts: "--txlookuplimit=0 --syncmode=snap"
 
-  # Directory for node data
-  data_dir: "$DATA_DIR"
+        # Lighthouse Configuration
+        lighthouse:
+          config_dir: "$DATA_DIR/lighthouse"
+          target_peers: $LIGHTHOUSE_TARGET_PEERS
+          extra_opts: "--checkpoint-sync-url=https://checkpoint-sync.ephemery.ethpandaops.io --checkpoint-sync-url-timeout=300"
 
-  # Directory for logs
-  logs_dir: "$LOGS_DIR"
-
-  # Geth Configuration
-  geth:
-    image: "$GETH_IMAGE"
-    cache: $GETH_CACHE
-    max_peers: $GETH_MAX_PEERS
-
-  # Lighthouse Configuration
-  lighthouse:
-    image: "$LIGHTHOUSE_IMAGE"
-    target_peers: $LIGHTHOUSE_TARGET_PEERS
+        # Sync configuration
+        sync:
+          use_checkpoint: true
+          checkpoint_url: "https://checkpoint-sync.ephemery.ethpandaops.io"
+          clear_database_on_start: true
+          
+        # Feature flags
+        features:
+          validator:
+            enabled: $ENABLE_VALIDATOR
+          monitoring:
+            enabled: $ENABLE_MONITORING
+          dashboard:
+            enabled: $ENABLE_DASHBOARD
+          backup:
+            enabled: false
+            
+        # Network configuration
+        network_mode: "host"
 EOF
 else
-    # Generate remote inventory file
+    # Generate remote inventory file with Ansible-compatible format
     cat > "$OUTPUT_FILE" << EOF
 # Remote Ephemery Node Configuration
-hosts:
-  - host: $REMOTE_HOST
-    user: $REMOTE_USER
-    port: $REMOTE_PORT
+# Generated on: $(date)
+all:
+  children:
+    ephemery:
+      hosts:
+        remote_host:
+          ansible_host: $REMOTE_HOST
+          ansible_user: $REMOTE_USER
+          ansible_port: $REMOTE_PORT
+      vars:
+        # Base directory for Ephemery
+        ephemery_base_dir: "$BASE_DIR"
+        jwt_secret_path: "$BASE_DIR/jwt.hex"
+        
+        # Directories structure
+        directories:
+          base: "$BASE_DIR"
+          data: "$DATA_DIR"
+          secrets: "$BASE_DIR/secrets"
+          logs: "$LOGS_DIR"
+          scripts: "$BASE_DIR/scripts"
+          backups: "$BASE_DIR/backups"
+        
+        # Security configuration
+        security:
+          jwt_secure_generation: true
+          firewall_enabled: true
+          firewall_default_policy: "deny"
+          
+        # Client selection
+        clients:
+          execution: "geth"
+          consensus: "lighthouse"
+          validator: "lighthouse"
+          
+          # Docker images
+          images:
+            geth: "$GETH_IMAGE"
+            lighthouse: "$LIGHTHOUSE_IMAGE"
+            validator: "$LIGHTHOUSE_IMAGE"
+          
+        # Geth Configuration
+        geth:
+          config_dir: "$DATA_DIR/geth"
+          cache: $GETH_CACHE
+          max_peers: $GETH_MAX_PEERS
+          extra_opts: "--txlookuplimit=0 --syncmode=snap"
 
-# Node Configuration
-remote:
-  # Base directory for Ephemery
-  base_dir: "$BASE_DIR"
+        # Lighthouse Configuration
+        lighthouse:
+          config_dir: "$DATA_DIR/lighthouse"
+          target_peers: $LIGHTHOUSE_TARGET_PEERS
+          extra_opts: "--checkpoint-sync-url=https://checkpoint-sync.ephemery.ethpandaops.io --checkpoint-sync-url-timeout=300"
 
-  # Directory for node data
-  data_dir: "$DATA_DIR"
-
-  # Directory for logs
-  logs_dir: "$LOGS_DIR"
-
-  # Geth Configuration
-  geth:
-    image: "$GETH_IMAGE"
-    cache: $GETH_CACHE
-    max_peers: $GETH_MAX_PEERS
-
-  # Lighthouse Configuration
-  lighthouse:
-    image: "$LIGHTHOUSE_IMAGE"
-    target_peers: $LIGHTHOUSE_TARGET_PEERS
+        # Sync configuration
+        sync:
+          use_checkpoint: true
+          checkpoint_url: "https://checkpoint-sync.ephemery.ethpandaops.io"
+          clear_database_on_start: true
+          
+        # Feature flags
+        features:
+          validator:
+            enabled: $ENABLE_VALIDATOR
+          monitoring:
+            enabled: $ENABLE_MONITORING
+          dashboard:
+            enabled: $ENABLE_DASHBOARD
+          backup:
+            enabled: false
+            
+        # Network configuration
+        network_mode: "host"
 EOF
 fi
 

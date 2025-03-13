@@ -24,15 +24,16 @@
 # Check if JWT path is a directory instead of a file and remove it if needed
 - name: Check if JWT path is a directory
   ansible.builtin.stat:
-    path: '{{ jwt_secret_path }}'
+    path: "{{ jwt_secret_path }}"
   register: jwt_path_stat
   when: not test_mode | default(false) | bool
 
 - name: Remove JWT directory if it exists
   ansible.builtin.file:
-    path: '{{ jwt_secret_path }}'
+    path: "{{ jwt_secret_path }}"
     state: absent
-  when: not test_mode | default(false) | bool and jwt_path_stat.stat.exists | default(false) | bool and jwt_path_stat.stat.isdir | default(false) | bool
+  when: not test_mode | default(false) | bool and jwt_path_stat.stat.exists | default(false) | bool and jwt_path_stat.stat.isdir
+    | default(false) | bool
 
 # Standard JWT secret generation (less secure)
 - name: Generate JWT secret with openssl
@@ -43,15 +44,15 @@
     echo "0x$(openssl rand -hex 32)" > {{ jwt_secret_path }}
     chmod 600 {{ jwt_secret_path }}
   args:
-    creates: '{{ jwt_secret_path }}'
+    creates: "{{ jwt_secret_path }}"
   register: jwt_secret_result
   changed_when: jwt_secret_result.rc == 0
   when: not test_mode | default(false) | bool
 
 - name: Ensure JWT secret has proper permissions
   ansible.builtin.file:
-    path: '{{ jwt_secret_path }}'
-    mode: '0600'
+    path: "{{ jwt_secret_path }}"
+    mode: "0600"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   when: not test_mode | default(false) | bool
@@ -59,8 +60,8 @@
 # Create a symbolic link to ensure consistent JWT path across clients if needed
 - name: Create consistent JWT path links for different client implementations
   ansible.builtin.file:
-    src: '{{ jwt_secret_path }}'
-    dest: '{{ ephemery_dir }}/jwt.hex'
+    src: "{{ jwt_secret_path }}"
+    dest: "{{ ephemery_dir }}/jwt.hex"
     state: link
     force: true
   when:
@@ -73,7 +74,7 @@
 
 - name: Check if firewall is enabled
   ansible.builtin.set_fact:
-    firewall_skip: '{{ not firewall_enabled | default(false) }}'
+    firewall_skip: "{{ not firewall_enabled | default(false) }}"
 
 # Install appropriate firewall software based on OS family
 - name: Install firewalld (for RedHat-based systems)
@@ -102,18 +103,18 @@
 
 - name: Configure firewalld - allow specific ports
   ansible.posix.firewalld:
-    port: '{{ item }}/tcp'
+    port: "{{ item }}/tcp"
     permanent: true
     state: enabled
-  loop: '{{ firewall_allowed_tcp_ports }}'
+  loop: "{{ firewall_allowed_tcp_ports }}"
   when: not firewall_skip and ansible_os_family == 'RedHat'
 
 - name: Configure firewalld - allow UDP ports
   ansible.posix.firewalld:
-    port: '{{ item }}/udp'
+    port: "{{ item }}/udp"
     permanent: true
     state: enabled
-  loop: '{{ firewall_allowed_udp_ports }}'
+  loop: "{{ firewall_allowed_udp_ports }}"
   when: not firewall_skip and ansible_os_family == 'RedHat'
 
 - name: Reload firewalld
@@ -128,28 +129,28 @@
 
 - name: Set default UFW policy
   community.general.ufw:
-    default: '{{ firewall_default_policy }}'
+    default: "{{ firewall_default_policy }}"
   when: not firewall_skip and ansible_os_family == 'Debian'
 
 - name: Configure UFW - allow specific TCP ports
   community.general.ufw:
     rule: allow
-    port: '{{ item }}'
+    port: "{{ item }}"
     proto: tcp
-  loop: '{{ firewall_allowed_tcp_ports }}'
+  loop: "{{ firewall_allowed_tcp_ports }}"
   when: not firewall_skip and ansible_os_family == 'Debian'
 
 - name: Configure UFW - allow specific UDP ports
   community.general.ufw:
     rule: allow
-    port: '{{ item }}'
+    port: "{{ item }}"
     proto: udp
-  loop: '{{ firewall_allowed_udp_ports }}'
+  loop: "{{ firewall_allowed_udp_ports }}"
   when: not firewall_skip and ansible_os_family == 'Debian'
 
 - name: Enable UFW logging
   community.general.ufw:
-    logging: 'on'
+    logging: "on"
   when: not firewall_skip and ansible_os_family == "Debian"
 
 # Client-specific firewall rules
@@ -183,7 +184,7 @@
   ansible.builtin.template:
     src: docker-daemon.json.j2
     dest: /etc/docker/daemon.json
-    mode: '0640'
+    mode: "0640"
   when:
     - firewall_enabled | bool
     - not test_mode | default(false) | bool

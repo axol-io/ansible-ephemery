@@ -9,7 +9,8 @@ rules:
     title: Memory high
     for: 10m
     severity: medium
-    summary: "Memory usage is dangerously high at {{ '{{' }} humanizePercentage $values.B.Value {{ '}}' }} for {{ '{{' }} $labels.instance {{ '}}' }}"
+    summary: "Memory usage is dangerously high at {{ '{{' }} humanizePercentage $values.B.Value {{ '}}' }} for {{ '{{' }}
+      $labels.instance {{ '}}' }}"
     condition: C
     annotations:
       execErrState: Error

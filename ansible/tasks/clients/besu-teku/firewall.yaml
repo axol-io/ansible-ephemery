@@ -4,13 +4,13 @@
 - name: Set firewall ports for besu-teku
   ansible.builtin.set_fact:
     firewall_allowed_tcp_ports:
-      - 22      # SSH
-      - 80      # HTTP
-      - 443     # HTTPS
-      - 30303   # Besu P2P
-      - 8551    # Besu Engine API
-      - 9000    # Teku P2P
-      - 8008    # Teku API
+      - 22 # SSH
+      - 80 # HTTP
+      - 443 # HTTPS
+      - 30303 # Besu P2P
+      - 8551 # Besu Engine API
+      - 9000 # Teku P2P
+      - 8008 # Teku API
     firewall_allowed_udp_ports:
-      - 30303   # Besu P2P
-      - 9000    # Teku P2P
+      - 30303 # Besu P2P
+      - 9000 # Teku P2P

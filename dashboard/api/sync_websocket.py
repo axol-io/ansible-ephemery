@@ -24,10 +24,62 @@ logging.basicConfig(
 )
 logger = logging.getLogger("sync_websocket")
 
+
+# Load configuration from environment or config file
+def load_config():
+    config = {}
+    config_path = os.environ.get(
+        "EPHEMERY_CONFIG_PATH", "/opt/ephemery/config/ephemery_paths.conf"
+    )
+
+    if os.path.exists(config_path):
+        logger.info(f"Loading configuration from {config_path}")
+        with open(config_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    # Remove quotes if present
+                    value = value.strip("\"'")
+                    # Expand variables in the value
+                    if "$" in value:
+                        for k, v in config.items():
+                            value = value.replace(f"${{{k}}}", v)
+                    config[key] = value
+        logger.info(f"Loaded configuration: {config}")
+    else:
+        logger.warning(
+            f"Configuration file {config_path} not found, using environment variables"
+        )
+
+    # Set defaults from environment or use defaults
+    config["EPHEMERY_BASE_DIR"] = os.environ.get(
+        "EPHEMERY_BASE_DIR", config.get("EPHEMERY_BASE_DIR", "/opt/ephemery")
+    )
+    config["EPHEMERY_DATA_DIR"] = os.environ.get(
+        "EPHEMERY_DATA_DIR",
+        config.get(
+            "EPHEMERY_DATA_DIR", os.path.join(config["EPHEMERY_BASE_DIR"], "data")
+        ),
+    )
+    config["LIGHTHOUSE_API_ENDPOINT"] = os.environ.get(
+        "LIGHTHOUSE_API_ENDPOINT",
+        config.get("LIGHTHOUSE_API_ENDPOINT", "http://localhost:5052"),
+    )
+    config["GETH_API_ENDPOINT"] = os.environ.get(
+        "GETH_API_ENDPOINT", config.get("GETH_API_ENDPOINT", "http://localhost:8545")
+    )
+
+    return config
+
+
+# Load configuration
+config = load_config()
+
 # Configuration
-DATA_DIR = os.environ.get("DATA_DIR", "/opt/ephemery/data")
-LIGHTHOUSE_API = "http://localhost:5052"
-GETH_API = "http://localhost:8545"
+DATA_DIR = config["EPHEMERY_DATA_DIR"]
+LIGHTHOUSE_API = config["LIGHTHOUSE_API_ENDPOINT"]
+GETH_API = config["GETH_API_ENDPOINT"]
 UPDATE_INTERVAL = 5  # seconds
 HISTORY_FILE = os.path.join(DATA_DIR, "sync_history.json")
 MAX_HISTORY_ENTRIES = 1000  # Maximum number of entries to keep in history

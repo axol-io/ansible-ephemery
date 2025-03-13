@@ -5,35 +5,35 @@
 
 # Network and directory configuration
 network: ephemery
-home_dir: '{{ ansible_env.HOME }}'
-ephemery_base_dir: '{{ home_dir }}/ephemery'
-ephemery_data_dir: '{{ ephemery_base_dir }}/data'
-ephemery_secrets_dir: '{{ ephemery_base_dir }}/secrets'
-ephemery_logs_dir: '{{ ephemery_base_dir }}/logs'
-ephemery_scripts_dir: '{{ ephemery_base_dir }}/scripts'
-ephemery_backup_dir: '{{ ephemery_base_dir }}/backups'
+home_dir: "{{ ansible_env.HOME }}"
+ephemery_base_dir: "{{ home_dir }}/ephemery"
+ephemery_data_dir: "{{ ephemery_base_dir }}/data"
+ephemery_secrets_dir: "{{ ephemery_base_dir }}/secrets"
+ephemery_logs_dir: "{{ ephemery_base_dir }}/logs"
+ephemery_scripts_dir: "{{ ephemery_base_dir }}/scripts"
+ephemery_backup_dir: "{{ ephemery_base_dir }}/backups"
 
 # Default client selection
 # NOTE: Currently, only the geth+lighthouse combination is fully implemented and supported.
 # Other client options are placeholders for future development.
-el: geth             # Execution client: currently only 'geth' is fully supported
-cl: lighthouse       # Consensus client: currently only 'lighthouse' is fully supported
+el: geth # Execution client: currently only 'geth' is fully supported
+cl: lighthouse # Consensus client: currently only 'lighthouse' is fully supported
 
 # Client extra options
-el_extra_opts: ''    # Extra options for execution client
-cl_extra_opts: '--target-peers=70 --execution-timeout-multiplier=5'    # Extra options for consensus client
+el_extra_opts: "" # Extra options for execution client
+cl_extra_opts: "--target-peers=70 --execution-timeout-multiplier=5" # Extra options for consensus client
 
 # Sync configuration
-use_checkpoint_sync: true  # Whether to use checkpoint sync (true) or genesis sync (false)
-checkpoint_sync_url: 'https://checkpoint-sync.ephemery.ethpandaops.io'  # Checkpoint sync URL for Ephemery
-clear_database: false      # Whether to clear the database before starting the client
+use_checkpoint_sync: true # Whether to use checkpoint sync (true) or genesis sync (false)
+checkpoint_sync_url: "https://checkpoint-sync.ephemery.ethpandaops.io" # Checkpoint sync URL for Ephemery
+clear_database: false # Whether to clear the database before starting the client
 
 # Client images - using pk910 Ephemery-wrapped images
 # NOTE: Currently, only the geth+lighthouse combination has pre-configured Ephemery images
 client_images:
-  geth: 'pk910/ephemery-geth:latest'
-  lighthouse: 'pk910/ephemery-lighthouse:latest'
-  validator: 'pk910/ephemery-lighthouse:latest'
+  geth: "pk910/ephemery-geth:latest"
+  lighthouse: "pk910/ephemery-lighthouse:latest"
+  validator: "pk910/ephemery-lighthouse:latest"
 
 # Additional bootstrap nodes for better peer connectivity
 bootstrap_nodes:
@@ -43,7 +43,7 @@ bootstrap_nodes:
   - "/ip4/135.181.91.151/tcp/9000/udp/9000/p2p/16Uiu2HAmEP7X3JDcdAYLagNQxpJ24n3HDwLGxVVsWyv2aUHrXA5b"
 
 # JWT Secret configuration
-jwt_secret_path: '{{ ephemery_base_dir }}/jwt.hex'
+jwt_secret_path: "{{ ephemery_base_dir }}/jwt.hex"
 jwt_secret_secure_generation: true
 
 # Resource management for Docker containers
@@ -52,14 +52,14 @@ ephemery_docker_memory_limit: |-
   '{{ (ansible_memory_mb.real.total * 0.90) | round | int }}M'
 
 # Individual client memory limits (percentage of total allocated memory)
-el_memory_percentage: 0.5  # 50% for execution client
-cl_memory_percentage: 0.4  # 40% for consensus client
-validator_memory_percentage: 0.1  # 10% for validator (if enabled)
+el_memory_percentage: 0.5 # 50% for execution client
+cl_memory_percentage: 0.4 # 40% for consensus client
+validator_memory_percentage: 0.1 # 10% for validator (if enabled)
 
 # Calculated memory limits
-el_memory_limit: '{{ ((ansible_memory_mb.real.total * 0.90 * el_memory_percentage) | round | int) }}M'
-cl_memory_limit: '{{ ((ansible_memory_mb.real.total * 0.90 * cl_memory_percentage) | round | int) }}M'
-validator_memory_limit: '{{ ((ansible_memory_mb.real.total * 0.90 * validator_memory_percentage) | round | int) }}M'
+el_memory_limit: "{{ ((ansible_memory_mb.real.total * 0.90 * el_memory_percentage) | round | int) }}M"
+cl_memory_limit: "{{ ((ansible_memory_mb.real.total * 0.90 * cl_memory_percentage) | round | int) }}M"
+validator_memory_limit: "{{ ((ansible_memory_mb.real.total * 0.90 * validator_memory_percentage) | round | int) }}M"
 
 # Monitoring configuration
 monitoring_enabled: false
@@ -73,7 +73,7 @@ grafana_agent_http_port: 12345
 
 # Backup configuration
 backup_enabled: true
-backup_frequency: daily  # Options: hourly, daily, weekly
+backup_frequency: daily # Options: hourly, daily, weekly
 backup_retention_days: 7
 
 # Validator configuration
@@ -90,34 +90,34 @@ firewall_enabled: true
 firewall_default_policy: deny
 firewall_allowed_tcp_ports:
   # Basic system
-  - 22    # SSH
-  - 80    # HTTP
-  - 443   # HTTPS
+  - 22 # SSH
+  - 80 # HTTP
+  - 443 # HTTPS
 
   # Monitoring
-  - '{{ grafana_port }}'         # Grafana
-  - '{{ grafana_agent_http_port }}' # Grafana Agent
-  - '{{ prometheus_port }}'      # Prometheus
-  - '{{ node_exporter_port }}'   # Node Exporter
-  - '{{ cadvisor_port }}'        # Cadvisor
+  - "{{ grafana_port }}" # Grafana
+  - "{{ grafana_agent_http_port }}" # Grafana Agent
+  - "{{ prometheus_port }}" # Prometheus
+  - "{{ node_exporter_port }}" # Node Exporter
+  - "{{ cadvisor_port }}" # Cadvisor
 
   # Execution clients (common ports)
   - 30303 # Ethereum P2P (TCP)
-  - 8545  # JSON-RPC HTTP
-  - 8546  # WebSocket JSON-RPC
-  - 8551  # Engine API
+  - 8545 # JSON-RPC HTTP
+  - 8546 # WebSocket JSON-RPC
+  - 8551 # Engine API
 
   # Consensus clients
-  - 9000  # Consensus P2P (Lighthouse, Teku, Nimbus)
+  - 9000 # Consensus P2P (Lighthouse, Teku, Nimbus)
   - 13000 # Prysm P2P
-  - 5052  # HTTP API (Lighthouse, Nimbus)
-  - 5051  # REST API (Teku)
-  - 4000  # Beacon API (Prysm)
-  - 3500  # Validator API (Prysm)
+  - 5052 # HTTP API (Lighthouse, Nimbus)
+  - 5051 # REST API (Teku)
+  - 4000 # Beacon API (Prysm)
+  - 3500 # Validator API (Prysm)
 
 firewall_allowed_udp_ports:
   - 30303 # Ethereum P2P (UDP)
-  - 9000  # Consensus P2P (UDP)
+  - 9000 # Consensus P2P (UDP)
   - 13000 # Prysm P2P (UDP)
 
 # Client-specific settings (to be enabled conditionally)
@@ -132,6 +132,6 @@ client_specific_ports:
     - 30303 # Already covered in common ports
 
 # Periodic reset configuration
-ephemery_automatic_reset: false                      # Enable automatic reset via cron
-ephemery_reset_frequency: "0 0 * * *"                # Default: Midnight every day (cron format)
-ephemery_reset_log_file: "{{ ephemery_logs_dir }}/reset.log"  # Reset log file location
+ephemery_automatic_reset: false # Enable automatic reset via cron
+ephemery_reset_frequency: "0 0 * * *" # Default: Midnight every day (cron format)
+ephemery_reset_log_file: "{{ ephemery_logs_dir }}/reset.log" # Reset log file location

@@ -1,0 +1,150 @@
+---
+# Inventory file for Ephemery nodes
+# Group nodes by client combinations
+ephemery:
+  children:
+    geth_lighthouse:
+      hosts:
+        ephemery-node1:
+          ansible_host: 103.214.23.174
+          el: geth
+          cl: lighthouse
+          # Validator Configuration
+          validator_enabled: true
+          validator_client: "lighthouse" # Default is the CL client, can be overridden for separate validator client
+          validator_image: "" # Optional: Override default validator client image
+          validator_graffiti: "Ephemery" # Custom graffiti for validator blocks
+          validator_fee_recipient: "0x0000000000000000000000000000000000000000" # Fee recipient address
+
+          # Validator key management
+          validator_keys_password_file: 'files/passwords/validators.txt'
+          validator_keys_src: 'files/validator_keys'
+          validator_expected_key_count: 1000 # Expected key count for validation - set to 0 to skip validation
+
+          # Validator performance settings
+          validator_memory_limit: "2g" # Memory limit for validator container
+          validator_cpu_limit: "2" # CPU limit for validator container
+          validator_extra_opts: "--suggested-fee-recipient=0x0000000000000000000000000000000000000000" # Extra options for validator client
+
+          # MEV configuration
+          mev_boost_enabled: false # Whether to enable MEV-Boost
+          mev_boost_relays: [] # List of MEV-Boost relays to use
+
+          # Enable checkpoint sync with a working URL
+          use_checkpoint_sync: true
+          checkpoint_sync_url: https://checkpoint-sync.holesky.ethpandaops.io
+          clear_database: true
+
+          # Lighthouse optimization parameters that aren't hardcoded in the role
+          cl_extra_opts: "--disable-deposit-contract-sync --target-peers=100 --execution-timeout-multiplier=10 --disable-backfill-rate-limiting"
+          # Geth optimization parameters that aren't hardcoded in the role
+          el_extra_opts: "--db.engine=pebble --cache=4096 --txlookuplimit=0 --syncmode=snap --maxpeers=100"
+
+          # Define explicit directories to avoid recursive templating errors
+          directories:
+            base: "/root/ephemery"
+            data: "/root/ephemery/data"
+            secrets: "/root/ephemery/secrets"
+            logs: "/root/ephemery/logs"
+            scripts: "/root/ephemery/scripts"
+            backups: "/root/ephemery/backups"
+            validator: "/root/ephemery/data/validator" # Explicit validator directory
+          jwt_secret_path: "/root/ephemery/jwt.hex"
+
+# Group nodes by type
+validators:
+  hosts:
+    ephemery-node1:
+      ansible_host: 103.214.23.174
+      el: geth
+      cl: lighthouse
+      # Validator Configuration
+      validator_enabled: true
+      validator_client: "lighthouse" # Default is the CL client, can be overridden for separate validator client
+      validator_image: "" # Optional: Override default validator client image
+      validator_graffiti: "Ephemery" # Custom graffiti for validator blocks
+      validator_fee_recipient: "0x0000000000000000000000000000000000000000" # Fee recipient address
+
+      # Validator key management
+      validator_keys_password_file: 'files/passwords/validators.txt'
+      validator_keys_src: 'files/validator_keys'
+      validator_expected_key_count: 1000 # Expected key count for validation - set to 0 to skip validation
+
+      # Validator performance settings
+      validator_memory_limit: "2g" # Memory limit for validator container
+      validator_cpu_limit: "2" # CPU limit for validator container
+      validator_extra_opts: "--suggested-fee-recipient=0x0000000000000000000000000000000000000000" # Extra options for validator client
+
+      # MEV configuration
+      mev_boost_enabled: false # Whether to enable MEV-Boost
+      mev_boost_relays: [] # List of MEV-Boost relays to use
+
+      use_checkpoint_sync: true
+      checkpoint_sync_url: 'https://checkpoint-sync.ephemery.ethpandaops.io'
+      clear_database: false
+      cl_extra_opts: "--disable-deposit-contract-sync"
+      el_extra_opts: "--db.engine=pebble"
+
+      # Define explicit directories to avoid recursive templating errors
+      directories:
+        base: "/root/ephemery"
+        data: "/root/ephemery/data"
+        secrets: "/root/ephemery/secrets"
+        logs: "/root/ephemery/logs"
+        scripts: "/root/ephemery/scripts"
+        backups: "/root/ephemery/backups"
+        validator: "/root/ephemery/data/validator" # Explicit validator directory
+      jwt_secret_path: "/root/ephemery/jwt.hex"
+
+monitoring:
+  hosts:
+    ephemery-node1:
+      monitoring_enabled: true
+      prometheus_enabled: true
+      grafana_enabled: true
+
+# Assign variables by node type
+all:
+  vars:
+    ansible_user: root
+    ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+    ansible_become: true
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+    network: 'ephemery'
+
+    # Set explicit directories structure for all hosts
+    directories:
+      base: "/root/ephemery"
+      data: "/root/ephemery/data"
+      secrets: "/root/ephemery/secrets"
+      logs: "/root/ephemery/logs"
+      scripts: "/root/ephemery/scripts"
+      backups: "/root/ephemery/backups"
+    jwt_secret_path: "/root/ephemery/jwt.hex"
+
+    # Checkpoint sync configuration - currently not working
+    checkpoint_sync_url: 'https://checkpoint-sync.ephemery.ethpandaops.io'
+
+    # Bootstrap nodes for better peer connectivity
+    bootstrap_nodes:
+      - "/ip4/157.90.35.151/tcp/9000/udp/9000/p2p/16Uiu2HAmVZnsqvTNQ2ya1YG2qi6DQchqX57jF9zN2CukZnQY84wJ"
+      - "/ip4/136.243.15.66/tcp/9000/udp/9000/p2p/16Uiu2HAmAwGWqGShumBQeUuivDyRMmCZjvbZsQwcEWYYLDVKvFjG"
+      - "/ip4/88.198.2.150/tcp/9000/udp/9000/p2p/16Uiu2HAm8cEfaKtweXbT4koAuifKKJPm8q7TdpaVfWk9j5E5L2m3"
+      - "/ip4/135.181.91.151/tcp/9000/udp/9000/p2p/16Uiu2HAmEP7X3JDcdAYLagNQxpJ24n3HDwLGxVVsWyv2aUHrXA5b"
+
+    # Client images - using specific versions
+    client_images:
+      geth: 'pk910/ephemery-geth:v1.15.3'
+      lighthouse: 'pk910/ephemery-lighthouse:latest'
+      validator: 'pk910/ephemery-lighthouse:latest'
+
+    # Resource allocation
+    el_memory_percentage: 0.5  # 50% for execution client
+    cl_memory_percentage: 0.4  # 40% for consensus client
+    validator_memory_percentage: 0.1  # 10% for validator
+
+  children:
+    ephemery:
+      vars:
+        ephemery_network: true
+        docker_installed: true

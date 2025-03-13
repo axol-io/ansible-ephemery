@@ -1,0 +1,68 @@
+---
+# Standardized paths for Ephemery Ansible playbooks
+# This file defines all paths used in Ansible playbooks to ensure consistency
+
+# Base directories based on deployment environment
+base_dirs:
+  default: "/opt/ephemery"     # Default production path
+  development: "~/ephemery"    # Development environment path
+  testing: "/tmp/ephemery"     # Testing environment path
+
+# Current deployment environment - change this to switch environments
+ephemery_environment: "{{ ephemery_env | default('default') }}"
+
+# Base directory based on current environment
+ephemery_base_dir: "{{ base_dirs[ephemery_environment] }}"
+
+# Standard directories based on the base directory
+ephemery_dirs:
+  config: "{{ ephemery_base_dir }}/config"
+  data: "{{ ephemery_base_dir }}/data"
+  geth_data: "{{ ephemery_base_dir }}/data/geth"
+  lighthouse_data: "{{ ephemery_base_dir }}/data/lighthouse"
+  validator_data: "{{ ephemery_base_dir }}/data/lighthouse-validator"
+  logs: "{{ ephemery_base_dir }}/logs"
+  scripts: "{{ ephemery_base_dir }}/scripts"
+  secrets: "{{ ephemery_base_dir }}/secrets"
+  validator_keys: "{{ ephemery_base_dir }}/data/validator-keys"
+  validator_passwords: "{{ ephemery_base_dir }}/secrets/validator-passwords"
+
+# File paths 
+ephemery_files:
+  jwt_secret: "{{ ephemery_base_dir }}/jwt.hex"
+  paths_config: "{{ ephemery_dirs.config }}/ephemery_paths.conf"
+  geth_config: "{{ ephemery_dirs.config }}/geth.toml"
+  lighthouse_config: "{{ ephemery_dirs.config }}/lighthouse.toml"
+  validator_config: "{{ ephemery_dirs.config }}/validator.toml"
+  prometheus_config: "{{ ephemery_dirs.config }}/prometheus.yaml"
+  
+# Docker network name
+ephemery_docker_network: "ephemery-net"
+
+# Container names
+ephemery_containers:
+  geth: "ephemery-geth"
+  lighthouse: "ephemery-lighthouse"
+  validator: "ephemery-validator"
+  prometheus: "ephemery-prometheus"
+  grafana: "ephemery-grafana"
+
+# Default port mappings
+ephemery_ports:
+  geth_http: 8545
+  geth_ws: 8546
+  geth_auth: 8551
+  geth_p2p: 30303
+  lighthouse_http: 5052
+  lighthouse_metrics: 8008
+  lighthouse_p2p: 9000
+  validator_metrics: 5064
+  prometheus: 9090
+  grafana: 3000
+
+# Default image tags
+ephemery_images:
+  geth: "pk910/ephemery-geth:latest"
+  lighthouse: "pk910/ephemery-lighthouse:latest"
+  prometheus: "prom/prometheus:v2.43.0"
+  grafana: "grafana/grafana:9.4.3" 

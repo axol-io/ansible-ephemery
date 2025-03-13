@@ -11,7 +11,7 @@ security:
 
 # Production resource allocation
 allocation:
-  memory_total_percentage: 0.85  # Slightly less aggressive than default (90%)
+  memory_total_percentage: 0.85 # Slightly less aggressive than default (90%)
 
 # Production features configuration
 features:
@@ -24,8 +24,8 @@ features:
   # Backup settings for production
   backup:
     enabled: true
-    frequency: 'daily'
-    retention_days: 14  # Longer retention for production
+    frequency: "daily"
+    retention_days: 14 # Longer retention for production
     offsite_backup: true
 
   # Reset frequency for production

@@ -11,23 +11,31 @@ show_help() {
     echo
     echo "Options:"
     echo "  -i, --inventory FILE     Optional: Specify inventory file"
+    echo "  -c, --config FILE        Optional: Specify config file (default: /opt/ephemery/config/ephemery_paths.conf)"
     echo "  -h, --help               Display this help message"
     echo
     echo "Examples:"
     echo "  $0"
     echo "  $0 --inventory config/local-inventory.yaml"
+    echo "  $0 --config /path/to/ephemery_paths.conf"
     echo
     echo "You can create an inventory file based on the example in config/local-inventory.yaml.example"
 }
 
 # Parse command line options
 INVENTORY_FILE=""
+CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"
 
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
         -i|--inventory)
             INVENTORY_FILE="$2"
+            shift
+            shift
+            ;;
+        -c|--config)
+            CONFIG_FILE="$2"
             shift
             shift
             ;;
@@ -47,6 +55,20 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../utils/parse_inventory.sh"
 
+# Load configuration file if available
+if [ -f "$CONFIG_FILE" ]; then
+    echo "Loading configuration from $CONFIG_FILE"
+    source "$CONFIG_FILE"
+else
+    echo "Configuration file not found, using default paths"
+    # Define default paths
+    EPHEMERY_BASE_DIR="$HOME/ephemery-local"
+    EPHEMERY_DATA_DIR="${EPHEMERY_BASE_DIR}/data"
+    EPHEMERY_LOGS_DIR="${EPHEMERY_BASE_DIR}/logs"
+    EPHEMERY_CONFIG_DIR="${EPHEMERY_BASE_DIR}/config"
+    EPHEMERY_JWT_SECRET="${EPHEMERY_CONFIG_DIR}/jwt.hex"
+fi
+
 # Parse inventory file if provided
 if [ -n "$INVENTORY_FILE" ]; then
     if [ ! -f "$INVENTORY_FILE" ]; then
@@ -58,11 +80,12 @@ if [ -n "$INVENTORY_FILE" ]; then
     parse_local_inventory "$INVENTORY_FILE"
 fi
 
-# Set default values if not provided by inventory
+# Set default values if not provided by inventory or config file
 EPHEMERY_BASE_DIR=${EPHEMERY_BASE_DIR:-$HOME/ephemery-local}
 EPHEMERY_DATA_DIR=${EPHEMERY_DATA_DIR:-$EPHEMERY_BASE_DIR/data}
 EPHEMERY_LOGS_DIR=${EPHEMERY_LOGS_DIR:-$EPHEMERY_BASE_DIR/logs}
-JWT_SECRET_PATH=${JWT_SECRET_PATH:-$EPHEMERY_BASE_DIR/jwt.hex}
+EPHEMERY_CONFIG_DIR=${EPHEMERY_CONFIG_DIR:-$EPHEMERY_BASE_DIR/config}
+EPHEMERY_JWT_SECRET=${EPHEMERY_JWT_SECRET:-$EPHEMERY_CONFIG_DIR/jwt.hex}
 
 # Set default client images and parameters
 GETH_IMAGE=${GETH_IMAGE:-pk910/ephemery-geth:v1.15.3}
@@ -73,18 +96,27 @@ LIGHTHOUSE_TARGET_PEERS=${LIGHTHOUSE_TARGET_PEERS:-100}
 
 echo "Setting up Ephemery with Geth and Lighthouse locally"
 echo "--------------------------------------------------------------"
+echo "Using the following paths:"
+echo "Base directory: $EPHEMERY_BASE_DIR"
+echo "Data directory: $EPHEMERY_DATA_DIR"
+echo "Logs directory: $EPHEMERY_LOGS_DIR"
+echo "Config directory: $EPHEMERY_CONFIG_DIR"
+echo "JWT secret: $EPHEMERY_JWT_SECRET"
+echo "--------------------------------------------------------------"
 
 # Create directories
 mkdir -p $EPHEMERY_BASE_DIR
 mkdir -p $EPHEMERY_DATA_DIR/geth
 mkdir -p $EPHEMERY_DATA_DIR/lighthouse
 mkdir -p $EPHEMERY_LOGS_DIR
+mkdir -p $EPHEMERY_CONFIG_DIR
 
 # Generate JWT secret
-if [ ! -f $JWT_SECRET_PATH ]; then
+if [ ! -f "$EPHEMERY_JWT_SECRET" ]; then
     echo "Generating JWT secret..."
-    openssl rand -hex 32 | tr -d "\n" > $JWT_SECRET_PATH
-    chmod 600 $JWT_SECRET_PATH
+    mkdir -p "$(dirname "$EPHEMERY_JWT_SECRET")"
+    openssl rand -hex 32 | tr -d "\n" > "$EPHEMERY_JWT_SECRET"
+    chmod 600 "$EPHEMERY_JWT_SECRET"
 fi
 
 # Create Docker network
@@ -102,7 +134,7 @@ echo "Starting Geth execution client with optimizations..."
 docker run -d --name ephemery-geth \
     --network ephemery \
     -v $EPHEMERY_DATA_DIR/geth:/ethdata \
-    -v $JWT_SECRET_PATH:/config/jwt-secret \
+    -v $EPHEMERY_JWT_SECRET:/config/jwt-secret \
     -p 8545-8546:8545-8546 -p 8551:8551 -p 30303:30303 -p 30303:30303/udp \
     $GETH_IMAGE \
     --datadir /ethdata \
@@ -123,7 +155,7 @@ echo "Starting Lighthouse consensus client with optimizations..."
 docker run -d --name ephemery-lighthouse \
     --network ephemery \
     -v $EPHEMERY_DATA_DIR/lighthouse:/ethdata \
-    -v $JWT_SECRET_PATH:/config/jwt-secret \
+    -v $EPHEMERY_JWT_SECRET:/config/jwt-secret \
     -p 5052:5052 -p 9000:9000 -p 9000:9000/udp -p 8008:8008 \
     $LIGHTHOUSE_IMAGE \
     lighthouse beacon \

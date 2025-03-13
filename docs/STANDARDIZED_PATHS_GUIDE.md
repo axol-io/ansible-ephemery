@@ -97,7 +97,7 @@ logger = logging.getLogger(__name__)
 def load_config():
     config = {}
     config_path = os.environ.get('EPHEMERY_CONFIG_PATH', '/opt/ephemery/config/ephemery_paths.conf')
-    
+
     if os.path.exists(config_path):
         logger.info(f"Loading configuration from {config_path}")
         with open(config_path, 'r') as f:
@@ -114,13 +114,13 @@ def load_config():
                     config[key] = value
     else:
         logger.warning(f"Configuration file {config_path} not found, using environment variables")
-    
+
     # Set defaults from environment or use defaults
     config['EPHEMERY_BASE_DIR'] = os.environ.get('EPHEMERY_BASE_DIR', config.get('EPHEMERY_BASE_DIR', '/opt/ephemery'))
-    config['EPHEMERY_CONFIG_DIR'] = os.environ.get('EPHEMERY_CONFIG_DIR', config.get('EPHEMERY_CONFIG_DIR', 
+    config['EPHEMERY_CONFIG_DIR'] = os.environ.get('EPHEMERY_CONFIG_DIR', config.get('EPHEMERY_CONFIG_DIR',
                                                   f"{config['EPHEMERY_BASE_DIR']}/config"))
     # Add other necessary defaults
-    
+
     return config
 
 # Usage example
@@ -140,7 +140,7 @@ Ansible playbooks should use standardized variable names and the configuration f
     ephemery_config_dir: "{{ ephemery_base_dir }}/config"
     ephemery_data_dir: "{{ ephemery_base_dir }}/data"
     ephemery_logs_dir: "{{ ephemery_base_dir }}/logs"
-    
+
   tasks:
     - name: Create configuration file
       copy:

@@ -53,7 +53,7 @@ rules:
 
   # Enforce truthy values using true/false rather than yes/no/on/off
   truthy:
-    allowed-values: ['true', 'false']
+    allowed-values: ["true", "false"]
     check-keys: false
 
   # Don't require document start marker

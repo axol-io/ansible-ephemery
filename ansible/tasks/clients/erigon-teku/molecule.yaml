@@ -6,15 +6,15 @@
 
 - name: 🌟 Ensure client directories exist
   ansible.builtin.file:
-    path: '{{ item }}'
+    path: "{{ item }}"
     state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   loop:
-    - '{{ ephemery_data_dir }}/el'
-    - '{{ ephemery_data_dir }}/cl'
-    - '{{ ephemery_logs_dir }}'
+    - "{{ ephemery_data_dir }}/el"
+    - "{{ ephemery_data_dir }}/cl"
+    - "{{ ephemery_logs_dir }}"
   when: not client_skip
 
 - name: 🔑 Ensure JWT secret exists
@@ -24,16 +24,16 @@
 
 - name: 🚀 Start Erigon (Execution Client)
   community.docker.docker_container:
-    name: '{{ network }}-erigon'
-    image: 'pk910/ephemery-erigon:v2.55.1'
+    name: "{{ network }}-erigon"
+    image: "pk910/ephemery-erigon:v2.55.1"
     state: started
     pull: true
     restart_policy: unless-stopped
     network_mode: host
-    memory: '{{ el_memory_limit }}'
+    memory: "{{ el_memory_limit }}"
     volumes:
-      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
-      - '{{ ephemery_data_dir }}/el:/data'
+      - "{{ jwt_secret_path }}:/execution-auth.jwt:ro"
+      - "{{ ephemery_data_dir }}/el:/data"
     command: >
       --datadir=/data
       --http
@@ -53,16 +53,16 @@
 
 - name: 🚀 Start Teku (Consensus Client)
   community.docker.docker_container:
-    name: '{{ network }}-teku'
-    image: 'pk910/ephemery-teku:24.1.0'
+    name: "{{ network }}-teku"
+    image: "pk910/ephemery-teku:24.1.0"
     state: started
     pull: true
     restart_policy: unless-stopped
     network_mode: host
-    memory: '{{ cl_memory_limit }}'
+    memory: "{{ cl_memory_limit }}"
     volumes:
-      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
-      - '{{ ephemery_data_dir }}/cl:/data'
+      - "{{ jwt_secret_path }}:/execution-auth.jwt:ro"
+      - "{{ ephemery_data_dir }}/cl:/data"
     command: >
       --data-path=/data
       --network=ephemery

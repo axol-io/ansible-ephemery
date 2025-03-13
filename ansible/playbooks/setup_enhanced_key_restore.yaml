@@ -1,0 +1,131 @@
+---
+# Playbook for setting up enhanced validator key restore system
+- name: Setup Enhanced Validator Key Restore System
+  hosts: all
+  gather_facts: true
+  become: false
+  vars:
+    cron_interval: "hourly" # Options: hourly, daily, custom
+    custom_schedule: "*/15 * * * *" # Default: every 15 minutes if custom interval used
+    force_install: false # Default to interactive mode
+    verbose_mode: false # Default to standard logging
+    container_name: "{{ network }}-validator-{{ cl }}" # Default based on network and CL variables
+
+  tasks:
+    - name: Set default variables if not defined
+      ansible.builtin.set_fact:
+        network: "{{ network | default('ephemery') }}"
+        cl: "{{ cl | default('lighthouse') }}"
+        ephemery_base_dir: "{{ ephemery_base_dir | default(ansible_env.HOME + '/ephemery') }}"
+
+    - name: Ensure scripts directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ ephemery_base_dir }}/scripts"
+        - "{{ ephemery_base_dir }}/scripts/utilities"
+        - "{{ ephemery_base_dir }}/scripts/core"
+
+    - name: Ensure data directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ ephemery_base_dir }}/data"
+        - "{{ ephemery_base_dir }}/data/logs"
+        - "{{ ephemery_base_dir }}/backups/validators"
+
+    - name: Copy enhanced key restore scripts
+      ansible.builtin.copy:
+        src: "../scripts/utilities/{{ item }}"
+        dest: "{{ ephemery_base_dir }}/scripts/utilities/{{ item }}"
+        mode: "0755"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+      loop:
+        - "enhanced_key_restore.sh"
+        - "ephemery_key_restore_wrapper.sh"
+        - "setup_ephemery_cron.sh"
+
+    - name: Copy reset handler script
+      ansible.builtin.copy:
+        src: "../scripts/core/ephemery_reset_handler.sh"
+        dest: "{{ ephemery_base_dir }}/scripts/core/ephemery_reset_handler.sh"
+        mode: "0755"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Check for existing backups
+      ansible.builtin.find:
+        paths: "{{ ephemery_base_dir }}/backups/validators"
+        file_type: directory
+        patterns: "validator_keys_backup_*"
+      register: backup_check
+
+    - name: Create initial backup if none exists
+      ansible.builtin.shell: |
+        {{ ephemery_base_dir }}/scripts/utilities/ephemery_key_restore_wrapper.sh --no-start --verbose
+      args:
+        creates: "{{ ephemery_base_dir }}/backups/validators/latest"
+      when: backup_check.matched == 0
+      register: initial_backup
+      ignore_errors: true
+
+    - name: Display initial backup result
+      ansible.builtin.debug:
+        msg: "{{ initial_backup.stdout_lines }}"
+      when: initial_backup is changed
+
+    - name: Confirm cron setup
+      ansible.builtin.pause:
+        prompt: |
+          You are about to set up the automatic validator key restore cron job.
+
+          Cron schedule: {{ cron_interval }} {{ '(' + custom_schedule + ')' if cron_interval == 'custom' else '' }}
+          Validator container: {{ container_name }}
+
+          Press ENTER to continue or Ctrl+C to abort
+      when: not force_install
+
+    - name: Setup cron job for reset handling
+      ansible.builtin.command: |
+        {{ ephemery_base_dir }}/scripts/utilities/setup_ephemery_cron.sh
+        --interval {{ cron_interval }}
+        {% if cron_interval == 'custom' %}--schedule "{{ custom_schedule }}"{% endif %}
+        {% if force_install %}--force{% endif %}
+        {% if verbose_mode %}--verbose{% endif %}
+      register: cron_setup
+
+    - name: Display cron setup result
+      ansible.builtin.debug:
+        msg: "{{ cron_setup.stdout_lines }}"
+
+    - name: Test reset handler without making changes
+      ansible.builtin.command: |
+        {{ ephemery_base_dir }}/scripts/core/ephemery_reset_handler.sh --dry-run --verbose
+      register: handler_test
+      changed_when: false
+
+    - name: Display reset handler test result
+      ansible.builtin.debug:
+        msg: "{{ handler_test.stdout_lines }}"
+
+    - name: Success message
+      ansible.builtin.debug:
+        msg: |-
+          =================================================================
+          Enhanced validator key restore system setup completed!
+          =================================================================
+
+          Configuration:
+          - Scripts installed in {{ ephemery_base_dir }}/scripts/
+          - Cron job configured for {{ cron_interval }} execution
+          - Log files located in {{ ephemery_base_dir }}/data/logs/
+
+          Available commands:
+          - Manual key restore: {{ ephemery_base_dir }}/scripts/utilities/ephemery_key_restore_wrapper.sh
+          - List backups: {{ ephemery_base_dir }}/scripts/utilities/ephemery_key_restore_wrapper.sh --list-backups
+          - Manual reset handling: {{ ephemery_base_dir }}/scripts/core/ephemery_reset_handler.sh

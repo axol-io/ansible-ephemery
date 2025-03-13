@@ -31,7 +31,6 @@ ephemery:
 validators:
   hosts:
     ephemery-node3:
-
 monitoring:
   hosts:
     ephemery-monitor:

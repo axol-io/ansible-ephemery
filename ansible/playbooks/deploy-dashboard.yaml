@@ -7,7 +7,7 @@
   gather_facts: true
 
   handlers:
-    - name: restart nginx
+    - name: Restart nginx
       ansible.builtin.service:
         name: nginx
         state: restarted

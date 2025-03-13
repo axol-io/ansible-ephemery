@@ -11,7 +11,7 @@ security:
 
 # Development resource allocation (reduced to free up resources for other dev tools)
 allocation:
-  memory_total_percentage: 0.70  # Lower than production (85-90%)
+  memory_total_percentage: 0.70 # Lower than production (85-90%)
   memory_distribution:
     execution_client: 0.5
     consensus_client: 0.4
@@ -41,5 +41,5 @@ sync:
 # Development client settings
 geth:
   options:
-    cache: 1024      # Lower memory cache for dev environment
-    maxpeers: 50     # Fewer peers for quicker startup
+    cache: 1024 # Lower memory cache for dev environment
+    maxpeers: 50 # Fewer peers for quicker startup

@@ -2,23 +2,23 @@
 - name: 🌟 Ensure ephemery directories exist
 
   ansible.builtin.file:
-    path: '{{ item }}'
+    path: "{{ item }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   loop:
-    - '{{ ephemery_base_dir }}'
-    - '{{ ephemery_base_dir }}/data/el'
-    - '{{ ephemery_base_dir }}/data/cl'
-    - '{{ ephemery_base_dir }}/scripts'
-    - '{{ ephemery_base_dir }}/logs'
-    - '{{ ephemery_base_dir }}/config'
-    - '{{ ephemery_base_dir }}/config/grafana'
-    - '{{ ephemery_base_dir }}/config/grafana/agent'
-    - '{{ ephemery_base_dir }}/config/grafana/provisioning'
-    - '{{ ephemery_base_dir }}/config/grafana/provisioning/datasources'
-    - '{{ ephemery_base_dir }}/config/grafana/provisioning/dashboards'
+    - "{{ ephemery_base_dir }}"
+    - "{{ ephemery_base_dir }}/data/el"
+    - "{{ ephemery_base_dir }}/data/cl"
+    - "{{ ephemery_base_dir }}/scripts"
+    - "{{ ephemery_base_dir }}/logs"
+    - "{{ ephemery_base_dir }}/config"
+    - "{{ ephemery_base_dir }}/config/grafana"
+    - "{{ ephemery_base_dir }}/config/grafana/agent"
+    - "{{ ephemery_base_dir }}/config/grafana/provisioning"
+    - "{{ ephemery_base_dir }}/config/grafana/provisioning/datasources"
+    - "{{ ephemery_base_dir }}/config/grafana/provisioning/dashboards"
 
 - name: 🔑 Include JWT secret management task
   ansible.builtin.import_tasks:
@@ -40,20 +40,20 @@
 - name: 📝 Create health check script
   ansible.builtin.template:
     src: "{{ lookup('env', 'PWD') }}/templates/scripts/health_check.sh.j2"
-    dest: '{{ ephemery_scripts_dir }}/health_check.sh'
+    dest: "{{ ephemery_scripts_dir }}/health_check.sh"
     force: true
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
-    mode: '0755'
+    mode: "0755"
 
 - name: ⏱️ Setup cron job for health check
   ansible.builtin.cron:
     name: Ephemery health check
-    minute: '*/5'
-    job: '{{ ephemery_scripts_dir }}/health_check.sh'
+    minute: "*/5"
+    job: "{{ ephemery_scripts_dir }}/health_check.sh"
     user: '{{ ansible_user | default("root") }}'
 
-  # Include client-specific configuration
+# Include client-specific configuration
 - name: 🚀 Include client-specific configuration
   ansible.builtin.include_tasks:
     file: ../clients/{{ el }}-{{ cl }}/main.yaml
@@ -61,7 +61,7 @@
     - el in ['geth', 'besu', 'nethermind', 'reth', 'erigon']
     - cl in ['lighthouse', 'teku', 'prysm', 'lodestar']
 
-  # Fallback to generic configuration if specific client combination is not available
+# Fallback to generic configuration if specific client combination is not available
 - name: 🚀 Check if client-specific configuration exists
   ansible.builtin.stat:
     path: ../clients/{{ el }}-{{ cl }}/main.yaml
@@ -72,14 +72,14 @@
 
 - name: 🚀 Check if Execution Client container exists
   community.docker.docker_container_info:
-    name: '{{ network }}-{{ el }}'
+    name: "{{ network }}-{{ el }}"
   register: el_container_info
   ignore_errors: true
   when: not test_mode | default(false)
 
 - name: 🚀 Remove existing Execution Client container if it exists
   community.docker.docker_container:
-    name: '{{ network }}-{{ el }}'
+    name: "{{ network }}-{{ el }}"
     state: absent
     force_kill: true
   when: not test_mode | default(false) and el_container_info.exists | default(false)
@@ -87,14 +87,14 @@
 - name: 🚀 Start Execution Client with generic configuration
   become: true
   community.docker.docker_container:
-    name: '{{ network }}-{{ el }}'
+    name: "{{ network }}-{{ el }}"
     image: '{% if el == "geth" %}pk910/ephemery-geth:v1.15.3{% else %}{{ client_images[el] }}{% endif %}'
     state: started
     restart_policy: unless-stopped
     network_mode: host
     volumes:
-      - '{{ ephemery_dir }}/data/{{ el }}:/data'
-      - '{{ ephemery_dir }}/jwt.hex:/jwt.hex'
+      - "{{ ephemery_dir }}/data/{{ el }}:/data"
+      - "{{ ephemery_dir }}/jwt.hex:/jwt.hex"
     command: >
       {% if el == "geth" %}
       --datadir=/data
@@ -120,14 +120,14 @@
 
 - name: 🚀 Check if Consensus Client container exists
   community.docker.docker_container_info:
-    name: '{{ network }}-{{ cl }}'
+    name: "{{ network }}-{{ cl }}"
   register: cl_container_info
   ignore_errors: true
   when: not test_mode | default(false)
 
 - name: 🚀 Remove existing Consensus Client container if it exists
   community.docker.docker_container:
-    name: '{{ network }}-{{ cl }}'
+    name: "{{ network }}-{{ cl }}"
     state: absent
     force_kill: true
   when: not test_mode | default(false) and cl_container_info.exists | default(false)
@@ -184,15 +184,15 @@
 - name: 🚀 Start Consensus Client with generic configuration
   become: true
   community.docker.docker_container:
-    name: '{{ network }}-{{ cl }}'
+    name: "{{ network }}-{{ cl }}"
     image: '{% if cl == "lighthouse" %}pk910/ephemery-lighthouse:latest{% else %}{{ client_images[cl] }}{% endif %}'
     state: started
     restart_policy: unless-stopped
     network_mode: host
     volumes:
-      - '{{ ephemery_dir }}/data/{{ cl }}:/data'
-      - '{{ ephemery_dir }}/jwt.hex:/jwt.hex'
-      - '{{ ephemery_dir }}/config/ephemery_network:/ephemery_config:ro'
+      - "{{ ephemery_dir }}/data/{{ cl }}:/data"
+      - "{{ ephemery_dir }}/jwt.hex:/jwt.hex"
+      - "{{ ephemery_dir }}/config/ephemery_network:/ephemery_config:ro"
     command: >
       {% if cl == "lighthouse" %}
       {{ lighthouse_command }}
@@ -209,8 +209,8 @@
     network_mode: host
     privileged: true
     volumes:
-      - '{{ ephemery_dir }}/config/grafana/agent/grafana-agent.yaml:/etc/agent/grafana-agent.yaml:ro'
+      - "{{ ephemery_dir }}/config/grafana/agent/grafana-agent.yaml:/etc/agent/grafana-agent.yaml:ro"
     command:
-      - '--config.file=/etc/agent/grafana-agent.yaml'
-      - '--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}'
+      - "--config.file=/etc/agent/grafana-agent.yaml"
+      - "--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}"
   when: not test_mode | default(false)

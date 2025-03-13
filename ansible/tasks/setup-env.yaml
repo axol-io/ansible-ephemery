@@ -3,7 +3,7 @@
   ansible.builtin.command:
     cmd: mkdir -p {{ home_dir }}
   args:
-    creates: '{{ home_dir }}'
+    creates: "{{ home_dir }}"
 
 - name: 📦 Install Docker prerequisites
   ansible.builtin.apt:
@@ -22,7 +22,7 @@
       ansible.builtin.get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
         dest: /tmp/docker.gpg
-        mode: '0644'
+        mode: "0644"
 
     - name: Dearmor Docker GPG key
       ansible.builtin.shell: set -o pipefail && cat /tmp/docker.gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -31,7 +31,8 @@
 
     - name: Add Docker repository
       ansible.builtin.apt_repository:
-        repo: "deb [arch={{ ansible_architecture }} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        repo: "deb [arch={{ ansible_architecture }} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu
+          {{ ansible_distribution_release }} stable"
         state: present
         filename: docker
 

@@ -4,6 +4,10 @@ inventory.*
 secrets.*
 !ansible/host_vars/example-*
 
+# Generated inventory files (with standardized naming pattern)
+*-inventory-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.yaml
+generated-inventory-*.yaml
+
 # Example files
 !ansible/host_vars/example-inventory.ini
 !ansible/host_vars/example-hostname.yaml

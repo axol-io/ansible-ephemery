@@ -4,7 +4,7 @@ galaxy_info:
   company: axol.io
   description: Playbook to set up and configure Ephemery Node. Includes Grafana Agent, Node Exporter, and Prometheus.
   license: MIT
-  min_ansible_version: '2.10'
+  min_ansible_version: "2.10"
   namespace: axol
   role_name: ephemery
   platforms:

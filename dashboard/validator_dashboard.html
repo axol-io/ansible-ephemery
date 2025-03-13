@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ephemery Validator Performance Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #6a5acd;
+            --secondary-color: #5a4abf;
+            --accent-color: #7f73d1;
+            --text-color: #333;
+            --light-bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --border-color: #e3e8ef;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --danger-color: #f44336;
+            --info-color: #2196f3;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-bg);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            font-size: 1.8rem;
+        }
+
+        header h1 i {
+            margin-right: 10px;
+        }
+
+        .dashboard-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .card-header .icon {
+            font-size: 1.2rem;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--light-bg);
+            color: var(--primary-color);
+            border-radius: 50%;
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .metric-trend {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .metric-trend.up {
+            color: var(--success-color);
+        }
+
+        .metric-trend.down {
+            color: var(--danger-color);
+        }
+
+        .progress-container {
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .validators-list {
+            margin-top: 20px;
+        }
+
+        .validators-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .validators-header h2 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 8px 15px 8px 35px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            outline: none;
+            width: 250px;
+            font-size: 0.9rem;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--light-bg);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: rgba(106, 90, 205, 0.05);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-active {
+            background-color: var(--success-color);
+        }
+
+        .status-pending {
+            background-color: var(--warning-color);
+        }
+
+        .status-error {
+            background-color: var(--danger-color);
+        }
+
+        .alerts-panel {
+            margin-top: 20px;
+        }
+
+        .alert-card {
+            background-color: #fff8e1;
+            border-left: 4px solid var(--warning-color);
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: #ff8f00;
+        }
+
+        .alert-timestamp {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .alert-message {
+            color: #5f4f2a;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-button {
+            padding: 10px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        .action-button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .action-button i {
+            margin-right: 8px;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .refresh-info {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .refresh-info i {
+            margin-right: 5px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dashboard-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-box input {
+                width: 100%;
+            }
+            
+            .dashboard-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-shield-alt"></i> Ephemery Validator Performance Dashboard</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="refresh-info">
+            <i class="fas fa-sync-alt"></i> Last updated: <span id="last-updated">Loading...</span> | Auto-refresh: <span id="refresh-countdown">30</span>s
+        </div>
+
+        <div class="dashboard-summary">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Active Validators</h2>
+                    <div class="icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="active-validators">--</div>
+                    <div class="metric-label">Total Active Validators</div>
+                    <div class="metric-trend up" id="validator-trend">
+                        <i class="fas fa-arrow-up"></i> <span id="validator-trend-value">--</span> since yesterday
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Attestation Effectiveness</h2>
+                    <div class="icon">
+                        <i class="fas fa-signature"></i>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="attestation-rate">--%</div>
+                    <div class="metric-label">Overall Effectiveness</div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="attestation-progress" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span>Target: 100%</span>
+                        <span id="missed-attestations">-- missed</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Average Balance</h2>
+                    <div class="icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="avg-balance">-- ETH</div>
+                    <div class="metric-label">Average Validator Balance</div>
+                    <div class="metric-trend up" id="balance-trend">
+                        <i class="fas fa-arrow-up"></i> <span id="balance-trend-value">--</span> in last 24h
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Recent Proposals</h2>
+                    <div class="icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="recent-proposals">--</div>
+                    <div class="metric-label">In Last 24 Hours</div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="proposal-progress" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span>Success Rate</span>
+                        <span id="proposal-rate">--%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Balance History (30 Days)</h2>
+                    <div class="icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="balance-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Attestation Performance</h2>
+                    <div class="icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="attestation-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="validators-list card">
+            <div class="validators-header">
+                <h2>Validator Performance</h2>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="validator-search" placeholder="Search validators...">
+                </div>
+            </div>
+            
+            <table id="validators-table">
+                <thead>
+                    <tr>
+                        <th>Index</th>
+                        <th>Status</th>
+                        <th>Balance</th>
+                        <th>Effectiveness</th>
+                        <th>Last Attestation</th>
+                        <th>Proposals</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="validators-body">
+                    <tr>
+                        <td colspan="7" style="text-align: center;">Loading validator data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="alerts-panel card">
+            <div class="card-header">
+                <h2>Alerts</h2>
+                <div class="icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+            <div id="alerts-container">
+                <div class="alert-card">
+                    <div class="alert-header">
+                        <div class="alert-title">Loading Alerts...</div>
+                        <div class="alert-timestamp">--</div>
+                    </div>
+                    <div class="alert-message">
+                        Please wait while we check for any validator alerts...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-actions">
+            <button class="action-button" id="refresh-button">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+            <button class="action-button" id="performance-check">
+                <i class="fas fa-tachometer-alt"></i> Run Performance Check
+            </button>
+            <button class="action-button" id="export-data">
+                <i class="fas fa-file-export"></i> Export Report
+            </button>
+            <button class="action-button" id="settings-button">
+                <i class="fas fa-cog"></i> Settings
+            </button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Ephemery Validator Performance Dashboard | &copy; 2024 Ephemery Team</p>
+        </div>
+    </footer>
+
+    <script>
+        // Sample data for demonstration purposes
+        // In a real implementation, this would be fetched from the API
+        const mockData = {
+            timestamp: new Date().toISOString(),
+            active_validators: 128,
+            attestation_rate: 98.7,
+            avg_balance: 32.14,
+            recent_proposals: 3,
+            proposal_rate: 100,
+            missed_attestations: 5,
+            validator_trend: 4,
+            balance_trend: 0.05,
+            validators: [
+                { index: 1, status: "active", balance: 32.14, effectiveness: 99.5, last_attestation: "2m ago", proposals: "1/1" },
+                { index: 2, status: "active", balance: 32.27, effectiveness: 100, last_attestation: "45s ago", proposals: "0/0" },
+                { index: 3, status: "active", balance: 31.98, effectiveness: 98.2, last_attestation: "1m ago", proposals: "1/1" },
+                { index: 4, status: "active", balance: 32.01, effectiveness: 99.8, last_attestation: "30s ago", proposals: "0/0" },
+                { index: 5, status: "active", balance: 32.08, effectiveness: 99.2, last_attestation: "1m ago", proposals: "1/1" }
+            ],
+            alerts: [
+                { title: "Low Attestation Rate", timestamp: "2024-03-12T15:30:00Z", message: "Validator #3 has missed 5 attestations in the last 24 hours." },
+                { title: "Performance Warning", timestamp: "2024-03-12T09:15:00Z", message: "Average balance for validator group is lower than network average by 0.15 ETH." }
+            ],
+            balance_history: [
+                { date: "2024-02-12", value: 32.00 },
+                { date: "2024-02-17", value: 32.03 },
+                { date: "2024-02-22", value: 32.05 },
+                { date: "2024-02-27", value: 32.08 },
+                { date: "2024-03-04", value: 32.10 },
+                { date: "2024-03-09", value: 32.12 },
+                { date: "2024-03-14", value: 32.14 }
+            ],
+            attestation_history: [
+                { date: "2024-03-08", rate: 99.1 },
+                { date: "2024-03-09", rate: 99.5 },
+                { date: "2024-03-10", rate: 99.8 },
+                { date: "2024-03-11", rate: 98.7 },
+                { date: "2024-03-12", rate: 99.2 },
+                { date: "2024-03-13", rate: 98.9 },
+                { date: "2024-03-14", rate: 98.7 }
+            ]
+        };
+
+        // Function to update the dashboard with API data
+        function updateDashboard(data) {
+            // Update summary metrics
+            document.getElementById('active-validators').textContent = data.active_validators;
+            document.getElementById('attestation-rate').textContent = data.attestation_rate + '%';
+            document.getElementById('avg-balance').textContent = data.avg_balance.toFixed(2) + ' ETH';
+            document.getElementById('recent-proposals').textContent = data.recent_proposals;
+            document.getElementById('proposal-rate').textContent = data.proposal_rate + '%';
+            document.getElementById('missed-attestations').textContent = data.missed_attestations + ' missed';
+            document.getElementById('validator-trend-value').textContent = '+' + data.validator_trend;
+            document.getElementById('balance-trend-value').textContent = '+' + data.balance_trend.toFixed(3) + ' ETH';
+            
+            // Update progress bars
+            document.getElementById('attestation-progress').style.width = data.attestation_rate + '%';
+            document.getElementById('proposal-progress').style.width = data.proposal_rate + '%';
+            
+            // Update last updated timestamp
+            document.getElementById('last-updated').textContent = new Date(data.timestamp).toLocaleString();
+            
+            // Update validators table
+            const tableBody = document.getElementById('validators-body');
+            tableBody.innerHTML = '';
+            
+            data.validators.forEach(validator => {
+                const row = document.createElement('tr');
+                
+                let statusClass = 'status-active';
+                if (validator.status === 'pending') statusClass = 'status-pending';
+                if (validator.status === 'error') statusClass = 'status-error';
+                
+                row.innerHTML = `
+                    <td>${validator.index}</td>
+                    <td><span class="status-indicator ${statusClass}"></span> ${validator.status}</td>
+                    <td>${validator.balance.toFixed(2)} ETH</td>
+                    <td>${validator.effectiveness}%</td>
+                    <td>${validator.last_attestation}</td>
+                    <td>${validator.proposals}</td>
+                    <td>
+                        <button class="action-button" style="padding: 5px 10px; font-size: 0.8rem;">
+                            <i class="fas fa-info-circle"></i> Details
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Update alerts
+            const alertsContainer = document.getElementById('alerts-container');
+            alertsContainer.innerHTML = '';
+            
+            if (data.alerts.length === 0) {
+                alertsContainer.innerHTML = `
+                    <div class="alert-card" style="background-color: #e8f5e9; border-left-color: #4caf50;">
+                        <div class="alert-header">
+                            <div class="alert-title" style="color: #2e7d32;">All Validators Healthy</div>
+                            <div class="alert-timestamp">${new Date().toLocaleString()}</div>
+                        </div>
+                        <div class="alert-message" style="color: #2e7d32;">
+                            No alerts detected. All validators are performing normally.
+                        </div>
+                    </div>
+                `;
+            } else {
+                data.alerts.forEach(alert => {
+                    const alertCard = document.createElement('div');
+                    alertCard.className = 'alert-card';
+                    
+                    alertCard.innerHTML = `
+                        <div class="alert-header">
+                            <div class="alert-title">${alert.title}</div>
+                            <div class="alert-timestamp">${new Date(alert.timestamp).toLocaleString()}</div>
+                        </div>
+                        <div class="alert-message">
+                            ${alert.message}
+                        </div>
+                    `;
+                    
+                    alertsContainer.appendChild(alertCard);
+                });
+            }
+            
+            // Update charts
+            updateBalanceChart(data.balance_history);
+            updateAttestationChart(data.attestation_history);
+        }
+
+        // Initialize and update balance history chart
+        function updateBalanceChart(data) {
+            const ctx = document.getElementById('balance-chart').getContext('2d');
+            
+            // Check if chart already exists
+            if (window.balanceChart) {
+                window.balanceChart.data.labels = data.map(item => item.date);
+                window.balanceChart.data.datasets[0].data = data.map(item => item.value);
+                window.balanceChart.update();
+                return;
+            }
+            
+            window.balanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => item.date),
+                    datasets: [{
+                        label: 'Average Balance (ETH)',
+                        data: data.map(item => item.value),
+                        backgroundColor: 'rgba(106, 90, 205, 0.1)',
+                        borderColor: 'rgba(106, 90, 205, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(106, 90, 205, 1)',
+                        pointRadius: 3,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            suggestedMin: Math.min(...data.map(item => item.value)) - 0.1,
+                            suggestedMax: Math.max(...data.map(item => item.value)) + 0.1
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize and update attestation chart
+        function updateAttestationChart(data) {
+            const ctx = document.getElementById('attestation-chart').getContext('2d');
+            
+            // Check if chart already exists
+            if (window.attestationChart) {
+                window.attestationChart.data.labels = data.map(item => item.date);
+                window.attestationChart.data.datasets[0].data = data.map(item => item.rate);
+                window.attestationChart.update();
+                return;
+            }
+            
+            window.attestationChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => item.date),
+                    datasets: [{
+                        label: 'Attestation Rate (%)',
+                        data: data.map(item => item.rate),
+                        backgroundColor: 'rgba(33, 150, 243, 0.6)',
+                        borderColor: 'rgba(33, 150, 243, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            suggestedMin: 95,
+                            suggestedMax: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initial update with mock data
+        updateDashboard(mockData);
+
+        // Set up refresh countdown
+        let countdown = 30;
+        const countdownElement = document.getElementById('refresh-countdown');
+        
+        setInterval(() => {
+            countdown--;
+            countdownElement.textContent = countdown;
+            
+            if (countdown <= 0) {
+                // In a real implementation, this would fetch fresh data
+                updateDashboard({
+                    ...mockData,
+                    timestamp: new Date().toISOString()
+                });
+                countdown = 30;
+            }
+        }, 1000);
+
+        // Set up event listeners
+        document.getElementById('refresh-button').addEventListener('click', () => {
+            updateDashboard({
+                ...mockData,
+                timestamp: new Date().toISOString()
+            });
+            countdown = 30;
+        });
+
+        document.getElementById('validator-search').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#validators-body tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Mock functionality for the action buttons
+        document.getElementById('performance-check').addEventListener('click', () => {
+            alert('Performance check initiated. Results will be available shortly.');
+        });
+
+        document.getElementById('export-data').addEventListener('click', () => {
+            alert('Report export initiated. Download will begin shortly.');
+        });
+
+        document.getElementById('settings-button').addEventListener('click', () => {
+            alert('Settings panel will be implemented in a future update.');
+        });
+    </script>
+</body>
+</html> 

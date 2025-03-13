@@ -3,18 +3,18 @@
 
 - name: Set Teku-specific variables
   ansible.builtin.set_fact:
-    teku_data_dir: '{{ ephemery_data_dir }}/{{ cl_client_name }}'
-    teku_http_port: '{{ cl_client_port }}'
-    teku_p2p_port: '{{ cl_p2p_port }}'
+    teku_data_dir: "{{ ephemery_data_dir }}/{{ cl_client_name }}"
+    teku_http_port: "{{ cl_client_port }}"
+    teku_p2p_port: "{{ cl_p2p_port }}"
     teku_metrics_port: '{{ cl_metrics_port | default("8008") }}'
 
 - name: Create Teku data directory
   ansible.builtin.file:
-    path: '{{ teku_data_dir }}'
+    path: "{{ teku_data_dir }}"
     state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
 
 - name: Ensure metrics port is different from HTTP API port
   ansible.builtin.set_fact:

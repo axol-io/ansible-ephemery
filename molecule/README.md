@@ -141,3 +141,37 @@ When contributing new tests, ensure they:
 2. Clean up after themselves
 3. Test for actual functionality, not just presence of files
 4. Include clear assertions with helpful error messages
+
+## Using Different Molecule Drivers
+
+The test infrastructure now supports multiple drivers for running Molecule tests:
+
+### Docker Driver (Default)
+
+By default, Molecule uses the Docker driver. The Docker socket path is automatically detected or can be specified with an environment variable:
+
+```bash
+# Use default detection (recommended)
+./run-tests.sh
+
+# Or specify a custom Docker socket path
+DOCKER_HOST_SOCK="/path/to/docker.sock" ./run-tests.sh
+```
+
+### Delegated Driver (No Docker Required)
+
+For environments where Docker isn't available or when you want to test directly on the local system, you can use the delegated driver:
+
+```bash
+# Run tests with the delegated driver
+MOLECULE_DRIVER=delegated ./run-tests.sh
+```
+
+When using the delegated driver, tests will be executed on the local machine without requiring Docker containers.
+
+### Other Drivers
+
+You can configure other Molecule drivers by:
+
+1. Creating a corresponding `molecule-<driver>.yml` file in the scenario directory
+2. Running with `MOLECULE_DRIVER=<driver>` environment variable

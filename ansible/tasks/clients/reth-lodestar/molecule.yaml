@@ -6,15 +6,15 @@
 
 - name: 🌟 Ensure client directories exist
   ansible.builtin.file:
-    path: '{{ item }}'
+    path: "{{ item }}"
     state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   loop:
-    - '{{ ephemery_data_dir }}/el'
-    - '{{ ephemery_data_dir }}/cl'
-    - '{{ ephemery_logs_dir }}'
+    - "{{ ephemery_data_dir }}/el"
+    - "{{ ephemery_data_dir }}/cl"
+    - "{{ ephemery_logs_dir }}"
   when: not client_skip
 
 - name: 🔑 Ensure JWT secret exists
@@ -24,16 +24,16 @@
 
 - name: 🚀 Start Reth (Execution Client)
   community.docker.docker_container:
-    name: '{{ network }}-reth'
-    image: 'pk910/ephemery-reth:v0.1.0-alpha.11'
+    name: "{{ network }}-reth"
+    image: "pk910/ephemery-reth:v0.1.0-alpha.11"
     state: started
     pull: true
     restart_policy: unless-stopped
     network_mode: host
-    memory: '{{ el_memory_limit }}'
+    memory: "{{ el_memory_limit }}"
     volumes:
-      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
-      - '{{ ephemery_data_dir }}/el:/data'
+      - "{{ jwt_secret_path }}:/execution-auth.jwt:ro"
+      - "{{ ephemery_data_dir }}/el:/data"
     command: >
       --datadir=/data
       --http
@@ -51,16 +51,16 @@
 
 - name: 🚀 Start Lodestar (Consensus Client)
   community.docker.docker_container:
-    name: '{{ network }}-lodestar'
-    image: 'pk910/ephemery-lodestar:v1.13.0'
+    name: "{{ network }}-lodestar"
+    image: "pk910/ephemery-lodestar:v1.13.0"
     state: started
     pull: true
     restart_policy: unless-stopped
     network_mode: host
-    memory: '{{ cl_memory_limit }}'
+    memory: "{{ cl_memory_limit }}"
     volumes:
-      - '{{ jwt_secret_path }}:/execution-auth.jwt:ro'
-      - '{{ ephemery_data_dir }}/cl:/data'
+      - "{{ jwt_secret_path }}:/execution-auth.jwt:ro"
+      - "{{ ephemery_data_dir }}/cl:/data"
     command: >
       beacon
       --dataDir=/data

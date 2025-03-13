@@ -9,7 +9,8 @@ rules:
     title: Disk Space low
     for: 10m
     severity: warning
-    summary: "Disk space low on {{ '{{' }} $labels.mountpoint {{ '}}' }} for {{ '{{' }} $labels.instance {{ '}}' }}, {{ '{{' }} $values.B {{ '}}' }} percent free"
+    summary: "Disk space low on {{ '{{' }} $labels.mountpoint {{ '}}' }} for {{ '{{' }} $labels.instance {{ '}}' }}, {{ '{{'
+      }} $values.B {{ '}}' }} percent free"
     condition: C
     annotations:
       execErrState: Error

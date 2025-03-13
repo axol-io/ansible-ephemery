@@ -1,0 +1,94 @@
+---
+# Production inventory file for Ephemery nodes
+ephemery:
+  hosts:
+    ephemery-node1:
+      ansible_host: # TODO: Add IP address
+      ansible_user: root
+      ansible_ssh_private_key_file: # TODO: Add private key file
+      ansible_become: true
+      ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+
+      # Base directory for Ephemery node - using standardized variable names
+      ephemery_base_dir: /opt/ephemery
+      ephemery_data_dir: "{{ ephemery_base_dir }}/data"
+      ephemery_scripts_dir: "{{ ephemery_base_dir }}/scripts"
+      ephemery_config_dir: "{{ ephemery_base_dir }}/config"
+      ephemery_logs_dir: "{{ ephemery_base_dir }}/logs"
+      ephemery_backup_dir: "{{ ephemery_base_dir }}/backups"
+
+      # Remove redundant variable
+      home_dir: "{{ ephemery_base_dir }}"
+
+      # JWT Secret configuration
+      jwt_secret_path: "{{ ephemery_config_dir }}/jwt.hex"
+      jwt_secret_secure_generation: true
+
+      # Client specific variables
+      cl_client_name: lighthouse
+      cl_client_port: 5052
+      cl_p2p_port: 9000
+      cl_metrics_port: 5054
+
+      # Execution and consensus client selections
+      el: geth
+      cl: lighthouse
+      use_checkpoint_sync: true
+      clear_database: true
+      checkpoint_sync_url: "https://checkpoint-sync.holesky.ethpandaops.io"
+
+      # Validator Configuration
+      validator_enabled: true
+      validator_client: "lighthouse" # Default is the CL client, can be overridden for separate validator client
+      validator_image: "" # Optional: Override default validator client image
+      validator_graffiti: "Ephemery" # Custom graffiti for validator blocks
+      
+      # Validator key management
+      validator_keys_password_file: 'files/passwords/validators.txt'
+      validator_keys_src: 'files/validator_keys'
+      validator_expected_key_count: 1000 # Expected key count for validation - set to 0 to skip validation
+      
+      # Validator performance settings
+      validator_memory_limit: "2g" # Memory limit for validator container
+      validator_cpu_limit: "2" # CPU limit for validator container
+      validator_extra_opts: "--suggested-fee-recipient=0x0000000000000000000000000000000000000000" # Extra options for validator client
+      
+      # MEV configuration
+      mev_boost_enabled: false # Whether to enable MEV-Boost
+      mev_boost_relays: [] # List of MEV-Boost relays to use
+
+      # Extra client-specific options
+      # Optimized for faster syncing
+      cl_extra_opts: "--target-peers=100 --execution-timeout-multiplier=5 --allow-insecure-genesis-sync --genesis-backfill
+        --disable-backfill-rate-limiting"
+      el_extra_opts: "--cache=4096 --txlookuplimit=0 --syncmode=snap --maxpeers=100"
+
+      # Monitoring configuration
+      monitoring_enabled: true
+      prometheus_enabled: true
+      grafana_enabled: true
+      cadvisor_enabled: true
+      prometheus_port: 17690
+      grafana_admin_password: "admin"
+      grafana_port: 3000
+      grafana_agent_http_port: 12345
+      node_exporter_port: 9100
+      node_exporter_name: node-exporter
+      cadvisor_port: 8080
+
+      # Network and environment configuration
+      network: ephemery
+      ephemery_network: true
+      docker_installed: true
+      firewall_enabled: false # Set to false to skip firewall configuration
+      test_mode: false # Set to false for actual deployment
+
+      # Resource allocation
+      el_memory_percentage: 0.5 # 50% for execution client
+      cl_memory_percentage: 0.4 # 40% for consensus client
+      validator_memory_percentage: 0.1 # 10% for validator
+
+      # Secrets (should be vault-encrypted in production)
+      telegram_bot_token: # TODO: Add telegram bot token
+      telegram_chat_id: # TODO: Add telegram chat id
+      jwtsecret: # TODO: Add jwtsecret

@@ -1,0 +1,24 @@
+[Unit]
+Description=Validator Key Performance Metrics Service
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory={{ ephemery_base_dir }}
+ExecStart={{ ephemery_base_dir }}/scripts/key_performance_metrics.sh
+Restart=on-failure
+RestartSec=30
+Environment="BASE_DIR={{ ephemery_base_dir }}"
+Environment="CLIENT_TYPE={{ client_type | default('lighthouse') }}"
+Environment="BEACON_NODE_ENDPOINT={{ beacon_node_endpoint | default('http://localhost:5052') }}"
+Environment="VALIDATOR_ENDPOINT={{ validator_endpoint | default('http://localhost:5062') }}"
+Environment="VALIDATOR_METRICS_PORT={{ validator_metrics_port | default('8009') }}"
+Environment="RETENTION_DAYS={{ retention_days | default('7') }}"
+Environment="ATTESTATION_THRESHOLD={{ attestation_threshold | default('0.90') }}"
+Environment="PROPOSAL_THRESHOLD={{ proposal_threshold | default('0.95') }}"
+Environment="BALANCE_DECREASE_THRESHOLD={{ balance_decrease_threshold | default('0.01') }}"
+
+[Install]
+WantedBy=multi-user.target 

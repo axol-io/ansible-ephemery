@@ -1,40 +1,40 @@
 ---
 - name: Ensure home directory for root exists with correct permissions
   ansible.builtin.file:
-    path: '{{ home_dir }}'
+    path: "{{ home_dir }}"
     state: directory
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
 
 - name: Create directory structure for default monitoring stack
   ansible.builtin.file:
-    path: '{{ item }}'
+    path: "{{ item }}"
     state: directory
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
   with_items:
-    - '{{ home_dir }}/config/prometheus'
-    - '{{ home_dir }}/config/grafana'
-    - '{{ home_dir }}/config/grafana/agent'
-    - '{{ home_dir }}/config/grafana/provisioning'
-    - '{{ home_dir }}/config/grafana/provisioning/datasources'
+    - "{{ home_dir }}/config/prometheus"
+    - "{{ home_dir }}/config/grafana"
+    - "{{ home_dir }}/config/grafana/agent"
+    - "{{ home_dir }}/config/grafana/provisioning"
+    - "{{ home_dir }}/config/grafana/provisioning/datasources"
 
 - name: Create monitoring directories
   ansible.builtin.file:
-    path: '{{ item }}'
+    path: "{{ item }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   loop:
-    - '{{ ephemery_dir }}/config/prometheus'
-    - '{{ ephemery_dir }}/config/grafana'
-    - '{{ ephemery_dir }}/config/grafana/dashboards'
-    - '{{ ephemery_dir }}/config/grafana/agent'
-    - '{{ ephemery_dir }}/data/prometheus'
-    - '{{ ephemery_dir }}/data/grafana'
+    - "{{ ephemery_dir }}/config/prometheus"
+    - "{{ ephemery_dir }}/config/grafana"
+    - "{{ ephemery_dir }}/config/grafana/dashboards"
+    - "{{ ephemery_dir }}/config/grafana/agent"
+    - "{{ ephemery_dir }}/data/prometheus"
+    - "{{ ephemery_dir }}/data/grafana"
 
 - name: Set default monitoring config changed value
   ansible.builtin.set_fact:
@@ -44,9 +44,9 @@
   become_user: root
   become: true
   ansible.builtin.template:
-    src: 'templates/datasources.yaml.j2'
-    dest: '{{ ephemery_dir }}/config/grafana/provisioning/datasources/datasource.yaml'
-    mode: '0644'
+    src: "templates/datasources.yaml.j2"
+    dest: "{{ ephemery_dir }}/config/grafana/provisioning/datasources/datasource.yaml"
+    mode: "0644"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
 
@@ -54,9 +54,9 @@
   become_user: root
   become: true
   ansible.builtin.template:
-    src: 'templates/grafana-agent.yaml.j2'
-    dest: '{{ ephemery_dir }}/config/grafana/agent/grafana-agent.yaml'
-    mode: '0644'
+    src: "templates/grafana-agent.yaml.j2"
+    dest: "{{ ephemery_dir }}/config/grafana/agent/grafana-agent.yaml"
+    mode: "0644"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   register: graf_cfg
@@ -65,9 +65,9 @@
   become_user: root
   become: true
   ansible.builtin.template:
-    src: 'templates/prometheus.yaml.j2'
-    dest: '{{ ephemery_dir }}/config/prometheus/prometheus.yaml'
-    mode: '0644'
+    src: "templates/prometheus.yaml.j2"
+    dest: "{{ ephemery_dir }}/config/prometheus/prometheus.yaml"
+    mode: "0644"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   register: prom_cfg
@@ -81,16 +81,16 @@
   become_user: root
   become: true
   community.docker.docker_container:
-    name: '{{ node_exporter_name }}'
+    name: "{{ node_exporter_name }}"
     image: prom/node-exporter:v1.6.1
     state: started
     pull: true
     restart_policy: unless-stopped
-    restart: '{{ monitoring_config_changed }}'
+    restart: "{{ monitoring_config_changed }}"
     network_mode: host
     privileged: true
     ports:
-      - '127.0.0.1:{{ node_exporter_port }}:{{ node_exporter_port }}'
+      - "127.0.0.1:{{ node_exporter_port }}:{{ node_exporter_port }}"
   when: not test_mode | default(false)
 
 - name: 📊 Start grafana agent
@@ -102,14 +102,14 @@
     state: started
     pull: true
     restart_policy: unless-stopped
-    restart: '{{ monitoring_config_changed }}'
+    restart: "{{ monitoring_config_changed }}"
     network_mode: host
     privileged: true
     volumes:
-      - '{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:/etc/agent/grafana-agent.yaml:ro'
+      - "{{ home_dir }}/config/grafana/agent/grafana-agent.yaml:/etc/agent/grafana-agent.yaml:ro"
     command:
-      - '--config.file=/etc/agent/grafana-agent.yaml'
-      - '--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}'
+      - "--config.file=/etc/agent/grafana-agent.yaml"
+      - "--server.http.address=0.0.0.0:{{ grafana_agent_http_port }}"
   when: not test_mode | default(false)
 
 - name: 📊 Start prometheus container
@@ -121,11 +121,11 @@
     state: started
     pull: true
     restart_policy: unless-stopped
-    restart: '{{ monitoring_config_changed }}'
+    restart: "{{ monitoring_config_changed }}"
     network_mode: host
     privileged: true
     volumes:
-      - '{{ home_dir }}/config/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro'
+      - "{{ home_dir }}/config/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro"
   when: not test_mode | default(false)
 
 - name: 📊 Start grafana dashboard container
@@ -135,18 +135,18 @@
     state: started
     pull: true
     restart_policy: unless-stopped
-    restart: '{{ monitoring_config_changed }}'
+    restart: "{{ monitoring_config_changed }}"
     network_mode: host
     privileged: true
     env:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: '{{ grafana_admin_password | default("admin") }}'
-      GF_AUTH_ANONYMOUS_ENABLED: 'true'
-      GF_USERS_ALLOW_SIGN_UP: 'false'
-      GF_SERVER_HTTP_PORT: '{{ grafana_port | string }}'
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_HTTP_PORT: "{{ grafana_port | string }}"
     volumes:
-      - '{{ ephemery_dir }}/data/grafana:/var/lib/grafana'
-      - '{{ ephemery_dir }}/config/grafana/provisioning/datasources/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro'
+      - "{{ ephemery_dir }}/data/grafana:/var/lib/grafana"
+      - "{{ ephemery_dir }}/config/grafana/provisioning/datasources/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro"
   when: grafana_enabled | default(true) | bool and not test_mode | default(false)
 
 # - name: Create Lighthouse performance monitoring dashboard

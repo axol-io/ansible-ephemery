@@ -15,7 +15,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
   loop:
@@ -28,7 +28,7 @@
   ansible.builtin.template:
     src: sync_monitor.sh.j2
     dest: "{{ ephemery_base_dir }}/scripts/sync_monitor.sh"
-    mode: '0755'
+    mode: "0755"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
 
@@ -57,12 +57,14 @@
   ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
-    mode: '0644'
+    mode: "0644"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
   loop:
-    - { src: 'sync_dashboard.html.j2', dest: '{{ ephemery_base_dir }}/data/monitoring/sync/dashboard/index.html' }
-    - { src: 'sync-report-generator.py.j2', dest: '{{ ephemery_base_dir }}/scripts/sync-report-generator.py', mode: '0755' }
+    - { src: "sync_dashboard.html.j2", dest: "{{ ephemery_base_dir }}/data/monitoring/sync/dashboard/index.html" }
+    - src: "sync-report-generator.py.j2"
+      dest: "{{ ephemery_base_dir }}/scripts/sync-report-generator.py"
+      mode: "0755"
   when: sync_dashboard_enabled | default(false) | bool
 
 - name: Create symbolic links to data files
@@ -71,16 +73,18 @@
     dest: "{{ item.dest }}"
     state: link
   loop:
-    - { src: '{{ ephemery_base_dir }}/data/monitoring/sync/current_status.json', dest: '{{ ephemery_base_dir }}/data/monitoring/sync/dashboard/data/current_status.json' }
-    - { src: '{{ ephemery_base_dir }}/data/monitoring/sync/history.json', dest: '{{ ephemery_base_dir }}/data/monitoring/sync/dashboard/data/history.json' }
+    - src: "{{ ephemery_base_dir }}/data/monitoring/sync/current_status.json"
+      dest: "{{ ephemery_base_dir }}/data/monitoring/sync/dashboard/data/current_status.json"
+    - src: "{{ ephemery_base_dir }}/data/monitoring/sync/history.json"
+      dest: "{{ ephemery_base_dir }}/data/monitoring/sync/dashboard/data/history.json"
   when: sync_dashboard_enabled | default(false) | bool
 
 - name: Configure nginx for dashboard
-  become: yes
+  become: true
   ansible.builtin.template:
     src: nginx-dashboard.conf.j2
     dest: /etc/nginx/conf.d/ephemery-dashboard.conf
-    mode: '0644'
+    mode: "0644"
   notify: restart nginx
   when: sync_dashboard_enabled | default(false) | bool
 
@@ -89,11 +93,11 @@
   when: sync_dashboard_enabled | default(false) | bool
 
 - name: Ensure nginx is running
-  become: yes
+  become: true
   ansible.builtin.service:
     name: nginx
     state: started
-    enabled: yes
+    enabled: true
   when: sync_dashboard_enabled | default(false) | bool
 
 - name: Display dashboard access information

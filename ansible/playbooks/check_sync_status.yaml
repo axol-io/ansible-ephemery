@@ -74,7 +74,8 @@
           {% elif geth_sync.json.result.currentBlock is defined %}
           Geth is syncing - Current Block: {{ (geth_sync.json.result.currentBlock | int(0, 16)) }},
           Highest Block: {{ (geth_sync.json.result.highestBlock | int(0, 16)) }},
-          Sync Progress: {{ ((geth_sync.json.result.currentBlock | int(0, 16)) / (geth_sync.json.result.highestBlock | int(0, 16)) * 100) | round(2) if geth_sync.json.result.highestBlock | int(0, 16) > 0 else 0 }}%
+          Sync Progress: {{ ((geth_sync.json.result.currentBlock | int(0, 16)) / (geth_sync.json.result.highestBlock | int(0,
+          16)) * 100) | round(2) if geth_sync.json.result.highestBlock | int(0, 16) > 0 else 0 }}%
           {% else %}
           Unable to determine Geth sync status or sync may be stalled
           {% endif %}
@@ -181,7 +182,8 @@
 
     # Check Validator logs for common errors
     - name: Check Validator logs for common errors
-      ansible.builtin.shell: set -o pipefail && docker logs ephemery-validator-lighthouse --tail 50 | grep -E "WARN|ERRO" | tail -10
+      ansible.builtin.shell: set -o pipefail && docker logs ephemery-validator-lighthouse --tail 50 | grep -E "WARN|ERRO"
+        | tail -10
       register: validator_errors
       changed_when: false
       failed_when: false
@@ -194,7 +196,8 @@
 
     # Check Validator status
     - name: Get Validator status
-      ansible.builtin.shell: set -o pipefail && docker logs ephemery-validator-lighthouse --tail 50 | grep -E "INFO|WARN" | tail -10
+      ansible.builtin.shell: set -o pipefail && docker logs ephemery-validator-lighthouse --tail 50 | grep -E "INFO|WARN"
+        | tail -10
       register: validator_status_logs
       changed_when: false
       failed_when: false

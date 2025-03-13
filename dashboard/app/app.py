@@ -154,6 +154,12 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/history")
+def history_page():
+    """History page"""
+    return render_template("history.html")
+
+
 @app.route("/api/status")
 def status():
     """API endpoint for current status"""
@@ -175,9 +181,19 @@ def history():
     try:
         # Optional parameters for filtering
         limit = request.args.get("limit", 100, type=int)
+        days = request.args.get("days", 0, type=int)
 
         with open(SYNC_HISTORY_FILE, "r") as f:
             full_history = json.load(f)
+
+        # Filter by days if specified
+        if days > 0:
+            cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
+            cutoff_str = cutoff_date.isoformat()
+            filtered_history = [
+                entry for entry in full_history if entry["timestamp"] >= cutoff_str
+            ]
+            return jsonify(filtered_history)
 
         # Return the most recent entries
         return jsonify(full_history[-limit:])

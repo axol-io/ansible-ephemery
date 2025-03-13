@@ -5,8 +5,8 @@
   ansible.builtin.set_fact:
     el_client_name: geth
     cl_client_name: lodestar
-    el_client_image: '{{ client_images.geth }}'
-    cl_client_image: '{{ client_images.lodestar }}'
+    el_client_image: "{{ client_images.geth }}"
+    cl_client_image: "{{ client_images.lodestar }}"
     el_client_port: 8545
     cl_client_port: 5052
     el_p2p_port: 30303
@@ -16,22 +16,22 @@
 
 - name: Create client-specific directories
   ansible.builtin.file:
-    path: '{{ item }}'
+    path: "{{ item }}"
     state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   loop:
-    - '{{ ephemery_data_dir }}/{{ el_client_name }}'
-    - '{{ ephemery_data_dir }}/{{ cl_client_name }}'
+    - "{{ ephemery_data_dir }}/{{ el_client_name }}"
+    - "{{ ephemery_data_dir }}/{{ cl_client_name }}"
 
 # Include client-specific tasks if they exist
 - name: Include EL client-specific tasks
   ansible.builtin.include_tasks:
-    file: 'el-{{ el_client_name }}.yaml'
+    file: "el-{{ el_client_name }}.yaml"
   ignore_errors: true
 
 - name: Include CL client-specific tasks
   ansible.builtin.include_tasks:
-    file: 'cl-{{ cl_client_name }}.yaml'
+    file: "cl-{{ cl_client_name }}.yaml"
   ignore_errors: true

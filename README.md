@@ -1,250 +1,281 @@
-# Ephemery Node
+# Ephemery Node Setup
 
-Ephemery is an Ethereum testnet that restarts weekly, providing a clean environment for testing and development.
+This repository contains scripts and instructions for setting up an Ephemery network node using Docker containers.
 
-## Quick Start
+## What is Ephemery?
 
-To run a simple local demo of an Ephemery node:
+Ephemery is an Ethereum test network that resets itself periodically, providing a fresh testing environment. The network uses the same parameters and configuration as the Ethereum mainnet, but is ephemeral in nature, which makes it ideal for testing applications without spending real ETH.
 
-```bash
-./run-ephemery-demo.sh
-```
+## Prerequisites
 
-This will start a local Ephemery node with Geth and Lighthouse in Docker containers.
+- Docker installed and running
+- Basic knowledge of Ethereum and Docker
+- Approximately 10GB of free disk space
+- Port forwarding for 8545, 8551, 30303, 5052, 9000, and 8008
 
-## Unified Deployment System
+## Quick Setup
 
-We now provide a simplified unified deployment system that makes it easy to deploy Ephemery nodes:
-
-```bash
-# Start the guided deployment process
-./scripts/deploy-ephemery.sh
-```
-
-The unified deployment system offers:
-
-- **Guided Configuration**: Interactive setup wizard to customize your deployment
-- **One-Command Deployment**: Deploy to local or remote servers with a single command
-- **Automated Verification**: Built-in verification tests ensure deployment success
-- **Smart Defaults**: Sensible defaults that work for most users
-
-### Deployment Options
+For a quick setup, run the provided setup script:
 
 ```bash
-# Local deployment with guided setup
-./scripts/deploy-ephemery.sh --type local
-
-# Remote deployment with guided setup
-./scripts/deploy-ephemery.sh --type remote --host your-server
-
-# Deploy with custom inventory file
-./scripts/deploy-ephemery.sh --inventory custom-inventory.yaml
-
-# Non-interactive deployment with default settings
-./scripts/deploy-ephemery.sh --yes
+./setup_ephemery.sh
 ```
 
-### Configuration Wizard
+This script will:
+1. Create necessary directories
+2. Set up a Docker network for container communication
+3. Generate a JWT secret for authentication
+4. Start the Geth execution client
+5. Start the Lighthouse consensus client
 
-For custom configurations, you can use our configuration wizard:
+## Validator Setup
+
+If you want to run validators on the Ephemery network, place your validator keys in a zip file at `ansible/files/validator_keys/validator_keys.zip` and run:
 
 ```bash
-./scripts/utils/guided_config.sh --output my-inventory.yaml
+./setup_ephemery_validator.sh
 ```
 
-This will guide you through creating a custom inventory file that can be used with the deployment system.
+This script will:
+1. Extract the validator keys from the zip file
+2. Create password files for the validators
+3. Start a Lighthouse validator client
+4. Import the validator keys into the client
 
-## Ephemery Automation
+Note: Your beacon node must be fully synced before validators can participate in the network.
 
-For production Ephemery nodes, we recommend using our automated retention system:
+## Manual Setup
+
+If you prefer to set up the nodes manually, follow these steps:
+
+### 1. Create directories
 
 ```bash
-# Deploy retention script and cron job
-./scripts/deploy_ephemery_retention.sh
+mkdir -p ~/ephemery/data/geth
+mkdir -p ~/ephemery/data/lighthouse
+mkdir -p ~/ephemery/config
+mkdir -p ~/ephemery/logs
+mkdir -p ~/ephemery/secrets
 ```
 
-This will set up automatic detection and handling of Ephemery network resets. For more information, see:
-
-- [Ephemery Setup Guide](docs/EPHEMERY_SETUP.md)
-- [Ephemery Script Reference](docs/EPHEMERY_SCRIPT_REFERENCE.md)
-- [Ephemery-Specific Configuration](docs/EPHEMERY_SPECIFIC.md)
-
-## Implementation Progress
-
-We've successfully implemented several key improvements to our Ansible deployment:
-
-✅ **Ephemery Testnet Support**
-- Added automated genesis reset detection
-- Implemented retention script with 5-minute polling
-- Created cron job setup for automatic resets
-- Added comprehensive documentation
-
-✅ **Validator Key Management Improvements**
-- Enhanced key validation and extraction
-- Added multi-format archive support
-- Implemented automatic key backup
-- Added atomic key operations
-
-✅ **Synchronization Monitoring**
-- Created comprehensive sync dashboard
-- Implemented detailed metrics collection
-- Added historical sync progress tracking
-
-✅ **Unified Deployment System**
-- Created single-command deployment script
-- Implemented guided configuration workflow
-- Added deployment verification tests
-- Provided comprehensive documentation
-- For detailed info, see our [Unified Deployment Guide](docs/UNIFIED_DEPLOYMENT.md)
-
-🚧 **In Progress**
-- Advanced key management features
-- Validator performance monitoring
-- Checkpoint sync improvements
-
-For detailed roadmap information, see our [Roadmap](docs/ROADMAP.md).
-
-## Validator Support
-
-The playbook now includes improved validator support with:
-
-- **Robust Key Count Validation**
-  - Verification of expected vs actual key count
-  - Detailed logging of key loading status
-  - Visual validation summary display
-
-- **Enhanced Compressed Key Handling**
-  - Support for multiple archive formats (zip and tar.gz)
-  - Improved extraction validation with better error reporting
-  - Staged extraction with atomic commit to prevent partial operations
-
-- **Key Backup Functionality**
-  - Automatic backup before key replacement
-  - Timestamped backup directories with rotation
-  - Backup tracking with "latest_backup" pointer
-
-- **Key File Validation**
-  - Comprehensive key format validation (JSON format check)
-  - Detailed error reporting for invalid keys
-  - Validation report file generation for troubleshooting
-
-For detailed validator setup instructions, see:
-
-- [Validator Guide](docs/VALIDATOR_README.md)
-- [Validator Key Management](docs/VALIDATOR_KEY_MANAGEMENT.md)
-
-## Synchronization Monitoring
-
-New synchronization monitoring features include:
-
-- **Comprehensive Sync Dashboard**
-  - Real-time sync metrics display for both execution and consensus clients
-  - Visual progress indicators with status tracking
-  - Node information and resource usage statistics
-
-- **Enhanced Status Reporting**
-  - Detailed Geth sync stage logging
-  - Lighthouse distance/slot metrics
-  - Combined execution/consensus sync status
-
-- **Performance Metrics**
-  - Sync percentage calculation and visualization
-  - Historical data collection (last 100 sync points)
-  - JSON output for external tool integration
-
-For detailed monitoring information, see our [Sync Monitoring Guide](docs/SYNC_MONITORING.md).
-
-## Checkpoint Sync Improvements
-
-We've implemented a comprehensive solution for fixing checkpoint sync issues:
-
-- **Automatic Checkpoint URL Testing**
-  - Tests multiple checkpoint sync URLs
-  - Selects the best working URL automatically
-  - Updates inventory configuration with working URL
-
-- **Optimized Sync Configuration**
-  - Configures Lighthouse with optimized parameters
-  - Implements network optimizations for faster sync
-  - Adds proper timeout and retry mechanisms
-
-- **Monitoring and Recovery**
-  - Creates checkpoint sync monitoring script
-  - Implements automatic recovery for stuck syncs
-  - Provides detailed sync progress reporting
-
-To fix checkpoint sync issues, run:
+### 2. Create Docker network
 
 ```bash
-./scripts/fix_checkpoint_sync.sh
+docker network create ephemery-net
 ```
 
-For detailed information about checkpoint sync fixes, see our [Checkpoint Sync Fix Guide](docs/CHECKPOINT_SYNC_FIX.md).
-
-The monitoring dashboard can be enabled with:
-
-```yaml
-# In your inventory file
-sync_monitoring_enabled: true   # Enable sync monitoring (default: true)
-sync_dashboard_enabled: true    # Enable web dashboard (default: false)
-```
-
-To access the sync status:
+### 3. Create JWT secret
 
 ```bash
-# CLI access
-cat /path/to/ephemery/data/monitoring/sync/current_status.json
-
-# Web dashboard (if enabled)
-http://YOUR_SERVER_IP/ephemery-status/
-
-# Monitoring logs
-cat /path/to/ephemery/data/monitoring/sync/monitor.log
+openssl rand -hex 32 > ~/ephemery/jwt.hex
+chmod 600 ~/ephemery/jwt.hex
 ```
 
-## Directory Structure
+### 4. Start Geth (Execution Layer)
 
-- `run-ephemery-demo.sh` - Main demo script for local testing
-- `scripts/` - Advanced deployment scripts
-  - `local/` - Scripts for local deployment
-  - `remote/` - Scripts for remote deployment
-  - `utils/` - Utility scripts for inventory management, cleanup, and more
-- `config/` - Configuration files and templates
-- `docs/` - Detailed documentation
-- `ansible/` - Ansible playbooks and tasks
-  - `tasks/` - Individual task files
-  - `templates/` - Jinja2 templates for configuration files
-  - `playbooks/` - Main playbook files
-
-## Advanced Usage
-
-For more advanced deployments, including remote server deployment and custom configurations, see the documentation in the `docs/` directory:
-
-- [Local Deployment](docs/local-deployment.md)
-- [Remote Deployment](docs/remote-deployment.md)
-- [Configuration](docs/configuration.md)
-- [Inventory Management](docs/inventory-management.md)
-- [Implementation Details](docs/IMPLEMENTATION_DETAILS.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Known Issues](docs/KNOWN_ISSUES.md)
-
-## Inventory Configuration Options
-
-The following new options have been added to the inventory:
-
-```yaml
-# Validator key configuration
-validator_expected_key_count: 1000  # Expected number of validator keys (set to 0 to skip validation)
-
-# Sync monitoring configuration
-sync_monitoring_enabled: true       # Enable sync monitoring
-sync_dashboard_enabled: true        # Enable web dashboard for sync status
+```bash
+docker run -d --name ephemery-geth --network ephemery-net \
+  -v ~/ephemery/data/geth:/ethdata \
+  -v ~/ephemery/jwt.hex:/config/jwt-secret \
+  -p 8545-8546:8545-8546 -p 8551:8551 -p 30303:30303 -p 30303:30303/udp \
+  pk910/ephemery-geth:latest \
+  --http.addr 0.0.0.0 --authrpc.addr 0.0.0.0 --authrpc.vhosts "*" \
+  --authrpc.jwtsecret /config/jwt-secret
 ```
 
-## Requirements
+### 5. Start Lighthouse (Consensus Layer)
 
-- Docker and Docker Compose
-- Bash shell
-- For remote deployment: SSH access to target server
-- For sync monitoring: Python 3 with jq installed on the target node
-- For web dashboard: nginx (optional)
+```bash
+docker run -d --name ephemery-lighthouse --network ephemery-net \
+  -v ~/ephemery/data/lighthouse:/ethdata \
+  -v ~/ephemery/jwt.hex:/config/jwt-secret \
+  -v ~/ephemery/config:/ephemery_config \
+  -p 5052:5052 -p 9000:9000 -p 9000:9000/udp -p 8008:8008 \
+  pk910/ephemery-lighthouse:latest \
+  lighthouse beacon --datadir /ethdata --testnet-dir=/ephemery_config \
+  --execution-jwt /config/jwt-secret --execution-endpoint http://ephemery-geth:8551 \
+  --http --http-address 0.0.0.0 --http-port 5052 \
+  --metrics --metrics-address 0.0.0.0 --metrics-port 8008 \
+  --target-peers 100 --execution-timeout-multiplier 5
+```
+
+### 6. Manual Validator Setup
+
+To manually set up validators:
+
+```bash
+# Create validator directories
+mkdir -p ~/ephemery/data/lighthouse-validator
+mkdir -p ~/ephemery/data/validator-keys
+mkdir -p ~/ephemery/secrets/validator-passwords
+
+# Extract validator keys and create password files
+# ... (Custom steps for your validator keys)
+
+# Start Lighthouse validator client
+docker run -d --name ephemery-validator --network ephemery-net \
+  -v ~/ephemery/data/lighthouse-validator:/validatordata \
+  -v ~/ephemery/data/validator-keys:/validator-keys \
+  -v ~/ephemery/secrets/validator-passwords:/validator-passwords \
+  pk910/ephemery-lighthouse:latest \
+  lighthouse validator \
+  --datadir /validatordata \
+  --beacon-nodes http://ephemery-lighthouse:5052 \
+  --testnet-dir=/ephemery_config \
+  --init-slashing-protection \
+  --metrics \
+  --metrics-address 0.0.0.0 \
+  --metrics-port 5064 \
+  --suggested-fee-recipient 0x0000000000000000000000000000000000000000
+
+# Import validator keys
+docker exec ephemery-validator lighthouse \
+  --testnet-dir=/ephemery_config \
+  account validator import \
+  --directory=/validator-keys \
+  --datadir=/validatordata \
+  --password-file=/validator-passwords/validator-1.txt
+```
+
+## Verification
+
+To verify that your nodes are running correctly:
+
+### Geth API
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' \
+  http://localhost:8545
+```
+
+### Lighthouse API
+
+```bash
+curl -X GET http://localhost:5052/eth/v1/node/syncing -H "Content-Type: application/json"
+```
+
+### Validator Status
+
+```bash
+curl -X GET http://localhost:5052/eth/v1/beacon/states/head/validators -H "Content-Type: application/json"
+```
+
+## Monitoring
+
+You can monitor the logs of the containers:
+
+```bash
+# Use the monitoring script
+./monitor_ephemery.sh [options]
+
+# Options:
+#   -g, --geth         Monitor Geth logs only
+#   -l, --lighthouse   Monitor Lighthouse logs only
+#   -c, --combined     Monitor both logs in split view (default, requires tmux)
+#   -s, --status       Show current node status
+#   -h, --help         Show this help message
+
+# Monitor validator logs
+docker logs -f ephemery-validator
+```
+
+## Health Check
+
+You can run health checks on your Ephemery node to identify issues and monitor performance:
+
+```bash
+# Use the health check script
+./health_check_ephemery.sh [options]
+
+# Options:
+#   -b, --basic         Run basic health checks (default)
+#   -f, --full          Run comprehensive health checks
+#   -p, --performance   Run performance checks
+#   -n, --network       Run network checks
+#   --base-dir PATH     Specify a custom base directory
+#   -h, --help          Show this help message
+```
+
+The health check script provides:
+- Container status checks
+- Sync status monitoring
+- Disk space analysis
+- Performance monitoring
+- Network connectivity checks
+- Validator status information
+
+## Data Management
+
+### Disk Space Management
+
+You can use the pruning script to manage disk space usage:
+
+```bash
+# Use the pruning script (dry run by default, no changes made)
+./prune_ephemery_data.sh [options]
+
+# Options:
+#   -s, --safe              Safe pruning (removes only non-essential data, default)
+#   -a, --aggressive        Aggressive pruning (removes more data, may affect performance)
+#   -f, --full              Full pruning (completely resets nodes, requires resync)
+#   -e, --execution-only    Prune only execution layer data
+#   -c, --consensus-only    Prune only consensus layer data
+#   -d, --dry-run           Show what would be pruned without making changes (default)
+#   -y, --yes               Skip confirmation prompts
+```
+
+### Validator Backup and Restore
+
+To backup and restore validator keys and slashing protection data:
+
+```bash
+# Create a backup
+./backup_restore_validators.sh backup [options]
+
+# Restore from a backup
+./backup_restore_validators.sh restore --file BACKUP_FILE [options]
+
+# Options:
+#   -d, --dir DIR          Directory to store backups or read from
+#   -f, --file FILE        Specific backup file to restore from (for restore mode)
+#   -e, --encrypt          Encrypt the backup (backup mode)
+#   --no-slashing          Exclude slashing protection data (backup mode)
+```
+
+**Important:** Always keep validator key backups secure as they control access to staked funds.
+
+## Troubleshooting
+
+### Common Issues
+
+1. **JWT Authentication Failures**
+   - Ensure both containers are using the same JWT file
+   - Make sure the JWT file permissions are set correctly (600)
+
+2. **Container Communication Issues**
+   - Verify the containers are on the same Docker network
+   - Check that the container names are resolved correctly within the network
+
+3. **Sync Issues**
+   - Initial sync may take several hours
+   - It's normal to see execution payload errors during the initial sync
+
+4. **Validator Issues**
+   - Ensure validator keys are properly imported
+   - Check that the beacon node is fully synced before expecting validator participation
+   - Verify validator client is connected to the beacon node
+
+### Restarting Containers
+
+If you need to restart the containers:
+
+```bash
+docker restart ephemery-geth ephemery-lighthouse ephemery-validator
+```
+
+## Additional Resources
+
+- [Ephemery Official Documentation](https://ephemery.dev/)
+- [Geth Documentation](https://geth.ethereum.org/docs/)
+- [Lighthouse Documentation](https://lighthouse-book.sigmaprime.io/)

@@ -10,18 +10,18 @@ geth:
   # Geth-specific options
   options:
     # Core geth settings
-    cache: 2048                    # Memory allocated to internal caching (MB)
-    txlookuplimit: 0               # Number of blocks for which tx lookup is enabled (0 = all blocks)
-    syncmode: "full"               # Blockchain sync mode (snap, full)
-    gcmode: "full"                 # Blockchain garbage collection mode (full, archive)
-    maxpeers: 100                  # Maximum number of peers to connect to
+    cache: 2048 # Memory allocated to internal caching (MB)
+    txlookuplimit: 0 # Number of blocks for which tx lookup is enabled (0 = all blocks)
+    syncmode: "full" # Blockchain sync mode (snap, full)
+    gcmode: "full" # Blockchain garbage collection mode (full, archive)
+    maxpeers: 100 # Maximum number of peers to connect to
 
     # Performance tuning
-    state_cache_percentage: 100     # Percentage of cache memory to use for state entries
-    noprune: False                 # Disable pruning and flush everything to disk
+    state_cache_percentage: 100 # Percentage of cache memory to use for state entries
+    noprune: false # Disable pruning and flush everything to disk
 
     # Ephemery-specific tweaks
-    ephemery_optimized: True       # Enables Ephemery-specific optimizations
+    ephemery_optimized: true # Enables Ephemery-specific optimizations
 
   # Docker container configuration
   container:
@@ -39,4 +39,8 @@ geth:
       - "6060:6060"
 
     # Startup command template
-    cmd_template: "geth --datadir /ethdata --networkid 38356 --syncmode full --gcmode full --state.cache.percentage 100 --cache 2048 --http --http.addr 0.0.0.0 --http.port 8545 --http.api eth,net,web3,engine,admin --http.corsdomain '*' --ws --ws.addr 0.0.0.0 --ws.port 8546 --ws.api eth,net,web3,engine,admin --ws.origins '*' --authrpc.addr 0.0.0.0 --authrpc.port 8551 --authrpc.jwtsecret /config/jwt-secret --metrics --metrics.addr 0.0.0.0 --metrics.port 6060 --nat extip:{{ ansible_host }} --discovery.dns ''"
+    cmd_template: "geth --datadir /ethdata --networkid 38356 --syncmode full --gcmode full --state.cache.percentage 100 --cache
+      2048 --http --http.addr 0.0.0.0 --http.port 8545 --http.api eth,net,web3,engine,admin --http.corsdomain '*' --ws --ws.addr
+      0.0.0.0 --ws.port 8546 --ws.api eth,net,web3,engine,admin --ws.origins '*' --authrpc.addr 0.0.0.0 --authrpc.port 8551
+      --authrpc.jwtsecret /config/jwt-secret --metrics --metrics.addr 0.0.0.0 --metrics.port 6060 --nat extip:{{ ansible_host
+      }} --discovery.dns ''"

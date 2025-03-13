@@ -3,17 +3,17 @@
 
 - name: Set Besu-specific variables
   ansible.builtin.set_fact:
-    besu_data_dir: '{{ ephemery_data_dir }}/{{ el_client_name }}'
+    besu_data_dir: "{{ ephemery_data_dir }}/{{ el_client_name }}"
     besu_network_id: 3151908
-    besu_http_port: '{{ el_client_port }}'
-    besu_p2p_port: '{{ el_p2p_port }}'
-    besu_metrics_port: '{{ el_metrics_port }}'
+    besu_http_port: "{{ el_client_port }}"
+    besu_p2p_port: "{{ el_p2p_port }}"
+    besu_metrics_port: "{{ el_metrics_port }}"
     besu_authrpc_port: 8551
 
 - name: Create Besu data directory
   ansible.builtin.file:
-    path: '{{ besu_data_dir }}'
+    path: "{{ besu_data_dir }}"
     state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"

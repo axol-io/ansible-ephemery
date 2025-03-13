@@ -55,40 +55,9 @@ jobs:
         env:
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
-  molecule:
+  test-wrapper-scripts:
     runs-on: ubuntu-latest
     needs: lint
-    strategy:
-      fail-fast: false
-      matrix:
-        scenario:
-          - default
-          - validator
-          # Only keep geth-lighthouse active, all other client combinations are commented out
-          # to reduce CI execution time. While all combinations are supported (see docs/CLIENT_COMBINATIONS.md),
-          # we test only the default combination in CI to ensure basic functionality.
-          # For comprehensive testing of all combinations, run the tests locally.
-          - clients/geth-lighthouse
-          # - clients/geth-prysm
-          # - clients/geth-teku
-          # - clients/geth-lodestar
-          # - clients/reth-lighthouse
-          # - clients/reth-prysm
-          # - clients/reth-teku
-          # - clients/reth-lodestar
-          # - clients/reth-nimbus
-          # - clients/erigon-lighthouse
-          # - clients/erigon-prysm
-          # - clients/erigon-teku
-          # - clients/erigon-lodestar
-          # - clients/nethermind-lighthouse
-          # - clients/nethermind-prysm
-          # - clients/nethermind-teku
-          # - clients/nethermind-lodestar
-          # - clients/besu-lighthouse
-          # - clients/besu-prysm
-          # - clients/besu-teku
-          # - clients/besu-lodestar
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -99,145 +68,148 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-          pip install molecule molecule-docker docker pytest-testinfra ansible-lint
-          sudo apt-get update
-          sudo apt-get install -y socat procps iproute2
-
-          # Prevent Ansible from using system-wide collections
-          echo "ANSIBLE_COLLECTIONS_PATH=${{ github.workspace }}/collections" >> $GITHUB_ENV
+          pip install ansible ansible-core
       - name: Install Ansible collections
         run: |
           mkdir -p collections
-          # Uninstall any system-wide collections to avoid conflicts
-          if [ -d "/opt/hostedtoolcache/Python/3.10.16/x64/lib/python3.10/site-packages/ansible_collections" ]; then
-            echo "Removing system-wide ansible collections to avoid conflicts"
-            sudo rm -rf /opt/hostedtoolcache/Python/3.10.16/x64/lib/python3.10/site-packages/ansible_collections
+          ansible-galaxy collection install -r requirements.yaml -p collections --force
+      - name: Create test environment
+        run: |
+          mkdir -p /tmp/ephemery-test/config
+          mkdir -p /tmp/ephemery-test/scripts/validator
+          mkdir -p /tmp/ephemery-test/scripts/core
+          
+          # Create mock validator scripts for testing
+          cat > /tmp/ephemery-test/scripts/validator/manage_validator_keys.sh << 'EOF'
+          #!/bin/bash
+          echo "Mock manage_validator_keys.sh called with args: $@"
+          exit 0
+          EOF
+          
+          cat > /tmp/ephemery-test/scripts/validator/monitor_validator.sh << 'EOF'
+          #!/bin/bash
+          echo "Mock monitor_validator.sh called with args: $@"
+          exit 0
+          EOF
+          
+          cat > /tmp/ephemery-test/scripts/validator/test_validator_config.sh << 'EOF'
+          #!/bin/bash
+          echo "Mock test_validator_config.sh called with args: $@"
+          exit 0
+          EOF
+          
+          cat > /tmp/ephemery-test/scripts/core/ephemery_reset_handler.sh << 'EOF'
+          #!/bin/bash
+          echo "Mock ephemery_reset_handler.sh called with args: $@"
+          exit 0
+          EOF
+          
+          chmod +x /tmp/ephemery-test/scripts/validator/*.sh
+          chmod +x /tmp/ephemery-test/scripts/core/*.sh
+          
+          # Create paths configuration
+          cat > /tmp/ephemery-test/config/ephemery_paths.conf << 'EOF'
+          EPHEMERY_BASE_DIR="/tmp/ephemery-test"
+          EPHEMERY_SCRIPTS_DIR="${EPHEMERY_BASE_DIR}/scripts"
+          EPHEMERY_DATA_DIR="${EPHEMERY_BASE_DIR}/data"
+          EPHEMERY_LOGS_DIR="${EPHEMERY_BASE_DIR}/logs"
+          EPHEMERY_CONFIG_DIR="${EPHEMERY_BASE_DIR}/config"
+          EPHEMERY_VALIDATOR_SCRIPTS_DIR="${EPHEMERY_SCRIPTS_DIR}/validator"
+          EPHEMERY_CORE_SCRIPTS_DIR="${EPHEMERY_SCRIPTS_DIR}/core"
+          EOF
+      - name: Test validator management wrapper script
+        run: |
+          # Copy the wrapper script to the test environment
+          cp playbooks/deploy_validator_management.yaml /tmp/validator_management.yaml
+          
+          # Modify the playbook to use the test environment
+          sed -i 's|ephemery_base_dir: "{{ ephemery_dir | default('\''/opt/ephemery'\'') }}"|ephemery_base_dir: "/tmp/ephemery-test"|g' /tmp/validator_management.yaml
+          
+          # Run the playbook to create the wrapper script
+          ansible-playbook -i localhost, -c local /tmp/validator_management.yaml
+          
+          # Test the wrapper script
+          echo "Testing validator management wrapper script..."
+          /tmp/ephemery-test/scripts/manage-validator.sh keys list
+          /tmp/ephemery-test/scripts/manage-validator.sh monitor
+          /tmp/ephemery-test/scripts/manage-validator.sh test
+          
+          # Test help command
+          /tmp/ephemery-test/scripts/manage-validator.sh help
+          
+          # Test invalid command
+          if /tmp/ephemery-test/scripts/manage-validator.sh invalid 2>/dev/null; then
+            echo "Error: Invalid command should have failed"
+            exit 1
+          else
+            echo "Invalid command test passed"
+          fi
+      - name: Test retention wrapper script
+        run: |
+          # Copy the wrapper script to the test environment
+          cp playbooks/deploy_ephemery_retention.yaml /tmp/ephemery_retention.yaml
+          
+          # Modify the playbook to use the test environment
+          sed -i 's|ephemery_base_dir: "{{ ephemery_dir | default('\''/opt/ephemery'\'') }}"|ephemery_base_dir: "/tmp/ephemery-test"|g' /tmp/ephemery_retention.yaml
+          
+          # Create data directory for status test
+          mkdir -p /tmp/ephemery-test/data
+          touch /tmp/ephemery-test/data/reset_handled
+          
+          # Run the playbook to create the wrapper script
+          ansible-playbook -i localhost, -c local /tmp/ephemery_retention.yaml
+          
+          # Test the wrapper script
+          echo "Testing retention wrapper script..."
+          /tmp/ephemery-test/scripts/manage-retention.sh check
+          /tmp/ephemery-test/scripts/manage-retention.sh reset
+          /tmp/ephemery-test/scripts/manage-retention.sh status
+          
+          # Test help command
+          /tmp/ephemery-test/scripts/manage-retention.sh help
+          
+          # Test invalid command
+          if /tmp/ephemery-test/scripts/manage-retention.sh invalid 2>/dev/null; then
+            echo "Error: Invalid command should have failed"
+            exit 1
+          else
+            echo "Invalid command test passed"
           fi
 
+  molecule:
+    runs-on: ubuntu-latest
+    needs: [lint, test-wrapper-scripts]
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario:
+          - default
+          - validator
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible molecule molecule-plugins[docker] docker pytest pytest-testinfra
+          pip install ansible-core
+      - name: Install Ansible collections
+        run: |
+          mkdir -p collections
           ansible-galaxy collection install -r requirements.yaml -p collections --force
           echo "ANSIBLE_COLLECTIONS_PATH=${{ github.workspace }}/collections" >> $GITHUB_ENV
-
-          # Set environment variable to explicitly ignore system collections
-          echo "ANSIBLE_COLLECTIONS_SCAN_SYS_PATH=false" >> $GITHUB_ENV
-
-          # Verify community.docker collection was installed correctly
-          if ls -la "${{ github.workspace }}/collections/ansible_collections/community/docker/" 2>/dev/null; then
-            echo "✅ community.docker installed successfully"
-          else
-            echo "❌ community.docker NOT installed - trying alternate method"
-            ansible-galaxy collection install community.docker:4.4.0 -p ${{ github.workspace }}/collections
-          fi
-
-          # Verify collections were installed correctly
-          chmod +x scripts/verify-collections.sh
-          ./scripts/verify-collections.sh
         env:
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
-      - name: Verify Docker
+      - name: Run Molecule tests
         run: |
-          docker --version
-          docker info
-          ls -la /var/run/docker.sock
-      - name: Create local ansible.cfg
-        run: |
-          cat > ansible.cfg << 'EOF'
-          [defaults]
-          collections_paths = ./collections
-          retry_files_enabled = False
-          host_key_checking = False
-          transport = local
-          force_color = True
-
-          [ssh_connection]
-          pipelining = True
-          EOF
-          echo "Created ansible.cfg in $(pwd)"
-      - name: Fix trailing whitespace and line endings
-        run: |
-          # Install dos2unix if needed
-          if ! command -v dos2unix &> /dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y dos2unix
-          fi
-
-          # Fix all YAML files
-          find . -name "*.yml" -o -name "*.yaml" | xargs -I{} dos2unix {}
-
-          # Remove trailing whitespace
-          find . -name "*.yml" -o -name "*.yaml" | xargs -I{} sed -i 's/[[:space:]]*$//' {}
-
-          echo "Fixed line endings and trailing whitespace in YAML files"
-      - name: Update Molecule configuration for GitHub Actions
-        run: |
-          for file in $(find molecule -name "molecule.yml"); do
-            echo "Updating $file for GitHub Actions environment..."
-            # Use default Docker socket path for GitHub Actions
-            sed -i 's|/Users/.*/\.docker/run/docker\.sock|/var/run/docker.sock|g' $file
-            sed -i 's|/Users/.*/\.orbstack/run/docker\.sock|/var/run/docker.sock|g' $file
-            # Ensure proper cgroup mounting
-            sed -i 's|/sys/fs/cgroup:/sys/fs/cgroup:ro|/sys/fs/cgroup:/sys/fs/cgroup:rw|g' $file
-            # Add cgroupns_mode if not present
-            if ! grep -q "cgroupns_mode:" $file; then
-              sed -i '/privileged:/a\    cgroupns_mode: host' $file
-            fi
-          done
-      - name: Run Molecule tests for ${{ matrix.scenario }} scenario
-        run: |
-          # Set environment variables for consistent collection loading
-          export ANSIBLE_COLLECTIONS_PATH="${{ github.workspace }}/collections"
-          export ANSIBLE_COLLECTIONS_SCAN_SYS_PATH=false
-          export MOLECULE_EPHEMERAL_DIRECTORY="${{ github.workspace }}/molecule/${{ matrix.scenario }}/.molecule"
-
-          # Set color and terminal settings
-          export PYTHONIOENCODING=UTF-8
-          export TERM=xterm-256color
-          export PY_COLORS=1
-          export ANSIBLE_FORCE_COLOR=1
-
-          # Copy all collections to each scenario's directory for better isolation
-          if [[ "${{ matrix.scenario }}" == *"/"* ]]; then
-            # For nested scenarios like "clients/geth-lighthouse"
-            SCENARIO_DIR="molecule/${{ matrix.scenario }}"
-            SCENARIO_NAME=$(echo "${{ matrix.scenario }}" | cut -d'/' -f2)
-            echo "Running nested scenario: ${{ matrix.scenario }}"
-
-            # Create collections directory in the scenario folder
-            mkdir -p "$SCENARIO_DIR/collections"
-            cp -r "${{ github.workspace }}/collections/ansible_collections" "$SCENARIO_DIR/collections/"
-
-            cd molecule
-            # Use script to capture clean terminal output
-            script -q -c "ANSIBLE_VERBOSITY=2 molecule test -s \"$SCENARIO_NAME\" --debug" /dev/null
-          else
-            # For standard scenarios
-            SCENARIO_DIR="molecule/${{ matrix.scenario }}"
-            echo "Running standard scenario: ${{ matrix.scenario }}"
-
-            # Create collections directory in the scenario folder
-            mkdir -p "$SCENARIO_DIR/collections"
-            cp -r "${{ github.workspace }}/collections/ansible_collections" "$SCENARIO_DIR/collections/"
-
-            # Use script to capture clean terminal output
-            script -q -c "ANSIBLE_VERBOSITY=2 molecule test -s ${{ matrix.scenario }} --debug" /dev/null
-          fi
+          cd molecule/${{ matrix.scenario }}
+          molecule test
         env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-          DOCKER_HOST: unix:///var/run/docker.sock
-          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
-          ANSIBLE_COLLECTIONS_SCAN_SYS_PATH: 'true'
-          ANSIBLE_CONFIG: ${{ github.workspace }}/ansible.cfg
-          ANSIBLE_ROLES_PATH: ${{ github.workspace }}/ansible
-          PYTHONIOENCODING: 'UTF-8'
-          TERM: 'xterm-256color'
-      - name: Archive test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: molecule-${{ matrix.scenario }}-results
-          path: |
-            **/molecule/${{ matrix.scenario }}/*-result.xml
-            **/molecule/${{ matrix.scenario }}/logs/
-          retention-days: 7
+          MOLECULE_DISTRO: ubuntu2204

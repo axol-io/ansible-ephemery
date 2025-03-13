@@ -3,18 +3,18 @@
 
 - name: Set Lighthouse-specific variables
   ansible.builtin.set_fact:
-    lighthouse_data_dir: '{{ ephemery_data_dir }}/{{ cl_client_name }}'
-    lighthouse_http_port: '{{ cl_client_port }}'
-    lighthouse_p2p_port: '{{ cl_p2p_port }}'
+    lighthouse_data_dir: "{{ ephemery_data_dir }}/{{ cl_client_name }}"
+    lighthouse_http_port: "{{ cl_client_port }}"
+    lighthouse_p2p_port: "{{ cl_p2p_port }}"
     lighthouse_metrics_port: '{{ cl_metrics_port | default("5054") }}'
 
 - name: Create Lighthouse data directory
   ansible.builtin.file:
-    path: '{{ lighthouse_data_dir }}'
+    path: "{{ lighthouse_data_dir }}"
     state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
 
 - name: Ensure metrics port is different from HTTP API port
   ansible.builtin.set_fact:

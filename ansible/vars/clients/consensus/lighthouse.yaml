@@ -11,12 +11,12 @@ lighthouse:
   options:
     target_peers: 100
     execution_timeout_multiplier: 5
-    allow_insecure_genesis_sync: True
-    genesis_backfill: True
-    disable_backfill_rate_limiting: True
+    allow_insecure_genesis_sync: true
+    genesis_backfill: true
+    disable_backfill_rate_limiting: true
     checkpoint_sync_url: "https://checkpoint-sync.ephemery.ethpandaops.io"
     use_checkpoint_sync: true
-    ephemery_optimized: True
+    ephemery_optimized: true
 
   # Docker container configuration
   container:
@@ -67,8 +67,8 @@ validator:
       - "/home/{{ ansible_user }}/ephemery/secrets/validator_keys:/validatorkeys"
       - "/home/{{ ansible_user }}/ephemery/jwt.hex:/config/jwt-secret"
     ports:
-      - '5062:5062'
-      - '8009:8009'
+      - "5062:5062"
+      - "8009:8009"
 
     # Startup command template
     cmd_template: >-

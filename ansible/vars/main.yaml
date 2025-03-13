@@ -25,7 +25,7 @@ client_images:
   lodestar: chainsafe/lodestar:v1.16.0
 
   # Other
-  validator: sigp/lighthouse:v5.3.0  # Default validator image
+  validator: sigp/lighthouse:v5.3.0 # Default validator image
   watchdog: jer117/watchdog-container:v0.0.3-story-geth
 
 # File paths for reference
@@ -41,9 +41,9 @@ files:
     prysm: files/prysm-conf.example
 
 # Docker volume mounting config
-host_el_data_mount: '{{ el }}-data'
-host_cl_data_mount: '{{ cl }}-data'
-host_keys_mount: '{{ files.validator_keys }}'
+host_el_data_mount: "{{ el }}-data"
+host_cl_data_mount: "{{ cl }}-data"
+host_keys_mount: "{{ files.validator_keys }}"
 
 #
 #
@@ -77,12 +77,12 @@ docker_network_name: ephemery
 docker_network_subnet: 172.20.0.0/24
 
 # JWT secret file path
-jwt_secret_path: '{{ home_dir }}/jwt/jwtsecret'
-jwt_secret_secure_generation: true  # Use more secure random generation
+jwt_secret_path: "{{ home_dir }}/jwt/jwtsecret"
+jwt_secret_secure_generation: true # Use more secure random generation
 
 # Client configurations
-consensus_client: lighthouse  # Options: lighthouse, teku, prysm, nimbus, lodestar
-execution_client: geth       # Options: geth, nethermind, besu, erigon, reth
+consensus_client: lighthouse # Options: lighthouse, teku, prysm, nimbus, lodestar
+execution_client: geth # Options: geth, nethermind, besu, erigon, reth
 
 # Hardware resource limits
 execution_memory_limit: 8g
@@ -101,8 +101,8 @@ http_port: 8545
 ws_port: 8546
 engine_port: 8551
 consensus_port: 5052
-p2p_port: 30303  # p2p port for execution client
-p2p_udp_port: 30303  # p2p udp port for execution client
-cl_p2p_port: 9000  # p2p port for consensus client
-cl_p2p_udp_port: 9000  # p2p udp port for consensus client
-monitoring_port: 3000  # Grafana
+p2p_port: 30303 # p2p port for execution client
+p2p_udp_port: 30303 # p2p udp port for execution client
+cl_p2p_port: 9000 # p2p port for consensus client
+cl_p2p_udp_port: 9000 # p2p udp port for consensus client
+monitoring_port: 3000 # Grafana

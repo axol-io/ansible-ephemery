@@ -21,13 +21,64 @@ logging.basicConfig(
 )
 logger = logging.getLogger("dashboard_api")
 
+
+# Load configuration from environment or config file
+def load_config():
+    config = {}
+    config_path = os.environ.get(
+        "EPHEMERY_CONFIG_PATH", "/opt/ephemery/config/ephemery_paths.conf"
+    )
+
+    if os.path.exists(config_path):
+        logger.info(f"Loading configuration from {config_path}")
+        with open(config_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    # Remove quotes if present
+                    value = value.strip("\"'")
+                    # Expand variables in the value
+                    if "$" in value:
+                        for k, v in config.items():
+                            value = value.replace(f"${{{k}}}", v)
+                    config[key] = value
+        logger.info(f"Loaded configuration: {config}")
+    else:
+        logger.warning(
+            f"Configuration file {config_path} not found, using environment variables"
+        )
+
+    # Set defaults from environment or use defaults
+    config["EPHEMERY_BASE_DIR"] = os.environ.get(
+        "EPHEMERY_BASE_DIR", config.get("EPHEMERY_BASE_DIR", "/opt/ephemery")
+    )
+    config["EPHEMERY_SCRIPTS_DIR"] = os.environ.get(
+        "EPHEMERY_SCRIPTS_DIR",
+        config.get(
+            "EPHEMERY_SCRIPTS_DIR", os.path.join(config["EPHEMERY_BASE_DIR"], "scripts")
+        ),
+    )
+    config["EPHEMERY_DATA_DIR"] = os.environ.get(
+        "EPHEMERY_DATA_DIR",
+        config.get(
+            "EPHEMERY_DATA_DIR", os.path.join(config["EPHEMERY_BASE_DIR"], "data")
+        ),
+    )
+
+    return config
+
+
+# Load configuration
+config = load_config()
+
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Configuration
-SCRIPTS_DIR = os.environ.get("SCRIPTS_DIR", "/opt/ephemery/scripts")
-DATA_DIR = os.environ.get("DATA_DIR", "/opt/ephemery/data")
+SCRIPTS_DIR = config["EPHEMERY_SCRIPTS_DIR"]
+DATA_DIR = config["EPHEMERY_DATA_DIR"]
 
 
 # Utility functions
@@ -145,28 +196,39 @@ def run_fix_script():
 
 @app.route("/api/history", methods=["GET"])
 def get_history():
-    """Get historical sync data"""
-    days = request.args.get("days", default=1, type=int)
-    client = request.args.get("client", default="both")
-
-    history_file = os.path.join(DATA_DIR, "sync_history.json")
-
-    if not os.path.exists(history_file):
-        return jsonify({"success": False, "error": "No history data available"})
-
+    """Get historical sync data with optional filtering"""
     try:
+        # Get query parameters
+        days = request.args.get("days", default=0, type=int)
+
+        # Load history data
+        history_file = os.path.join(DATA_DIR, "sync_history.json")
+        if not os.path.exists(history_file):
+            return (
+                jsonify({"success": False, "error": "No history data available"}),
+                404,
+            )
+
         with open(history_file, "r") as f:
-            history = json.load(f)
+            history_data = json.load(f)
 
-        # Filter by days and client if needed
-        # (This would be implemented based on how the history data is structured)
+        # Filter by days if specified
+        if days > 0:
+            from datetime import datetime, timedelta
 
-        return jsonify({"success": True, "data": history})
+            cutoff_date = datetime.now() - timedelta(days=days)
+            cutoff_str = cutoff_date.isoformat()
+            filtered_data = [
+                entry for entry in history_data if entry["timestamp"] >= cutoff_str
+            ]
+            return jsonify(filtered_data)
+
+        # Return all data if no filtering
+        return jsonify(history_data)
+
     except Exception as e:
-        logger.error(f"Error reading history file: {e}")
-        return jsonify(
-            {"success": False, "error": f"Error reading history file: {str(e)}"}
-        )
+        logger.error(f"Error retrieving history data: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # Main entry point

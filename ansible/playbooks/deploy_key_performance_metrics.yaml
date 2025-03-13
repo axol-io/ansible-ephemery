@@ -1,0 +1,136 @@
+---
+# Playbook for deploying key performance metrics
+- name: Deploy Key Performance Metrics
+  hosts: all
+  become: true
+  vars:
+    ephemery_base_dir: /root/ephemery
+    metrics_dir: "{{ ephemery_base_dir }}/data/metrics"
+    key_metrics_dir: "{{ metrics_dir }}/key_metrics"
+    prometheus_dir: /prometheus
+    validator_metrics_dir: "{{ prometheus_dir }}/key-metrics"
+    client_type: "{{ client_type | default('lighthouse') }}"
+    beacon_node_endpoint: "{{ beacon_node_endpoint | default('http://localhost:5052') }}"
+    validator_endpoint: "{{ validator_endpoint | default('http://localhost:5062') }}"
+    retention_days: "{{ retention_days | default('7') }}"
+
+  tasks:
+    - name: Ensure required directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ ephemery_base_dir }}/scripts"
+        - "{{ key_metrics_dir }}"
+        - "{{ key_metrics_dir }}/history"
+        - "{{ metrics_dir }}/prometheus"
+        - "{{ validator_metrics_dir }}"
+
+    - name: Copy key performance metrics script
+      ansible.builtin.copy:
+        src: ../scripts/key_performance_metrics.sh
+        dest: "{{ ephemery_base_dir }}/scripts/key_performance_metrics.sh"
+        mode: "0755"
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - bc
+          - curl
+          - jq
+        state: present
+        update_cache: true
+
+    - name: Create key performance metrics service
+      ansible.builtin.template:
+        src: ../ansible/templates/key-performance-metrics.service.j2
+        dest: /etc/systemd/system/key-performance-metrics.service
+        mode: "0644"
+
+    - name: Create symbolic link for Prometheus metrics
+      ansible.builtin.file:
+        src: "{{ metrics_dir }}/prometheus"
+        dest: "{{ validator_metrics_dir }}"
+        state: link
+        force: true
+
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Run key performance metrics script once to initialize
+      ansible.builtin.command: "{{ ephemery_base_dir }}/scripts/key_performance_metrics.sh"
+      register: initial_metrics
+      changed_when: true
+      ignore_errors: true
+
+    - name: Display initial metrics results
+      ansible.builtin.debug:
+        var: initial_metrics.stdout_lines
+      when: initial_metrics.stdout is defined
+
+    - name: Enable and start key performance metrics service
+      ansible.builtin.systemd:
+        name: key-performance-metrics
+        enabled: true
+        state: started
+
+    - name: Wait for metrics file to be created
+      ansible.builtin.wait_for:
+        path: "{{ key_metrics_dir }}/key_metrics.json"
+        state: present
+        timeout: 120
+      register: metrics_file
+      ignore_errors: true
+
+    - name: Check service status
+      ansible.builtin.command: systemctl status key-performance-metrics
+      register: service_status
+      changed_when: false
+      ignore_errors: true
+
+    - name: Display service status
+      ansible.builtin.debug:
+        var: service_status.stdout_lines
+
+    - name: Enable and restart Prometheus container if running
+      community.docker.docker_container:
+        name: prometheus
+        restart: true
+      register: prometheus_restart
+      failed_when: false  # Skip failure if container doesn't exist
+
+    - name: Create Grafana dashboard directory
+      ansible.builtin.file:
+        path: "{{ ephemery_base_dir }}/dashboard/grafana/dashboards"
+        state: directory
+        mode: "0755"
+
+    - name: Copy Key Performance Dashboard to Grafana
+      ansible.builtin.copy:
+        src: ../dashboard/grafana/dashboards/key_performance_metrics.json
+        dest: "{{ ephemery_base_dir }}/dashboard/grafana/dashboards/key_performance_metrics.json"
+        mode: "0644"
+
+    - name: Restart Grafana container if running
+      community.docker.docker_container:
+        name: grafana
+        restart: true
+      register: grafana_restart
+      failed_when: false  # Skip failure if container doesn't exist
+
+    - name: Add key performance metrics to cron for regular updates
+      ansible.builtin.cron:
+        name: "Update key performance metrics"
+        minute: "*/10" # Run every 10 minutes
+        job: "{{ ephemery_base_dir }}/scripts/key_performance_metrics.sh > /dev/null 2>&1"
+        user: root
+
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg:
+          - "Key Performance Metrics has been deployed!"
+          - "View the metrics at: http://{{ ansible_host }}:3000/d/validator-key-performance"
+          - "View raw metrics at: {{ key_metrics_dir }}/key_metrics.json"
+          - "View summary metrics at: {{ key_metrics_dir }}/key_metrics_summary.json"

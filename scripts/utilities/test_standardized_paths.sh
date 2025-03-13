@@ -101,12 +101,12 @@ echo -e "\n${BLUE}=== Testing Scripts ===${NC}"
 test_script() {
     local script_name="$1"
     local script_path="${TEST_BASE_DIR}/scripts/${script_name}"
-    
+
     echo -e "${YELLOW}Testing ${script_name}...${NC}"
-    
+
     # Make the script executable
     chmod +x "${script_path}"
-    
+
     # Run the script with CONFIG_FILE environment variable
     if CONFIG_FILE="${TEST_CONFIG}" bash -c "cd ${TEST_BASE_DIR} && ${script_path} --dry-run" > /dev/null 2>&1; then
         echo -e "${GREEN}✓ ${script_name} works with test configuration${NC}"

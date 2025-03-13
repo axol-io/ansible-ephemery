@@ -6,22 +6,22 @@
 network: ephemery
 
 # Client selection
-el: geth              # Execution client: geth, besu, nethermind, reth, erigon
-cl: lighthouse        # Consensus client: lighthouse, teku, prysm, lodestar
-validator_enabled: true  # Set to true to enable validator
+el: geth # Execution client: geth, besu, nethermind, reth, erigon
+cl: lighthouse # Consensus client: lighthouse, teku, prysm, lodestar
+validator_enabled: true # Set to true to enable validator
 
 # Host-specific directory paths (override defaults if needed)
-home_dir: /home/ubuntu  # Home directory path for this host
+home_dir: /home/ubuntu # Home directory path for this host
 
 # Connection settings
-ansible_host: 'TODO'  # IP address of this host
-ansible_user: 'TODO'         # SSH user for this host
+ansible_host: "TODO" # IP address of this host
+ansible_user: "TODO" # SSH user for this host
 # ansible_ssh_private_key_file: "~/.ssh/id_rsa"  # Optional: SSH key file
 
 # Feature flags
-monitoring_enabled: true    # Enable monitoring stack
-cadvisor_enabled: true      # Enable container monitoring
-backup_enabled: true        # Enable automatic backups
+monitoring_enabled: true # Enable monitoring stack
+cadvisor_enabled: true # Enable container monitoring
+backup_enabled: true # Enable automatic backups
 
 # Service ports (override defaults if needed)
 node_exporter_port: 9100
@@ -37,8 +37,8 @@ grafana_port: 3000
 
 # Secrets (should be vault-encrypted in production)
 # Use ansible-vault encrypt_string for each of these values
-grafana_admin_password: 'example_password'
-telegram_bot_token: '1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-telegram_chat_id: '123456789'
-jwtsecret: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
-validator_keystore_password: 'example_validator_password'
+grafana_admin_password: "example_password"
+telegram_bot_token: "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+telegram_chat_id: "123456789"
+jwtsecret: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+validator_keystore_password: "example_validator_password"

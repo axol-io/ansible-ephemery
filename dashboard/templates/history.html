@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync History - Ephemery Checkpoint Sync Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='img/ephemery-logo.svg') }}" alt="Ephemery Logo" width="30" height="30" class="d-inline-block align-top">
+                Ephemery Checkpoint Sync Dashboard
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/history">History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="http://localhost:3000" target="_blank">Grafana</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="http://localhost:9090" target="_blank">Prometheus</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Sync History</h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadHistoryData(1)">1 Day</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadHistoryData(7)">7 Days</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadHistoryData(30)">30 Days</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadHistoryData(0)">All</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="historyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">Lighthouse Sync Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Average Slots per Hour</td>
+                                    <td id="avg-slots-hour">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Maximum Sync Rate</td>
+                                    <td id="max-sync-rate">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Time to Sync Estimate</td>
+                                    <td id="time-to-sync">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Head Slot Gain (Last 24h)</td>
+                                    <td id="head-slot-gain">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">Geth Sync Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Average Blocks per Hour</td>
+                                    <td id="avg-blocks-hour">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Maximum Block Rate</td>
+                                    <td id="max-block-rate">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Time to Sync Estimate</td>
+                                    <td id="block-time-to-sync">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Block Gain (Last 24h)</td>
+                                    <td id="block-gain">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">Sync Events Timeline</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline" id="sync-events-timeline">
+                            <div class="placeholder-message">Loading events...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">Ephemery Checkpoint Sync Dashboard | <a href="https://github.com/eth-clients/ephemery" target="_blank">GitHub</a></span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/history.js') }}"></script>
+</body>
+</html> 

@@ -3,22 +3,22 @@
 
 # Network identity
 network:
-  name: 'ephemery'
-  description: 'Ephemery Testnet (24-hour reset cycle)'
+  name: "ephemery"
+  description: "Ephemery Testnet (24-hour reset cycle)"
   chain_id: 39337
 
 # Ephemery-specific settings
 ephemery:
   # Network reset configuration
   reset:
-    frequency: "0 0 * * *"                # Midnight every day (cron format)
-    preload_genesis: true                 # Preload genesis for faster restart
-    backup_before_reset: true             # Create backup before network reset
+    frequency: "0 0 * * *" # Midnight every day (cron format)
+    preload_genesis: true # Preload genesis for faster restart
+    backup_before_reset: true # Create backup before network reset
 
   # Ephemery-specific endpoints
   endpoints:
-    explorer: 'https://explorer.ephemery.dev/'
-    faucet: 'https://faucet.ephemery.dev/'
+    explorer: "https://explorer.ephemery.dev/"
+    faucet: "https://faucet.ephemery.dev/"
 
   # Bootstrap nodes specific to Ephemery network
   bootstrap_nodes:
@@ -29,9 +29,9 @@ ephemery:
 
 # Client images for Ephemery
 client_images:
-  geth: 'pk910/ephemery-geth:latest'
-  lighthouse: 'pk910/ephemery-lighthouse:latest'
-  validator: 'pk910/ephemery-lighthouse:latest'
+  geth: "pk910/ephemery-geth:latest"
+  lighthouse: "pk910/ephemery-lighthouse:latest"
+  validator: "pk910/ephemery-lighthouse:latest"
 
 # Network-specific client settings
 client_settings:
@@ -39,7 +39,7 @@ client_settings:
     options:
       # Ephemery-optimized settings
       txlookuplimit: 0
-      syncmode: 'snap'
+      syncmode: "snap"
 
   lighthouse:
     options:

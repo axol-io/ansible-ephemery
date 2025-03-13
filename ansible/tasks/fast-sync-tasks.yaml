@@ -33,7 +33,7 @@
 - name: Create network optimization script
   ansible.builtin.copy:
     dest: "{{ ephemery_scripts_dir | default('/opt/ephemery/scripts') }}/optimize_network.sh"
-    mode: '0755'
+    mode: "0755"
     content: |
       #!/bin/bash
 
@@ -68,7 +68,7 @@
 - name: Create sync status check script
   ansible.builtin.copy:
     dest: "{{ ephemery_scripts_dir | default('/opt/ephemery/scripts') }}/check_sync_status.sh"
-    mode: '0755'
+    mode: "0755"
     content: |
       #!/bin/bash
 

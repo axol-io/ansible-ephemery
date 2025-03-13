@@ -117,3 +117,114 @@ body {
 .btn {
     margin-bottom: 10px;
 }
+
+/* Timeline styles */
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 120px;
+    width: 4px;
+    background: #e9ecef;
+    margin-left: -2px;
+}
+
+.timeline-event {
+    position: relative;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.timeline-date {
+    width: 110px;
+    padding-right: 10px;
+    text-align: right;
+    font-weight: bold;
+    color: #495057;
+}
+
+.timeline-indicator {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin: 0 10px;
+    z-index: 1;
+}
+
+.timeline-indicator.success {
+    background-color: #28a745;
+}
+
+.timeline-indicator.info {
+    background-color: #17a2b8;
+}
+
+.timeline-indicator.warning {
+    background-color: #ffc107;
+}
+
+.timeline-indicator.error {
+    background-color: #dc3545;
+}
+
+.timeline-content {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 1;
+}
+
+.timeline-content h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #343a40;
+}
+
+.timeline-content p {
+    margin-bottom: 0;
+    color: #6c757d;
+}
+
+.placeholder-message {
+    text-align: center;
+    color: #6c757d;
+    padding: 20px;
+}
+
+/* History page specific styles */
+#historyChart {
+    height: 350px;
+}
+
+.btn-group .btn {
+    margin-bottom: 0;
+}
+
+/* Table styles for statistics */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.table th, .table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+
+/* Make clickable elements more obvious */
+.btn-outline-primary {
+    border-width: 2px;
+}
+
+.btn-primary, .btn-outline-primary:hover {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}

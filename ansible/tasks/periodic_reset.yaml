@@ -1,30 +1,28 @@
 ---
-  # Tasks for setting up periodic resets of Ephemery nodes
-
-
+# Tasks for setting up periodic resets of Ephemery nodes
 - name: Create script directory if it doesn't exist
   ansible.builtin.file:
-    path: '{{ ephemery_scripts_dir }}'
+    path: "{{ ephemery_scripts_dir }}"
     state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
 
 - name: Copy reset script
   ansible.builtin.template:
     src: templates/scripts/reset_ephemery.sh.j2
-    dest: '{{ ephemery_scripts_dir }}/reset_ephemery.sh'
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    dest: "{{ ephemery_scripts_dir }}/reset_ephemery.sh"
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
 
 - name: Create log directory if it doesn't exist
   ansible.builtin.file:
-    path: '{{ ephemery_logs_dir }}'
+    path: "{{ ephemery_logs_dir }}"
     state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
 
 - name: Parse ephemery_reset_frequency into cron components
   ansible.builtin.set_fact:

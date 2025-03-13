@@ -1,0 +1,33 @@
+name: Validate Standardized Paths
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  validate-paths:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up environment
+        run: |
+          mkdir -p /tmp/opt/ephemery/config
+          cp config/ephemery_paths.conf /tmp/opt/ephemery/config/
+          chmod +x scripts/utilities/validate_paths.sh
+
+      - name: Run path validation
+        run: |
+          # Temporarily modify the validation script to use the test location
+          sed -i 's|STANDARD_CONFIG="/opt/ephemery/config/ephemery_paths.conf"|STANDARD_CONFIG="/tmp/opt/ephemery/config/ephemery_paths.conf"|g' scripts/utilities/validate_paths.sh
+
+          # Run the validation
+          ./scripts/utilities/validate_paths.sh
+
+      - name: Check for non-compliant files
+        if: ${{ failure() }}
+        run: |
+          echo "::error::Some files are not compliant with standardized paths. Please update them according to the guidelines in docs/STANDARDIZED_PATHS_GUIDE.md"
+          exit 1 

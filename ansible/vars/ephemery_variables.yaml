@@ -8,36 +8,36 @@
 
 # Network identity
 network:
-  name: 'ephemery'
-  description: 'Ephemery Testnet (24-hour reset cycle)'
-  genesis_time: '2023-01-01T00:00:00Z'  # This will be overridden by actual network genesis
+  name: "ephemery"
+  description: "Ephemery Testnet (24-hour reset cycle)"
+  genesis_time: "2023-01-01T00:00:00Z" # This will be overridden by actual network genesis
 
 # Directory structure - define each path directly to avoid circular references
 directories:
-  base: '{{ ansible_env.HOME }}/ephemery'
-  data: '{{ ansible_env.HOME }}/ephemery/data'
-  secrets: '{{ ansible_env.HOME }}/ephemery/secrets'
-  logs: '{{ ansible_env.HOME }}/ephemery/logs'
-  scripts: '{{ ansible_env.HOME }}/ephemery/scripts'
-  backups: '{{ ansible_env.HOME }}/ephemery/backups'
+  base: "{{ ansible_env.HOME }}/ephemery"
+  data: "{{ ansible_env.HOME }}/ephemery/data"
+  secrets: "{{ ansible_env.HOME }}/ephemery/secrets"
+  logs: "{{ ansible_env.HOME }}/ephemery/logs"
+  scripts: "{{ ansible_env.HOME }}/ephemery/scripts"
+  backups: "{{ ansible_env.HOME }}/ephemery/backups"
 
 # Client selection (currently only geth+lighthouse fully supported)
 clients:
-  execution: 'geth'      # Currently only geth is fully supported
-  consensus: 'lighthouse' # Currently only lighthouse is fully supported
-  validator: 'lighthouse' # Currently only lighthouse is fully supported
+  execution: "geth" # Currently only geth is fully supported
+  consensus: "lighthouse" # Currently only lighthouse is fully supported
+  validator: "lighthouse" # Currently only lighthouse is fully supported
 
   # Additional client configuration options
   options:
-    execution: '--target-peers=70 --execution-timeout-multiplier=5'
-    consensus: '--target-peers=70 --execution-timeout-multiplier=5'
-    validator: ''
+    execution: "--target-peers=70 --execution-timeout-multiplier=5"
+    consensus: "--target-peers=70 --execution-timeout-multiplier=5"
+    validator: ""
 
   # Docker images for clients
   images:
-    geth: 'pk910/ephemery-geth:latest'
-    lighthouse: 'pk910/ephemery-lighthouse:latest'
-    validator: 'pk910/ephemery-lighthouse:latest'
+    geth: "pk910/ephemery-geth:latest"
+    lighthouse: "pk910/ephemery-lighthouse:latest"
+    validator: "pk910/ephemery-lighthouse:latest"
 
 # ==============================================
 # === NETWORK CONFIGURATION ===================
@@ -46,15 +46,15 @@ clients:
 # Sync configuration
 sync:
   use_checkpoint: true
-  checkpoint_url: 'https://checkpoint-sync.ephemery.ethpandaops.io'
+  checkpoint_url: "https://checkpoint-sync.ephemery.ethpandaops.io"
   clear_database_on_start: false
 
 # Security configuration
 security:
-  jwt_secret_path: '{{ ansible_env.HOME }}/ephemery/jwt.hex'
+  jwt_secret_path: "{{ ansible_env.HOME }}/ephemery/jwt.hex"
   jwt_secure_generation: true
   firewall_enabled: true
-  firewall_default_policy: 'deny'
+  firewall_default_policy: "deny"
 
 # Bootstrap nodes
 bootstrap_nodes:
@@ -78,11 +78,11 @@ features:
     cadvisor_enabled: true
   backup:
     enabled: true
-    frequency: 'daily'  # Options: hourly, daily, weekly
+    frequency: "daily" # Options: hourly, daily, weekly
     retention_days: 7
   automatic_reset:
     enabled: false
-    frequency: "0 0 * * *"  # Default: Midnight every day (cron format)
+    frequency: "0 0 * * *" # Default: Midnight every day (cron format)
     log_file: "{{ ansible_env.HOME }}/ephemery/logs/reset.log"
 
 # ==============================================
@@ -93,21 +93,21 @@ features:
 ports:
   # Execution client ports
   execution:
-    p2p: 30303          # P2P communication
-    http_rpc: 8545      # HTTP RPC
-    ws_rpc: 8546        # WebSocket RPC
-    engine_api: 8551    # Engine API
+    p2p: 30303 # P2P communication
+    http_rpc: 8545 # HTTP RPC
+    ws_rpc: 8546 # WebSocket RPC
+    engine_api: 8551 # Engine API
 
   # Consensus client ports
   consensus:
-    p2p: 9000           # P2P communication
-    http_api: 5052      # HTTP API
-    metrics: 8008       # Metrics endpoint
+    p2p: 9000 # P2P communication
+    http_api: 5052 # HTTP API
+    metrics: 8008 # Metrics endpoint
 
   # Validator ports
   validator:
-    http_api: 5062      # HTTP API
-    metrics: 8009       # Metrics endpoint
+    http_api: 5062 # HTTP API
+    metrics: 8009 # Metrics endpoint
 
   # Monitoring ports
   monitoring:

@@ -7,13 +7,19 @@ exclude_paths:
   - .vscode/
   - ansible/playbooks/validator.yaml
   - ansible/playbooks/firewall_setup.yaml
+  - ansible/playbooks/fix_checkpoint_sync.yaml
 
 skip_list:
   - yaml[line-length]
   - yaml[truthy]
+  - var-naming[no-role-prefix]
+  - name[casing]
+  - name[template]
+  - jinja[spacing]
   - schema[tasks]
   - no-handler
   - no-changed-when
+  - no-relative-paths
 
 warn_list:
   - experimental

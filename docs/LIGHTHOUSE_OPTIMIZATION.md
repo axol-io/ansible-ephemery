@@ -4,17 +4,24 @@ This document provides guidance on optimizing both Lighthouse (Consensus Layer) 
 
 ## Recommended Consensus Layer (Lighthouse) Parameters
 
+For checkpoint sync (recommended):
 ```yaml
-cl_extra_opts: "--target-peers=100 --execution-timeout-multiplier=5 --allow-insecure-genesis-sync --genesis-backfill --disable-backfill-rate-limiting"
+cl_extra_opts: "--target-peers=100 --execution-timeout-multiplier=5"
+```
+
+For genesis sync (alternative):
+```yaml
+cl_extra_opts: "--target-peers=100 --execution-timeout-multiplier=5 --allow-insecure-genesis-sync --genesis-backfill --disable-backfill-rate-limiting --disable-deposit-contract-sync"
 ```
 
 ### Parameter Explanations:
 
 - `--target-peers=100`: Increases target peer count for faster data acquisition
 - `--execution-timeout-multiplier=5`: Increases timeout multiplier to prevent execution client timeouts
-- `--allow-insecure-genesis-sync`: Enables genesis sync for faster initial sync without requiring checkpoint sync
-- `--genesis-backfill`: Optimizes historical data sync from genesis
-- `--disable-backfill-rate-limiting`: Removes rate limiting for faster backfill operation
+- `--allow-insecure-genesis-sync`: Enables genesis sync for faster initial sync without requiring checkpoint sync (genesis sync only)
+- `--genesis-backfill`: Optimizes historical data sync from genesis (genesis sync only)
+- `--disable-backfill-rate-limiting`: Removes rate limiting for faster backfill operation (genesis sync only)
+- `--disable-deposit-contract-sync`: Removes unnecessary deposit contract operations
 
 ## Recommended Execution Layer (Geth) Parameters
 
@@ -28,6 +35,21 @@ el_extra_opts: "--cache=4096 --txlookuplimit=0 --syncmode=snap --maxpeers=100"
 - `--txlookuplimit=0`: Disables transaction lookup limit to reduce database size
 - `--syncmode=snap`: Uses snap sync mode which is faster than full sync
 - `--maxpeers=100`: Increases maximum peer connections for better network connectivity
+
+## Sync Strategy Recommendation
+
+We recommend using checkpoint sync with our enhanced checkpoint sync system:
+
+```yaml
+use_checkpoint_sync: true  # Enable checkpoint sync for faster initial sync
+```
+
+If checkpoint sync isn't working properly, you can:
+1. Try our enhanced checkpoint sync tool: `./scripts/maintenance/enhanced_checkpoint_sync.sh --apply`
+2. Fall back to genesis sync if needed:
+   ```yaml
+   use_checkpoint_sync: false  # Fall back to genesis sync with optimizations
+   ```
 
 ## Resource Allocation Strategy
 
@@ -70,19 +92,8 @@ Always use the Ephemery-specific client images for best performance:
 
 ```yaml
 client_images:
-  geth: 'pk910/ephemery-geth:v1.15.3'
-  lighthouse: 'pk910/ephemery-lighthouse:latest'
-  validator: 'pk910/ephemery-lighthouse:latest'
-```
-
-## Sync Strategy
-
-For optimal sync performance:
-
-```yaml
-# Recommended sync settings
-use_checkpoint_sync: false  # Genesis sync with optimizations is more reliable
-clear_database: true  # Starts with a clean database
+  geth: "pk910/ephemery-geth:v1.15.3"
+  lighthouse: "pk910/ephemery-lighthouse:v4.6.0"
 ```
 
 ## Monitoring and Troubleshooting
@@ -196,3 +207,10 @@ Since Ephemery is reset periodically:
 - [Ephemery Network Resources](https://github.com/ephemery-testnet/ephemery-resources)
 - [Lighthouse Documentation](https://lighthouse-book.sigmaprime.io/)
 - [Geth Documentation](https://geth.ethereum.org/docs/)
+
+## Further Resources
+
+For more information and advanced optimization options, see:
+- [Client Optimization Guide](./CLIENT_OPTIMIZATION.md)
+- [Checkpoint Sync Guide](./PRD/FEATURES/CHECKPOINT_SYNC.md)
+- [Enhanced Checkpoint Sync](./PRD/FEATURES/CHECKPOINT_SYNC_FIX.md)

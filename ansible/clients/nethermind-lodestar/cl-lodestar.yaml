@@ -3,18 +3,18 @@
 
 - name: Set Lodestar-specific variables
   ansible.builtin.set_fact:
-    lodestar_data_dir: '{{ ephemery_data_dir }}/{{ cl_client_name }}'
-    lodestar_http_port: '{{ cl_client_port }}'
-    lodestar_p2p_port: '{{ cl_p2p_port }}'
+    lodestar_data_dir: "{{ ephemery_data_dir }}/{{ cl_client_name }}"
+    lodestar_http_port: "{{ cl_client_port }}"
+    lodestar_p2p_port: "{{ cl_p2p_port }}"
     lodestar_metrics_port: '{{ cl_metrics_port | default("8008") }}'
 
 - name: Create Lodestar data directory
   ansible.builtin.file:
-    path: '{{ lodestar_data_dir }}'
+    path: "{{ lodestar_data_dir }}"
     state: directory
-    mode: '0755'
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
 
 - name: Ensure metrics port is different from HTTP API port
   ansible.builtin.set_fact:

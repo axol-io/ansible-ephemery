@@ -1,0 +1,104 @@
+---
+# Playbook to deploy Ephemery retention script and set up cron job
+- name: Deploy Ephemery Retention Script
+  hosts: ephemery
+  become: true
+  vars:
+    ephemery_home: /root/ephemery
+    script_dir: "{{ ephemery_home }}/scripts"
+    config_dir: "{{ ephemery_home }}/config"
+    data_dir: "{{ ephemery_home }}/data"
+    log_dir: "{{ ephemery_home }}/logs"
+
+  tasks:
+    - name: Ensure Ephemery directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ script_dir }}"
+        - "{{ config_dir }}"
+        - "{{ data_dir }}"
+        - "{{ log_dir }}"
+
+    - name: Copy Ephemery retention script
+      ansible.builtin.copy:
+        src: ../scripts/ephemery_retention.sh
+        dest: "{{ script_dir }}/ephemery_retention.sh"
+        mode: "0755"
+
+    - name: Set correct paths in retention script
+      ansible.builtin.replace:
+        path: "{{ script_dir }}/ephemery_retention.sh"
+        regexp: '^HOME_DIR="(.+)"'
+        replace: 'HOME_DIR="{{ ephemery_home }}"'
+
+    - name: Check if Docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_check
+      ignore_errors: true
+      changed_when: false
+
+    - name: Fail if Docker is not installed
+      ansible.builtin.fail:
+        msg: "Docker is not installed on the target server. Please install Docker first."
+      when: docker_check.rc != 0
+
+    - name: Check if containers exist
+      ansible.builtin.shell: |
+        set -o pipefail
+        docker ps -a | grep -E 'ephemery-geth|ephemery-lighthouse|ephemery-validator' || true
+      register: container_check
+      changed_when: false
+
+    - name: Display container status
+      ansible.builtin.debug:
+        msg: "Found Ephemery containers: {{ container_check.stdout }}"
+      when: container_check.stdout != ""
+
+    - name: Warning if no containers found
+      ansible.builtin.debug:
+        msg: "No Ephemery containers found. Make sure your container names match those in the retention script."
+      when: container_check.stdout == ""
+
+    - name: Check Ephemery client ports
+      ansible.builtin.wait_for:
+        host: localhost
+        port: "{{ item }}"
+        timeout: 5
+        state: started
+      ignore_errors: true
+      loop:
+        - 5052 # Lighthouse API port
+        - 8545 # Geth API port
+      register: port_check
+      changed_when: false
+
+    - name: Display port status
+      ansible.builtin.debug:
+        msg: "Ephemery client ports check results: {% for result in port_check.results %}Port {{ result.item }}: {{ 'Open'
+          if result.state == 'started' else 'Closed' }}{% if not loop.last %}, {% endif %}{% endfor %}"
+
+    - name: Set up cron job for Ephemery retention
+      ansible.builtin.cron:
+        name: "Ephemery Retention Check"
+        minute: "*/5"
+        job: "{{ script_dir }}/ephemery_retention.sh > {{ log_dir }}/retention.log 2>&1"
+        state: present
+
+    - name: Run retention script for the first time
+      ansible.builtin.command: "{{ script_dir }}/ephemery_retention.sh"
+      register: retention_output
+      changed_when: retention_output.stdout.find("Reset completed successfully") != -1
+
+    - name: Display retention script output
+      ansible.builtin.debug:
+        msg: "{{ retention_output.stdout_lines }}"
+
+    - name: Instructions for monitoring
+      ansible.builtin.debug:
+        msg:
+          - "Ephemery retention script has been deployed and configured to run every 5 minutes."
+          - "You can monitor the logs with: tail -f {{ log_dir }}/retention.log"
+          - "Check the sync status with: docker logs ephemery-lighthouse | grep -E 'slot|sync|distance'"

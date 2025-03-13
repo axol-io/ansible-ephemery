@@ -1,0 +1,24 @@
+[Unit]
+Description=Ephemery Validator Dashboard API
+After=network.target
+Requires=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/ephemery/dashboard/api
+ExecStart=/usr/bin/python3 /opt/ephemery/dashboard/api/validator_metrics_api.py
+Restart=always
+RestartSec=30
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=validator-dashboard
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="BEACON_NODE_ENDPOINT=http://localhost:5052"
+Environment="VALIDATOR_ENDPOINT=http://localhost:5062"
+Environment="EPHEMERY_BASE_DIR=/opt/ephemery"
+Environment="EPHEMERY_CONFIG_PATH=/opt/ephemery/config/ephemery_paths.conf"
+
+[Install]
+WantedBy=multi-user.target 

@@ -3,17 +3,17 @@
 
 - name: Create Ephemery network configuration directory
   ansible.builtin.file:
-    path: '{{ ephemery_dir }}/config/ephemery_network'
+    path: "{{ ephemery_dir }}/config/ephemery_network"
     state: directory
-    mode: '0755'
+    mode: "0755"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
 
 - name: Download latest Ephemery network configuration
   ansible.builtin.get_url:
     url: https://github.com/ephemery-testnet/ephemery-genesis/releases/latest/download/testnet-all.tar.gz
-    dest: '{{ ephemery_dir }}/config/ephemery_network/testnet-all.tar.gz'
-    mode: '0644'
+    dest: "{{ ephemery_dir }}/config/ephemery_network/testnet-all.tar.gz"
+    mode: "0644"
     owner: '{{ ansible_user | default("root") }}'
     group: '{{ ansible_user | default("root") }}'
   register: ephemery_download
