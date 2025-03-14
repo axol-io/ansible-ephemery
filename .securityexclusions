@@ -2,10 +2,15 @@
 collections/ansible_collections/
 .github/workflows/
 
-# Common patterns that are not real secrets
+# Common patterns that are not real secrets - one regex per line
 password: password
+password: pa
+password: '\{\{ credentials\.password \}\}'
 token: invalidtoken
+token: "invalidtoken!!!"
 admin_password: password
 key_value
 key: user
-key: foo 
+key: foo
+grant_type: "password"
+filename: key 
