@@ -1,20 +1,35 @@
 # Security Test
 
-This file is just to test our pre-commit hook for security scanning.
+This file contains test patterns to verify our pre-commit hook.
 
-## Patterns That Should Be Excluded (Not Flagged)
+## Patterns that should be excluded (not flagged)
 
-- Valid configuration: password variable
-- Valid configuration: API token configuration
-- Valid configuration: SSH key path
-- Valid path: validator_keys_dir
-- Valid path: jwt_secret_path
-- Valid configuration: validator_keystore_password
+```yaml
+# Variable references - should be ignored
+password: {{ password_var }}
+token: {{ api_token }}
+secret: {{ lookup('env', 'SECRET') }}
 
-## Patterns That Should Be Caught (Actual Secrets)
+# Configuration references - should be ignored
+password: admin
+admin_password: "admin"
+grafana_admin_password: "admin"
+key: pre-commit
+private_key_path: /path/to/keys
+ssh_key_file: /etc/ssh/id_rsa.pub
+api_token_config: token_name
+jwt_secret_path: /secrets/jwt.hex
 
-- Actual secret: password: supersecret123
-- Actual token: api_token: 4a1d476f2e0b4c3a9876
-- Actual key: private_key: -----BEGIN PRIVATE KEY----
+# Template variables - should be ignored
+password: "{{ credentials.password }}"
+token: "{{ api.token }}"
+```
 
-These patterns above should be caught by the pre-commit hook as they might be real secrets. 
+## Patterns that should be caught (actual secrets)
+
+```yaml
+# Real secrets - should be caught by the hook
+password: supersecret123!
+api_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ
+private_key: -----BEGIN RSA PRIVATE KEY-----\nMIIEogIBAAKCAQEA7bq98wTPWJQS/8FkVKAfhI7+xV+NzTQ1tM3+KzOjZaLJ+5Z6\n54f5jH3254==\n-----END RSA PRIVATE KEY-----
+``` 
