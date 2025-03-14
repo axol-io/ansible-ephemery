@@ -23,22 +23,41 @@ This document tracks changes to the Ephemery Node project over time, detailing n
   - Consistent Prometheus configuration
   - Standardized job names and target definitions
   - Improved dashboard integration
+- Configuration validation utility (`validate_configuration.sh`)
+  - Checks for consistency in paths, container names, and URLs
+  - Provides validation for validator key integrity
+  - Includes automatic fixing capability for common issues
+  - Generates detailed validation reports
+- Container naming standardization
+  - Standardized pattern: `{network}-{role}-{client}`
+  - Container name validation script (`validate_container_names.sh`)
+  - Backward compatibility mappings for legacy container names
+  - Detailed reporting of naming inconsistencies with file locations
 - Updated documentation
   - Added configuration standardization documentation
   - Updated troubleshooting documentation
   - Added monitoring standardization documentation
+  - Added standardization implementation guide
+  - Added progress tracking for standardization effort
 
 ### Changed
 - Refactored Python API scripts to use standardized configuration loading
 - Updated shell scripts to use standardized paths
 - Standardized service files to use consistent environment variables
 - Updated Ansible playbooks to create and manage standardized configuration
+- Standardized validator-related paths across all scripts and playbooks
+- Improved checkpoint sync URL handling with conditional templates
+- Unified container naming conventions across all scripts
+- Enhanced `scripts/core/path_config.sh` for better compatibility with various bash versions
+- Updated `ansible/vars/paths.yaml` with improved container name standardization
+- Improved environment-specific path handling in configuration scripts
 
 ### Fixed
 - Resolved issues from inconsistent path definitions
 - Fixed Prometheus configuration inconsistencies
 - Eliminated hardcoded paths throughout the codebase
 - Improved error handling for missing configuration
+- Fixed compatibility issues with associative arrays in bash scripts
 
 ## [1.4.0] - YYYY-MM-DD
 
@@ -224,3 +243,12 @@ This document tracks changes to the Ephemery Node project over time, detailing n
 - [Project Roadmap](./ROADMAP.md)
 - [Known Issues](./KNOWN_ISSUES.md)
 - [Ephemery Setup Guide](../FEATURES/EPHEMERY_SETUP.md)
+
+## [Unreleased]
+
+### Added
+- Enhanced Validator Status Dashboard with advanced visualization, metrics, and alerting
+- Integration between advanced validator monitoring and the new dashboard interface
+- Validator performance analytics with attestation, proposal, and sync committee metrics
+- Visual representations of validator health and performance
+- Easy-to-use wrapper script for accessing the dashboard

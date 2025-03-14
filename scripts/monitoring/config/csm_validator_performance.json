@@ -1,0 +1,46 @@
+{
+    "data_directory": "/var/lib/validator/data",
+    "metrics_directory": "/var/lib/validator/metrics",
+    "monitoring_interval": 60,
+    "alert_threshold": 10,
+    "compare_network": true,
+    "beacon_api": "http://localhost:5052",
+    "csm_api": "http://localhost:9000",
+    "network_api": "https://beaconcha.in/api/v1",
+    "alert_channels": {
+        "email": {
+            "enabled": false,
+            "recipients": ["admin@example.com"],
+            "smtp_server": "smtp.example.com",
+            "smtp_port": 587,
+            "smtp_user": "alerts@example.com"
+        },
+        "slack": {
+            "enabled": false,
+            "webhook_url": "https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX",
+            "channel": "#validator-alerts"
+        },
+        "pagerduty": {
+            "enabled": false,
+            "integration_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        }
+    },
+    "performance_thresholds": {
+        "effectiveness": {
+            "warning": 95,
+            "critical": 90
+        },
+        "inclusion_distance": {
+            "warning": 2,
+            "critical": 4
+        },
+        "balance_growth": {
+            "warning": 0,
+            "critical": -1
+        }
+    },
+    "historical_data": {
+        "retention_days": 30,
+        "analysis_frequency_hours": 24
+    }
+} 

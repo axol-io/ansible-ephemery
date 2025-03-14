@@ -156,7 +156,7 @@
 
 - name: Start Validator client
   community.docker.docker_container:
-    name: "{{ network }}-validator-{{ cl }}"
+    name: "{{ ephemery_validator_container | default('ephemery-validator') }}"
     image: "{{ client_images.validator }}"
     state: started
     restart_policy: unless-stopped
@@ -164,7 +164,7 @@
     network_mode: host
     volumes:
       - "{{ ephemery_data_dir }}/validator:/data:rw"
-      - "{{ ephemery_secrets_dir }}/validator/keys:/secrets/keys:ro"
+      - "{{ ephemery_validator_keys_dir | default(ephemery_secrets_dir + '/validator/keys') }}:/secrets/keys:ro"
       - "{{ ephemery_secrets_dir }}/validator/passwords:/secrets/passwords:ro"
       - "{{ jwt_secret_path }}:/execution-auth.jwt:ro"
       - "{{ ephemery_base_dir }}/config/ephemery_network:/ephemery_config:ro"

@@ -66,9 +66,35 @@ repos:
       - id: black
         language_version: python3
 
-  # Commenting out shellcheck for now as it needs more work
-  # - repo: https://github.com/shellcheck-py/shellcheck-py
-  #   rev: v0.9.0.5
-  #   hooks:
-  #     - id: shellcheck
-  #       args: [--severity=warning]
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.5
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning, --color=always]
+        files: \.(sh|bash)$
+        types: [shell]
+        exclude: ^collections/
+
+  # Shell script formatting
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.7.0-1
+    hooks:
+      - id: shfmt
+        args: [-w, -i, "2", -ci, -bn]
+        files: \.(sh|bash)$
+        types: [shell]
+        exclude: ^collections/
+
+  # Version check for shell scripts
+  - repo: local
+    hooks:
+      - id: validate-shell-script-versions
+        name: Validate shell script versions
+        description: Checks that shell scripts have a consistent version pattern
+        entry: ./scripts/tools/validate_versions.sh
+        language: script
+        files: \.(sh|bash)$
+        types: [shell]
+        exclude: ^collections/
+        pass_filenames: true

@@ -12,6 +12,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from flask import Flask, jsonify, render_template, request
 
+# Import Obol SquadStaking module
+from obol_integration import register_obol_blueprint
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -19,6 +22,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+# Register Obol SquadStaking blueprint
+register_obol_blueprint(app)
 
 # Configuration
 LIGHTHOUSE_API = os.environ.get(

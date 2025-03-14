@@ -2,6 +2,46 @@
 
 # Ephemery Node Monitoring Script
 # This script provides a convenient way to monitor Ephemery nodes
+# Version: 1.2.0
+
+# Source core utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+CORE_DIR="${SCRIPT_DIR}/scripts/core"
+
+# Source path configuration
+if [ -f "${CORE_DIR}/path_config.sh" ]; then
+  source "${CORE_DIR}/path_config.sh"
+else
+  echo "Error: Path configuration not found at ${CORE_DIR}/path_config.sh"
+  echo "Please ensure the core scripts are properly installed."
+  exit 1
+fi
+
+# Source error handling
+if [ -f "${CORE_DIR}/error_handling.sh" ]; then
+  source "${CORE_DIR}/error_handling.sh"
+  # Set up error handling
+  setup_error_handling
+else
+  echo "Error: Error handling script not found at ${CORE_DIR}/error_handling.sh"
+  echo "Please ensure the core scripts are properly installed."
+  exit 1
+fi
+
+# Source common utilities
+if [ -f "${CORE_DIR}/common.sh" ]; then
+  source "${CORE_DIR}/common.sh"
+else
+  echo "Error: Common utilities script not found at ${CORE_DIR}/common.sh"
+  echo "Please ensure the core scripts are properly installed."
+  exit 1
+fi
+
+# Declare version information for dependencies
+declare -A VERSIONS=(
+  [TMUX]="3.3"
+  [JQ]="1.6"
+)
 
 # Color definitions
 GREEN='\033[0;32m'
@@ -16,7 +56,7 @@ MONITOR_MODE="combined"
 
 # Function to display usage information
 show_usage() {
-    echo -e "${BLUE}Ephemery Node Monitoring Script${NC}"
+    log_info "Ephemery Node Monitoring Script"
     echo ""
     echo "Usage: $0 [options]"
     echo ""
@@ -27,7 +67,7 @@ show_usage() {
     echo "  -c, --combined     Monitor all logs in split view (default, requires tmux)"
     echo "  -s, --status       Show current node status"
     echo "  -y, --sync         Show detailed sync status"
-    echo "  --base-dir PATH    Specify a custom base directory (default: ~/ephemery)"
+    echo "  --base-dir PATH    Specify a custom base directory (default: ${EPHEMERY_BASE_DIR})"
     echo "  -h, --help         Show this help message"
     echo ""
     echo "Examples:"
@@ -39,15 +79,57 @@ show_usage() {
     echo "  $0 --sync           # Show detailed sync status"
 }
 
+# Check dependencies
+check_dependencies() {
+  local missing_deps=false
+  
+  if [[ "$MONITOR_MODE" == "combined" ]]; then
+    if ! command -v tmux &> /dev/null; then
+      log_error "tmux is not installed and is required for combined mode. Please install tmux v${VERSIONS[TMUX]} or later."
+      missing_deps=true
+    else
+      local tmux_version
+      tmux_version=$(tmux -V | sed -n 's/tmux \([0-9]*\.[0-9]*\).*/\1/p')
+      if ! version_greater_equal "$tmux_version" "${VERSIONS[TMUX]}"; then
+        log_warning "tmux version $tmux_version is older than recommended version ${VERSIONS[TMUX]}"
+      else
+        log_success "tmux version $tmux_version is installed (✓)"
+      fi
+    fi
+  fi
+  
+  if ! command -v jq &> /dev/null; then
+    log_warning "jq is not installed. Status checks will have limited formatting."
+  else
+    local jq_version
+    jq_version=$(jq --version | sed -n 's/jq-\([0-9]*\.[0-9]*\).*/\1/p')
+    if ! version_greater_equal "$jq_version" "${VERSIONS[JQ]}"; then
+      log_warning "jq version $jq_version is older than recommended version ${VERSIONS[JQ]}"
+    else
+      log_success "jq version $jq_version is installed (✓)"
+    fi
+  fi
+  
+  if [ "$missing_deps" = true ]; then
+    log_fatal "Missing required dependencies. Please install them and try again."
+    exit 1
+  fi
+}
+
+# Helper function to compare versions
+version_greater_equal() {
+  printf '%s\n%s\n' "$2" "$1" | sort -V -C
+}
+
 # Function to monitor Geth logs
 monitor_geth() {
-    echo -e "${BLUE}Monitoring Geth logs. Press Ctrl+C to exit.${NC}"
+    log_info "Monitoring Geth logs. Press Ctrl+C to exit."
     docker logs -f ephemery-geth
 }
 
 # Function to monitor Lighthouse logs
 monitor_lighthouse() {
-    echo -e "${BLUE}Monitoring Lighthouse logs. Press Ctrl+C to exit.${NC}"
+    log_info "Monitoring Lighthouse logs. Press Ctrl+C to exit."
     docker logs -f ephemery-lighthouse
 }
 

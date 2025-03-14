@@ -1,0 +1,19 @@
+# ShellCheck configuration for Ephemery Node project
+# See: https://www.shellcheck.net/
+
+# Exclude some warnings that are too strict for this project
+# SC1090: Can't follow non-constant source
+# SC1091: Not following: (file) was not specified as input
+# SC2034: Variable appears unused (many are used in sourced files)
+disable=SC1090,SC1091,SC2034
+
+# Enable some optional warnings
+enable=require-variable-braces
+enable=deprecate-which
+enable=avoid-nullary-conditions
+
+# External sources
+external-sources=true
+
+# Shell type/dialect
+shell=bash 

@@ -11,6 +11,9 @@ base_dirs:
 # Current deployment environment - change this to switch environments
 ephemery_environment: "{{ ephemery_env | default('default') }}"
 
+# Network name configuration
+ephemery_network: "{{ network | default('ephemery') }}"
+
 # Base directory based on current environment
 ephemery_base_dir: "{{ base_dirs[ephemery_environment] }}"
 
@@ -39,13 +42,24 @@ ephemery_files:
 # Docker network name
 ephemery_docker_network: "ephemery-net"
 
-# Container names
+# Client configuration
+ephemery_clients:
+  execution: "{{ execution_client | default('geth') }}"
+  consensus: "{{ consensus_client | default('lighthouse') }}"
+  validator: "{{ validator_client | default('lighthouse') }}"
+
+# Container names using standardized naming convention: {network}-{role}-{client}
 ephemery_containers:
-  geth: "ephemery-geth"
-  lighthouse: "ephemery-lighthouse"
-  validator: "ephemery-validator"
-  prometheus: "ephemery-prometheus"
-  grafana: "ephemery-grafana"
+  execution: "{{ ephemery_network }}-execution-{{ ephemery_clients.execution }}"
+  consensus: "{{ ephemery_network }}-consensus-{{ ephemery_clients.consensus }}"
+  validator: "{{ ephemery_network }}-validator-{{ ephemery_clients.validator }}" 
+  prometheus: "{{ ephemery_network }}-prometheus"
+  grafana: "{{ ephemery_network }}-grafana"
+
+# Legacy container names (for backward compatibility)
+ephemery_legacy_containers:
+  geth: "{{ ephemery_containers.execution }}"
+  lighthouse: "{{ ephemery_containers.consensus }}"
 
 # Default port mappings
 ephemery_ports:

@@ -2,23 +2,50 @@
 
 # Ephemery Validator Backup & Restore Script
 # This script helps backup and restore validator keys and slashing protection data
+# Version: 1.2.0
 
-# Source common configuration if available
+# Source core utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-if [ -f "$SCRIPT_DIR/scripts/core/ephemery_config.sh" ]; then
-  source "$SCRIPT_DIR/scripts/core/ephemery_config.sh"
+CORE_DIR="${SCRIPT_DIR}/scripts/core"
+
+# Source path configuration
+if [ -f "${CORE_DIR}/path_config.sh" ]; then
+  source "${CORE_DIR}/path_config.sh"
 else
-  # Fallback to local definitions if common config not found
-  EPHEMERY_BASE_DIR=~/ephemery
-  EPHEMERY_VALIDATOR_CONTAINER="ephemery-validator"
+  echo "Error: Path configuration not found at ${CORE_DIR}/path_config.sh"
+  echo "Please ensure the core scripts are properly installed."
+  exit 1
 fi
 
-# Color definitions
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Source error handling
+if [ -f "${CORE_DIR}/error_handling.sh" ]; then
+  source "${CORE_DIR}/error_handling.sh"
+  # Set up error handling
+  setup_error_handling
+else
+  echo "Error: Error handling script not found at ${CORE_DIR}/error_handling.sh"
+  echo "Please ensure the core scripts are properly installed."
+  exit 1
+fi
+
+# Source common utilities
+if [ -f "${CORE_DIR}/common.sh" ]; then
+  source "${CORE_DIR}/common.sh"
+else
+  echo "Error: Common utilities script not found at ${CORE_DIR}/common.sh"
+  echo "Please ensure the core scripts are properly installed."
+  exit 1
+fi
+
+# Declare version information for dependencies
+declare -A VERSIONS=(
+  [DOCKER]="24.0.0"
+  [OPENSSL]="1.1.1"
+  [GPG]="2.2.0"
+)
+
+# Define container names from path_config if not already defined
+EPHEMERY_VALIDATOR_CONTAINER="${EPHEMERY_VALIDATOR_CONTAINER:-ephemery-validator}"
 
 # Default settings
 MODE="backup"
@@ -30,7 +57,7 @@ TIMESTAMP=$(date +"%Y%m%d%H%M%S")
 
 # Function to show help
 show_help() {
-  echo -e "${BLUE}Ephemery Validator Backup & Restore Script${NC}"
+  log_info "Ephemery Validator Backup & Restore Script"
   echo ""
   echo "This script helps backup and restore validator keys and slashing protection data."
   echo ""
@@ -41,17 +68,62 @@ show_help() {
   echo "  restore  Restore validator keys from a backup"
   echo ""
   echo "Options:"
-  echo "  -d, --dir DIR          Directory to store backups or read from (default: ~/ephemery_backups)"
+  echo "  -d, --dir DIR          Directory to store backups or read from (default: ${EPHEMERY_BASE_DIR}/backups)"
   echo "  -f, --file FILE        Specific backup file to restore from (for restore mode)"
   echo "  -e, --encrypt          Encrypt the backup (backup mode)"
   echo "  --no-slashing          Exclude slashing protection data (backup mode)"
-  echo "  --base-dir PATH        Specify a custom base directory (default: ~/ephemery)"
+  echo "  --base-dir PATH        Specify a custom base directory (default: ${EPHEMERY_BASE_DIR})"
   echo "  -h, --help             Show this help message"
   echo ""
   echo "Examples:"
-  echo "  $0 backup --dir /secure/backups     # Create a backup in specified directory"
-  echo "  $0 backup --encrypt                 # Create an encrypted backup"
-  echo "  $0 restore --file backup.zip        # Restore from a specific backup file"
+  echo "  $0 backup              # Create a backup"
+  echo "  $0 backup --encrypt    # Create an encrypted backup"
+  echo "  $0 restore -f file.tar # Restore from specific backup"
+}
+
+# Function to check dependencies
+check_dependencies() {
+  local missing_deps=false
+
+  # Check Docker with version validation
+  if ! command -v docker &> /dev/null; then
+    log_error "Docker is not installed. Please install Docker v${VERSIONS[DOCKER]} or later."
+    missing_deps=true
+  else
+    local docker_version
+    docker_version=$(docker --version | sed -n 's/Docker version \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
+    if ! version_greater_equal "$docker_version" "${VERSIONS[DOCKER]}"; then
+      log_warning "Docker version $docker_version is older than recommended version ${VERSIONS[DOCKER]}"
+    else
+      log_success "Docker version $docker_version is installed (✓)"
+    fi
+  fi
+
+  # Check OpenSSL if encryption is enabled
+  if [ "$ENCRYPT_BACKUP" = true ]; then
+    if ! command -v openssl &> /dev/null; then
+      log_error "OpenSSL is not installed but required for encryption. Please install OpenSSL v${VERSIONS[OPENSSL]} or later."
+      missing_deps=true
+    else
+      local openssl_version
+      openssl_version=$(openssl version | sed -n 's/OpenSSL \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
+      if ! version_greater_equal "$openssl_version" "${VERSIONS[OPENSSL]}"; then
+        log_warning "OpenSSL version $openssl_version is older than recommended version ${VERSIONS[OPENSSL]}"
+      else
+        log_success "OpenSSL version $openssl_version is installed (✓)"
+      fi
+    fi
+  fi
+
+  if [ "$missing_deps" = true ]; then
+    log_fatal "Missing required dependencies. Please install them and try again."
+    exit 1
+  fi
+}
+
+# Helper function to compare versions
+version_greater_equal() {
+  printf '%s\n%s\n' "$2" "$1" | sort -V -C
 }
 
 # Parse command line arguments
@@ -64,7 +136,7 @@ fi
 
 # Default backup directory
 if [ -z "$BACKUP_DIR" ]; then
-  BACKUP_DIR=~/ephemery_backups
+  BACKUP_DIR="${EPHEMERY_BASE_DIR}/backups"
 fi
 
 # Process remaining arguments

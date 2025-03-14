@@ -104,6 +104,41 @@ metrics_cache = {
 BEACON_ENDPOINT = os.environ.get("BEACON_NODE_ENDPOINT", "http://localhost:5052")
 VALIDATOR_ENDPOINT = os.environ.get("VALIDATOR_ENDPOINT", "http://localhost:5062")
 
+# Default alert settings
+DEFAULT_ALERT_SETTINGS = {
+    "attestation_threshold": 95,
+    "balance_threshold": 0.01,
+    "enable_proposal_alerts": True,
+}
+
+# Path for storing settings and additional data
+SETTINGS_FILE = os.path.join(METRICS_DIR, "alert_settings.json")
+VALIDATOR_DETAILS_DIR = os.path.join(METRICS_DIR, "validator_details")
+
+# Ensure directories exist
+os.makedirs(VALIDATOR_DETAILS_DIR, exist_ok=True)
+
+# Load alert settings from file or use defaults
+def load_alert_settings():
+    """Load alert settings from file or use defaults."""
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading alert settings: {e}")
+    return DEFAULT_ALERT_SETTINGS.copy()
+
+# Save alert settings to file
+def save_alert_settings(settings):
+    """Save alert settings to file."""
+    try:
+        with open(SETTINGS_FILE, 'w') as f:
+            json.dump(settings, f, indent=2)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving alert settings: {e}")
+        return False
 
 def run_performance_check():
     """Run the performance check script and return the output."""
@@ -249,17 +284,170 @@ def fetch_beacon_data():
 
 
 def fetch_lighthouse_validator_data():
-    """Fetch validator metrics from Lighthouse validator client."""
+    """Fetch data directly from the lighthouse validator API."""
     try:
-        response = requests.get(f"{VALIDATOR_ENDPOINT}/lighthouse/validators", timeout=5)
+        # Get validator statuses from the lighthouse validator API
+        response = requests.get(
+            f"{VALIDATOR_ENDPOINT}/metrics", timeout=5
+        )
 
         if response.status_code != 200:
-            logger.error(f"Failed to fetch validator data: {response.status_code}")
+            logger.error(f"Failed to fetch lighthouse validator data: {response.status_code}")
             return None
 
-        return response.json()
+        # Parse prometheus metrics format
+        # This is a simplified parser - in production, use a proper prometheus parser
+        lines = response.text.split('\n')
+        metrics = {}
+        
+        for line in lines:
+            if line and not line.startswith('#'):
+                try:
+                    parts = line.split(' ')
+                    if len(parts) >= 2:
+                        name = parts[0]
+                        value = float(parts[1])
+                        metrics[name] = value
+                except Exception as e:
+                    # Skip lines that can't be parsed
+                    pass
+                    
+        return {
+            "raw_metrics": metrics,
+            "processed_metrics": {
+                "active_validators": metrics.get("validator_active_validators", 0),
+                "attestation_effectiveness": metrics.get("validator_attestation_effectiveness", 0) * 100,
+                "balance_avg": metrics.get("validator_balance_average", 32.0),
+            }
+        }
     except Exception as e:
-        logger.exception(f"Error fetching validator data: {e}")
+        logger.exception(f"Error fetching lighthouse validator data: {e}")
+        return None
+
+
+def get_validator_details(validator_index):
+    """Get detailed information about a specific validator."""
+    # Try to load cached validator details
+    detail_file = os.path.join(VALIDATOR_DETAILS_DIR, f"validator_{validator_index}.json")
+    
+    if os.path.exists(detail_file):
+        try:
+            with open(detail_file, 'r') as f:
+                details = json.load(f)
+                
+            # Check if details are fresh enough (less than 1 hour old)
+            if details.get("last_updated") and (time.time() - details["last_updated"] < 3600):
+                return details
+        except Exception as e:
+            logger.error(f"Error reading validator details: {e}")
+    
+    # If no cached details or they're stale, fetch from beacon node
+    try:
+        # Get validator info from beacon node
+        response = requests.get(
+            f"{BEACON_ENDPOINT}/eth/v1/beacon/states/head/validators/{validator_index}",
+            timeout=5
+        )
+        
+        if response.status_code != 200:
+            logger.error(f"Failed to fetch validator details: {response.status_code}")
+            return None
+            
+        validator_data = response.json().get("data", {})
+        
+        # Get performance history if available
+        history_file = os.path.join(METRICS_DIR, "history", "validator_history.json")
+        balance_history = []
+        
+        if os.path.exists(history_file):
+            try:
+                with open(history_file, 'r') as f:
+                    history = json.load(f)
+                    # Filter for this validator if individual data is available
+                    if "validators" in history and str(validator_index) in history["validators"]:
+                        balance_history = history["validators"][str(validator_index)].get("balance_history", [])
+                    else:
+                        # Fall back to global history
+                        balance_history = history.get("balance_history", [])
+            except Exception as e:
+                logger.error(f"Error reading history file: {e}")
+        
+        # Construct details object
+        details = {
+            "index": validator_index,
+            "status": validator_data.get("status", "unknown"),
+            "balance": int(validator_data.get("balance", 32000000000)) / 1000000000,  # Convert Gwei to ETH
+            "effectiveness": validator_data.get("validator", {}).get("effectiveness", 0),
+            "activation_epoch": validator_data.get("validator", {}).get("activation_epoch", "unknown"),
+            "balance_history": balance_history,
+            "inclusion_distance": 1.3,  # Default value, replace with actual data if available
+            "sync_participation": 99.2,  # Default value, replace with actual data if available
+            "head_distance": 1.0,  # Default value, replace with actual data if available
+            "last_updated": time.time()
+        }
+        
+        # Cache the details
+        try:
+            with open(detail_file, 'w') as f:
+                json.dump(details, f, indent=2)
+        except Exception as e:
+            logger.error(f"Error caching validator details: {e}")
+            
+        return details
+    except Exception as e:
+        logger.exception(f"Error fetching validator details: {e}")
+        return None
+
+
+def generate_performance_metrics():
+    """Generate advanced performance metrics for validators."""
+    try:
+        # Get basic metrics first
+        basic_metrics = get_validator_metrics()
+        if not basic_metrics:
+            return None
+            
+        # Get beacon node sync status
+        try:
+            response = requests.get(f"{BEACON_ENDPOINT}/eth/v1/node/syncing", timeout=5)
+            if response.status_code == 200:
+                sync_data = response.json().get("data", {})
+                head_slot = int(sync_data.get("head_slot", 0))
+                sync_distance = int(sync_data.get("sync_distance", 0))
+            else:
+                head_slot = 0
+                sync_distance = 0
+        except Exception as e:
+            logger.error(f"Error getting sync status: {e}")
+            head_slot = 0
+            sync_distance = 0
+            
+        # Calculate advanced metrics
+        advanced_metrics = {
+            "participation_rate": basic_metrics.get("attestation_rate", 0),  # Use attestation rate as fallback
+            "network_sync": sync_distance,
+            "inclusion_distance": 1.3,  # Default value, replace with actual calculation if available
+            "performance_score": 0,  # Will be calculated below
+        }
+        
+        # Calculate overall performance score (0-100)
+        attestation_weight = 0.5
+        sync_weight = 0.3
+        inclusion_weight = 0.2
+        
+        attestation_score = min(100, advanced_metrics["participation_rate"])
+        sync_score = 100 if sync_distance == 0 else max(0, 100 - sync_distance * 10)
+        inclusion_score = 100 if advanced_metrics["inclusion_distance"] <= 1 else max(0, 100 - (advanced_metrics["inclusion_distance"] - 1) * 50)
+        
+        advanced_metrics["performance_score"] = (
+            attestation_score * attestation_weight +
+            sync_score * sync_weight +
+            inclusion_score * inclusion_weight
+        )
+        
+        return {**basic_metrics, **advanced_metrics}
+    except Exception as e:
+        logger.exception(f"Error generating advanced metrics: {e}")
         return None
 
 
@@ -269,6 +457,15 @@ def api_metrics():
     metrics = get_validator_metrics()
     if metrics is None:
         return jsonify({"error": "Failed to retrieve metrics"}), 500
+    return jsonify(metrics)
+
+
+@app.route("/api/metrics/advanced", methods=["GET"])
+def api_advanced_metrics():
+    """API endpoint to get advanced performance metrics."""
+    metrics = generate_performance_metrics()
+    if metrics is None:
+        return jsonify({"error": "Failed to generate advanced metrics"}), 500
     return jsonify(metrics)
 
 
@@ -311,12 +508,60 @@ def api_validators_live():
     )
 
 
+@app.route("/api/validator/<int:validator_index>", methods=["GET"])
+def api_validator_details(validator_index):
+    """API endpoint to get detailed information about a specific validator."""
+    details = get_validator_details(validator_index)
+    if details is None:
+        return jsonify({"error": f"Failed to retrieve details for validator {validator_index}"}), 404
+    return jsonify(details)
+
+
+@app.route("/api/alert_settings", methods=["GET"])
+def api_get_alert_settings():
+    """API endpoint to get alert settings."""
+    settings = load_alert_settings()
+    return jsonify(settings)
+
+
+@app.route("/api/alert_settings", methods=["POST"])
+def api_update_alert_settings():
+    """API endpoint to update alert settings."""
+    try:
+        settings = request.json
+        if not settings or not isinstance(settings, dict):
+            return jsonify({"error": "Invalid settings format"}), 400
+            
+        # Validate settings
+        for key in ["attestation_threshold", "balance_threshold", "enable_proposal_alerts"]:
+            if key not in settings:
+                return jsonify({"error": f"Missing required setting: {key}"}), 400
+                
+        if not isinstance(settings["attestation_threshold"], (int, float)) or settings["attestation_threshold"] < 0 or settings["attestation_threshold"] > 100:
+            return jsonify({"error": "attestation_threshold must be a number between 0 and 100"}), 400
+            
+        if not isinstance(settings["balance_threshold"], (int, float)) or settings["balance_threshold"] < 0:
+            return jsonify({"error": "balance_threshold must be a positive number"}), 400
+            
+        if not isinstance(settings["enable_proposal_alerts"], bool):
+            return jsonify({"error": "enable_proposal_alerts must be a boolean"}), 400
+            
+        # Save settings
+        if save_alert_settings(settings):
+            return jsonify({"success": True, "message": "Settings updated successfully"})
+        else:
+            return jsonify({"error": "Failed to save settings"}), 500
+    except Exception as e:
+        logger.exception(f"Error updating alert settings: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/status", methods=["GET"])
 def api_status():
     """API endpoint to get the status of the validator metrics API."""
     status = {
         "timestamp": datetime.datetime.now().isoformat(),
-        "api_version": "1.0.0",
+        "api_version": "1.1.0",  # Updated version for enhanced features
         "beacon_node_endpoint": BEACON_ENDPOINT,
         "validator_endpoint": VALIDATOR_ENDPOINT,
         "metrics_dir": METRICS_DIR,
@@ -326,6 +571,7 @@ def api_status():
             if metrics_cache["last_updated"]
             else None
         ),
+        "enhanced_features": True,
     }
     return jsonify(status)
 
@@ -334,7 +580,7 @@ def api_status():
 def index():
     """Serve the index page."""
     return jsonify(
-        {"message": "Validator Metrics API", "version": "1.0.0", "status": "running"}
+        {"message": "Validator Metrics API", "version": "1.1.0", "status": "running"}
     )
 
 
@@ -346,6 +592,6 @@ def health():
 
 if __name__ == "__main__":
     # Set host to 0.0.0.0 to make the server externally visible
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("VALIDATOR_API_PORT", 5000))
     debug = os.environ.get("DEBUG", "false").lower() == "true"
     app.run(host="0.0.0.0", port=port, debug=debug)

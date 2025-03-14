@@ -1,0 +1,263 @@
+/* Queue Monitoring Dashboard Styles */
+
+/* Card styles */
+.card {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border: none;
+    border-radius: 0.35rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-actions {
+    margin-left: auto;
+}
+
+.card-footer {
+    background-color: #f8f9fc;
+    border-top: 1px solid #e3e6f0;
+    padding: 0.75rem 1.25rem;
+}
+
+/* Status card styles */
+.status-card {
+    padding: 1rem;
+    text-align: center;
+    border-radius: 0.35rem;
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+.status-card:hover {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    transform: translateY(-2px);
+}
+
+.status-card h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+    color: #4e73df;
+}
+
+.status-card .trend {
+    font-size: 1.2rem;
+    margin-top: 0.5rem;
+}
+
+/* Activation card styles */
+.activation-card {
+    padding: 1rem;
+    text-align: center;
+    border-radius: 0.35rem;
+    background-color: #fff;
+}
+
+.activation-card h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+    color: #1cc88a;
+}
+
+.activation-card h5 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+    color: #4e73df;
+}
+
+.confidence-indicator {
+    margin-top: 0.5rem;
+}
+
+/* Efficiency metrics styles */
+.efficiency-metrics {
+    padding: 1rem;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.metric-label {
+    font-weight: 600;
+    color: #5a5c69;
+}
+
+.metric-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #4e73df;
+    margin-right: 0.5rem;
+}
+
+/* Overall score display */
+.overall-score {
+    padding: 1rem;
+    text-align: center;
+}
+
+.score-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.score-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #4e73df;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: 700;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+/* Chart container styles */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Advanced metrics styles */
+.metric-card {
+    padding: 1rem;
+    text-align: center;
+    border-radius: 0.35rem;
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.metric-card h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+    color: #4e73df;
+}
+
+.metric-card .progress {
+    height: 0.5rem;
+    border-radius: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+/* Button styles */
+.btn-group-sm .btn {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.btn-outline-secondary.active {
+    background-color: #4e73df;
+    border-color: #4e73df;
+    color: white;
+}
+
+/* Page title styles */
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #5a5c69;
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .score-circle {
+        width: 80px;
+        height: 80px;
+        font-size: 1.5rem;
+    }
+    
+    .status-card h2 {
+        font-size: 2rem;
+    }
+    
+    .activation-card h3 {
+        font-size: 1.5rem;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}
+
+/* Animation for refresh button */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fa-sync-alt {
+    transition: transform 0.3s ease;
+}
+
+#refresh-btn:active .fa-sync-alt {
+    animation: spin 1s linear;
+}
+
+/* Tooltip customization */
+.tooltip {
+    font-size: 0.8rem;
+}
+
+/* Badge styles */
+.badge {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.25rem;
+}
+
+/* Progress bar animations */
+.progress-bar {
+    transition: width 1s ease-in-out;
+}
+
+/* Trend indicators */
+.trend .fa-arrow-up.text-success {
+    color: #1cc88a !important;
+}
+
+.trend .fa-arrow-down.text-success {
+    color: #1cc88a !important;
+}
+
+.trend .fa-arrow-up.text-warning {
+    color: #f6c23e !important;
+}
+
+.trend .fa-arrow-down.text-warning {
+    color: #f6c23e !important;
+}
+
+.trend .fa-arrow-up.text-danger {
+    color: #e74a3b !important;
+}
+
+.trend .fa-arrow-down.text-danger {
+    color: #e74a3b !important;
+} 

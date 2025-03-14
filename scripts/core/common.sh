@@ -24,6 +24,60 @@ if [[ -f "${SCRIPT_DIR}/ephemery_config.sh" ]]; then
 fi
 
 ###############################################################################
+# Path standardization functions
+###############################################################################
+
+# Provide standardized path management across all scripts
+# Usage: get_ephemery_path "config"
+get_ephemery_path() {
+  local path_type="$1"
+  local environment="${EPHEMERY_ENVIRONMENT:-default}"
+  
+  # Default base directories for different environments
+  local default_base="/opt/ephemery"
+  local dev_base="$HOME/ephemery"
+  local test_base="/tmp/ephemery"
+  
+  # Set base directory based on environment
+  local base_dir
+  case "$environment" in
+    development) base_dir="$dev_base" ;;
+    testing)     base_dir="$test_base" ;;
+    *)           base_dir="$default_base" ;;
+  esac
+  
+  # Override with EPHEMERY_BASE_DIR if defined
+  base_dir="${EPHEMERY_BASE_DIR:-$base_dir}"
+  
+  # Return the requested path
+  case "$path_type" in
+    base)           echo "$base_dir" ;;
+    config)         echo "$base_dir/config" ;;
+    data)           echo "$base_dir/data" ;;
+    geth_data)      echo "$base_dir/data/geth" ;;
+    lighthouse_data) echo "$base_dir/data/lighthouse" ;;
+    validator_data) echo "$base_dir/data/lighthouse-validator" ;;
+    logs)           echo "$base_dir/logs" ;;
+    scripts)        echo "$base_dir/scripts" ;;
+    secrets)        echo "$base_dir/secrets" ;;
+    jwt_secret)     echo "$base_dir/jwt.hex" ;;
+    *)              echo "$base_dir/$path_type" ;;
+  esac
+}
+
+# Create standard ephemery directories
+# Usage: ensure_ephemery_directories
+ensure_ephemery_directories() {
+  mkdir -p "$(get_ephemery_path config)"
+  mkdir -p "$(get_ephemery_path data)"
+  mkdir -p "$(get_ephemery_path geth_data)"
+  mkdir -p "$(get_ephemery_path lighthouse_data)"
+  mkdir -p "$(get_ephemery_path logs)"
+  mkdir -p "$(get_ephemery_path scripts)"
+  mkdir -p "$(get_ephemery_path secrets)"
+}
+
+###############################################################################
 # Color and formatting constants
 ###############################################################################
 

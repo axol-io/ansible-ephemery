@@ -28,6 +28,16 @@ This script will:
 4. Start the Geth execution client
 5. Start the Lighthouse consensus client
 
+## Documentation
+
+The following documentation is available to help you understand and use this project:
+
+- [Testing Guide](docs/TESTING.md) - Instructions for testing Ephemery scripts
+- [Testing Framework](docs/TESTING_FRAMEWORK.md) - Documentation for the automated testing framework
+- [Script Management](docs/SCRIPT_MANAGEMENT.md) - Guide for managing and using scripts
+- [Standardized Paths Guide](docs/STANDARDIZED_PATHS_GUIDE.md) - Overview of standardized paths
+- [Security Guide](docs/SECURITY.md) - Security best practices
+
 ## Validator Setup
 
 If you want to run validators on the Ephemery network, place your validator keys in a zip file at `ansible/files/validator_keys/validator_keys.zip` and run:
@@ -178,6 +188,70 @@ You can monitor the logs of the containers:
 
 # Monitor validator logs
 docker logs -f ephemery-validator
+```
+
+### Enhanced Validator Dashboard
+
+For comprehensive validator monitoring with advanced visualization and analytics, use the new validator dashboard:
+
+```bash
+# Launch the enhanced validator dashboard
+./scripts/validator-dashboard.sh [options]
+
+# Options:
+#   -b, --beacon URL      Beacon node API URL (default: http://localhost:5052)
+#   -v, --validator URL   Validator API URL (default: http://localhost:5064)
+#   -r, --refresh N       Refresh interval in seconds (default: 10)
+#   -c, --compact         Use compact view (summary only)
+#   -d, --detailed        Use detailed view (includes validator details)
+#   -f, --full            Use full view with all information (default)
+#   -a, --analyze         Generate historical performance analysis report
+#   --period PERIOD       Analysis period (1d, 7d, 30d, 90d, all) for historical analysis
+#   --charts              Generate performance charts (requires gnuplot)
+```
+
+The enhanced validator dashboard provides:
+
+- Real-time validator status monitoring
+- Performance metrics visualization (attestation rate, proposal rate, sync participation)
+- Balance tracking and trend analysis
+- Alert detection for underperforming validators
+- Detailed validator information
+
+### Historical Performance Analysis
+
+To analyze validator performance over time and identify trends:
+
+```bash
+# Generate performance report for the last 7 days
+./scripts/validator-dashboard.sh --analyze
+
+# Generate detailed report with charts for last 30 days
+./scripts/validator-dashboard.sh --analyze --period 30d --charts
+
+# Generate PDF report (requires wkhtmltopdf)
+./scripts/monitoring/validator_performance_analysis.sh --period 30d --pdf
+```
+
+The performance analysis provides:
+
+- Validator balance trend analysis
+- Attestation effectiveness metrics
+- Performance comparison across validators
+- Visual charts for balance and attestation trends
+- Comprehensive HTML and optional PDF reports
+
+For more advanced monitoring and reporting, you can use the underlying monitoring script directly:
+
+```bash
+# Advanced validator monitoring
+./scripts/monitoring/advanced_validator_monitoring.sh [options]
+
+# Options:
+#   -o, --output DIR       Output directory for metrics
+#   -a, --alerts           Generate alerts for underperforming validators
+#   -t, --threshold NUM    Alert threshold percentage (default: 90)
+#   -e, --enhanced-dashboard Use enhanced validator dashboard
 ```
 
 ## Health Check

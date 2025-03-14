@@ -1,0 +1,28 @@
+{
+    "validators": [
+        "validator_1",
+        "validator_2",
+        "validator_3"
+    ],
+    "alert_thresholds": {
+        "missed_attestations": 2,
+        "missed_proposals": 1,
+        "inclusion_distance": 3,
+        "decreasing_balance_percentage": 1,
+        "sync_committee_participation": 90
+    },
+    "notification_methods": {
+        "email": true,
+        "email_to": "validator-admin@example.com",
+        "email_from": "validator-alerts@example.com",
+        "sms": false,
+        "sms_to": "+15551234567",
+        "webhook": false,
+        "webhook_url": "https://example.com/webhook/validator-alerts"
+    },
+    "data_directory": "/var/lib/validator/data",
+    "metrics_directory": "/var/lib/validator/metrics",
+    "polling_interval": 300,
+    "retention_days": 30,
+    "log_level": "INFO"
+} 

@@ -14,13 +14,13 @@ lighthouse:
     allow_insecure_genesis_sync: true
     genesis_backfill: true
     disable_backfill_rate_limiting: true
-    checkpoint_sync_url: "https://checkpoint-sync.ephemery.ethpandaops.io"
-    use_checkpoint_sync: true
+    checkpoint_sync_url: "{{ ephemery_checkpoint_sync_url | default('https://checkpoint-sync.ephemery.ethpandaops.io') }}"
+    use_checkpoint_sync: "{{ ephemery_checkpoint_sync_enabled | default(true) }}"
     ephemery_optimized: true
 
   # Docker container configuration
   container:
-    name: "ephemery-lighthouse"
+    name: "{{ ephemery_lighthouse_container | default('ephemery-lighthouse') }}"
     image: "pk910/ephemery-lighthouse:latest"
     volumes:
       - "/home/{{ ansible_user }}/ephemery/data/lighthouse:/ethdata"
@@ -49,22 +49,24 @@ lighthouse:
       --allow-insecure-genesis-sync
       --genesis-backfill
       --disable-backfill-rate-limiting
-      --checkpoint-sync-url https://checkpoint-sync.ephemery.ethpandaops.io
+      {% if ephemery_checkpoint_sync_enabled | default(true) %}
+      --checkpoint-sync-url {{ ephemery_checkpoint_sync_url | default('https://checkpoint-sync.ephemery.ethpandaops.io') }}
+      {% endif %}
 
 # Validator client configuration
 validator:
   name: "Lighthouse Validator"
   description: "Lighthouse validator client"
   config_dir: "/home/{{ ansible_user }}/ephemery/data/validator"
-  keys_dir: "/home/{{ ansible_user }}/ephemery/secrets/validator_keys"
+  keys_dir: "{{ ephemery_validator_keys_dir | default('/home/' + ansible_user + '/ephemery/secrets/validator_keys') }}"
 
   # Docker container configuration
   container:
-    name: "ephemery-validator"
+    name: "{{ ephemery_validator_container | default('ephemery-validator') }}"
     image: "pk910/ephemery-lighthouse:latest"
     volumes:
       - "/home/{{ ansible_user }}/ephemery/data/validator:/validatordata"
-      - "/home/{{ ansible_user }}/ephemery/secrets/validator_keys:/validatorkeys"
+      - "{{ ephemery_validator_keys_dir | default('/home/' + ansible_user + '/ephemery/secrets/validator_keys') }}:/validatorkeys"
       - "/home/{{ ansible_user }}/ephemery/jwt.hex:/config/jwt-secret"
     ports:
       - "5062:5062"

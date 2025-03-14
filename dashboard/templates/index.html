@@ -1,140 +1,363 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ephemery Checkpoint Sync Dashboard</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <img src="{{ url_for('static', filename='img/ephemery-logo.svg') }}" alt="Ephemery Logo" width="30" height="30" class="d-inline-block align-top">
-                Ephemery Checkpoint Sync Dashboard
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/history">History</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="http://localhost:3000" target="_blank">Grafana</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="http://localhost:9090" target="_blank">Prometheus</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-12">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title">Checkpoint Sync Status</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="status-card">
-                                    <h4>Lighthouse Status</h4>
-                                    <div id="lighthouse-status" class="status-indicator">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                    </div>
-                                    <div class="status-details">
-                                        <p><strong>Head Slot:</strong> <span id="head-slot">Loading...</span></p>
-                                        <p><strong>Sync Distance:</strong> <span id="sync-distance">Loading...</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="status-card">
-                                    <h4>Geth Status</h4>
-                                    <div id="geth-status" class="status-indicator">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                    </div>
-                                    <div class="status-details">
-                                        <p><strong>Current Block:</strong> <span id="current-block">Loading...</span></p>
-                                        <p><strong>Highest Block:</strong> <span id="highest-block">Loading...</span></p>
-                                        <p><strong>Progress:</strong> <span id="sync-progress">Loading...</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+{% block title %}Ephemery Checkpoint Sync Dashboard{% endblock %}
 
-        <div class="row">
-            <div class="col-12">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title">Sync Progress</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="syncChart"></canvas>
-                        </div>
-                    </div>
-                </div>
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Lighthouse Sync Status</h5>
             </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title">Recent Alerts</h5>
+            <div class="card-body">
+                <div class="status-container">
+                    <div class="status-item">
+                        <span class="status-label">Status:</span>
+                        <span class="status-value" id="lighthouse-status">Loading...</span>
                     </div>
-                    <div class="card-body">
-                        <div id="recent-alerts">
-                            <p>No recent alerts</p>
-                        </div>
+                    <div class="status-item">
+                        <span class="status-label">Head Slot:</span>
+                        <span class="status-value" id="lighthouse-head-slot">Loading...</span>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title">Actions</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <button id="restart-lighthouse" class="btn btn-warning">Restart Lighthouse</button>
-                            <button id="check-sync-url" class="btn btn-primary">Check Checkpoint URLs</button>
-                            <button id="run-fix-script" class="btn btn-success">Run Fix Checkpoint Script</button>
-                        </div>
+                    <div class="status-item">
+                        <span class="status-label">Sync Distance:</span>
+                        <span class="status-value" id="lighthouse-sync-distance">Loading...</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">Ephemery Checkpoint Sync Dashboard | <a href="https://github.com/eth-clients/ephemery" target="_blank">GitHub</a></span>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Geth Sync Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="status-container">
+                    <div class="status-item">
+                        <span class="status-label">Status:</span>
+                        <span class="status-value" id="geth-status">Loading...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Current Block:</span>
+                        <span class="status-value" id="geth-current-block">Loading...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Highest Block:</span>
+                        <span class="status-value" id="geth-highest-block">Loading...</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </footer>
+    </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-</body>
-</html>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Sync Progress</h5>
+                <div class="card-actions">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" data-period="day">Day</button>
+                        <button type="button" class="btn btn-outline-secondary" data-period="week">Week</button>
+                        <button type="button" class="btn btn-outline-secondary" data-period="month">Month</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="sync-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Lighthouse Sync History</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="lighthouse-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Geth Sync History</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="geth-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Function to update status
+    function updateStatus() {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                // Update Lighthouse status
+                const lighthouseStatus = data.lighthouse.is_syncing ? 'Syncing' : 'Synced';
+                document.getElementById('lighthouse-status').textContent = lighthouseStatus;
+                document.getElementById('lighthouse-status').className = 'status-value ' + (data.lighthouse.is_syncing ? 'syncing' : 'synced');
+                
+                document.getElementById('lighthouse-head-slot').textContent = data.lighthouse.head_slot;
+                document.getElementById('lighthouse-sync-distance').textContent = data.lighthouse.sync_distance;
+                
+                // Update Geth status
+                const gethStatus = data.geth.is_syncing ? 'Syncing' : 'Synced';
+                document.getElementById('geth-status').textContent = gethStatus;
+                document.getElementById('geth-status').className = 'status-value ' + (data.geth.is_syncing ? 'syncing' : 'synced');
+                
+                document.getElementById('geth-current-block').textContent = data.geth.current_block;
+                document.getElementById('geth-highest-block').textContent = data.geth.highest_block;
+            })
+            .catch(error => {
+                console.error('Error fetching status:', error);
+            });
+    }
+    
+    // Function to update charts
+    function updateCharts(period = 'day') {
+        let days = 1;
+        if (period === 'week') days = 7;
+        if (period === 'month') days = 30;
+        
+        fetch(`/api/history?days=${days}`)
+            .then(response => response.json())
+            .then(data => {
+                // Process data for charts
+                const timestamps = data.map(entry => entry.timestamp);
+                const lighthouseHeadSlots = data.map(entry => entry.lighthouse.head_slot);
+                const lighthouseSyncDistances = data.map(entry => entry.lighthouse.sync_distance);
+                const gethCurrentBlocks = data.map(entry => entry.geth.current_block);
+                const gethHighestBlocks = data.map(entry => entry.geth.highest_block);
+                
+                // Update Sync Progress Chart
+                updateSyncChart(timestamps, lighthouseHeadSlots, lighthouseSyncDistances, gethCurrentBlocks, gethHighestBlocks);
+                
+                // Update Lighthouse Chart
+                updateLighthouseChart(timestamps, lighthouseHeadSlots, lighthouseSyncDistances);
+                
+                // Update Geth Chart
+                updateGethChart(timestamps, gethCurrentBlocks, gethHighestBlocks);
+            })
+            .catch(error => {
+                console.error('Error fetching history:', error);
+            });
+    }
+    
+    // Function to update Sync Progress Chart
+    function updateSyncChart(timestamps, lighthouseHeadSlots, lighthouseSyncDistances, gethCurrentBlocks, gethHighestBlocks) {
+        const ctx = document.getElementById('sync-chart').getContext('2d');
+        
+        if (window.syncChart) {
+            window.syncChart.destroy();
+        }
+        
+        window.syncChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [
+                    {
+                        label: 'Lighthouse Head Slot',
+                        data: lighthouseHeadSlots,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Geth Current Block',
+                        data: gethCurrentBlocks,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'hour'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Value'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Function to update Lighthouse Chart
+    function updateLighthouseChart(timestamps, headSlots, syncDistances) {
+        const ctx = document.getElementById('lighthouse-chart').getContext('2d');
+        
+        if (window.lighthouseChart) {
+            window.lighthouseChart.destroy();
+        }
+        
+        window.lighthouseChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [
+                    {
+                        label: 'Head Slot',
+                        data: headSlots,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Sync Distance',
+                        data: syncDistances,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'hour'
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Head Slot'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Sync Distance'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Function to update Geth Chart
+    function updateGethChart(timestamps, currentBlocks, highestBlocks) {
+        const ctx = document.getElementById('geth-chart').getContext('2d');
+        
+        if (window.gethChart) {
+            window.gethChart.destroy();
+        }
+        
+        window.gethChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [
+                    {
+                        label: 'Current Block',
+                        data: currentBlocks,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Highest Block',
+                        data: highestBlocks,
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'hour'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Block Number'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initial update
+        updateStatus();
+        updateCharts();
+        
+        // Set up period buttons
+        document.querySelectorAll('.btn-group[role="group"] .btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active button
+                document.querySelectorAll('.btn-group[role="group"] .btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Update charts with selected period
+                updateCharts(this.getAttribute('data-period'));
+            });
+        });
+        
+        // Set up auto-refresh
+        setInterval(updateStatus, 30000); // Update status every 30 seconds
+        setInterval(() => {
+            const activePeriod = document.querySelector('.btn-group[role="group"] .btn.active').getAttribute('data-period');
+            updateCharts(activePeriod);
+        }, 300000); // Update charts every 5 minutes
+    });
+</script>
+{% endblock %}

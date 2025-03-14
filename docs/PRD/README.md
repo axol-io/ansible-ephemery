@@ -35,6 +35,8 @@ The PRD system is organized into the following sections:
   - [Validator Key Restore](./FEATURES/VALIDATOR_KEY_RESTORE.md)
   - [Validator Performance Monitoring](./FEATURES/VALIDATOR_PERFORMANCE_MONITORING.md)
   - [Dashboard Implementation](./FEATURES/DASHBOARD_IMPLEMENTATION.md)
+  - [Lido CSM Integration](./FEATURES/LIDO_CSM_INTEGRATION.md)
+  - [Obol SquadStaking Integration](./FEATURES/OBOL_SQUADSTAKING_INTEGRATION.md)
   - [Configuration](./DEPLOYMENT/CONFIGURATION.md)
   - [Mainnet Deployment](./DEPLOYMENT/MAINNET_DEPLOYMENT.md)
 - [**Design**](./DESIGN/DESIGN_PRINCIPLES.md): Core design philosophy and principles
@@ -69,15 +71,27 @@ The PRD system has been fully populated with content previously found in our fla
 
 The current high-priority initiatives include:
 
-1. **Advanced Validator Performance Monitoring**: We have made significant progress on our enhanced metrics collection, dashboards, and alerting systems for validator performance. The implementation includes real-time performance metrics, visual dashboards, customizable alerting, and historical data analysis.
+1. **Lido CSM (Community Staking Module) Integration**: We are implementing support for Lido's Community Staking Module to enable permissionless liquid staking functionality in the Ephemery environment. This includes deployment automation, monitoring integration, performance optimization, and comprehensive documentation for CSM operations. We are also developing specialized tools for CSM node operators including bond management systems, stake distribution queue monitoring, profitability calculators, validator performance monitoring, protocol health monitoring, and ejector monitoring systems to optimize operations.
 
-2. **Checkpoint Sync Reliability Improvements**: We have implemented comprehensive fixes for checkpoint sync issues, including multi-provider fallback, automatic URL testing and selection, sync monitoring, and automatic recovery procedures.
+2. **Obol SquadStaking Integration**: We are developing support for Obol's SquadStaking platform to enable distributed validator technology in the Ephemery environment. This integration will allow for increased validator security and reliability through distributed key management and consensus. We will implement Obol's full product suite including Charon middleware, and support the Learn-Experience-Earn pathway for Techne credential acquisition. Our implementation will serve all operator categories (staking protocols, node operators, home stakers, stakers) and provide cross-protocol integration with Lido CSM. This will enable operators to enhance key security, improve performance, reduce risks, and access new staking opportunities.
 
-3. **Dashboard Enhancement**: We have expanded our dashboard capabilities to include both sync status monitoring and validator performance monitoring, with real-time updates, historical data visualization, and alerting systems.
+3. **Advanced Validator Performance Monitoring**: We have made significant progress on our enhanced metrics collection, dashboards, and alerting systems for validator performance. The implementation includes real-time performance metrics, visual dashboards, customizable alerting, and historical data analysis.
 
-4. **Documentation Improvements**: We continue to enhance our documentation with better organization, improved troubleshooting guides, and updates to reflect recent feature additions.
+4. **Checkpoint Sync Reliability Improvements**: We have implemented comprehensive fixes for checkpoint sync issues, including multi-provider fallback, automatic URL testing and selection, sync monitoring, and automatic recovery procedures.
 
-5. **Configuration Standardization**: We have implemented a comprehensive configuration standardization system to ensure consistent paths, environment variables, and configuration across all components of the Ephemery system.
+5. **Dashboard Enhancement**: We have expanded our dashboard capabilities to include both sync status monitoring and validator performance monitoring, with real-time updates, historical data visualization, and alerting systems.
+
+6. **Documentation Improvements**: We continue to enhance our documentation with better organization, improved troubleshooting guides, and updates to reflect recent feature additions.
+
+7. **Configuration Standardization**: We have implemented a comprehensive configuration standardization system to ensure consistent paths, environment variables, and configuration across all components of the Ephemery system.
+
+8. **Codebase Quality Improvements**: We are making significant progress on codebase quality improvements:
+   - Standardized container naming with consistent pattern `{network}-{role}-{client}`
+   - Enhanced path configuration with improved environment-specific handling
+   - Created validation tools to identify inconsistencies across the codebase
+   - Implemented backward compatibility support for transitioning to new standards
+   - Improved shell script compatibility across different environments
+   See [Implementation Progress](./PROJECT_MANAGEMENT/IMPLEMENTATION_PROGRESS.md) for more details.
 
 ## Recently Completed Features
 

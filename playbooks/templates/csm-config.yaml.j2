@@ -1,0 +1,54 @@
+# Lido CSM Configuration for Ephemery
+csm:
+  enabled: true
+  endpoint: "http://localhost:{{ csm_api_port }}"
+  data_dir: "{{ csm_data_dir }}"
+  bond:
+    initial_amount: {{ csm_bond_amount }}
+    minimum_ratio: 0.1
+    rebase_monitoring: true
+    claim_threshold: 0.5
+    automatic_optimization: false
+  queue:
+    monitoring_enabled: true
+    position_alerts: true
+    forecast_horizon_days: 30
+  monitoring:
+    enabled: true
+    metrics_port: {{ csm_metrics_port }}
+    alerting:
+      enabled: true
+      notification_channels: ["log"]
+      threshold_missed_attestations: 3
+      threshold_missed_proposals: 1
+      threshold_ejection_rate: 0.05
+      bond_health_threshold: 0.8
+      queue_movement_threshold: 5
+  validators:
+    count: 10
+    start_index: 0
+    performance_monitoring: {{ csm_validator_monitoring | lower }}
+    automatic_recovery: true
+    exit_monitoring: true
+    withdrawal_tracking: true
+  ejector:
+    enabled: {{ csm_ejector_monitoring | lower }}
+    monitoring_interval: 60
+    automatic_recovery: true
+    max_concurrent_ejections: 5
+  performance:
+    max_concurrent_operations: 100
+    timeout_multiplier: 3
+    resource_allocation:
+      cpu_percentage: 40
+      memory_percentage: 30
+  profitability:
+    update_interval: 3600
+    historical_data_retention_days: 90
+    enabled: {{ csm_profitability_calculator | lower }}
+    cost_inputs:
+      hardware_cost_monthly: 100
+      power_cost_monthly: 20
+      bandwidth_cost_monthly: 30
+      maintenance_hours_monthly: 5
+      maintenance_hourly_rate: 50 

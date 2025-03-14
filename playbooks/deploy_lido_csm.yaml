@@ -1,0 +1,205 @@
+---
+# Lido CSM Integration Deployment Playbook
+# ========================================
+#
+# This playbook automates the deployment of Lido CSM integration with Ephemery nodes
+# It handles configuration, installation, and setup of monitoring components.
+#
+# Usage:
+#   ansible-playbook playbooks/deploy_lido_csm.yaml -i inventory.yaml
+
+- name: Deploy Lido CSM Integration for Ephemery
+  hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    ephemery_base_dir: "{{ ansible_env.HOME }}/ephemery"
+    csm_data_dir: "{{ ephemery_base_dir }}/data/lido-csm"
+    csm_config_dir: "{{ ephemery_base_dir }}/config/lido-csm"
+    csm_logs_dir: "{{ ephemery_base_dir }}/logs/lido-csm"
+    csm_metrics_port: 8888
+    csm_api_port: 9000
+    csm_docker_image: "lidofinance/csm:latest"
+    csm_bond_amount: 2.0
+    csm_container_name: "ephemery-lido-csm"
+    csm_validator_monitoring: false
+    csm_ejector_monitoring: false
+    csm_protocol_monitoring: false
+    csm_profitability_calculator: false
+    ephemery_docker_network: "ephemery-net"
+    force_reset: false
+
+  tasks:
+    - name: Ensure necessary packages are installed
+      package:
+        name:
+          - docker.io
+          - python3-docker
+          - jq
+          - bc
+        state: present
+      become: true
+
+    - name: Check if Ephemery base directory exists
+      stat:
+        path: "{{ ephemery_base_dir }}"
+      register: ephemery_dir_check
+
+    - name: Fail if Ephemery is not set up
+      fail:
+        msg: "Ephemery base directory not found: {{ ephemery_base_dir }}. Please run the Ephemery setup script first."
+      when: not ephemery_dir_check.stat.exists
+
+    - name: Check if Docker network exists
+      command: "docker network inspect {{ ephemery_docker_network }}"
+      register: network_check
+      failed_when: false
+      changed_when: false
+
+    - name: Fail if Ephemery Docker network is not set up
+      fail:
+        msg: "Ephemery Docker network not found: {{ ephemery_docker_network }}. Please run the Ephemery setup script first."
+      when: network_check.rc != 0
+
+    - name: Check if CSM container already exists
+      command: "docker ps -a --format {% raw %}{{.Names}}{% endraw %} | grep ^{{ csm_container_name }}$"
+      register: container_check
+      failed_when: false
+      changed_when: false
+
+    - name: Warn if CSM container exists and force_reset is false
+      debug:
+        msg: "CSM container already exists: {{ csm_container_name }}. Use force_reset: true to reset it."
+      when: container_check.rc == 0 and not force_reset
+
+    - name: Skip remaining tasks if container exists and force_reset is false
+      meta: end_play
+      when: container_check.rc == 0 and not force_reset
+
+    - name: Create necessary directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ csm_data_dir }}"
+        - "{{ csm_config_dir }}"
+        - "{{ csm_logs_dir }}"
+        - "{{ ephemery_base_dir }}/data/monitoring/lido-csm"
+        - "{{ ephemery_base_dir }}/config/prometheus"
+
+    - name: Create CSM configuration file
+      template:
+        src: templates/csm-config.yaml.j2
+        dest: "{{ csm_config_dir }}/config.yaml"
+        mode: '0644'
+      register: config_created
+
+    - name: Create Prometheus scrape config for CSM
+      template:
+        src: templates/lido-csm-prometheus.yaml.j2
+        dest: "{{ ephemery_base_dir }}/config/prometheus/lido-csm.yaml"
+        mode: '0644'
+      register: prometheus_config_created
+
+    - name: Set up profitability calculator if enabled
+      file:
+        path: "{{ csm_data_dir }}/profitability"
+        state: directory
+        mode: '0755'
+      when: csm_profitability_calculator
+
+    - name: Create empty profitability data file if enabled
+      file:
+        path: "{{ csm_data_dir }}/profitability/data.json"
+        state: touch
+        mode: '0644'
+      when: csm_profitability_calculator
+
+    - name: Set up validator monitoring if enabled
+      file:
+        path: "{{ csm_data_dir }}/validator-monitoring"
+        state: directory
+        mode: '0755'
+      when: csm_validator_monitoring
+
+    - name: Set up ejector monitoring if enabled
+      file:
+        path: "{{ csm_data_dir }}/ejector-monitoring"
+        state: directory
+        mode: '0755'
+      when: csm_ejector_monitoring
+
+    - name: Set up protocol monitoring if enabled
+      file:
+        path: "{{ csm_data_dir }}/protocol-monitoring"
+        state: directory
+        mode: '0755'
+      when: csm_protocol_monitoring
+
+    - name: Stop and remove existing CSM container if it exists
+      docker_container:
+        name: "{{ csm_container_name }}"
+        state: absent
+        force_kill: yes
+      when: container_check.rc == 0 and force_reset
+
+    - name: Pull CSM Docker image
+      docker_image:
+        name: "{{ csm_docker_image }}"
+        source: pull
+        force_source: yes
+
+    - name: Deploy CSM container
+      docker_container:
+        name: "{{ csm_container_name }}"
+        image: "{{ csm_docker_image }}"
+        state: started
+        restart_policy: unless-stopped
+        network_mode: "{{ ephemery_docker_network }}"
+        ports:
+          - "{{ csm_api_port }}:{{ csm_api_port }}"
+          - "{{ csm_metrics_port }}:{{ csm_metrics_port }}"
+        volumes:
+          - "{{ csm_config_dir }}:/config"
+          - "{{ csm_data_dir }}:/data"
+        env:
+          CSM_BOND_AMOUNT: "{{ csm_bond_amount }}"
+          CSM_API_PORT: "{{ csm_api_port }}"
+          CSM_METRICS_PORT: "{{ csm_metrics_port }}"
+          CSM_CONFIG_FILE: "/config/config.yaml"
+          CSM_DATA_DIR: "/data"
+
+    - name: Reload Prometheus configuration if container exists
+      command: "docker exec ephemery-prometheus kill -HUP 1"
+      failed_when: false
+      changed_when: prometheus_config_created.changed
+      register: prometheus_reload
+
+    - name: Wait for CSM API to become available
+      uri:
+        url: "http://localhost:{{ csm_api_port }}/status"
+        method: GET
+        return_content: yes
+        status_code: 200
+        timeout: 3
+      register: api_check
+      until: api_check.status == 200
+      retries: 20
+      delay: 3
+      failed_when: false
+      ignore_errors: true
+
+    - name: Display CSM deployment information
+      debug:
+        msg: |
+          Lido CSM integration deployment completed.
+          
+          CSM API Endpoint:  http://localhost:{{ csm_api_port }}
+          CSM Metrics:       http://localhost:{{ csm_metrics_port }}
+          
+          To view CSM logs, run:
+            docker logs -f {{ csm_container_name }}
+          
+          To monitor CSM, run:
+            {{ ephemery_base_dir }}/scripts/monitoring/monitor_lido_csm.sh 

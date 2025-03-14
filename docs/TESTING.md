@@ -2,6 +2,8 @@
 
 This document provides instructions for testing the Ephemery scripts, particularly the new wrapper scripts that have been implemented to standardize script usage.
 
+> **New:** For comprehensive documentation on our automated testing framework, please see [TESTING_FRAMEWORK.md](./TESTING_FRAMEWORK.md).
+
 ## Prerequisites
 
 Before testing, ensure you have:

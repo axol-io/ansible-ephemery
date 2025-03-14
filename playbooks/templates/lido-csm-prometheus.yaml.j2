@@ -1,0 +1,7 @@
+scrape_configs:
+  - job_name: 'lido-csm'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['localhost:{{ csm_metrics_port }}']
+        labels:
+          instance: 'csm' 

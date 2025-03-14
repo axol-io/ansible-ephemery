@@ -1,0 +1,32 @@
+{
+    "validators": [
+        "validator_1",
+        "validator_2",
+        "validator_3"
+    ],
+    "data_directory": "/var/lib/validator/data",
+    "metrics_directory": "/var/lib/validator/metrics",
+    "forecast_days": 7,
+    "analysis_type": "advanced",
+    "output_format": "json",
+    "analysis_settings": {
+        "trend_window_days": 30,
+        "alert_thresholds": {
+            "attestation_performance": 0.5,
+            "inclusion_distance": 2,
+            "balance_decrease": -1.0
+        },
+        "forecast_metrics": [
+            "attestation_rate",
+            "balance",
+            "inclusion_distance"
+        ]
+    },
+    "recommendation_types": [
+        "attestation_performance",
+        "inclusion_distance",
+        "balance_trend",
+        "resource_optimization",
+        "hardware_requirements"
+    ]
+} 

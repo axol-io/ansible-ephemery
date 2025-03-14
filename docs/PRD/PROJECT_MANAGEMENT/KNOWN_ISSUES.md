@@ -33,49 +33,30 @@ The following issues have been resolved in recent updates:
 - [x] **Missing validator metrics collection**: No performance data
   - Added detailed metrics collection for validators
 
+- [x] **Inconsistent validator key path references**: `validator_keys_src` defined in inventory but also hardcoded in some playbooks
+  - Fixed by standardizing all key path references to use `EPHEMERY_VALIDATOR_KEYS_DIR` variable
+
+- [x] **Checkpoint sync URL inconsistency**: `checkpoint_sync_url` defined in inventory but commented out in Lighthouse tasks
+  - Fixed by consistently using conditional inclusion of checkpoint sync URL in templates
+
+- [x] **Inconsistent container naming**: Both `ephemery-validator-lighthouse` and `{{ network }}-validator-{{ cl }}` used in different places
+  - Fixed by standardizing container naming with `ephemery_validator_container` variable
+
 ## Current Issues
 
 ### Code and Configuration Issues
 
-- [ ] **Inconsistent validator key path references**: `validator_keys_src` defined in inventory but also hardcoded in some playbooks
-  - **Impact**: May cause key loading failures when paths are modified
-  - **Workaround**: Ensure all reference paths match exactly
+- [ ] **Ambiguous error messages in setup scripts**: Error messages don't provide clear resolution steps
+  - **Impact**: Difficult for users to troubleshoot issues
+  - **Workaround**: Manually check logs for detailed errors
 
-- [ ] **Checkpoint sync URL inconsistency**: `checkpoint_sync_url` defined in inventory but commented out in Lighthouse tasks
-  - **Impact**: Checkpoint sync not functioning as expected
-  - **Workaround**: Manually uncomment the checkpoint sync URL configuration
+- [ ] **Manual handling of validator key passwords**: No secure password management
+  - **Impact**: Potential security issues with plaintext passwords
+  - **Workaround**: Manually create secure password files
 
-- [ ] **Inconsistent container naming**: Both `ephemery-validator-lighthouse` and `{{ network }}-validator-{{ cl }}` used in different places
-  - **Impact**: Can cause confusion in scripts and monitoring
-  - **Workaround**: Use full container names in manual commands
-
-- [ ] **Non-existing paths referenced in ansible/clients/geth-lighthouse/cl-lighthouse.yaml**: Template references for maintenance script are commented out
-  - **Impact**: Maintenance script not properly configured
-  - **Workaround**: Create missing paths or update references
-
-- [ ] **Undefined validator image in some task contexts**: Missing default fallback when `client_images.validator` isn't defined
-  - **Impact**: Deployment may fail with unclear errors
-  - **Workaround**: Always define validator image in inventory
-
-- [ ] **Incomplete validator definition file handling**: Path checked but not fully validated or used in validator initialization
-  - **Impact**: Custom validator configurations may not apply
-  - **Workaround**: Verify validator definition files manually
-
-- [ ] **Password file permissions error**: Ansible user not consistently applied for file ownership
-  - **Impact**: Permission denied errors when accessing password files
-  - **Workaround**: Manually fix permissions after deployment
-
-- [ ] **Duplicated validator configuration**: Same config defined in multiple inventory groups
-  - **Impact**: Configuration conflicts and unexpected behavior
-  - **Workaround**: Ensure consistent configuration across inventory groups
-
-- [ ] **Hard-coded "ephemery" password**: Default password used without secure generation option
-  - **Impact**: Security risk in production environments
-  - **Workaround**: Manually change password files after deployment
-
-- [ ] **Path inconsistencies between `ephemery_base_dir` and expanded paths**: Some paths use full specification when variable would work
-  - **Impact**: Path changes in inventory may not propagate to all components
-  - **Workaround**: Check all path references when changing base directory
+- [ ] **Cache persistence across resets**: Cache data may persist between network resets
+  - **Impact**: Outdated cache data may cause synchronization issues
+  - **Workaround**: Manually clear cache directories
 
 ### Execution Client Issues
 

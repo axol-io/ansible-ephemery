@@ -2,18 +2,51 @@
 
 # Ephemery Data Pruning Script
 # This script helps manage disk space by providing options to prune old data
+# Version: 1.2.0
 
-# Source common configuration if available
+# Source core utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-if [ -f "$SCRIPT_DIR/scripts/core/ephemery_config.sh" ]; then
-  source "$SCRIPT_DIR/scripts/core/ephemery_config.sh"
+CORE_DIR="${SCRIPT_DIR}/scripts/core"
+
+# Source path configuration
+if [ -f "${CORE_DIR}/path_config.sh" ]; then
+  source "${CORE_DIR}/path_config.sh"
 else
-  # Fallback to local definitions if common config not found
-  EPHEMERY_BASE_DIR=~/ephemery
-  EPHEMERY_GETH_CONTAINER="ephemery-geth"
-  EPHEMERY_LIGHTHOUSE_CONTAINER="ephemery-lighthouse"
-  EPHEMERY_VALIDATOR_CONTAINER="ephemery-validator"
+  echo "Error: Path configuration not found at ${CORE_DIR}/path_config.sh"
+  echo "Please ensure the core scripts are properly installed."
+  exit 1
 fi
+
+# Source error handling
+if [ -f "${CORE_DIR}/error_handling.sh" ]; then
+  source "${CORE_DIR}/error_handling.sh"
+  # Set up error handling
+  setup_error_handling
+else
+  echo "Error: Error handling script not found at ${CORE_DIR}/error_handling.sh"
+  echo "Please ensure the core scripts are properly installed."
+  exit 1
+fi
+
+# Source common utilities
+if [ -f "${CORE_DIR}/common.sh" ]; then
+  source "${CORE_DIR}/common.sh"
+else
+  echo "Error: Common utilities script not found at ${CORE_DIR}/common.sh"
+  echo "Please ensure the core scripts are properly installed."
+  exit 1
+fi
+
+# Declare version information for dependencies
+declare -A VERSIONS=(
+  [DOCKER]="24.0.0"
+  [DU]="8.32"
+)
+
+# Define container names from path_config if not already defined
+EPHEMERY_GETH_CONTAINER="${EPHEMERY_GETH_CONTAINER:-ephemery-geth}"
+EPHEMERY_LIGHTHOUSE_CONTAINER="${EPHEMERY_LIGHTHOUSE_CONTAINER:-ephemery-lighthouse}"
+EPHEMERY_VALIDATOR_CONTAINER="${EPHEMERY_VALIDATOR_CONTAINER:-ephemery-validator}"
 
 # Color definitions
 GREEN='\033[0;32m'
@@ -29,7 +62,7 @@ CONFIRM=false
 
 # Function to show help
 show_help() {
-  echo -e "${BLUE}Ephemery Data Pruning Script${NC}"
+  log_info "Ephemery Data Pruning Script"
   echo ""
   echo "This script helps manage disk space by removing unnecessary data files."
   echo ""
@@ -43,14 +76,43 @@ show_help() {
   echo "  -c, --consensus-only    Prune only consensus layer data"
   echo "  -d, --dry-run           Show what would be pruned without making changes (default)"
   echo "  -y, --yes               Skip confirmation prompts"
-  echo "  --base-dir PATH         Specify a custom base directory (default: ~/ephemery)"
+  echo "  --base-dir PATH         Specify a custom base directory (default: ${EPHEMERY_BASE_DIR})"
   echo "  -h, --help              Show this help message"
   echo ""
   echo "Examples:"
   echo "  $0 --safe               # Safe pruning (dry run mode)"
   echo "  $0 --safe --yes         # Safe pruning with automatic confirmation"
   echo "  $0 --aggressive --yes   # Aggressive pruning with automatic confirmation"
-  echo "  $0 --full --yes         # Full pruning with automatic confirmation"
+  echo "  $0 --execution-only     # Prune only execution layer data (dry run mode)"
+}
+
+# Function to check dependencies
+check_dependencies() {
+  local missing_deps=false
+
+  # Check Docker with version validation
+  if ! command -v docker &> /dev/null; then
+    log_error "Docker is not installed. Please install Docker v${VERSIONS[DOCKER]} or later."
+    missing_deps=true
+  else
+    local docker_version
+    docker_version=$(docker --version | sed -n 's/Docker version \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
+    if ! version_greater_equal "$docker_version" "${VERSIONS[DOCKER]}"; then
+      log_warning "Docker version $docker_version is older than recommended version ${VERSIONS[DOCKER]}"
+    else
+      log_success "Docker version $docker_version is installed (✓)"
+    fi
+  fi
+
+  if [ "$missing_deps" = true ]; then
+    log_fatal "Missing required dependencies. Please install them and try again."
+    exit 1
+  fi
+}
+
+# Helper function to compare versions
+version_greater_equal() {
+  printf '%s\n%s\n' "$2" "$1" | sort -V -C
 }
 
 # Parse command line arguments

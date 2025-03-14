@@ -1,119 +1,269 @@
-# Testing Guide
+# Ephemery Testing Guide
 
-This document outlines the testing practices, principles, and procedures for the Ephemery Node project. Comprehensive testing is essential for ensuring reliability and stability of the system.
+This guide provides comprehensive information about testing the Ephemery node software, including automated tests, integration tests, performance tests, and manual testing procedures.
 
-## Overview
+## Testing Philosophy
 
-The Ephemery Node testing strategy encompasses multiple levels of testing, from unit tests to integration tests to end-to-end deployment tests. This multi-layered approach helps catch issues at different stages of development.
+The Ephemery project follows these testing principles:
 
-## Molecule Testing Framework
+1. **Automated Testing**: Whenever possible, tests should be automated to ensure consistency and enable continuous integration.
+2. **Test Coverage**: Tests should cover all critical functionality, including edge cases and error conditions.
+3. **Realistic Scenarios**: Tests should simulate real-world usage patterns and environments.
+4. **Incremental Testing**: New features should come with corresponding tests.
+5. **Performance Validation**: Performance aspects should be systematically tested.
 
-We use Molecule for testing our Ansible roles and playbooks. Molecule provides a standardized way to test Ansible code across different environments.
+## Testing Categories
 
-### Test Structure
+### 1. Unit Tests
 
-The tests are organized into scenarios, each with its own directory:
+Unit tests verify the functionality of individual components in isolation.
 
-```bash
-molecule/
-├── clients/               # Client combination scenarios
-│   ├── <client-pair>/     # e.g., geth-lighthouse
-│   │   ├── converge.yml   # Playbook to apply the role
-│   │   ├── molecule.yml   # Molecule configuration
-│   │   └── verify.yml     # Tests to verify the role applied correctly
-├── <special-scenario>/    # e.g., default, validator, etc.
-├── shared/                # Shared resources across scenarios
-└── run-tests.sh           # Helper script to run tests locally
-```
+#### Shell Script Testing
 
-### Molecule Drivers
-
-The test infrastructure supports multiple drivers for running Molecule tests:
-
-#### Docker Driver (Default)
-
-By default, Molecule uses the Docker driver. The Docker socket path is automatically detected or can be specified with an environment variable:
+For shell scripts, we use a combination of shellcheck for static analysis and mock-based testing:
 
 ```bash
-# Use default detection (recommended)
-./run-tests.sh
+# Run shellcheck on all shell scripts
+shellcheck scripts/*.sh scripts/*/*.sh
 
-# Or specify a custom Docker socket path
-DOCKER_HOST_SOCK="/path/to/docker.sock" ./run-tests.sh
+# Run unit tests for shell scripts
+scripts/development/run_shell_unit_tests.sh
 ```
 
-#### Delegated Driver (No Docker Required)
+#### Ansible Role Testing
 
-For environments where Docker isn't available or when you want to test directly on the local system, you can use the delegated driver:
+For Ansible roles, we use Molecule for testing:
 
 ```bash
-# Run tests with the delegated driver
-MOLECULE_DRIVER=delegated ./run-tests.sh
+# Install Molecule prerequisites
+pip install -r requirements-dev.txt
+
+# Run Molecule tests for a specific role
+cd ansible/roles/ephemery_core
+molecule test
 ```
 
-When using the delegated driver, tests will be executed on the local machine without requiring Docker containers.
+### 2. Integration Tests
 
-#### Converting Scenarios to Use the Delegated Driver
+Integration tests verify that different components work together correctly.
 
-You can convert all Docker-based scenarios to use the delegated driver with:
+#### Validator Dashboard Testing
+
+The validator dashboard has a dedicated test script that verifies its functionality:
 
 ```bash
-./molecule/convert-to-delegated.sh
+# Run validator dashboard tests
+scripts/development/test_validator_dashboard.sh
 ```
 
-This script will:
-1. Create backups of your existing molecule.yml files
-2. Replace them with delegated driver configurations
-3. Preserve your test logic while changing only the execution environment
+This script tests:
+- Different dashboard view modes (compact, detailed, full)
+- Historical analysis functionality
+- Integration with the validator monitoring system
+- Handles various data edge cases correctly
 
-### Running Tests Locally
+#### Client Integration Testing
 
-To run tests locally:
+To test integration between execution and consensus clients:
 
 ```bash
-# Run all tests with the default driver
-./molecule/run-tests.sh
-
-# Run a specific test scenario
-./molecule/run-tests.sh <scenario-name>
-
-# Run tests with the delegated driver
-MOLECULE_DRIVER=delegated ./molecule/run-tests.sh
+# Run client integration tests
+scripts/development/test_client_integration.sh
 ```
 
-### CI/CD Integration
+### 3. System Tests
 
-Our GitHub Actions workflow automatically runs Molecule tests on pull requests and pushes to main branches. See the [CI/CD documentation](./CI_CD.md) for more details.
+System tests verify the behavior of the complete system in a realistic environment.
 
-## Test Verification
+#### End-to-End Testing
 
-The verification phase checks that:
+```bash
+# Run end-to-end test suite
+scripts/development/run_e2e_tests.sh
+```
 
-1. Required services are running
-2. Necessary ports are open
-3. Configuration files exist and have correct permissions
-4. Components can communicate with each other
+This test:
+1. Deploys a complete Ephemery node
+2. Verifies successful sync with the network
+3. Tests validator operations (if enabled)
+4. Verifies monitoring and dashboard functionality
 
-## Troubleshooting Tests
+#### Reset Testing
 
-If tests fail, check:
+To test the weekly reset mechanism:
 
-1. Docker is running and accessible (if using Docker driver)
-2. The Docker socket is available at the expected location
-3. You have sufficient permissions to access the Docker socket
-4. For Mac users: ensure Docker Desktop is running and properly configured
-5. For environments without Docker: use the delegated driver instead
+```bash
+# Test reset functionality 
+scripts/development/test_reset_process.sh
+```
 
-If you encounter Docker-related issues, try:
-1. Using the delegated driver: `MOLECULE_DRIVER=delegated ./run-tests.sh`
-2. Specifying a custom Docker socket path: `DOCKER_HOST_SOCK="/path/to/docker.sock" ./run-tests.sh`
-3. Running with increased verbosity: `MOLECULE_VERBOSITY=2 ./run-tests.sh`
+### 4. Performance Testing
 
-## Related Documents
+Performance tests verify the system behaves correctly under load and measure key performance metrics.
 
-- [Development Setup](./DEVELOPMENT_SETUP.md)
-- [Contributing](./CONTRIBUTING.md)
-- [Troubleshooting](./TROUBLESHOOTING.md)
-- [CI/CD](./CI_CD.md)
+#### Sync Performance Test
 
-*Note: This document is a placeholder based on the existing TESTING.md file and will be fully migrated with comprehensive content in a future update.*
+```bash
+# Test sync performance with different configurations
+scripts/development/test_sync_performance.sh --checkpoint=true --execution-client=geth --consensus-client=lighthouse
+```
+
+#### Validator Performance Test
+
+```bash
+# Test validator performance with varying validator counts
+scripts/development/test_validator_performance.sh --count=10
+```
+
+### 5. Chaos Testing
+
+Chaos tests verify the system's resilience to unexpected failures and conditions.
+
+```bash
+# Run chaos tests
+scripts/development/run_chaos_tests.sh
+```
+
+The chaos tests include:
+- Network partitioning
+- Container restarts
+- Resource constraints
+- Disk space limitations
+- High CPU/memory load
+- Checkpoint server failures
+
+## Continuous Integration
+
+The Ephemery project uses GitHub Actions for continuous integration testing. The CI pipeline includes:
+
+1. **Static Analysis**: Linting and static analysis of shell scripts and Ansible playbooks
+2. **Unit Tests**: Automated unit tests for all components
+3. **Integration Tests**: Basic integration tests for critical functionality
+4. **Deployment Tests**: Testing deployment on various supported platforms
+
+CI runs are triggered on:
+- Pull requests
+- Commits to the main branch
+- Release tags
+- Weekly scheduled runs
+
+## Test Data
+
+For reproducible testing, the project provides mock test data in the `scripts/development/test_data` directory. This data simulates:
+
+- Validator states and metrics
+- Beacon chain and execution client status
+- Historical performance data
+- Network events
+
+## Manual Testing Procedures
+
+Some aspects of the system benefit from manual testing:
+
+### Manual Reset Testing
+
+1. Set up a test environment with a shortened epoch time
+2. Trigger a network reset
+3. Verify all components handle the reset correctly
+4. Check data pruning and state handling
+5. Verify clients re-sync successfully
+
+### Manual Dashboard Testing
+
+1. Launch the dashboard in different views
+2. Verify metrics display correctly
+3. Test interactive features
+4. Verify alert functionality
+5. Check historical data visualization
+
+## Writing Tests
+
+### Test Script Structure
+
+New test scripts should follow this structure:
+
+1. **Setup**: Prepare the test environment
+2. **Execution**: Run the functionality being tested
+3. **Verification**: Check that outcomes match expectations
+4. **Cleanup**: Restore the system to its original state
+
+### Test Script Template
+
+```bash
+#!/bin/bash
+#
+# Test script for [component]
+# Description: Tests [specific functionality]
+
+set -e
+
+# Load common test library
+source "$(dirname "${BASH_SOURCE[0]}")/test_common.sh"
+
+# Setup test environment
+setup() {
+  echo "Setting up test environment..."
+  # Setup code here
+}
+
+# Execute test
+execute() {
+  echo "Executing test..."
+  # Test execution code here
+}
+
+# Verify results
+verify() {
+  echo "Verifying results..."
+  # Verification code here
+  
+  if [[ $expected == $actual ]]; then
+    return 0
+  else
+    echo "Test failed: Expected $expected but got $actual"
+    return 1
+  fi
+}
+
+# Clean up
+cleanup() {
+  echo "Cleaning up..."
+  # Cleanup code here
+}
+
+# Run the test
+run_test() {
+  setup
+  execute
+  verify
+  local result=$?
+  cleanup
+  return $result
+}
+
+# Execute test and exit with appropriate code
+run_test
+exit $?
+```
+
+## Test Coverage
+
+The goal is to maintain at least 80% test coverage for all critical components. Coverage is measured by:
+
+1. **Shell Scripts**: Counting functions and ensuring test cases for each function
+2. **Ansible Roles**: Using Molecule's coverage report
+3. **Manual Features**: Maintaining a checklist of manually verified features
+
+## Testing Schedule
+
+Regular testing should be performed according to this schedule:
+
+- **Daily**: Automated CI tests run on all new code
+- **Weekly**: Full end-to-end test suite run
+- **Monthly**: Complete manual testing of all interfaces
+- **Pre-release**: Comprehensive testing of all features
+- **Post-reset**: Verification that resets don't impact functionality
+
+## Conclusion
+
+Following this testing guide will help ensure the reliability and quality of the Ephemery node software. By combining automated tests with strategic manual testing, we can provide users with a robust and dependable system.
