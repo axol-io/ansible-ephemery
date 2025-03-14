@@ -12,12 +12,18 @@ ansible/vars/
 ansible/defaults/
 ansible/host_vars/
 inventories/
+docs/
+docs/PRD/
 
 # Common patterns that are not real secrets - one pattern per line
 password: password
 password: pa
 password: admin
 password: {{ credentials.password }}
+password: "{{ credentials.password }}"
+token: {{ api_token }}
+token: "{{ api.token }}"
+secret: {{ lookup('env', 'SECRET') }}
 token: invalidtoken
 token: "invalidtoken!!!"
 admin_password: password
@@ -41,4 +47,7 @@ jwt.hex
 validator_key
 telegram_bot_token: auth_token
 telegram_bot_token: 
-key: pre-commit 
+key: pre-commit
+password: ephemery
+api_key: "${CSM_API_KEY}"
+withdrawal_credentials: "0x..." 
