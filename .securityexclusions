@@ -2,6 +2,11 @@
 collections/ansible_collections/
 .github/workflows/
 
+# Collections directory can have a lot of false positives
+collections/
+ansible_collections/
+collections/ansible_collections/community/general/
+
 # Common patterns that are not real secrets - one regex per line
 password: password
 password: pa
