@@ -3,13 +3,9 @@ collections/ansible_collections/
 .github/workflows/
 molecule/
 ansible/
-
-# Collections directory can have a lot of false positives
 collections/
 ansible_collections/
 collections/ansible_collections/community/general/
-
-# Common deployment-related paths
 ansible/secrets/
 ansible/files/
 ansible/vars/
@@ -17,15 +13,18 @@ ansible/defaults/
 ansible/host_vars/
 inventories/
 
-# Common patterns that are not real secrets - one regex per line
+# Common patterns that are not real secrets - one pattern per line
 password: password
 password: pa
 password: admin
-password: '\{\{ credentials\.password \}\}'
+password: {{ credentials.password }}
 token: invalidtoken
 token: "invalidtoken!!!"
 admin_password: password
 admin_password: admin
+admin_password: "admin"
+grafana_admin_password: "admin"
+grafana_admin_password: "example_password"
 key_value
 key: user
 key: foo
@@ -39,4 +38,7 @@ jwtsecret
 validator_keys
 keystore
 jwt.hex
-validator_key 
+validator_key
+telegram_bot_token: auth_token
+telegram_bot_token: 
+key: pre-commit 
