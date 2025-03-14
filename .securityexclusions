@@ -1,21 +1,42 @@
 # Directories to exclude from secrets scanning
 collections/ansible_collections/
 .github/workflows/
+molecule/
+ansible/
 
 # Collections directory can have a lot of false positives
 collections/
 ansible_collections/
 collections/ansible_collections/community/general/
 
+# Common deployment-related paths
+ansible/secrets/
+ansible/files/
+ansible/vars/
+ansible/defaults/
+ansible/host_vars/
+inventories/
+
 # Common patterns that are not real secrets - one regex per line
 password: password
 password: pa
+password: admin
 password: '\{\{ credentials\.password \}\}'
 token: invalidtoken
 token: "invalidtoken!!!"
 admin_password: password
+admin_password: admin
 key_value
 key: user
 key: foo
 grant_type: "password"
-filename: key 
+filename: key
+ssh_key
+private_key
+public_key
+jwt_secret
+jwtsecret
+validator_keys
+keystore
+jwt.hex
+validator_key 
