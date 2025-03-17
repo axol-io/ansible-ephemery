@@ -18,7 +18,7 @@ Ephemery is an Ethereum test network that resets itself periodically, providing 
 For a quick setup, run the provided setup script:
 
 ```bash
-./scripts/setup/setup_ephemery.sh
+./scripts/deployment/setup_ephemery.sh
 ```
 
 This script will:
@@ -28,6 +28,45 @@ This script will:
 3. Generate a JWT secret for authentication
 4. Start the Geth execution client
 5. Start the Lighthouse consensus client
+
+## Repository Structure
+
+The repository is organized into the following directories:
+
+### `/ansible`
+- `playbooks/` - Ansible playbooks for automated deployments
+- `roles/` - Ansible roles for various components
+- `inventories/` - Inventory files for different environments
+
+### `/config`
+- `ansible/` - Ansible-specific configuration files
+- `clients/` - Configuration for Ethereum clients
+- `testing/` - Testing configuration
+
+### `/docs`
+- `development/` - Development guides and documentation
+- `testing/` - Testing guides and procedures
+- `usage/` - Usage guides and examples
+
+### `/scripts`
+- `core/` - Core functionality scripts
+- `deployment/` - Scripts for deploying nodes and validators
+- `lib/` - Shared libraries and functions
+- `maintenance/` - Maintenance scripts
+- `monitoring/` - Monitoring and health check scripts
+- `testing/` - Testing scripts and framework
+- `utilities/` - Utility scripts for development and administration
+
+## Testing Framework
+
+The Ephemery testing framework is located in `/scripts/testing/` and provides:
+
+1. Standardized test environment initialization
+2. Mock framework for testing without real dependencies
+3. Shell script linting via shellharden
+4. Continuous integration tools
+
+Refer to the [Testing README](scripts/testing/README.md) for detailed documentation.
 
 ## Script Organization
 

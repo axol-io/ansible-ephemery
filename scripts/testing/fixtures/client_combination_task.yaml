@@ -1,0 +1,55 @@
+---
+# Client combination task for testing different execution + consensus client pairs
+
+- name: Set test directory
+  set_fact:
+    test_dir: "/tmp/ephemery_test/{{ execution_client }}_{{ consensus_client }}"
+
+- name: Create test directory
+  file:
+    path: "{{ test_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Create mock client service files
+  file:
+    path: "{{ test_dir }}/{{ item }}.service"
+    state: touch
+    mode: '0644'
+  loop:
+    - "{{ execution_client }}"
+    - "{{ consensus_client }}"
+    - "{{ consensus_client }}-validator"
+
+- name: Create mock JWT secret file
+  copy:
+    dest: "{{ test_dir }}/jwt.hex"
+    content: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+    mode: '0600'
+
+- name: Create mock config files
+  copy:
+    dest: "{{ test_dir }}/{{ item }}_config.yaml"
+    content: |
+      # Mock configuration for {{ item }}
+      network: ephemery_test
+      data_dir: "{{ test_dir }}/data"
+      log_level: info
+    mode: '0644'
+  loop:
+    - "{{ execution_client }}"
+    - "{{ consensus_client }}"
+
+- name: Set combination facts
+  set_fact:
+    "{{ execution_client }}_{{ consensus_client }}_status": "success"
+    execution_endpoint: "http://localhost:8545"
+    consensus_endpoint: "http://localhost:5052"
+
+- name: Simulate client startup
+  command: "sleep 1"
+  changed_when: false
+
+- name: Report compatibility success for {{ execution_client }} + {{ consensus_client }}
+  debug:
+    msg: "Client combination {{ execution_client }} + {{ consensus_client }} deployed successfully" 

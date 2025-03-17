@@ -8,22 +8,110 @@ set -e
 
 # Define base directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 
 # Source the common library
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
+# Source testing framework libraries
+source "${PROJECT_ROOT}/scripts/lib/test_config.sh"
+source "${PROJECT_ROOT}/scripts/lib/test_mock.sh"
+
 # Source core utilities
-source "${PROJECT_ROOT}/scripts/core/path_config.sh"
-source "${PROJECT_ROOT}/scripts/core/error_handling.sh"
-source "${PROJECT_ROOT}/scripts/core/common.sh"
+source "${PROJECT_ROOT}/scripts/core/path_config.sh" 2>/dev/null || echo "Warning: path_config.sh not found"
+source "${PROJECT_ROOT}/scripts/core/error_handling.sh" 2>/dev/null || echo "Warning: error_handling.sh not found"
+source "${PROJECT_ROOT}/scripts/core/common.sh" 2>/dev/null || echo "Warning: core/common.sh not found"
 
-# Setup error handling
-setup_error_handling
+# Parse command line arguments
+MOCK_MODE=false
+VERBOSE=false
 
-# Test configuration
-TEST_DURATION=300  # 5 minutes
-REPORT_FILE="${PROJECT_ROOT}/scripts/testing/reports/network_disruption_$(date +%Y%m%d-%H%M%S).log"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mock)
+      MOCK_MODE=true
+      shift
+      ;;
+    --verbose)
+      VERBOSE=true
+      export MOCK_VERBOSE=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--mock] [--verbose]"
+      exit 1
+      ;;
+  esac
+done
+
+# Initialize test environment
+export TEST_MOCK_MODE="${MOCK_MODE}"
+export TEST_VERBOSE="${VERBOSE}"
+
+# Load configuration
+load_config
+
+# Initialize test environment
+init_test_env() {
+  # Create test report directory if it doesn't exist
+  TEST_REPORT_DIR="${PROJECT_ROOT}/scripts/testing/reports"
+  mkdir -p "${TEST_REPORT_DIR}"
+  
+  # Set up mock environment if enabled
+  if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+    # Ensure test_mock.sh is sourced
+    if ! type mock_init &>/dev/null; then
+      source "${PROJECT_ROOT}/scripts/lib/test_mock.sh"
+      mock_init
+      override_commands
+    fi
+    
+    # Register default mock behavior for common tools
+    mock_register "systemctl" "success"
+    mock_register "ip" "success"
+    mock_register "tc" "success"
+    mock_register "iptables" "success"
+    mock_register "curl" "success"
+    mock_register "ansible-playbook" "success"
+    
+    # Use shorter intervals in performance tests when in mock mode
+    MOCK_TEST_DURATION=30    # 30 seconds instead of 5 minutes
+    MOCK_REPORT_INTERVAL=5   # 5 seconds instead of longer periods
+  fi
+  
+  # Create a temporary directory for test artifacts
+  TEST_TMP_DIR=$(mktemp -d -t "ephemery_test_XXXXXX")
+  export TEST_TMP_DIR
+  
+  # Set the fixture directory
+  TEST_FIXTURE_DIR="${PROJECT_ROOT}/scripts/testing/fixtures"
+  export TEST_FIXTURE_DIR
+  
+  echo "Test environment initialized:"
+  echo "- Project root: ${PROJECT_ROOT}"
+  echo "- Report directory: ${TEST_REPORT_DIR}"
+  echo "- Temporary directory: ${TEST_TMP_DIR}"
+  echo "- Mock mode: ${TEST_MOCK_MODE:-false}"
+  echo "- Fixture directory: ${TEST_FIXTURE_DIR}"
+}
+
+# Initialize test environment
+init_test_env
+
+# Setup error handling if the function exists
+if type setup_error_handling &>/dev/null; then
+  setup_error_handling
+fi
+
+# Test configuration - adjust based on mock mode
+if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+  TEST_DURATION=${MOCK_TEST_DURATION:-30}  # 30 seconds for mock testing
+else
+  TEST_DURATION=300  # 5 minutes for real testing
+fi
+
+REPORT_FILE="${TEST_REPORT_DIR}/network_disruption_$(date +%Y%m%d-%H%M%S).log"
 
 # Create report file
 {
@@ -32,6 +120,7 @@ REPORT_FILE="${PROJECT_ROOT}/scripts/testing/reports/network_disruption_$(date +
   echo "Date: $(date)"
   echo "Environment: $(hostname)"
   echo "Test Duration: ${TEST_DURATION} seconds"
+  echo "Mock Mode: ${TEST_MOCK_MODE}"
   echo "--------------------------------------------------------"
   echo ""
 } > "${REPORT_FILE}"
@@ -41,16 +130,22 @@ check_prerequisites() {
   local missing_tools=()
   
   for tool in tc ip iptables curl jq; do
-    if ! command -v "${tool}" &> /dev/null; then
+    if ! is_tool_available "${tool}"; then
       missing_tools+=("${tool}")
     fi
   done
   
   if [ ${#missing_tools[@]} -gt 0 ]; then
-    echo -e "${RED}Error: Missing required tools: ${missing_tools[*]}${NC}"
-    echo "Please install these tools before running this test."
-    echo "Missing tools: ${missing_tools[*]}" >> "${REPORT_FILE}"
-    exit 1
+    if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+      echo -e "${YELLOW}Notice: Using mock implementations for: ${missing_tools[*]}${NC}"
+      echo "Using mock implementations for: ${missing_tools[*]}" >> "${REPORT_FILE}"
+      return 0
+    else
+      echo -e "${RED}Error: Missing required tools: ${missing_tools[*]}${NC}"
+      echo "Please install these tools before running this test."
+      echo "Missing tools: ${missing_tools[*]}" >> "${REPORT_FILE}"
+      exit 1
+    fi
   fi
 }
 
@@ -261,23 +356,32 @@ run_network_disruption_tests() {
     return 1
   fi
   
+  # Reduce test durations if in mock mode
+  local test_duration=60
+  local recovery_time=120
+  
+  if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+    test_duration=5
+    recovery_time=10
+  fi
+  
   # Test 1: High latency
   echo -e "${BLUE}Test 1: High network latency${NC}"
   echo "Test 1: High network latency" >> "${REPORT_FILE}"
-  simulate_network_latency "${interface}" 500 60
-  wait_for_recovery 120
+  simulate_network_latency "${interface}" 500 ${test_duration}
+  wait_for_recovery ${recovery_time}
   
   # Test 2: Packet loss
   echo -e "${BLUE}Test 2: Packet loss${NC}"
   echo "Test 2: Packet loss" >> "${REPORT_FILE}"
-  simulate_packet_loss "${interface}" 20 60
-  wait_for_recovery 120
+  simulate_packet_loss "${interface}" 20 ${test_duration}
+  wait_for_recovery ${recovery_time}
   
   # Test 3: P2P port blocking
   echo -e "${BLUE}Test 3: P2P port blocking${NC}"
   echo "Test 3: P2P port blocking" >> "${REPORT_FILE}"
-  block_p2p_ports 60
-  wait_for_recovery 180
+  block_p2p_ports ${test_duration}
+  wait_for_recovery ${recovery_time}
   
   # Final check
   if check_node_services && check_execution_sync && check_consensus_sync; then
@@ -295,6 +399,13 @@ run_network_disruption_tests() {
 main() {
   echo -e "${BLUE}Network Disruption Chaos Test${NC}"
   
+  # Check if test should be skipped
+  if should_skip_test "network_disruption" "tc" "ip" "iptables"; then
+    echo -e "${YELLOW}Skipping network disruption test due to missing dependencies${NC}"
+    echo "SKIPPED: Network disruption tests due to missing dependencies" >> "${REPORT_FILE}"
+    exit 0
+  fi
+  
   # Check prerequisites
   check_prerequisites
   
@@ -302,11 +413,17 @@ main() {
   if run_network_disruption_tests; then
     echo -e "${GREEN}✓ Network disruption tests passed${NC}"
     echo "✓ PASSED: Network disruption tests" >> "${REPORT_FILE}"
-    return 0
+    
+    # Cleanup test environment before exit
+    cleanup_test_env
+    exit 0
   else
     echo -e "${RED}✗ Network disruption tests failed${NC}"
     echo "✗ FAILED: Network disruption tests" >> "${REPORT_FILE}"
-    return 1
+    
+    # Cleanup test environment before exit
+    cleanup_test_env
+    exit 1
   fi
 }
 

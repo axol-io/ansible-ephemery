@@ -8,10 +8,12 @@
 # Last Modified: 2025-03-17
 # Get the absolute path to the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 
 # Source the common library
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
+source "${PROJECT_ROOT}/scripts/lib/test_config.sh"
+source "${PROJECT_ROOT}/scripts/lib/test_mock.sh"
 
 # test_jwt_auth.sh - Test script to verify JWT authentication between execution and consensus clients
 #
@@ -22,6 +24,72 @@ source "${PROJECT_ROOT}/scripts/lib/common.sh"
 # 3. Both clients are using the correct JWT path
 # 4. The clients can successfully authenticate using the JWT token
 # 5. The execution client is properly configured with the correct chain ID
+
+# Initialize test environment
+init_test_env() {
+  # Create test report directory if it doesn't exist
+  TEST_REPORT_DIR="${PROJECT_ROOT}/scripts/testing/reports"
+  mkdir -p "${TEST_REPORT_DIR}"
+  
+  # Set up mock environment if enabled
+  if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+    # Ensure test_mock.sh is sourced
+    if ! type mock_init &>/dev/null; then
+      source "${PROJECT_ROOT}/scripts/lib/test_mock.sh"
+      mock_init
+      override_commands
+    fi
+    
+    # Register default mock behavior for common tools
+    mock_register "systemctl" "success"
+    mock_register "curl" "success"
+    mock_register "geth" "success"
+    mock_register "lighthouse" "success"
+  fi
+  
+  # Create a temporary directory for test artifacts
+  TEST_TMP_DIR=$(mktemp -d -t "ephemery_test_XXXXXX")
+  export TEST_TMP_DIR
+  
+  # Set the fixture directory
+  TEST_FIXTURE_DIR="${PROJECT_ROOT}/scripts/testing/fixtures"
+  export TEST_FIXTURE_DIR
+  
+  echo "Test environment initialized"
+}
+
+# Parse command line arguments
+MOCK_MODE=false
+VERBOSE=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mock)
+      MOCK_MODE=true
+      shift
+      ;;
+    --verbose)
+      VERBOSE=true
+      export MOCK_VERBOSE=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--mock] [--verbose]"
+      exit 1
+      ;;
+  esac
+done
+
+# Initialize test environment
+export TEST_MOCK_MODE="${MOCK_MODE}"
+export TEST_VERBOSE="${VERBOSE}"
+
+# Load configuration
+load_config
+
+# Initialize test environment
+init_test_env
 
 # Strict error handling
 set -euo pipefail
