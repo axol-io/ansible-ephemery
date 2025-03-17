@@ -9,7 +9,10 @@ set -e
 
 # Define base directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." &>/dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 # Source core utilities if available
 if [ -f "${PROJECT_ROOT}/scripts/core/path_config.sh" ]; then
@@ -28,11 +31,6 @@ fi
 
 # Color definitions in case common.sh not available
 if [ -z "${GREEN}" ]; then
-  GREEN='\033[0;32m'
-  YELLOW='\033[1;33m'
-  RED='\033[0;31m'
-  BLUE='\033[0;34m'
-  NC='\033[0m' # No Color
 fi
 
 # Define test directories

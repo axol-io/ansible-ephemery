@@ -1,24 +1,15 @@
-# Deployment Scripts
+# deployment
 
-This directory contains scripts for deploying and managing Ephemery nodes and validators in various environments.
+
+Scripts for deploying Ephemery nodes and validators.
 
 ## Available Scripts
 
-### Node Deployment
-- `deploy_enhanced_validator_dashboard.sh` - Deploys the enhanced validator monitoring dashboard
-- `fix_mainnet_deployment.sh` - Fixes common mainnet deployment issues
-
-### Validator Deployment
-- `deploy-validator.sh` - Deploys a new validator node
-- `deploy-monitoring.sh` - Sets up monitoring for deployed validators
+*(Scripts will be listed automatically as they are added)*
 
 ## Usage
 
-Most deployment scripts support these common options:
-- `-h, --help` - Display help information
-- `-v, --verbose` - Enable verbose output
-- `-d, --dry-run` - Show what would be done without making changes
-- `-f, --force` - Force deployment without confirmation
+See individual script files for detailed usage instructions.
 
 ## Features
 
@@ -54,3 +45,22 @@ Most deployment scripts support these common options:
 - Monitor for unauthorized access
 
 For detailed usage instructions, refer to the main [README.md](../../README.md) or run each script with the `--help` flag.
+
+## Contents
+
+- **complete_script_organization.sh**: 
+- **deploy-ephemery.sh**: 
+- **deploy_enhanced_key_restore.sh**: 
+- **deploy_ephemery_retention.sh**: 
+- **deploy_key_performance_metrics.sh**: 
+- **fix_mainnet_deployment.sh**: 
+- **install-collections.sh**: 
+- **multi_node_orchestration.sh**: 
+- **reorganize_scripts.sh**: Identifies and migrates scripts to the new directory structure
+- **script_audit.sh**: Audits scripts for common patterns and duplication
+- **setup-dev-env.sh**: 
+- **setup-ephemery.sh**: 
+- **setup_dashboard.sh**: 
+- **setup_ephemery_cron.sh**: 
+- **setup_lido_csm.sh**: 
+- **setup_obol_squadstaking.sh**: 

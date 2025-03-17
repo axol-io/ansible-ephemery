@@ -10,6 +10,10 @@ readonly _EPHEMERY_VERSION_MANAGEMENT_LOADED=1
 
 # Source path configuration if not already loaded
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 if [[ -z "${_EPHEMERY_PATH_CONFIG_LOADED}" && -f "${SCRIPT_DIR}/path_config.sh" ]]; then
   source "${SCRIPT_DIR}/path_config.sh"
 fi

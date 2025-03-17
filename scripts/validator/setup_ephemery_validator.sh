@@ -6,6 +6,9 @@
 
 # Source core utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 CORE_DIR="${SCRIPT_DIR}/scripts/core"
 
 # Source path configuration

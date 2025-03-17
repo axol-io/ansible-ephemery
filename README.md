@@ -38,24 +38,91 @@ The repository's scripts are organized into the following directories:
 - `deployment/` - Scripts for deploying nodes and validators
 - `monitoring/` - Scripts for monitoring and health checks
 - `maintenance/` - Scripts for system maintenance and troubleshooting
-- `validator/` - Scripts for validator management
-- `utilities/` - Common utility functions and helpers
+- `testing/` - Scripts for testing various components
+- `validator/` - Scripts related to validator operations
+- `core/` - Core functionality and shared components
+- `lib/` - Common library with shared functions
+- `tools/` - Utility scripts for development and administration
 
 Each script directory contains its own README with detailed information about the scripts it contains.
 
+## Script Standardization
+
+All scripts in this repository follow a standard structure and use the common library for consistent functionality. 
+
+### Common Library
+
+The common library (`scripts/lib/common.sh`) provides shared functions for:
+- Color-coded logging
+- Error handling
+- Banner and progress display
+- Path management
+- Configuration management
+
+### Using the Common Library
+
+When creating new scripts, follow these guidelines:
+
+1. Start with the standard script header including version and description
+2. Define the script directory and project root
+3. Source the common library
+4. Use the provided logging functions (log_info, log_success, log_warn, log_error)
+
+Example:
+
+```bash
+#!/usr/bin/env bash
+# Version: 1.0.0
+#
+# Script Name: example_script.sh
+# Description: Example script demonstrating common library usage
+# Author: Your Name
+# Created: YYYY-MM-DD
+# Last Modified: YYYY-MM-DD
+
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
+# Script logic
+log_info "Starting example script"
+# ... script logic ...
+log_success "Script completed successfully"
+```
+
+### Standardization Tool
+
+You can use the standardization tool to standardize existing scripts:
+
+```bash
+scripts/tools/standardize_scripts.sh -s path/to/your/script.sh
+```
+
+This tool will:
+- Add common library reference
+- Remove redundant color definitions
+- Calculate correct relative paths
+- Make the script executable
+
 ## Documentation
+
+For a comprehensive list of all documentation, see the [Documentation Index](docs/INDEX.md).
+
 
 The following documentation is available to help you understand and use this project:
 
+- [Getting Started](docs/prd/GETTING_STARTED.md) - A quick start guide for new users
+- [Client Optimization](docs/CLIENT_OPTIMIZATION.md) - Tips for optimizing client performance
+- [Lighthouse Optimization](docs/LIGHTHOUSE_OPTIMIZATION.md) - Specific optimizations for Lighthouse
+- [Secret Management](docs/SECRET_MANAGEMENT.md) - Best practices for managing secrets
+- [Validator Password Management](docs/VALIDATOR_PASSWORD_MANAGEMENT.md) - Managing validator passwords
+- [Standardized Paths Guide](docs/STANDARDIZED_PATHS_GUIDE.md) - Understanding the standardized path structure
+- [Script Management](docs/SCRIPT_MANAGEMENT.md) - How to maintain and organize scripts
 - [Testing Guide](docs/TESTING.md) - Instructions for testing Ephemery scripts
-- [Testing Framework](docs/TESTING_FRAMEWORK.md) - Documentation for the automated testing framework
-- [Script Management](docs/SCRIPT_MANAGEMENT.md) - Guide for managing and using scripts
-- [Standardized Paths Guide](docs/STANDARDIZED_PATHS_GUIDE.md) - Overview of standardized paths
-- [Security Guide](docs/SECURITY.md) - Security best practices
-- [Installation Guide](docs/INSTALLATION.md)
-- [Configuration Guide](docs/CONFIGURATION.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Secret Management](docs/SECRET_MANAGEMENT.md)
+- [JWT Authentication Troubleshooting](docs/prd/FEATURES/JWT_AUTHENTICATION_TROUBLESHOOTING.md) - Troubleshooting JWT issues between clients
 
 Each script directory also contains its own README with specific documentation:
 - [Setup Scripts](scripts/setup/README.md)

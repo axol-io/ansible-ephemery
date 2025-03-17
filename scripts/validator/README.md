@@ -1,4 +1,5 @@
-# Validator Scripts
+# validator
+
 
 This directory contains scripts for managing and operating Ephemery validators.
 
@@ -36,3 +37,12 @@ Most scripts support the following common options:
 - Keep validator client software updated
 
 For detailed usage instructions, refer to the main [README.md](../../README.md) or run each script with the `--help` flag.
+
+## Contents
+
+- **backup_restore_validators.sh**: 
+- **integration_test.sh**: 
+- **manage_validator_keys.sh**: 
+- **monitor_validator.sh**: 
+- **setup_ephemery_validator.sh**: 
+- **test_validator_config.sh**: 

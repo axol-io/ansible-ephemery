@@ -6,22 +6,17 @@
 
 set -e
 
-# Define color codes for output
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
+# Get the absolute path to the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 # Default values
 VALIDATOR_API="http://localhost:5064"
 BEACON_API="http://localhost:5052"
-OUTPUT_DIR="${REPO_ROOT}/validator_metrics"
+OUTPUT_DIR="${PROJECT_ROOT}/validator_metrics"
 REPORT_FILE="${OUTPUT_DIR}/validator_report.json"
 CONFIG_FILE="${OUTPUT_DIR}/validator_monitor_config.json"
 ALERTS_FILE="${OUTPUT_DIR}/validator_alerts.json"
@@ -32,6 +27,8 @@ CHECK_ONLY=false
 GENERATE_ALERTS=false
 ALERT_THRESHOLD=90
 ENHANCED_DASHBOARD=false
+
+# Define color codes for output
 
 # Help function
 function show_help {

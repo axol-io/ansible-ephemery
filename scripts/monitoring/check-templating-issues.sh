@@ -1,4 +1,11 @@
 #!/bin/bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 
 # Script to check for templating issues in Ansible playbooks
@@ -9,10 +16,6 @@ set -e
 echo "===== Checking for templating issues in Ansible playbooks ====="
 
 # Define colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-NC='\033[0m' # No Color
 
 # Function to run ansible-playbook in check mode with verbose output
 check_playbook() {

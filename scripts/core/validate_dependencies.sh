@@ -17,6 +17,10 @@
 
 # Source common functions and path configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 # Source with error handling in case files don't exist
 source "${SCRIPT_DIR}/error_handling.sh" 2>/dev/null || echo "Warning: error_handling.sh not found"
 source "${SCRIPT_DIR}/common.sh" 2>/dev/null || echo "Warning: common.sh not found"

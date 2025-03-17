@@ -1,3 +1,16 @@
+# testing
+
+
+Scripts for testing Ephemery nodes and validators.
+
+## Available Scripts
+
+*(Scripts will be listed automatically as they are added)*
+
+## Usage
+
+See individual script files for detailed usage instructions.
+
 # Ephemery Testing Framework
 
 This directory contains the testing framework for the Ephemery project. The framework includes various test categories to ensure all aspects of the system function correctly.
@@ -102,3 +115,10 @@ If tests are failing, check the detailed logs in the `reports` directory. Common
 - Insufficient permissions (tests may require sudo for some operations)
 - Network connectivity issues
 - Incorrect configuration of client services
+
+## Contents
+
+- **run_all_tests.sh**: Runs all tests for the Ephemery project
+- **run_tests.sh**: 
+- **test_utils.sh**: Common utilities for shell script testing
+- **version_check_test.sh**: 

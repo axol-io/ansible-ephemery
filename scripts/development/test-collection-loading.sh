@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 
 # Script to test Ansible collection loading to verify our configuration fixes
@@ -6,10 +13,6 @@
 set -e
 
 # Colors for output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-NC='\033[0m' # No Color
 
 echo -e "${YELLOW}Testing Ansible Collection Loading${NC}"
 echo "------------------------------------"

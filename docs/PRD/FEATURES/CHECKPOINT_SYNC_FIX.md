@@ -156,6 +156,16 @@ If inventory file updates aren't reflected in the configuration:
 - Manually verify the URL was updated in the inventory
 - Run the Ansible playbook directly with `-v` for verbose output
 
+#### 4. JWT Authentication Failures
+
+Even with a working checkpoint sync URL, sync might fail due to JWT authentication issues between the execution and consensus clients:
+
+- Consensus logs showing "Execution endpoint is not synced" despite checkpoint sync
+- Execution logs showing "Beacon client online, but no consensus updates received"
+- Chain ID mismatches between clients (Ephemery requires 39438144)
+
+For detailed troubleshooting of JWT authentication issues, see [JWT Authentication Troubleshooting](./JWT_AUTHENTICATION_TROUBLESHOOTING.md).
+
 ### Diagnostic Steps
 
 1. **Check Lighthouse Logs**:

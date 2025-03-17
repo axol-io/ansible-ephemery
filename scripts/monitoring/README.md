@@ -1,46 +1,45 @@
-# Monitoring Scripts
+# monitoring
 
-This directory contains scripts for monitoring Ephemery nodes and validators.
+
+Scripts for monitoring and analyzing Ephemery nodes and validators.
 
 ## Available Scripts
 
-### Node Monitoring
-- `monitor_logs.sh` - Monitor logs from Geth and Lighthouse clients
-- `diagnose_output.sh` - Analyze and diagnose node output for issues
-- `filter_ansible_output.sh` - Filter and format Ansible deployment output
-
-### Validator Monitoring
-- `demo_validator_monitoring.sh` - Demonstrates validator monitoring capabilities
-- `ephemery_dashboard.sh` - Provides a comprehensive monitoring dashboard
-- `ephemery_output.sh` - Formats and displays validator output
-
-### Analysis Tools
-- `analyze_ansible_output.sh` - Analyzes Ansible deployment logs for issues
-- `monitor_logs.sh` - Advanced log monitoring and analysis
+*(Scripts will be listed automatically as they are added)*
 
 ## Usage
 
-Most monitoring scripts support these common options:
-- `-h, --help` - Display help information
-- `-v, --verbose` - Enable verbose output
-- `-f, --follow` - Follow log output in real-time
-- `-n, --lines N` - Show last N lines of output
+See individual script files for detailed usage instructions.
 
-## Features
+## Contents
 
-- Real-time log monitoring
-- Performance metrics collection
-- Error detection and diagnosis
-- Custom filtering and formatting
-- Dashboard integration
-- Alert generation for critical issues
-
-## Best Practices
-
-1. Regularly check monitoring output
-2. Set up alerts for critical issues
-3. Keep logs for troubleshooting
-4. Monitor system resource usage
-5. Review performance metrics periodically
-
-For detailed usage instructions, refer to the main [README.md](../../README.md) or run each script with the `--help` flag.
+- **advanced_validator_metrics.sh**: 
+- **advanced_validator_monitoring.sh**: 
+- **bond_optimization.sh**: 
+- **check-templating-issues.sh**: 
+- **check-yaml-extensions.sh**: 
+- **check_ephemery_status.sh**: 
+- **check_sync_status.sh**: 
+- **checkpoint_sync_alert.sh**: 
+- **csm_analytics_suite.sh**: 
+- **csm_validator_performance.sh**: 
+- **fix_checkpoint_sync.sh**: 
+- **generate_test_data.sh**: 
+- **health_check_ephemery.sh**: 
+- **monitor_ephemery.sh**: 
+- **monitor_lido_csm.sh**: 
+- **optimize_validator_monitoring.sh**: 
+- **quick_health_vibe_check.sh**: 
+- **run_validator_monitoring.sh**: 
+- **setup_validator_alerts.sh**: 
+- **test_checkpoint_sync.sh**: 
+- **test_validator_alerts.sh**: 
+- **validator_alert_system.sh**: 
+- **validator_alerts_system.sh**: 
+- **validator_dashboard.sh**: 
+- **validator_earnings_estimator.sh**: 
+- **validator_external_integration.sh**: 
+- **validator_performance_analysis.sh**: 
+- **validator_performance_compare.sh**: 
+- **validator_performance_monitor.sh**: 
+- **validator_predictive_analytics.sh**: 

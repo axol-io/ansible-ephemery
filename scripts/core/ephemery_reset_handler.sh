@@ -1,27 +1,40 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Version: 1.0.0
-# ephemery_reset_handler.sh - Handles Ephemery network resets
+#
+# Script Name: ephemery_reset_handler.sh
+# Description: Handles Ephemery network resets
+# Author: Ephemery Team
+# Created: 2025-03-17
+# Last Modified: 2025-03-17
 #
 # This script detects when the Ephemery network has reset and performs
 # necessary actions to prepare the node for the new network, including
 # restoring validator keys.
 
-# Strict error handling
-set -euo pipefail
-
-# Script directory and paths
+# Get the absolute path to the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common and config libraries
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+source "${PROJECT_ROOT}/scripts/lib/config.sh"
+
+# Setup error handling and cleanup
+setup_traps
+
+# Script constants and paths
 PARENT_DIR="$(dirname "${SCRIPT_DIR}")"
 UTILITIES_DIR="${PARENT_DIR}/utilities"
 KEY_RESTORE_WRAPPER="${UTILITIES_DIR}/ephemery_key_restore_wrapper.sh"
 
-# Default paths
-DATA_DIR="${HOME}/ephemery/data"
-CONFIG_DIR="${HOME}/ephemery/config"
+# Default paths from configuration or defaults
+DATA_DIR="${EPHEMERY_DATA_DIR:-${HOME}/ephemery/data}"
+CONFIG_DIR="${EPHEMERY_CONFIG_DIR:-${HOME}/ephemery/config}"
+LOGS_DIR="${EPHEMERY_LOGS_DIR:-${DATA_DIR}/logs}"
 LAST_GENESIS_TIME_FILE="${DATA_DIR}/last_genesis_time"
 RESET_DETECTED_FILE="${DATA_DIR}/reset_detected"
 RESET_HANDLED_FILE="${DATA_DIR}/reset_handled"
-LOG_FILE="${DATA_DIR}/logs/reset_handler.log"
+LOG_FILE="${LOGS_DIR}/reset_handler.log"
 
 # Default settings
 VERBOSE=false
@@ -32,40 +45,26 @@ RESTART_CONTAINERS=true
 BEACON_CONTAINER="ephemery-beacon-lighthouse"
 VALIDATOR_CONTAINER="ephemery-validator-lighthouse"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
 # Create data directory if it doesn't exist
-mkdir -p "${DATA_DIR}" "${DATA_DIR}/logs"
-
-# Logging function
-log() {
-    local timestamp
-    timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    echo -e "${timestamp} - $1" | tee -a "${LOG_FILE}"
-fi
+mkdir -p "${DATA_DIR}" "${LOGS_DIR}"
 
 # Print usage information
 function print_usage() {
-    echo -e "${BLUE}Ephemery Reset Handler${NC}"
-    echo
-    echo "This script detects and handles Ephemery network resets, including validator key restoration."
-    echo
-    echo -e "${YELLOW}Usage:${NC}"
-    echo "  $0 [options]"
-    echo
-    echo -e "${YELLOW}Options:${NC}"
-    echo "  -f, --force           Force reset handling even if no reset is detected"
-    echo "  -n, --no-keys         Skip validator key restoration"
-    echo "  -c, --no-containers   Skip container restart"
-    echo "  -d, --dry-run         Validate and log but don't make changes"
-    echo "  -v, --verbose         Enable verbose output"
-    echo "  -h, --help            Show this help message"
-fi
+    log_info "Ephemery Reset Handler"
+    log_info ""
+    log_info "This script detects and handles Ephemery network resets, including validator key restoration."
+    log_info ""
+    log_info "Usage:"
+    log_info "  $0 [options]"
+    log_info ""
+    log_info "Options:"
+    log_info "  -f, --force           Force reset handling even if no reset is detected"
+    log_info "  -n, --no-keys         Skip validator key restoration"
+    log_info "  -c, --no-containers   Skip container restart"
+    log_info "  -d, --dry-run         Validate and log but don't make changes"
+    log_info "  -v, --verbose         Enable verbose output"
+    log_info "  -h, --help            Show this help message"
+}
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -96,7 +95,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            echo -e "${RED}Unknown option: $1${NC}"
+            log_error "Unknown option: $1"
             print_usage
             exit 1
             ;;
@@ -105,24 +104,24 @@ done
 
 # Function to check for network reset
 check_for_reset() {
-    log "Checking for Ephemery network reset..."
+    log_info "Checking for Ephemery network reset..."
 
     # Check if config directory exists
     if [[ ! -d "${CONFIG_DIR}" ]]; then
-        log "Error: Config directory not found: ${CONFIG_DIR}"
+        log_error "Config directory not found: ${CONFIG_DIR}"
         return 1
     fi
 
     # Get current genesis time from configuration
     local genesis_file="${CONFIG_DIR}/genesis.json"
     if [[ ! -f "${genesis_file}" ]]; then
-        log "Error: Genesis file not found: ${genesis_file}"
+        log_error "Genesis file not found: ${genesis_file}"
         return 1
-    }
+    fi
 
     # Extract genesis time with proper fallback
     local current_genesis_time
-    if command -v jq >/dev/null 2>&1; then
+    if is_command_available jq; then
         current_genesis_time=$(jq -r '.genesis_time' "${genesis_file}" 2>/dev/null || echo "0")
     else
         # Fallback to grep and sed if jq not available
@@ -130,25 +129,25 @@ check_for_reset() {
     fi
 
     if [[ -z "${current_genesis_time}" || "${current_genesis_time}" == "0" || "${current_genesis_time}" == "null" ]]; then
-        log "Error: Could not extract genesis time from ${genesis_file}"
+        log_error "Could not extract genesis time from ${genesis_file}"
         return 1
     fi
 
     # Check if we have a record of the last genesis time
     if [[ ! -f "${LAST_GENESIS_TIME_FILE}" ]]; then
-        log "No previous genesis time recorded. Recording current genesis time: ${current_genesis_time}"
+        log_info "No previous genesis time recorded. Recording current genesis time: ${current_genesis_time}"
         echo "${current_genesis_time}" > "${LAST_GENESIS_TIME_FILE}"
         return 1
-    }
+    fi
 
     # Compare with last recorded genesis time
     local last_genesis_time
     last_genesis_time=$(cat "${LAST_GENESIS_TIME_FILE}")
 
     if [[ "${current_genesis_time}" != "${last_genesis_time}" ]]; then
-        log "Ephemery network reset detected!"
-        log "Old genesis time: ${last_genesis_time}"
-        log "New genesis time: ${current_genesis_time}"
+        log_info "Ephemery network reset detected!"
+        log_info "Old genesis time: ${last_genesis_time}"
+        log_info "New genesis time: ${current_genesis_time}"
 
         # Update the last genesis time
         echo "${current_genesis_time}" > "${LAST_GENESIS_TIME_FILE}"
@@ -158,35 +157,37 @@ check_for_reset() {
 
         return 0 # Reset detected
     else
-        log "No network reset detected. Genesis time unchanged: ${current_genesis_time}"
+        log_info "No network reset detected. Genesis time unchanged: ${current_genesis_time}"
 
         # If force option is used, treat as reset
         if [[ "${FORCE}" == "true" ]]; then
-            log "Force option used. Treating as reset."
+            log_info "Force option used. Treating as reset."
             touch "${RESET_DETECTED_FILE}"
             return 0
         fi
 
         return 1 # No reset detected
     fi
-fi
+}
 
 # Function to handle reset
 handle_reset() {
-    log "Handling Ephemery network reset..."
+    log_info "Handling Ephemery network reset..."
 
     if [[ "${DRY_RUN}" == "true" ]]; then
-        log "DRY RUN: Would handle network reset here"
+        log_info "DRY RUN: Would handle network reset here"
     else
         # Step 1: Stop containers if requested
         if [[ "${RESTART_CONTAINERS}" == "true" ]]; then
-            log "Stopping Ephemery containers..."
-            docker stop "${BEACON_CONTAINER}" "${VALIDATOR_CONTAINER}" 2>/dev/null || log "Warning: Failed to stop containers (may not be running)"
+            log_info "Stopping Ephemery containers..."
+            if ! docker stop "${BEACON_CONTAINER}" "${VALIDATOR_CONTAINER}" 2>/dev/null; then
+                log_warn "Failed to stop containers (may not be running)"
+            fi
         fi
 
         # Step 2: Restore validator keys if requested
         if [[ "${RESTORE_KEYS}" == "true" ]]; then
-            log "Restoring validator keys..."
+            log_info "Restoring validator keys..."
             if [[ -x "${KEY_RESTORE_WRAPPER}" ]]; then
                 # Build key restore options
                 local restore_opts=()
@@ -200,57 +201,61 @@ handle_reset() {
                 restore_opts+=("--no-start")
 
                 # Run key restore
-                "${KEY_RESTORE_WRAPPER}" "${restore_opts[@]}" || {
-                    log "Error: Validator key restore failed"
+                if ! "${KEY_RESTORE_WRAPPER}" "${restore_opts[@]}"; then
+                    log_error "Validator key restore failed"
                     return 1
-                }
+                fi
             else
-                log "Error: Key restore wrapper not found or not executable: ${KEY_RESTORE_WRAPPER}"
+                log_error "Key restore wrapper not found or not executable: ${KEY_RESTORE_WRAPPER}"
                 return 1
             fi
         fi
 
         # Step 3: Restart containers if requested
         if [[ "${RESTART_CONTAINERS}" == "true" ]]; then
-            log "Starting Ephemery containers..."
-            docker start "${BEACON_CONTAINER}" "${VALIDATOR_CONTAINER}" 2>/dev/null || {
-                log "Error: Failed to start containers"
+            log_info "Starting Ephemery containers..."
+            if ! docker start "${BEACON_CONTAINER}" "${VALIDATOR_CONTAINER}" 2>/dev/null; then
+                log_error "Failed to start containers"
                 return 1
-            }
+            fi
         fi
 
         # Mark reset as handled
         touch "${RESET_HANDLED_FILE}"
-        log "Network reset handling complete"
+        log_success "Network reset handling complete"
     fi
-fi
+}
+
+# Define cleanup function
+cleanup() {
+    log_info "Cleaning up..."
+    # Add specific cleanup actions here if needed
+}
 
 # Main execution
-log "Ephemery reset handler started"
+log_info "Ephemery reset handler started"
 
 # Check if a reset was already detected but not handled
 if [[ -f "${RESET_DETECTED_FILE}" ]] && [[ ! -f "${RESET_HANDLED_FILE}" ]]; then
-    log "Previously detected reset found. Handling now."
-    handle_reset
-    if [[ $? -eq 0 ]]; then
+    log_info "Previously detected reset found. Handling now."
+    if handle_reset; then
         rm -f "${RESET_DETECTED_FILE}"
-        log "Reset handling successful"
+        log_success "Reset handling successful"
     else
-        log "Reset handling failed. Will try again next time."
+        log_error "Reset handling failed. Will try again next time."
     fi
     exit 0
 # Check for a new reset
 elif check_for_reset; then
-    log "New network reset detected. Handling now."
-    handle_reset
-    if [[ $? -eq 0 ]]; then
+    log_info "New network reset detected. Handling now."
+    if handle_reset; then
         rm -f "${RESET_DETECTED_FILE}"
-        log "Reset handling successful"
+        log_success "Reset handling successful"
     else
-        log "Reset handling failed. Will try again next time."
+        log_error "Reset handling failed. Will try again next time."
     fi
     exit 0
 else
-    log "No network reset detected. Nothing to do."
+    log_info "No network reset detected. Nothing to do."
     exit 0
 fi

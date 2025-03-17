@@ -8,7 +8,10 @@ set -e
 
 # Define base directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." &> /dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 # Source core utilities if available
 if [ -f "${PROJECT_ROOT}/scripts/core/common.sh" ]; then
@@ -16,11 +19,6 @@ if [ -f "${PROJECT_ROOT}/scripts/core/common.sh" ]; then
 fi
 
 # Define colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
 
 # Configuration
 REPORT_FILE="${PROJECT_ROOT}/error_handling_report_$(date +%Y%m%d-%H%M%S).md"

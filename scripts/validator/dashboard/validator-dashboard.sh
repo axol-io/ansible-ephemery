@@ -18,13 +18,12 @@
 #   -h, --help            Show this help message
 
 # Set color codes
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Check if monitoring script exists

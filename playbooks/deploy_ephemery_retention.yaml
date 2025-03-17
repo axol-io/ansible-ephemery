@@ -12,6 +12,9 @@
     ephemery_data_dir: "{{ ephemery_base_dir }}/data"
     ephemery_logs_dir: "{{ ephemery_base_dir }}/logs"
     ephemery_core_scripts_dir: "{{ ephemery_scripts_dir }}/core"
+    # JWT authentication settings
+    jwt_secret_path: "{{ ephemery_base_dir }}/jwt.hex"
+    jwt_permissions: "0600"
 
   tasks:
     - name: Create required directories
@@ -25,6 +28,40 @@
         - "{{ ephemery_data_dir }}"
         - "{{ ephemery_logs_dir }}"
         - "{{ ephemery_core_scripts_dir }}"
+
+    # JWT Authentication Setup - Added as part of improved JWT authentication handling
+    - name: Check if JWT secret file exists
+      ansible.builtin.stat:
+        path: "{{ jwt_secret_path }}"
+      register: jwt_secret_file
+
+    - name: Generate a new JWT secret if it doesn't exist
+      ansible.builtin.shell: openssl rand -hex 32 | tr -d "\n" | sed 's/^/0x/' > "{{ jwt_secret_path }}"
+      args:
+        creates: "{{ jwt_secret_path }}"
+      when: not jwt_secret_file.stat.exists
+
+    - name: Ensure JWT secret file has correct permissions
+      ansible.builtin.file:
+        path: "{{ jwt_secret_path }}"
+        mode: "{{ jwt_permissions }}"
+      when: jwt_secret_file.stat.exists
+
+    - name: Validate JWT secret format
+      ansible.builtin.shell: |
+        JWT_CONTENT=$(cat "{{ jwt_secret_path }}")
+        if [[ ! "${JWT_CONTENT}" =~ ^0x[0-9a-fA-F]{64}$ ]]; then
+          echo "0x$(openssl rand -hex 32)" > "{{ jwt_secret_path }}"
+          echo "regenerated"
+        else
+          echo "valid"
+        fi
+      register: jwt_validation
+      changed_when: jwt_validation.stdout == "regenerated"
+
+    - name: Display JWT token validation result
+      ansible.builtin.debug:
+        msg: "JWT token status: {{ jwt_validation.stdout }}"
 
     # Check if standardized paths configuration exists
     - name: Check if standardized paths configuration exists
@@ -56,8 +93,8 @@
           # Core scripts directory
           EPHEMERY_CORE_SCRIPTS_DIR="${EPHEMERY_SCRIPTS_DIR}/core"
 
-          # JWT secret path
-          EPHEMERY_JWT_SECRET="${EPHEMERY_CONFIG_DIR}/jwt.hex"
+          # JWT secret path - standardized to use jwt.hex filename
+          EPHEMERY_JWT_SECRET="${EPHEMERY_BASE_DIR}/jwt.hex"
 
           # Validator keys directory
           EPHEMERY_VALIDATOR_KEYS="${EPHEMERY_DATA_DIR}/validator_keys"
@@ -72,6 +109,23 @@
         dest: "{{ ephemery_config_dir }}/ephemery_paths.conf"
         mode: '0644'
       when: not paths_conf.stat.exists
+
+    # Copy JWT authentication test script - Added for improved monitoring
+    - name: Copy JWT authentication test script
+      ansible.builtin.copy:
+        src: "../scripts/testing/tests/test_jwt_auth.sh"
+        dest: "{{ ephemery_scripts_dir }}/test_jwt_auth.sh"
+        mode: '0755'
+      register: jwt_test_script
+
+    # Configure the JWT test to run periodically
+    - name: Create cron job for JWT authentication monitoring
+      ansible.builtin.cron:
+        name: "Monitor JWT authentication"
+        minute: "*/30"
+        job: "{{ ephemery_scripts_dir }}/test_jwt_auth.sh >> {{ ephemery_logs_dir }}/jwt_auth_test.log 2>&1"
+        state: present
+        user: "root"
 
     - name: Copy ephemery reset handler script
       ansible.builtin.copy:
@@ -106,6 +160,9 @@
           RESET_DETECTED_FILE="${DATA_DIR}/reset_detected"
           RESET_HANDLED_FILE="${DATA_DIR}/reset_handled"
           LOG_FILE="${EPHEMERY_LOGS_DIR}/reset_handler.log"
+          
+          # JWT Auth path - use consistent path
+          JWT_SECRET="${EPHEMERY_JWT_SECRET:-${EPHEMERY_BASE_DIR}/jwt.hex}"
 
           # Default settings
           VERBOSE=false
@@ -115,6 +172,7 @@
           RESTART_CONTAINERS=true
           BEACON_CONTAINER="ephemery-beacon-lighthouse"
           VALIDATOR_CONTAINER="ephemery-validator-lighthouse"
+          EXECUTION_CONTAINER="ephemery-geth"
 
           # Colors for output
           RED='\033[0;31m'
@@ -147,41 +205,21 @@
               echo ""
           }
 
-          # Parse command line arguments
-          while [[ $# -gt 0 ]]; do
-              key="$1"
-              case $key in
-                  --verbose)
-                      VERBOSE=true
-                      shift
-                      ;;
-                  --force)
-                      FORCE=true
-                      shift
-                      ;;
-                  --dry-run)
-                      DRY_RUN=true
-                      shift
-                      ;;
-                  --no-keys)
-                      RESTORE_KEYS=false
-                      shift
-                      ;;
-                  --no-restart)
-                      RESTART_CONTAINERS=false
-                      shift
-                      ;;
-                  --help)
-                      show_usage
-                      exit 0
-                      ;;
-                  *)
-                      log "Unknown option: $1"
-                      show_usage
-                      exit 1
-                      ;;
-              esac
-          done
+          # Reset JWT secret function - ensures proper setup during network reset
+          reset_jwt_secret() {
+              log "${BLUE}Resetting JWT secret for new network...${NC}"
+              
+              # Generate new JWT secret
+              echo "0x$(openssl rand -hex 32)" > "${JWT_SECRET}"
+              chmod 600 "${JWT_SECRET}"
+              
+              # Verify the secret
+              JWT_CONTENT=$(cat "${JWT_SECRET}")
+              log "${GREEN}✓ New JWT secret generated (first 10 chars): ${JWT_CONTENT:0:10}...${NC}"
+              
+              # Return success
+              return 0
+          }
 
           # Main function to check for network reset
           check_for_reset() {

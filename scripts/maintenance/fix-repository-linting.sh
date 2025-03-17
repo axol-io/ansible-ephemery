@@ -20,6 +20,10 @@ set -e
 
 # Load common utilities if available
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 if [[ -f "${REPO_ROOT}/scripts/utilities/common.sh" ]]; then

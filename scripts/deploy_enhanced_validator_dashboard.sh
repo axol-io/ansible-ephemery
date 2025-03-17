@@ -27,11 +27,6 @@ LOG_DIR="/var/log/ephemery"
 METRICS_DIR="${BASE_DIR}/data/metrics"
 
 # ANSI color codes
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
 
 # Function to display usage information
 show_usage() {
@@ -171,6 +166,10 @@ copy_dashboard_files() {
 
   # Get the script's directory
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
   REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
   if [[ "${TARGET_HOST}" == "localhost" ]]; then
