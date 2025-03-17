@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Script to create a new client scenario based on the template
 #
@@ -24,10 +25,10 @@ TARGET_DIR="../../clients/${SCENARIO_NAME}"
 mkdir -p "${TARGET_DIR}"
 
 # Create molecule.yaml from template
-sed "s/EL_CLIENT/${EL_CLIENT}/g; s/CL_CLIENT/${CL_CLIENT}/g" "${TEMPLATE_PATH}" > "${TARGET_DIR}/molecule.yaml"
+sed "s/EL_CLIENT/${EL_CLIENT}/g; s/CL_CLIENT/${CL_CLIENT}/g" "${TEMPLATE_PATH}" >"${TARGET_DIR}/molecule.yaml"
 
 # Create minimal converge.yaml
-cat > "${TARGET_DIR}/converge.yaml" << EOF
+cat >"${TARGET_DIR}/converge.yaml" <<EOF
 ---
 - name: Converge
   hosts: all

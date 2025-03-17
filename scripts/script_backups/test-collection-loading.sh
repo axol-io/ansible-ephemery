@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Version: 1.0.0
 
 # Script to test Ansible collection loading to verify our configuration fixes
 
@@ -15,13 +16,13 @@ echo "------------------------------------"
 
 # Determine the root of the repository
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-COLLECTIONS_DIR="$REPO_ROOT/collections"
+COLLECTIONS_DIR="${REPO_ROOT}/collections"
 
-echo "Repository root: $REPO_ROOT"
-echo "Collections directory: $COLLECTIONS_DIR"
+echo "Repository root: ${REPO_ROOT}"
+echo "Collections directory: ${COLLECTIONS_DIR}"
 
 # Set environment variables for test
-export ANSIBLE_COLLECTIONS_PATH="$COLLECTIONS_DIR"
+export ANSIBLE_COLLECTIONS_PATH="${COLLECTIONS_DIR}"
 export ANSIBLE_COLLECTIONS_SCAN_SYS_PATH=false
 
 echo

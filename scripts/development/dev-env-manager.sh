@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # dev-env-manager.sh - Consolidated script for development environment management
 # Combines functionality from:
 # - setup-dev-env.sh
@@ -67,19 +68,19 @@ function setup_dev_env {
   # Parse arguments
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -s|--skip-virtualenv)
+      -s | --skip-virtualenv)
         skip_virtualenv=1
         shift
         ;;
-      -c|--skip-collections)
+      -c | --skip-collections)
         skip_collections=1
         shift
         ;;
-      -p|--skip-packages)
+      -p | --skip-packages)
         skip_packages=1
         shift
         ;;
-      -v|--verbose)
+      -v | --verbose)
         verbose=1
         shift
         ;;
@@ -94,7 +95,7 @@ function setup_dev_env {
   echo "Setting up development environment..."
 
   # Create virtual environment
-  if [ $skip_virtualenv -eq 0 ]; then
+  if [ ${skip_virtualenv} -eq 0 ]; then
     echo "Creating Python virtual environment..."
     if [ -d "venv" ]; then
       echo "Virtual environment already exists. Skipping creation."
@@ -111,7 +112,7 @@ function setup_dev_env {
   fi
 
   # Install Python packages
-  if [ $skip_packages -eq 0 ]; then
+  if [ ${skip_packages} -eq 0 ]; then
     echo "Installing required Python packages..."
     pip install -r requirements.txt
     pip install -r requirements-dev.txt
@@ -121,7 +122,7 @@ function setup_dev_env {
   fi
 
   # Install Ansible collections
-  if [ $skip_collections -eq 0 ]; then
+  if [ ${skip_collections} -eq 0 ]; then
     echo "Installing Ansible collections..."
     install_collections --force
   else
@@ -152,15 +153,15 @@ function install_collections {
   # Parse arguments
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -f|--force)
+      -f | --force)
         force=1
         shift
         ;;
-      -c|--check)
+      -c | --check)
         check=1
         shift
         ;;
-      -v|--verbose)
+      -v | --verbose)
         verbose=1
         shift
         ;;
@@ -183,35 +184,35 @@ function install_collections {
   # Extract collections from requirements.yaml
   collections=$(grep -A 100 "collections:" requirements.yaml | grep -B 100 -m 1 -e "^[a-z]*:" -e "^$" | grep "name:" | cut -d ':' -f 2 | sed 's/ //g')
 
-  if [ -z "$collections" ]; then
+  if [ -z "${collections}" ]; then
     echo "No collections found in requirements.yaml."
     exit 1
   fi
 
   # Check or install collections
-  if [ $check -eq 1 ]; then
+  if [ ${check} -eq 1 ]; then
     echo "Checking if collections are installed..."
 
-    for collection in $collections; do
-      if ansible-galaxy collection list | grep -q "$collection"; then
-        echo "✓ $collection is installed."
+    for collection in ${collections}; do
+      if ansible-galaxy collection list | grep -q "${collection}"; then
+        echo "✓ ${collection} is installed."
       else
-        echo "✗ $collection is NOT installed."
+        echo "✗ ${collection} is NOT installed."
       fi
     done
   else
     # Install collections
     installation_opts=""
-    if [ $force -eq 1 ]; then
+    if [ ${force} -eq 1 ]; then
       installation_opts="--force"
     fi
 
-    if [ $verbose -eq 1 ]; then
-      installation_opts="$installation_opts -v"
+    if [ ${verbose} -eq 1 ]; then
+      installation_opts="${installation_opts} -v"
     fi
 
     echo "Installing Ansible collections..."
-    ansible-galaxy collection install -r requirements.yaml $installation_opts
+    ansible-galaxy collection install -r requirements.yaml "${installation_opts}"
     echo "Collections installed successfully."
   fi
 }
@@ -223,7 +224,7 @@ function test_collections {
   # Parse arguments
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -v|--verbose)
+      -v | --verbose)
         verbose=1
         shift
         ;;
@@ -246,7 +247,7 @@ function test_collections {
   # Extract collections from requirements.yaml
   collections=$(grep -A 100 "collections:" requirements.yaml | grep -B 100 -m 1 -e "^[a-z]*:" -e "^$" | grep "name:" | cut -d ':' -f 2 | sed 's/ //g')
 
-  if [ -z "$collections" ]; then
+  if [ -z "${collections}" ]; then
     echo "No collections found in requirements.yaml."
     exit 1
   fi
@@ -255,25 +256,25 @@ function test_collections {
   local all_installed=1
   local missing_collections=""
 
-  for collection in $collections; do
-    if ansible-galaxy collection list | grep -q "$collection"; then
-      if [ $verbose -eq 1 ]; then
-        echo "✓ $collection is installed."
+  for collection in ${collections}; do
+    if ansible-galaxy collection list | grep -q "${collection}"; then
+      if [ ${verbose} -eq 1 ]; then
+        echo "✓ ${collection} is installed."
       fi
     else
-      echo "✗ $collection is NOT installed."
+      echo "✗ ${collection} is NOT installed."
       all_installed=0
-      missing_collections="$missing_collections\n  - $collection"
+      missing_collections="${missing_collections}\n  - ${collection}"
     fi
   done
 
   # Print summary
   echo ""
-  if [ $all_installed -eq 1 ]; then
+  if [ ${all_installed} -eq 1 ]; then
     echo "All required collections are installed."
     return 0
   else
-    echo "Missing collections:$missing_collections"
+    echo "Missing collections:${missing_collections}"
     echo ""
     echo "To install missing collections, run:"
     echo "  $0 install-collections"
@@ -290,7 +291,7 @@ fi
 COMMAND="$1"
 shift
 
-case "$COMMAND" in
+case "${COMMAND}" in
   setup)
     if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
       usage_setup
@@ -324,7 +325,7 @@ case "$COMMAND" in
     ;;
 
   *)
-    echo "Unknown command: $COMMAND"
+    echo "Unknown command: ${COMMAND}"
     usage
     exit 1
     ;;

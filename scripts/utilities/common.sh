@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Version: 1.0.0
 #
 # Script Name: common.sh
 # Description: Common utility functions for Ephemery Node scripts
@@ -20,9 +21,9 @@ set -euo pipefail
 
 # Load standardized configuration if available
 CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"
-if [ -f "$CONFIG_FILE" ]; then
-  echo "Loading configuration from $CONFIG_FILE"
-  source "$CONFIG_FILE"
+if [ -f "${CONFIG_FILE}" ]; then
+  echo "Loading configuration from ${CONFIG_FILE}"
+  source "${CONFIG_FILE}"
 else
   echo "Configuration file not found, using default paths"
   # Default paths if config not available
@@ -70,8 +71,8 @@ is_command_available() {
 check_dependencies() {
   local missing_deps=()
   for cmd in "$@"; do
-    if ! is_command_available "$cmd"; then
-      missing_deps+=("$cmd")
+    if ! is_command_available "${cmd}"; then
+      missing_deps+=("${cmd}")
     fi
   done
 
@@ -100,7 +101,7 @@ confirm_action() {
   local question="${1:-Are you sure you want to proceed?}"
   read -p "${question} [y/N] " -n 1 -r
   echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
+  if [[ ${REPLY} =~ ^[Yy]$ ]]; then
     return 0
   else
     return 1
@@ -129,10 +130,10 @@ get_script_name() {
 # -----------------------------------------------------------------------------
 get_absolute_path() {
   local path="$1"
-  if [[ "$path" = /* ]]; then
-    echo "$path"
+  if [[ "${path}" = /* ]]; then
+    echo "${path}"
   else
-    echo "$(pwd)/$path"
+    echo "$(pwd)/${path}"
   fi
 }
 

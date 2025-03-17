@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # optimize_checkpoint_sync.sh - Advanced performance optimizations for Ephemery checkpoint sync
 #
@@ -59,10 +60,10 @@ declare -A EL_OPTIMIZATIONS=(
 )
 
 # Default syncing performance thresholds
-SLOT_SYNC_RATE_THRESHOLD=50  # Slots per minute
-BLOCK_SYNC_RATE_THRESHOLD=200  # Blocks per minute
-INITIAL_CACHE_SIZE=2048  # MB
-MAX_CACHE_SIZE=8192  # MB
+SLOT_SYNC_RATE_THRESHOLD=50   # Slots per minute
+BLOCK_SYNC_RATE_THRESHOLD=200 # Blocks per minute
+INITIAL_CACHE_SIZE=2048       # MB
+MAX_CACHE_SIZE=8192           # MB
 
 # Function to display help information
 function show_help() {
@@ -93,55 +94,55 @@ function show_help() {
 function log() {
   local level="$1"
   local message="$2"
-  local color="$NC"
+  local color="${NC}"
 
-  case "$level" in
-    "INFO") color="$GREEN" ;;
-    "WARN") color="$YELLOW" ;;
-    "ERROR") color="$RED" ;;
-    "DEBUG") 
-      color="$BLUE"
-      if [[ "$VERBOSE" != "true" ]]; then
+  case "${level}" in
+    "INFO") color="${GREEN}" ;;
+    "WARN") color="${YELLOW}" ;;
+    "ERROR") color="${RED}" ;;
+    "DEBUG")
+      color="${BLUE}"
+      if [[ "${VERBOSE}" != "true" ]]; then
         return
       fi
       ;;
   esac
 
-  echo -e "${color}[$(date '+%Y-%m-%d %H:%M:%S')] [$level] $message${NC}"
+  echo -e "${color}[$(date '+%Y-%m-%d %H:%M:%S')] [${level}] ${message}${NC}"
 }
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -a|--apply)
+    -a | --apply)
       APPLY_OPTIMIZATIONS=true
       shift
       ;;
-    -b|--benchmark)
+    -b | --benchmark)
       RUN_BENCHMARK=true
       shift
       ;;
-    -c|--cache-only)
+    -c | --cache-only)
       CACHE_ONLY=true
       shift
       ;;
-    -i|--inventory)
+    -i | --inventory)
       INVENTORY_FILE="$2"
       shift 2
       ;;
-    -n|--network-only)
+    -n | --network-only)
       NETWORK_ONLY=true
       shift
       ;;
-    -r|--reset)
+    -r | --reset)
       RESET_OPTIMIZATIONS=true
       shift
       ;;
-    -v|--verbose)
+    -v | --verbose)
       VERBOSE=true
       shift
       ;;
-    -h|--help)
+    -h | --help)
       show_help
       exit 0
       ;;
@@ -154,52 +155,52 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check inventory file exists
-if [[ ! -f "$INVENTORY_FILE" ]]; then
-  log "ERROR" "Inventory file not found: $INVENTORY_FILE"
+if [[ ! -f "${INVENTORY_FILE}" ]]; then
+  log "ERROR" "Inventory file not found: ${INVENTORY_FILE}"
   exit 1
 fi
 
 # Create necessary directories
 function setup_directories() {
   log "INFO" "Setting up directories"
-  
+
   mkdir -p "${CONFIG_DIR}"
   mkdir -p "${CACHE_DIR}"
   mkdir -p "${BENCHMARK_DIR}"
-  
+
   # Create a .gitignore file in the cache directory
   if [[ ! -f "${CACHE_DIR}/.gitignore" ]]; then
-    echo "*" > "${CACHE_DIR}/.gitignore"
+    echo "*" >"${CACHE_DIR}/.gitignore"
   fi
 }
 
 # Detect the consensus and execution client being used
 function detect_clients() {
   log "INFO" "Detecting clients from inventory file"
-  
+
   # Extract client information from inventory file
-  CONSENSUS_CLIENT=$(grep -E "^consensus_client:" "$INVENTORY_FILE" | awk '{print $2}' | tr -d "'\"")
-  EXECUTION_CLIENT=$(grep -E "^execution_client:" "$INVENTORY_FILE" | awk '{print $2}' | tr -d "'\"")
-  
-  if [[ -z "$CONSENSUS_CLIENT" || -z "$EXECUTION_CLIENT" ]]; then
+  CONSENSUS_CLIENT=$(grep -E "^consensus_client:" "${INVENTORY_FILE}" | awk '{print $2}' | tr -d "'\"")
+  EXECUTION_CLIENT=$(grep -E "^execution_client:" "${INVENTORY_FILE}" | awk '{print $2}' | tr -d "'\"")
+
+  if [[ -z "${CONSENSUS_CLIENT}" || -z "${EXECUTION_CLIENT}" ]]; then
     log "ERROR" "Could not detect clients from inventory file"
     exit 1
   fi
-  
-  log "INFO" "Detected consensus client: $CONSENSUS_CLIENT"
-  log "INFO" "Detected execution client: $EXECUTION_CLIENT"
+
+  log "INFO" "Detected consensus client: ${CONSENSUS_CLIENT}"
+  log "INFO" "Detected execution client: ${EXECUTION_CLIENT}"
 }
 
 # Function to implement caching optimizations
 function apply_caching_optimizations() {
   log "INFO" "Applying caching optimizations"
-  
+
   # Create the checkpoint sync cache directory
   mkdir -p "${CACHE_DIR}/states"
   mkdir -p "${CACHE_DIR}/blocks"
-  
+
   # Create cache configuration file
-  cat > "${CONFIG_DIR}/cache_config.yaml" << EOF
+  cat >"${CONFIG_DIR}/cache_config.yaml" <<EOF
 cache:
   enabled: true
   directory: "${CACHE_DIR}"
@@ -212,79 +213,79 @@ EOF
 
   # Add cache directory bind mount to the docker-compose file
   local docker_compose_file="${REPO_ROOT}/docker-compose.yaml"
-  if [[ -f "$docker_compose_file" ]]; then
+  if [[ -f "${docker_compose_file}" ]]; then
     # Check if volume is already added
-    if ! grep -q "${CACHE_DIR}:/checkpoint-cache" "$docker_compose_file"; then
+    if ! grep -q "${CACHE_DIR}:/checkpoint-cache" "${docker_compose_file}"; then
       log "INFO" "Adding cache directory to docker-compose.yaml"
-      sed -i.bak '/^\s*volumes:/a \      - '${CACHE_DIR}':/checkpoint-cache:rw' "$docker_compose_file"
+      sed -i.bak '/^\s*volumes:/a \      - '"${CACHE_DIR}"':/checkpoint-cache:rw' "${docker_compose_file}"
     else
       log "INFO" "Cache volume already exists in docker-compose.yaml"
     fi
   else
     log "WARN" "docker-compose.yaml not found, skipping volume configuration"
   fi
-  
+
   # Add cache parameter to client configuration in inventory
   update_client_params
-  
+
   log "INFO" "Cache optimizations applied"
 }
 
 # Function to update client parameters in inventory
 function update_client_params() {
   local backup_file="${INVENTORY_FILE}.bak.$(date +%Y%m%d%H%M%S)"
-  cp "$INVENTORY_FILE" "$backup_file"
-  log "INFO" "Created backup of inventory file: $backup_file"
-  
+  cp "${INVENTORY_FILE}" "${backup_file}"
+  log "INFO" "Created backup of inventory file: ${backup_file}"
+
   # Get client-specific optimizations
-  local cl_opts="${CLIENT_OPTIMIZATIONS[$CONSENSUS_CLIENT]}"
-  local el_opts="${EL_OPTIMIZATIONS[$EXECUTION_CLIENT]}"
-  
-  if [[ -z "$cl_opts" ]]; then
-    log "WARN" "No specific optimizations found for $CONSENSUS_CLIENT"
+  local cl_opts="${CLIENT_OPTIMIZATIONS[${CONSENSUS_CLIENT}]}"
+  local el_opts="${EL_OPTIMIZATIONS[${EXECUTION_CLIENT}]}"
+
+  if [[ -z "${cl_opts}" ]]; then
+    log "WARN" "No specific optimizations found for ${CONSENSUS_CLIENT}"
     cl_opts="--checkpoint-sync-url-timeout=30"
   fi
-  
-  if [[ -z "$el_opts" ]]; then
-    log "WARN" "No specific optimizations found for $EXECUTION_CLIENT"
+
+  if [[ -z "${el_opts}" ]]; then
+    log "WARN" "No specific optimizations found for ${EXECUTION_CLIENT}"
     el_opts="--cache=4096"
   fi
-  
+
   # Add cache path for consensus client if needed
-  if [[ "$CONSENSUS_CLIENT" == "lighthouse" ]]; then
-    cl_opts="$cl_opts --checkpoint-sync-cache-path=/checkpoint-cache"
-  elif [[ "$CONSENSUS_CLIENT" == "prysm" ]]; then
-    cl_opts="$cl_opts --checkpoint-state-cache=/checkpoint-cache"
-  elif [[ "$CONSENSUS_CLIENT" == "teku" ]]; then
-    cl_opts="$cl_opts --Xdata-storage-archive-directory=/checkpoint-cache"
+  if [[ "${CONSENSUS_CLIENT}" == "lighthouse" ]]; then
+    cl_opts="${cl_opts} --checkpoint-sync-cache-path=/checkpoint-cache"
+  elif [[ "${CONSENSUS_CLIENT}" == "prysm" ]]; then
+    cl_opts="${cl_opts} --checkpoint-state-cache=/checkpoint-cache"
+  elif [[ "${CONSENSUS_CLIENT}" == "teku" ]]; then
+    cl_opts="${cl_opts} --Xdata-storage-archive-directory=/checkpoint-cache"
   fi
-  
+
   # Update inventory file with optimized parameters
   log "INFO" "Updating client parameters in inventory file"
-  
+
   # Update cl_extra_opts
-  if grep -q "cl_extra_opts:" "$INVENTORY_FILE"; then
-    sed -i.bak "s|cl_extra_opts:.*|cl_extra_opts: '$cl_opts'|g" "$INVENTORY_FILE"
+  if grep -q "cl_extra_opts:" "${INVENTORY_FILE}"; then
+    sed -i.bak "s|cl_extra_opts:.*|cl_extra_opts: '${cl_opts}'|g" "${INVENTORY_FILE}"
   else
-    echo "cl_extra_opts: '$cl_opts'" >> "$INVENTORY_FILE"
+    echo "cl_extra_opts: '${cl_opts}'" >>"${INVENTORY_FILE}"
   fi
-  
+
   # Update el_extra_opts
-  if grep -q "el_extra_opts:" "$INVENTORY_FILE"; then
-    sed -i.bak "s|el_extra_opts:.*|el_extra_opts: '$el_opts'|g" "$INVENTORY_FILE"
+  if grep -q "el_extra_opts:" "${INVENTORY_FILE}"; then
+    sed -i.bak "s|el_extra_opts:.*|el_extra_opts: '${el_opts}'|g" "${INVENTORY_FILE}"
   else
-    echo "el_extra_opts: '$el_opts'" >> "$INVENTORY_FILE"
+    echo "el_extra_opts: '${el_opts}'" >>"${INVENTORY_FILE}"
   fi
-  
+
   log "INFO" "Client parameters updated in inventory file"
 }
 
 # Function to implement network request optimizations
 function apply_network_optimizations() {
   log "INFO" "Applying network request optimizations"
-  
+
   # Create network optimization configuration file
-  cat > "${CONFIG_DIR}/network_config.yaml" << EOF
+  cat >"${CONFIG_DIR}/network_config.yaml" <<EOF
 network:
   max_concurrent_requests: 64
   request_timeout_seconds: 30
@@ -299,78 +300,78 @@ EOF
 
   # Set optimal timeout and request batch size in inventory
   local backup_file="${INVENTORY_FILE}.bak.$(date +%Y%m%d%H%M%S)"
-  cp "$INVENTORY_FILE" "$backup_file"
-  log "INFO" "Created backup of inventory file: $backup_file"
-  
+  cp "${INVENTORY_FILE}" "${backup_file}"
+  log "INFO" "Created backup of inventory file: ${backup_file}"
+
   # Update use_parallel_downloads in inventory if it exists
-  if grep -q "use_parallel_downloads:" "$INVENTORY_FILE"; then
-    sed -i.bak "s/use_parallel_downloads:.*/use_parallel_downloads: true/" "$INVENTORY_FILE"
+  if grep -q "use_parallel_downloads:" "${INVENTORY_FILE}"; then
+    sed -i.bak "s/use_parallel_downloads:.*/use_parallel_downloads: true/" "${INVENTORY_FILE}"
   else
-    echo "use_parallel_downloads: true" >> "$INVENTORY_FILE"
+    echo "use_parallel_downloads: true" >>"${INVENTORY_FILE}"
   fi
-  
+
   # Ensure check/test multiple URLs is configured
-  if grep -q "test_multiple_checkpoint_urls:" "$INVENTORY_FILE"; then
-    sed -i.bak "s/test_multiple_checkpoint_urls:.*/test_multiple_checkpoint_urls: true/" "$INVENTORY_FILE"
+  if grep -q "test_multiple_checkpoint_urls:" "${INVENTORY_FILE}"; then
+    sed -i.bak "s/test_multiple_checkpoint_urls:.*/test_multiple_checkpoint_urls: true/" "${INVENTORY_FILE}"
   else
-    echo "test_multiple_checkpoint_urls: true" >> "$INVENTORY_FILE"
+    echo "test_multiple_checkpoint_urls: true" >>"${INVENTORY_FILE}"
   fi
-  
+
   log "INFO" "Network optimizations applied"
 }
 
 # Function to reset optimizations
 function reset_optimizations() {
   log "INFO" "Resetting checkpoint sync optimizations"
-  
+
   # Restore inventory file from backup if exists
   local latest_backup=$(ls -t "${INVENTORY_FILE}.bak."* 2>/dev/null | head -n 1)
-  if [[ -n "$latest_backup" ]]; then
-    cp "$latest_backup" "$INVENTORY_FILE"
-    log "INFO" "Restored inventory file from backup: $latest_backup"
+  if [[ -n "${latest_backup}" ]]; then
+    cp "${latest_backup}" "${INVENTORY_FILE}"
+    log "INFO" "Restored inventory file from backup: ${latest_backup}"
   else
     log "WARN" "No backup found, manually removing optimization settings"
-    
+
     # Remove cache from docker-compose
     local docker_compose_file="${REPO_ROOT}/docker-compose.yaml"
-    if [[ -f "$docker_compose_file" ]]; then
-      sed -i.bak "/checkpoint-cache/d" "$docker_compose_file"
+    if [[ -f "${docker_compose_file}" ]]; then
+      sed -i.bak "/checkpoint-cache/d" "${docker_compose_file}"
     fi
-    
+
     # Reset client parameters in inventory
-    if grep -q "cl_extra_opts:" "$INVENTORY_FILE"; then
-      sed -i.bak "s|cl_extra_opts:.*|cl_extra_opts: ''|g" "$INVENTORY_FILE"
+    if grep -q "cl_extra_opts:" "${INVENTORY_FILE}"; then
+      sed -i.bak "s|cl_extra_opts:.*|cl_extra_opts: ''|g" "${INVENTORY_FILE}"
     fi
-    
-    if grep -q "el_extra_opts:" "$INVENTORY_FILE"; then
-      sed -i.bak "s|el_extra_opts:.*|el_extra_opts: ''|g" "$INVENTORY_FILE"
+
+    if grep -q "el_extra_opts:" "${INVENTORY_FILE}"; then
+      sed -i.bak "s|el_extra_opts:.*|el_extra_opts: ''|g" "${INVENTORY_FILE}"
     fi
   fi
-  
+
   # Optionally clean up cache files
   read -p "Do you want to delete the cache files? (y/N) " -n 1 -r
   echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
+  if [[ ${REPLY} =~ ^[Yy]$ ]]; then
     rm -rf "${CACHE_DIR:?}/"*
     log "INFO" "Cache files deleted"
   fi
-  
+
   log "INFO" "Optimizations have been reset"
 }
 
 # Function to benchmark different optimization strategies
 function run_benchmark_tests() {
   log "INFO" "Starting benchmark of different optimization strategies"
-  
+
   local timestamp=$(date +"%Y%m%d_%H%M%S")
   local benchmark_results="${BENCHMARK_DIR}/benchmark_${timestamp}.md"
-  
+
   # Create benchmark results file
-  cat > "$benchmark_results" << EOF
+  cat >"${benchmark_results}" <<EOF
 # Checkpoint Sync Optimization Benchmark Results
 Date: $(date)
-Consensus Client: $CONSENSUS_CLIENT
-Execution Client: $EXECUTION_CLIENT
+Consensus Client: ${CONSENSUS_CLIENT}
+Execution Client: ${EXECUTION_CLIENT}
 
 ## Test Configurations
 
@@ -383,16 +384,16 @@ EOF
     ["network"]="Network request optimizations only"
     ["combined"]="Combined optimizations"
   )
-  
+
   # Add configuration details to results
   for config in "${!BENCHMARK_CONFIGS[@]}"; do
-    echo "### ${config}" >> "$benchmark_results"
-    echo "Description: ${BENCHMARK_CONFIGS[$config]}" >> "$benchmark_results"
-    echo "" >> "$benchmark_results"
+    echo "### ${config}" >>"${benchmark_results}"
+    echo "Description: ${BENCHMARK_CONFIGS[${config}]}" >>"${benchmark_results}"
+    echo "" >>"${benchmark_results}"
   done
-  
+
   # Add results table header
-  cat >> "$benchmark_results" << EOF
+  cat >>"${benchmark_results}" <<EOF
 ## Results
 
 | Configuration | Sync Time (min) | Peak Memory (MB) | Avg CPU (%) | Slot Sync Rate | Block Sync Rate |
@@ -400,16 +401,16 @@ EOF
 EOF
 
   # Backup original inventory
-  cp "$INVENTORY_FILE" "${INVENTORY_FILE}.benchmark.bak"
-  
+  cp "${INVENTORY_FILE}" "${INVENTORY_FILE}.benchmark.bak"
+
   # Run each benchmark configuration
   for config in "${!BENCHMARK_CONFIGS[@]}"; do
-    log "INFO" "Running benchmark for configuration: $config"
-    
+    log "INFO" "Running benchmark for configuration: ${config}"
+
     # Reset to baseline
-    cp "${INVENTORY_FILE}.benchmark.bak" "$INVENTORY_FILE"
-    
-    case "$config" in
+    cp "${INVENTORY_FILE}.benchmark.bak" "${INVENTORY_FILE}"
+
+    case "${config}" in
       "baseline")
         # No optimizations
         ;;
@@ -433,50 +434,50 @@ EOF
         apply_network_optimizations
         ;;
     esac
-    
+
     # Run the test via the test_checkpoint_sync.sh script if available
     local sync_time="N/A"
     local peak_memory="N/A"
     local avg_cpu="N/A"
     local slot_sync_rate="N/A"
     local block_sync_rate="N/A"
-    
+
     if [[ -f "${REPO_ROOT}/scripts/monitoring/test_checkpoint_sync.sh" ]]; then
-      log "INFO" "Running test_checkpoint_sync.sh for configuration: $config"
+      log "INFO" "Running test_checkpoint_sync.sh for configuration: ${config}"
       local test_output="${BENCHMARK_DIR}/test_${config}_${timestamp}.log"
-      
+
       # Run the test and capture output
-      "${REPO_ROOT}/scripts/monitoring/test_checkpoint_sync.sh" > "$test_output" 2>&1
-      
+      "${REPO_ROOT}/scripts/monitoring/test_checkpoint_sync.sh" >"${test_output}" 2>&1
+
       # Extract metrics
-      if [[ -f "$test_output" ]]; then
-        sync_time=$(grep "Total test duration:" "$test_output" | awk '{print $4}')
-        peak_memory=$(grep -a "Peak memory usage:" "$test_output" | awk '{print $4}')
-        avg_cpu=$(grep -a "Average CPU usage:" "$test_output" | awk '{print $4}')
-        slot_sync_rate=$(grep -a "Slot sync rate:" "$test_output" | awk '{print $4}')
-        block_sync_rate=$(grep -a "Block sync rate:" "$test_output" | awk '{print $4}')
+      if [[ -f "${test_output}" ]]; then
+        sync_time=$(grep "Total test duration:" "${test_output}" | awk '{print $4}')
+        peak_memory=$(grep -a "Peak memory usage:" "${test_output}" | awk '{print $4}')
+        avg_cpu=$(grep -a "Average CPU usage:" "${test_output}" | awk '{print $4}')
+        slot_sync_rate=$(grep -a "Slot sync rate:" "${test_output}" | awk '{print $4}')
+        block_sync_rate=$(grep -a "Block sync rate:" "${test_output}" | awk '{print $4}')
       fi
     else
       log "WARN" "test_checkpoint_sync.sh not found, skipping actual sync test"
       # Simulate results for demonstration
-      sync_time="$(( 30 + RANDOM % 30 ))"
-      peak_memory="$(( 2000 + RANDOM % 1000 ))"
-      avg_cpu="$(( 30 + RANDOM % 50 ))"
-      slot_sync_rate="$(( 40 + RANDOM % 40 ))"
-      block_sync_rate="$(( 150 + RANDOM % 100 ))"
+      sync_time="$((30 + RANDOM % 30))"
+      peak_memory="$((2000 + RANDOM % 1000))"
+      avg_cpu="$((30 + RANDOM % 50))"
+      slot_sync_rate="$((40 + RANDOM % 40))"
+      block_sync_rate="$((150 + RANDOM % 100))"
     fi
-    
+
     # Add results to the table
-    echo "| $config | $sync_time | $peak_memory | $avg_cpu | $slot_sync_rate | $block_sync_rate |" >> "$benchmark_results"
-    
-    log "INFO" "Completed benchmark for configuration: $config"
+    echo "| ${config} | ${sync_time} | ${peak_memory} | ${avg_cpu} | ${slot_sync_rate} | ${block_sync_rate} |" >>"${benchmark_results}"
+
+    log "INFO" "Completed benchmark for configuration: ${config}"
   done
-  
+
   # Restore original inventory
-  cp "${INVENTORY_FILE}.benchmark.bak" "$INVENTORY_FILE"
-  
+  cp "${INVENTORY_FILE}.benchmark.bak" "${INVENTORY_FILE}"
+
   # Add recommendations based on results
-  cat >> "$benchmark_results" << EOF
+  cat >>"${benchmark_results}" <<EOF
 
 ## Recommendations
 
@@ -485,21 +486,21 @@ Based on the benchmark results, the recommended optimization strategy is:
 EOF
 
   # Determine best configuration based on sync time (this is simplified and would be more sophisticated in a real implementation)
-  local best_config="combined"  # Default recommendation
-  echo "- Use the **${best_config}** configuration for optimal performance" >> "$benchmark_results"
-  echo "- Ensure checkpoint sync URL is fast and reliable" >> "$benchmark_results"
-  echo "- Set cache size based on available system memory" >> "$benchmark_results"
-  
-  log "INFO" "Benchmark completed. Results saved to: $benchmark_results"
-  echo -e "${GREEN}Benchmark results: $benchmark_results${NC}"
+  local best_config="combined" # Default recommendation
+  echo "- Use the **${best_config}** configuration for optimal performance" >>"${benchmark_results}"
+  echo "- Ensure checkpoint sync URL is fast and reliable" >>"${benchmark_results}"
+  echo "- Set cache size based on available system memory" >>"${benchmark_results}"
+
+  log "INFO" "Benchmark completed. Results saved to: ${benchmark_results}"
+  echo -e "${GREEN}Benchmark results: ${benchmark_results}${NC}"
 }
 
 # Function to apply client-specific optimizations
 function apply_client_specific_optimizations() {
-  log "INFO" "Applying client-specific optimizations for $CONSENSUS_CLIENT and $EXECUTION_CLIENT"
-  
+  log "INFO" "Applying client-specific optimizations for ${CONSENSUS_CLIENT} and ${EXECUTION_CLIENT}"
+
   # Add client-specific optimizations based on detected clients
-  case "$CONSENSUS_CLIENT" in
+  case "${CONSENSUS_CLIENT}" in
     "lighthouse")
       log "DEBUG" "Applying Lighthouse-specific optimizations"
       # Additional lighthouse optimizations would go here
@@ -513,11 +514,11 @@ function apply_client_specific_optimizations() {
       # Additional teku optimizations would go here
       ;;
     *)
-      log "WARN" "No specific optimizations available for $CONSENSUS_CLIENT"
+      log "WARN" "No specific optimizations available for ${CONSENSUS_CLIENT}"
       ;;
   esac
-  
-  case "$EXECUTION_CLIENT" in
+
+  case "${EXECUTION_CLIENT}" in
     "geth")
       log "DEBUG" "Applying Geth-specific optimizations"
       # Additional geth optimizations would go here
@@ -527,7 +528,7 @@ function apply_client_specific_optimizations() {
       # Additional nethermind optimizations would go here
       ;;
     *)
-      log "WARN" "No specific optimizations available for $EXECUTION_CLIENT"
+      log "WARN" "No specific optimizations available for ${EXECUTION_CLIENT}"
       ;;
   esac
 }
@@ -535,31 +536,31 @@ function apply_client_specific_optimizations() {
 # Main function
 function main() {
   log "INFO" "Starting Checkpoint Sync Performance Optimizer"
-  
+
   # Setup directories
   setup_directories
-  
+
   # Detect clients
   detect_clients
-  
+
   # Handle reset option first
-  if [[ "$RESET_OPTIMIZATIONS" == "true" ]]; then
+  if [[ "${RESET_OPTIMIZATIONS}" == "true" ]]; then
     reset_optimizations
     exit 0
   fi
-  
+
   # Run benchmarks if requested
-  if [[ "$RUN_BENCHMARK" == "true" ]]; then
+  if [[ "${RUN_BENCHMARK}" == "true" ]]; then
     run_benchmark_tests
     exit 0
   fi
-  
+
   # Apply optimizations if requested
-  if [[ "$APPLY_OPTIMIZATIONS" == "true" ]]; then
-    if [[ "$CACHE_ONLY" == "true" ]]; then
+  if [[ "${APPLY_OPTIMIZATIONS}" == "true" ]]; then
+    if [[ "${CACHE_ONLY}" == "true" ]]; then
       log "INFO" "Applying cache optimizations only"
       apply_caching_optimizations
-    elif [[ "$NETWORK_ONLY" == "true" ]]; then
+    elif [[ "${NETWORK_ONLY}" == "true" ]]; then
       log "INFO" "Applying network optimizations only"
       apply_network_optimizations
     else
@@ -568,13 +569,13 @@ function main() {
       apply_network_optimizations
       apply_client_specific_optimizations
     fi
-    
+
     log "INFO" "Optimizations applied successfully"
     log "INFO" "To apply these changes, restart your node services"
     log "INFO" "Recommended: Run 'docker-compose down && docker-compose up -d' in the project root"
-    
+
     # Suggest running a benchmark
-    if [[ "$RUN_BENCHMARK" != "true" ]]; then
+    if [[ "${RUN_BENCHMARK}" != "true" ]]; then
       log "INFO" "Consider running a benchmark to measure the impact: $0 --benchmark"
     fi
   else
@@ -584,4 +585,4 @@ function main() {
 }
 
 # Run the main function
-main 
+main

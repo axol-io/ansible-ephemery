@@ -114,15 +114,15 @@
                 const lighthouseStatus = data.lighthouse.is_syncing ? 'Syncing' : 'Synced';
                 document.getElementById('lighthouse-status').textContent = lighthouseStatus;
                 document.getElementById('lighthouse-status').className = 'status-value ' + (data.lighthouse.is_syncing ? 'syncing' : 'synced');
-                
+
                 document.getElementById('lighthouse-head-slot').textContent = data.lighthouse.head_slot;
                 document.getElementById('lighthouse-sync-distance').textContent = data.lighthouse.sync_distance;
-                
+
                 // Update Geth status
                 const gethStatus = data.geth.is_syncing ? 'Syncing' : 'Synced';
                 document.getElementById('geth-status').textContent = gethStatus;
                 document.getElementById('geth-status').className = 'status-value ' + (data.geth.is_syncing ? 'syncing' : 'synced');
-                
+
                 document.getElementById('geth-current-block').textContent = data.geth.current_block;
                 document.getElementById('geth-highest-block').textContent = data.geth.highest_block;
             })
@@ -130,13 +130,13 @@
                 console.error('Error fetching status:', error);
             });
     }
-    
+
     // Function to update charts
     function updateCharts(period = 'day') {
         let days = 1;
         if (period === 'week') days = 7;
         if (period === 'month') days = 30;
-        
+
         fetch(`/api/history?days=${days}`)
             .then(response => response.json())
             .then(data => {
@@ -146,13 +146,13 @@
                 const lighthouseSyncDistances = data.map(entry => entry.lighthouse.sync_distance);
                 const gethCurrentBlocks = data.map(entry => entry.geth.current_block);
                 const gethHighestBlocks = data.map(entry => entry.geth.highest_block);
-                
+
                 // Update Sync Progress Chart
                 updateSyncChart(timestamps, lighthouseHeadSlots, lighthouseSyncDistances, gethCurrentBlocks, gethHighestBlocks);
-                
+
                 // Update Lighthouse Chart
                 updateLighthouseChart(timestamps, lighthouseHeadSlots, lighthouseSyncDistances);
-                
+
                 // Update Geth Chart
                 updateGethChart(timestamps, gethCurrentBlocks, gethHighestBlocks);
             })
@@ -160,15 +160,15 @@
                 console.error('Error fetching history:', error);
             });
     }
-    
+
     // Function to update Sync Progress Chart
     function updateSyncChart(timestamps, lighthouseHeadSlots, lighthouseSyncDistances, gethCurrentBlocks, gethHighestBlocks) {
         const ctx = document.getElementById('sync-chart').getContext('2d');
-        
+
         if (window.syncChart) {
             window.syncChart.destroy();
         }
-        
+
         window.syncChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -214,15 +214,15 @@
             }
         });
     }
-    
+
     // Function to update Lighthouse Chart
     function updateLighthouseChart(timestamps, headSlots, syncDistances) {
         const ctx = document.getElementById('lighthouse-chart').getContext('2d');
-        
+
         if (window.lighthouseChart) {
             window.lighthouseChart.destroy();
         }
-        
+
         window.lighthouseChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -281,15 +281,15 @@
             }
         });
     }
-    
+
     // Function to update Geth Chart
     function updateGethChart(timestamps, currentBlocks, highestBlocks) {
         const ctx = document.getElementById('geth-chart').getContext('2d');
-        
+
         if (window.gethChart) {
             window.gethChart.destroy();
         }
-        
+
         window.gethChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -331,13 +331,13 @@
             }
         });
     }
-    
+
     // Event listeners
     document.addEventListener('DOMContentLoaded', function() {
         // Initial update
         updateStatus();
         updateCharts();
-        
+
         // Set up period buttons
         document.querySelectorAll('.btn-group[role="group"] .btn').forEach(button => {
             button.addEventListener('click', function() {
@@ -346,12 +346,12 @@
                     btn.classList.remove('active');
                 });
                 this.classList.add('active');
-                
+
                 // Update charts with selected period
                 updateCharts(this.getAttribute('data-period'));
             });
         });
-        
+
         // Set up auto-refresh
         setInterval(updateStatus, 30000); // Update status every 30 seconds
         setInterval(() => {

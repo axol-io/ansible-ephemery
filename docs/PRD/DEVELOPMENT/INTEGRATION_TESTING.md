@@ -8,7 +8,7 @@ The integration testing framework provides automated testing capabilities for va
 
 ## Key Features
 
-- **Comprehensive Test Suites**: 
+- **Comprehensive Test Suites**:
   - Validator setup tests
   - Sync functionality tests
   - Performance benchmarking
@@ -176,4 +176,4 @@ Planned enhancements to the integration testing framework include:
 
 ## Conclusion
 
-The integration testing framework provides a comprehensive solution for testing Ephemery validator operations across different client combinations. By automating these tests, we can ensure consistent validator performance and reliability across different environments and configurations. 
+The integration testing framework provides a comprehensive solution for testing Ephemery validator operations across different client combinations. By automating these tests, we can ensure consistent validator performance and reliability across different environments and configurations.

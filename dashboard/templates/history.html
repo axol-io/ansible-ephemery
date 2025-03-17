@@ -71,7 +71,7 @@
     function loadHistoryData(period = 'day') {
         let limit = 100;
         let days = 0;
-        
+
         if (period === 'day') {
             days = 1;
         } else if (period === 'week') {
@@ -79,14 +79,14 @@
         } else if (period === 'month') {
             days = 30;
         }
-        
+
         let url = '/api/history';
         if (days > 0) {
             url += `?days=${days}`;
         } else if (period === 'all') {
             url += '?limit=1000';
         }
-        
+
         fetch(url)
             .then(response => response.json())
             .then(data => {
@@ -97,17 +97,17 @@
                 console.error('Error loading history data:', error);
             });
     }
-    
+
     // Function to update history chart
     function updateHistoryChart(data, period) {
         const ctx = document.getElementById('history-chart').getContext('2d');
-        
+
         // Process data for chart
         const timestamps = data.map(entry => entry.timestamp);
         const lighthouseHeadSlots = data.map(entry => entry.lighthouse.head_slot);
         const lighthouseSyncDistances = data.map(entry => entry.lighthouse.sync_distance);
         const gethCurrentBlocks = data.map(entry => entry.geth.current_block);
-        
+
         // Determine time unit based on period
         let timeUnit = 'hour';
         if (period === 'week') {
@@ -115,11 +115,11 @@
         } else if (period === 'month' || period === 'all') {
             timeUnit = 'week';
         }
-        
+
         if (window.historyChart) {
             window.historyChart.destroy();
         }
-        
+
         window.historyChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -202,51 +202,51 @@
             }
         });
     }
-    
+
     // Function to update history table
     function updateHistoryTable(data) {
         const tableBody = document.getElementById('history-table-body');
         tableBody.innerHTML = '';
-        
+
         // Sort data by timestamp (newest first)
         data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
+
         // Take only the first 50 entries to avoid overwhelming the table
         const displayData = data.slice(0, 50);
-        
+
         displayData.forEach(entry => {
             const row = document.createElement('tr');
-            
+
             // Format timestamp
             const timestamp = new Date(entry.timestamp);
             const formattedTimestamp = timestamp.toLocaleString();
-            
+
             // Create cells
             const timestampCell = document.createElement('td');
             timestampCell.textContent = formattedTimestamp;
-            
+
             const lighthouseStatusCell = document.createElement('td');
             const lighthouseStatus = entry.lighthouse.is_syncing ? 'Syncing' : 'Synced';
             lighthouseStatusCell.textContent = lighthouseStatus;
             lighthouseStatusCell.className = entry.lighthouse.is_syncing ? 'text-warning' : 'text-success';
-            
+
             const headSlotCell = document.createElement('td');
             headSlotCell.textContent = entry.lighthouse.head_slot;
-            
+
             const syncDistanceCell = document.createElement('td');
             syncDistanceCell.textContent = entry.lighthouse.sync_distance;
-            
+
             const gethStatusCell = document.createElement('td');
             const gethStatus = entry.geth.is_syncing ? 'Syncing' : 'Synced';
             gethStatusCell.textContent = gethStatus;
             gethStatusCell.className = entry.geth.is_syncing ? 'text-warning' : 'text-success';
-            
+
             const currentBlockCell = document.createElement('td');
             currentBlockCell.textContent = entry.geth.current_block;
-            
+
             const highestBlockCell = document.createElement('td');
             highestBlockCell.textContent = entry.geth.highest_block;
-            
+
             // Add cells to row
             row.appendChild(timestampCell);
             row.appendChild(lighthouseStatusCell);
@@ -255,17 +255,17 @@
             row.appendChild(gethStatusCell);
             row.appendChild(currentBlockCell);
             row.appendChild(highestBlockCell);
-            
+
             // Add row to table
             tableBody.appendChild(row);
         });
     }
-    
+
     // Event listeners
     document.addEventListener('DOMContentLoaded', function() {
         // Initial load
         loadHistoryData();
-        
+
         // Set up period buttons
         document.querySelectorAll('.btn-group[role="group"] .btn').forEach(button => {
             button.addEventListener('click', function() {
@@ -274,12 +274,12 @@
                     btn.classList.remove('active');
                 });
                 this.classList.add('active');
-                
+
                 // Load data for selected period
                 loadHistoryData(this.getAttribute('data-period'));
             });
         });
-        
+
         // Set up refresh button
         document.getElementById('refresh-history').addEventListener('click', function() {
             const activePeriod = document.querySelector('.btn-group[role="group"] .btn.active').getAttribute('data-period');

@@ -34,6 +34,13 @@ repos:
         pass_filenames: false
         types: [yaml]
         description: Checks that YAML files use the correct extension (.yaml except in molecule/ directory)
+      - id: check-unencrypted-secrets
+        name: Check for unencrypted secrets
+        entry: ./scripts/check-unencrypted-secrets.sh
+        language: script
+        pass_filenames: false
+        types: [yaml]
+        description: Checks for unencrypted secrets in YAML files
       - id: install-ansible-collections
         name: Install Ansible Collections
         entry: ./scripts/install-collections.sh

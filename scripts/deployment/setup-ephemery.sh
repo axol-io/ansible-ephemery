@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # Ephemery Testnet Node Setup Script
 # This script automates the setup of an Ephemery testnet node with Electra/Pectra support
 
@@ -14,44 +15,44 @@ echo -e "${GREEN}=======================================${NC}"
 echo ""
 
 # Check if running as root
-if [[ $EUID -ne 0 ]]; then
-   echo -e "${RED}This script must be run as root${NC}"
-   exit 1
+if [[ ${EUID} -ne 0 ]]; then
+  echo -e "${RED}This script must be run as root${NC}"
+  exit 1
 fi
 
 # Check Docker
 echo -e "\n${YELLOW}Checking Docker...${NC}"
-if command -v docker &> /dev/null; then
-    echo -e "${GREEN}✓ Docker is installed${NC}"
+if command -v docker &>/dev/null; then
+  echo -e "${GREEN}✓ Docker is installed${NC}"
 else
-    echo -e "${RED}✗ Docker is not installed${NC}"
-    echo -e "${YELLOW}Installing Docker...${NC}"
+  echo -e "${RED}✗ Docker is not installed${NC}"
+  echo -e "${YELLOW}Installing Docker...${NC}"
 
-    # Update package lists
-    apt-get update
+  # Update package lists
+  apt-get update
 
-    # Install prerequisites
-    apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+  # Install prerequisites
+  apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 
-    # Add Docker's official GPG key
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+  # Add Docker's official GPG key
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 
-    # Add Docker repository
-    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  # Add Docker repository
+  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
-    # Update package lists again
-    apt-get update
+  # Update package lists again
+  apt-get update
 
-    # Install Docker
-    apt-get install -y docker-ce
+  # Install Docker
+  apt-get install -y docker-ce
 
-    # Verify Docker is installed
-    if command -v docker &> /dev/null; then
-        echo -e "${GREEN}✓ Docker installed successfully${NC}"
-    else
-        echo -e "${RED}✗ Docker installation failed. Please install Docker manually.${NC}"
-        exit 1
-    fi
+  # Verify Docker is installed
+  if command -v docker &>/dev/null; then
+    echo -e "${GREEN}✓ Docker installed successfully${NC}"
+  else
+    echo -e "${RED}✗ Docker installation failed. Please install Docker manually.${NC}"
+    exit 1
+  fi
 fi
 
 # Create directory structure
@@ -64,19 +65,19 @@ echo -e "${GREEN}✓ Directory structure created${NC}"
 
 # Generate JWT token
 echo -e "\n${YELLOW}Generating JWT token...${NC}"
-openssl rand -hex 32 > /opt/ephemery/jwt.hex
+openssl rand -hex 32 >/opt/ephemery/jwt.hex
 echo -e "${GREEN}✓ JWT token generated${NC}"
 
 # Download the Ephemery network configuration
 echo -e "\n${YELLOW}Downloading Ephemery network configuration...${NC}"
 curl -s -L https://github.com/ephemery-testnet/ephemery-genesis/releases/download/ephemery-143/testnet-all.tar.gz -o /tmp/testnet-all.tar.gz
 if [ $? -eq 0 ]; then
-    tar -xzf /tmp/testnet-all.tar.gz -C /opt/ephemery/config/ephemery_network
-    rm /tmp/testnet-all.tar.gz
-    echo -e "${GREEN}✓ Network configuration downloaded${NC}"
+  tar -xzf /tmp/testnet-all.tar.gz -C /opt/ephemery/config/ephemery_network
+  rm /tmp/testnet-all.tar.gz
+  echo -e "${GREEN}✓ Network configuration downloaded${NC}"
 else
-    echo -e "${RED}✗ Failed to download network configuration${NC}"
-    echo -e "${YELLOW}Please download the Ephemery network configuration manually${NC}"
+  echo -e "${RED}✗ Failed to download network configuration${NC}"
+  echo -e "${YELLOW}Please download the Ephemery network configuration manually${NC}"
 fi
 
 # Pull Docker images
@@ -108,10 +109,10 @@ docker run -d --name ephemery-geth \
   --authrpc.addr=0.0.0.0
 
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ Geth started successfully${NC}"
+  echo -e "${GREEN}✓ Geth started successfully${NC}"
 else
-    echo -e "${RED}✗ Failed to start Geth${NC}"
-    exit 1
+  echo -e "${RED}✗ Failed to start Geth${NC}"
+  exit 1
 fi
 
 # Wait for Geth to initialize
@@ -147,10 +148,10 @@ docker run -d --name ephemery-lighthouse \
   --allow-insecure-genesis-sync
 
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ Lighthouse started successfully${NC}"
+  echo -e "${GREEN}✓ Lighthouse started successfully${NC}"
 else
-    echo -e "${RED}✗ Failed to start Lighthouse${NC}"
-    exit 1
+  echo -e "${RED}✗ Failed to start Lighthouse${NC}"
+  exit 1
 fi
 
 # Wait for Lighthouse to initialize
@@ -172,11 +173,11 @@ docker run -d --name ephemery-validator-lighthouse \
   --testnet-dir=/ephemery_config
 
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ Validator started successfully${NC}"
+  echo -e "${GREEN}✓ Validator started successfully${NC}"
 else
-    echo -e "${RED}✗ Failed to start Validator${NC}"
-    # Don't exit on validator failure, as it's not critical
-    echo -e "${YELLOW}You can start the validator later once you have imported validator keys${NC}"
+  echo -e "${RED}✗ Failed to start Validator${NC}"
+  # Don't exit on validator failure, as it's not critical
+  echo -e "${YELLOW}You can start the validator later once you have imported validator keys${NC}"
 fi
 
 # Display status

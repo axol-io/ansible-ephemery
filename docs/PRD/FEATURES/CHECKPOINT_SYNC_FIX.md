@@ -121,8 +121,8 @@ The enhanced checkpoint sync system supports the following options:
 
 The system automatically tests the following checkpoint sync URLs:
 
-- https://checkpoint-sync.holesky.ethpandaops.io
-- https://beaconstate-holesky.chainsafe.io
+- https://checkpoint-sync.ephemery.ethpandaops.io
+- https://beaconstate-ephemery.chainsafe.io
 - https://checkpoint-sync.ephemery.dev
 - https://checkpoint.ephemery.eth.limo
 - https://checkpoint-sync.mainnet.ethpandaops.io
@@ -170,7 +170,7 @@ If inventory file updates aren't reflected in the configuration:
 
 3. **Test Checkpoint URL Directly**:
    ```bash
-   curl -s -I https://checkpoint-sync.holesky.ethpandaops.io/eth/v1/beacon/states/finalized
+   curl -s -I https://checkpoint-sync.ephemery.ethpandaops.io/eth/v1/beacon/states/finalized
    ```
 
 ## Advanced Configuration
@@ -181,8 +181,8 @@ You can modify the list of checkpoint URLs in the script to include your own tru
 
 ```bash
 CHECKPOINT_URLS=(
-  "https://checkpoint-sync.holesky.ethpandaops.io"
-  "https://beaconstate-holesky.chainsafe.io"
+  "https://checkpoint-sync.ephemery.ethpandaops.io"
+  "https://beaconstate-ephemery.chainsafe.io"
   "https://checkpoint-sync.ephemery.dev"
   "https://checkpoint.ephemery.eth.limo"
   "https://your-custom-checkpoint-url.example.com"

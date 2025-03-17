@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 
 # diagnose_output.sh
 # A script to diagnose and fix common Ansible output issues
@@ -25,7 +26,7 @@ fi
 
 # Check current callback plugin
 current_callback=$(grep "stdout_callback" ansible.cfg | awk -F "=" '{print $2}' | tr -d ' ')
-echo -e "${BLUE}Current stdout callback:${NC} $current_callback"
+echo -e "${BLUE}Current stdout callback:${NC} ${current_callback}"
 
 # Check if our scripts exist
 filter_script_exists=false
@@ -53,36 +54,36 @@ else
 fi
 
 # Check if scripts are executable
-if [ "$filter_script_exists" = true ] && [ ! -x "scripts/filter_ansible_output.sh" ]; then
+if [ "${filter_script_exists}" = true ] && [ ! -x "scripts/filter_ansible_output.sh" ]; then
   echo -e "${YELLOW}! Filter script is not executable${NC}"
   echo "  Run: chmod +x scripts/filter_ansible_output.sh"
 fi
 
-if [ "$run_script_exists" = true ] && [ ! -x "scripts/run_ansible.sh" ]; then
+if [ "${run_script_exists}" = true ] && [ ! -x "scripts/run_ansible.sh" ]; then
   echo -e "${YELLOW}! Run script is not executable${NC}"
   echo "  Run: chmod +x scripts/run_ansible.sh"
 fi
 
-if [ "$monitor_script_exists" = true ] && [ ! -x "scripts/monitor_logs.sh" ]; then
+if [ "${monitor_script_exists}" = true ] && [ ! -x "scripts/monitor_logs.sh" ]; then
   echo -e "${YELLOW}! Monitor logs script is not executable${NC}"
   echo "  Run: chmod +x scripts/monitor_logs.sh"
 fi
 
 # Check logs directory
 logs_dir="${EPHEMERY_LOGS_DIR:-/tmp/ephemery-test/logs}"
-if [ -d "$logs_dir" ]; then
-  echo -e "${GREEN}✓ Logs directory found:${NC} $logs_dir"
-  log_count=$(find "$logs_dir" -type f -name "*.log" 2>/dev/null | wc -l)
-  echo "  $log_count log files found"
+if [ -d "${logs_dir}" ]; then
+  echo -e "${GREEN}✓ Logs directory found:${NC} ${logs_dir}"
+  log_count=$(find "${logs_dir}" -type f -name "*.log" 2>/dev/null | wc -l)
+  echo "  ${log_count} log files found"
 else
-  echo -e "${YELLOW}! Logs directory not found:${NC} $logs_dir"
+  echo -e "${YELLOW}! Logs directory not found:${NC} ${logs_dir}"
   echo "  This is normal if you haven't run Ephemery yet."
 fi
 
 # Check terminal color support
 if [ -t 1 ]; then
   colors=$(tput colors 2>/dev/null)
-  if [ -n "$colors" ] && [ "$colors" -ge 8 ]; then
+  if [ -n "${colors}" ] && [ "${colors}" -ge 8 ]; then
     echo -e "${GREEN}✓ Terminal supports colors${NC}"
   else
     echo -e "${YELLOW}! Terminal may not support colors${NC}"
@@ -98,7 +99,7 @@ echo -e "${BOLD}Recommendations:${NC}"
 
 # Recommend callback plugin
 echo -e "${BLUE}Callback Plugin:${NC}"
-case "$current_callback" in
+case "${current_callback}" in
   minimal)
     echo "  Current: minimal (concise output, good for most cases)"
     echo "  Other options:"
@@ -117,7 +118,7 @@ case "$current_callback" in
     echo "    Edit ansible.cfg and set stdout_callback = minimal"
     ;;
   *)
-    echo "  Current: $current_callback"
+    echo "  Current: ${current_callback}"
     echo "  Consider trying 'minimal' for concise output:"
     echo "    Edit ansible.cfg and set stdout_callback = minimal"
     ;;
@@ -125,14 +126,14 @@ esac
 
 # Recommend output management approach
 echo -e "${BLUE}Output Management:${NC}"
-if [ "$filter_script_exists" = true ] && [ "$run_script_exists" = true ]; then
+if [ "${filter_script_exists}" = true ] && [ "${run_script_exists}" = true ]; then
   echo "  Use the wrapper script for most cases:"
   echo "    ./scripts/run_ansible.sh playbooks/your_playbook.yaml -f -l"
   echo "  For detailed debugging:"
   echo "    ./scripts/run_ansible.sh playbooks/your_playbook.yaml -vvv -l"
   echo "  For minimal output:"
   echo "    ./scripts/run_ansible.sh playbooks/your_playbook.yaml -s"
-elif [ "$filter_script_exists" = true ]; then
+elif [ "${filter_script_exists}" = true ]; then
   echo "  Use the filter script to reduce output:"
   echo "    ansible-playbook playbooks/your_playbook.yaml | ./scripts/filter_ansible_output.sh"
 else
@@ -142,18 +143,18 @@ fi
 
 # Recommend log monitoring approach
 echo -e "${BLUE}Log Monitoring:${NC}"
-if [ "$monitor_script_exists" = true ]; then
+if [ "${monitor_script_exists}" = true ]; then
   echo "  Use the monitor script to view logs:"
   echo "    ./scripts/monitor_logs.sh -c geth"
   echo "    ./scripts/monitor_logs.sh -c lighthouse"
   echo "    ./scripts/monitor_logs.sh -c validator"
 else
   echo "  Basic log monitoring:"
-  echo "    tail -f $logs_dir/geth.log"
-  echo "    tail -f $logs_dir/lighthouse.log"
-  echo "    tail -f $logs_dir/validator.log"
+  echo "    tail -f ${logs_dir}/geth.log"
+  echo "    tail -f ${logs_dir}/lighthouse.log"
+  echo "    tail -f ${logs_dir}/validator.log"
 fi
 
 echo ""
 echo -e "${BOLD}For more information:${NC}"
-echo "  See docs/managing_ansible_output.md for detailed guidance" 
+echo "  See docs/managing_ansible_output.md for detailed guidance"

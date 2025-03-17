@@ -2,101 +2,36 @@
 
 This directory contains scripts for managing and operating Ephemery nodes and validators.
 
-## Core Scripts
+## Script Categories
 
-The main scripts are located in the repository root for easy access:
+### Setup and Deployment
+- `setup/setup_ephemery.sh` - Sets up an Ephemery node with both execution (Geth) and consensus (Lighthouse) clients
+- `validator/setup_ephemery_validator.sh` - Sets up a Lighthouse validator client for participating in the Ephemery network
+- `deployment/setup_obol_squadstaking.sh` - Sets up Obol distributed validator technology integration
 
-| Script | Description |
-|--------|-------------|
-| `setup_ephemery.sh` | Sets up an Ephemery node with both execution (Geth) and consensus (Lighthouse) clients |
-| `setup_ephemery_validator.sh` | Sets up a Lighthouse validator client for participating in the Ephemery network |
-| `monitor_ephemery.sh` | Monitors logs and status of running Ephemery clients |
-| `health_check_ephemery.sh` | Performs health checks on node performance, sync status, and more |
-| `prune_ephemery_data.sh` | Manages disk space by pruning unnecessary data |
-| `backup_restore_validators.sh` | Backs up and restores validator keys and slashing protection data |
-| `troubleshoot_ephemery.sh` | Diagnoses and fixes common issues with Ephemery nodes |
+### Monitoring and Health Checks
+- `monitoring/monitor_ephemery.sh` - Monitors logs and status of running Ephemery clients
+- `monitoring/health_check_ephemery.sh` - Performs health checks on node performance, sync status, and more
 
-## Script Organization
-
-The scripts in this directory are organized into several categories:
-
-### Core Configuration
-
-Located in `core/` directory:
-
-| Script | Description |
-|--------|-------------|
-| `ephemery_config.sh` | Common configuration shared across all scripts for consistency |
-
-### Deployment
-
-Located in `deployment/` directory:
-
-| Script | Description |
-|--------|-------------|
-| `deploy-ephemery.sh` | Full deployment script for Ephemery nodes |
-| `setup-ephemery.sh` | Another version of the setup script (used by Ansible) |
-| `setup_ephemery_cron.sh` | Sets up scheduled tasks for Ephemery maintenance |
-| `deploy_ephemery_retention.sh` | Configures data retention policies |
-| `setup_dashboard.sh` | Sets up monitoring dashboards |
-| `deploy_key_performance_metrics.sh` | Deploys performance monitoring metrics |
-| `deploy_enhanced_key_restore.sh` | Advanced key restoration utility |
-| `fix_mainnet_deployment.sh` | Fixes issues with mainnet deployments |
+### Maintenance and Troubleshooting
+- `maintenance/prune_ephemery_data.sh` - Manages disk space by pruning unnecessary data
+- `maintenance/troubleshoot_ephemery.sh` - Diagnoses and fixes common issues with Ephemery nodes
 
 ### Validator Management
-
-Located in `validator/` directory:
-
-| Script | Description |
-|--------|-------------|
-| `manage-validator.sh` | Manages validator operations |
-| `start-validator-dashboard.sh` | Starts the validator monitoring dashboard |
-| `restore_validator_keys.sh` | Restores validator keys (older version) |
-
-### Monitoring and Maintenance
-
-Located in various directories:
-
-| Script | Description |
-|--------|-------------|
-| `monitoring/` | Scripts for monitoring and alerts |
-| `maintenance/` | Scripts for regular maintenance tasks |
-| `utilities/` | Utility scripts for common operations |
-
-### Development and Testing
-
-Located in `development/` and related directories:
-
-| Script | Description |
-|--------|-------------|
-| `run-tests.sh` | Runs automated tests |
-| `check-yaml-extensions.sh` | Validates YAML file extensions |
-| `install-collections.sh` | Installs required Ansible collections |
-
-## Script Organization Tools
-
-Scripts to help manage and organize the script collection:
-
-| Script | Description |
-|--------|-------------|
-| `organize_scripts.sh` | Organizes scripts into appropriate directories |
-| `complete_script_organization.sh` | Comprehensive script organization tool |
-| `update_script_readmes.sh` | Updates README files for script directories |
+- `validator/backup_restore_validators.sh` - Backs up and restores validator keys and slashing protection data
 
 ## Usage Guidelines
 
-1. **Root-level Scripts**: Use the scripts in the repository root for common operations. These are designed to be user-friendly.
+1. **Script Location**: All scripts are organized in subdirectories based on their functionality.
 
-2. **Specialized Scripts**: The scripts in this directory are more specialized and may require additional configuration or knowledge.
+2. **Configuration**: Most scripts source common configuration from shared utilities. Modify these for default settings.
 
-3. **Configuration**: Most scripts source the common configuration from `core/ephemery_config.sh`. Modify this file to change default settings across all scripts.
-
-4. **Execution**: Make scripts executable before running:
+3. **Execution**: Run scripts from the repository root, for example:
    ```bash
-   chmod +x script_name.sh
+   ./scripts/setup/setup_ephemery.sh
    ```
 
-5. **Help Options**: Most scripts provide help information with the `-h` or `--help` option.
+4. **Help Options**: All scripts provide help information with the `-h` or `--help` option.
 
 ## Best Practices
 
@@ -108,13 +43,26 @@ Scripts to help manage and organize the script collection:
 
 4. **Check Logs**: Monitor logs after running scripts to ensure operations completed successfully.
 
-5. **Security**: Be careful with scripts that modify validator keys or authentication data, as these can affect the security of your staked funds.
+5. **Security**: Be careful with scripts that modify validator keys or authentication data.
 
-## Contributing
+## Directory Structure
 
-When adding new scripts:
+- `setup/` - Scripts for initial setup and configuration
+  - `setup_ephemery.sh` - Main setup script for Ephemery node
 
-1. Follow the existing naming conventions
-2. Add appropriate error handling and help information
-3. Update this README to document the new script
-4. Consider adding the script to the common configuration if appropriate
+- `validator/` - Scripts for validator management
+  - `setup_ephemery_validator.sh` - Setup script for validator nodes
+  - `backup_restore_validators.sh` - Backup and restore utilities for validator keys
+
+- `monitoring/` - Scripts for monitoring and health checks
+  - `monitor_ephemery.sh` - Main monitoring script
+  - `health_check_ephemery.sh` - Health check utilities
+
+- `maintenance/` - Scripts for system maintenance
+  - `prune_ephemery_data.sh` - Data pruning utilities
+  - `troubleshoot_ephemery.sh` - Troubleshooting utilities
+
+- `deployment/` - Scripts for deployment and integration
+  - `setup_obol_squadstaking.sh` - Obol DVT integration setup
+
+For detailed usage instructions for each script, please refer to the main [README.md](../README.md) or run the script with the `--help` flag.

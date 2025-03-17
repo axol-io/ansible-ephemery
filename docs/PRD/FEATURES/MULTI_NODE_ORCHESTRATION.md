@@ -381,4 +381,4 @@ Current limitations include:
 
 ## Conclusion
 
-The Multi-Node Orchestration system provides a comprehensive solution for deploying and managing Ephemery validator clusters with improved reliability, scalability, and performance. By distributing validators across multiple nodes and implementing automatic failover, it significantly enhances the resilience of Ephemery validator operations. 
+The Multi-Node Orchestration system provides a comprehensive solution for deploying and managing Ephemery validator clusters with improved reliability, scalability, and performance. By distributing validators across multiple nodes and implementing automatic failover, it significantly enhances the resilience of Ephemery validator operations.

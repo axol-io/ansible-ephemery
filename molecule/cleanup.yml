@@ -90,7 +90,7 @@
       loop:
         - /tmp/backup_test
         - /tmp/ephemery_*
-        - /tmp/jwtsecret
+        - /tmp/jwt.hex
       ignore_errors: true
       tags: [always]
 

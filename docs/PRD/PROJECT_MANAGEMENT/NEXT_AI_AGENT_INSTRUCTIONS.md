@@ -167,4 +167,4 @@ Please update the following documents as you make progress:
 
 Additionally, create detailed PRD documents for new features in the appropriate location within the `docs/PRD/FEATURES/` directory.
 
-Good luck with the implementation! 
+Good luck with the implementation!

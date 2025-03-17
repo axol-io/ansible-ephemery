@@ -11,13 +11,13 @@
     validator_secrets_dir: "{{ ephemery_base_dir | default('/root/ephemery') }}/secrets/validator"
     validator_start_index: "{{ validator_start_index | default(0) }}"
     validator_count: "{{ validator_count | default(10) }}"
-  
+
   tasks:
     - name: Check if this is a distributed validator deployment
       ansible.builtin.set_fact:
         distributed_deployment: true
       failed_when: not (validator_enabled | default(false) | bool)
-    
+
     - name: Create validator directories
       ansible.builtin.file:
         path: "{{ item }}"
@@ -27,11 +27,11 @@
         - "{{ validator_keys_base_dir }}"
         - "{{ validator_secrets_dir }}/keys"
         - "{{ validator_secrets_dir }}/passwords"
-    
+
     - name: Generate or copy master validator key set
       ansible.builtin.include_tasks: tasks/validator_key_generation.yaml
       when: inventory_hostname == groups['distributed_validators'][0]
-    
+
     - name: Synchronize master keys to other nodes
       ansible.builtin.synchronize:
         src: "{{ validator_keys_base_dir }}/"
@@ -39,17 +39,17 @@
         mode: push
       delegate_to: "{{ groups['distributed_validators'][0] }}"
       when: inventory_hostname != groups['distributed_validators'][0]
-    
+
     - name: Calculate key range for this node
       ansible.builtin.set_fact:
         key_range_start: "{{ validator_start_index }}"
         key_range_end: "{{ validator_start_index + validator_count }}"
-    
+
     - name: Create node-specific validator key subset
       ansible.builtin.shell: |
         # Create a clean subset directory
         mkdir -p {{ validator_secrets_dir }}/keys_subset
-        
+
         # Find keystore files in the specified range
         find {{ validator_keys_base_dir }}/keys -name "keystore-*.json" | sort | \
         sed -n "{{ key_range_start + 1 }},{{ key_range_end }}p" | \
@@ -61,11 +61,11 @@
           # Create password file
           echo "ephemery" > {{ validator_secrets_dir }}/passwords/${basename%.json}.txt
         done
-        
+
         # Count selected keys
         KEY_COUNT=$(ls {{ validator_secrets_dir }}/keys_subset | wc -l)
         echo "Selected $KEY_COUNT validator keys for node {{ inventory_hostname }}"
-        
+
         # Move keys to final location
         rm -rf {{ validator_secrets_dir }}/keys/*
         mv {{ validator_secrets_dir }}/keys_subset/* {{ validator_secrets_dir }}/keys/
@@ -73,17 +73,17 @@
       args:
         executable: /bin/bash
       register: key_subset_result
-    
+
     - name: Display key distribution result
       ansible.builtin.debug:
         msg: "{{ key_subset_result.stdout_lines }}"
-    
+
     - name: Configure validator client
       ansible.builtin.include_tasks: "tasks/configure_validator_{{ cl }}.yaml"
       vars:
         validator_keys_dir: "{{ validator_secrets_dir }}/keys"
         validator_passwords_dir: "{{ validator_secrets_dir }}/passwords"
-    
+
     - name: Start validator client
       community.docker.docker_container:
         name: "ephemery-validator-{{ cl }}"
@@ -134,10 +134,60 @@
           --graffiti="multi-node-{{ inventory_hostname }}"
           {% endif %}
       when: validator_enabled | bool
+      register: validator_start_result
+
+    - name: Create validator restart script
+      ansible.builtin.template:
+        src: templates/restart_validator.sh.j2
+        dest: "{{ ephemery_base_dir }}/scripts/restart_validator.sh"
+        mode: '0755'
+      vars:
+        validator_container_name: "ephemery-validator-{{ cl }}"
+        validator_secrets_dir: "{{ validator_secrets_dir }}"
+        password_check_enabled: true
+
+    - name: Add password validation to validator restart workflow
+      ansible.builtin.blockinfile:
+        path: "{{ ephemery_base_dir }}/scripts/restart_validator.sh"
+        insertafter: "#!/bin/bash"
+        block: |
+          # Validate password files for all keys before restart
+          validate_passwords() {
+            local keydir="{{ validator_secrets_dir }}/keys"
+            local passdir="{{ validator_secrets_dir }}/passwords"
+
+            echo "Validating password files before restart..."
+            for keyfile in "$keydir"/*.json; do
+              if [ -f "$keyfile" ]; then
+                local basename="${keyfile##*/}"
+                local passfile="$passdir/${basename%.json}.txt"
+
+                if [ ! -f "$passfile" ]; then
+                  echo "ERROR: Password file $passfile not found for key $basename"
+                  return 1
+                fi
+              fi
+            done
+            echo "Password validation successful"
+            return 0
+          }
+
+          # Add to restart process
+          validate_passwords || {
+            echo "Password validation failed, aborting restart"
+            exit 1
+          }
+
+    - name: Create cron job for periodic validator service health check
+      ansible.builtin.cron:
+        name: "Check validator service and passwords"
+        minute: "*/30"
+        job: "{{ ephemery_base_dir }}/scripts/restart_validator.sh --check-only >> {{ ephemery_base_dir }}/logs/validator_healthcheck.log 2>&1"
+        user: root
 
     - name: Register validator in monitoring system
       ansible.builtin.shell: |
         echo "{{ inventory_hostname }} validator keys: {{ validator_count }} (indices {{ validator_start_index }}-{{ validator_start_index + validator_count - 1 }})" >> {{ ephemery_base_dir }}/logs/validator_distribution.log
       args:
         executable: /bin/bash
-      delegate_to: "{{ monitoring_host }}" 
+      delegate_to: "{{ monitoring_host }}"

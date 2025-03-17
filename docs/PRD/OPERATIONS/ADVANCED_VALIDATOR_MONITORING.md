@@ -292,4 +292,4 @@ The Advanced Validator Performance Monitoring system with alerting capabilities 
 - [Validator Operations Guide](./VALIDATOR_OPERATIONS.md)
 - [Genesis Validator Guide](./GENESIS_VALIDATOR.md)
 - [Monitoring System Overview](./MONITORING_SYSTEM.md)
-- [Ephemery Testnet Overview](../OVERVIEW/EPHEMERY_TESTNET.md) 
+- [Ephemery Testnet Overview](../OVERVIEW/EPHEMERY_TESTNET.md)

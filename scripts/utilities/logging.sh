@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Version: 1.0.0
 #
 # Script Name: logging.sh
 # Description: Logging utility functions for Ephemery Node scripts
@@ -46,10 +47,10 @@ GRAY="\033[0;37m"
 # -----------------------------------------------------------------------------
 should_log() {
   local msg_level=$1
-  local current_level=${LOG_LEVELS[$LOG_LEVEL]}
-  local requested_level=${LOG_LEVELS[$msg_level]}
+  local current_level=${LOG_LEVELS[${LOG_LEVEL}]}
+  local requested_level=${LOG_LEVELS[${msg_level}]}
 
-  if [[ $requested_level -ge $current_level ]]; then
+  if [[ ${requested_level} -ge ${current_level} ]]; then
     return 0
   else
     return 1
@@ -151,11 +152,11 @@ log_success() {
 # -----------------------------------------------------------------------------
 set_log_level() {
   local level="$1"
-  if [[ -z "${LOG_LEVELS[$level]:-}" ]]; then
-    echo "Invalid log level: $level" >&2
+  if [[ -z "${LOG_LEVELS[${level}]:-}" ]]; then
+    echo "Invalid log level: ${level}" >&2
     return 1
   fi
-  LOG_LEVEL="$level"
+  LOG_LEVEL="${level}"
   return 0
 }
 

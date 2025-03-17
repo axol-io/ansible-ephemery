@@ -149,8 +149,8 @@ def check_sync_urls():
 
 # List of URLs to test
 URLS=(
-  "https://checkpoint-sync.holesky.ethpandaops.io"
-  "https://beaconstate-holesky.chainsafe.io"
+  "https://checkpoint-sync.ephemery.ethpandaops.io"
+  "https://beaconstate-ephemery.chainsafe.io"
   "https://checkpoint-sync.ephemery.dev"
   "https://checkpoint.ephemery.eth.limo"
   "https://checkpoint-sync.ephemery.ethpandaops.io"

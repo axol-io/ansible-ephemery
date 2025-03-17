@@ -18,15 +18,30 @@ Ephemery is an Ethereum test network that resets itself periodically, providing 
 For a quick setup, run the provided setup script:
 
 ```bash
-./setup_ephemery.sh
+./scripts/setup/setup_ephemery.sh
 ```
 
 This script will:
+
 1. Create necessary directories
 2. Set up a Docker network for container communication
 3. Generate a JWT secret for authentication
 4. Start the Geth execution client
 5. Start the Lighthouse consensus client
+
+## Script Organization
+
+The repository's scripts are organized into the following directories:
+
+### `/scripts`
+- `setup/` - Scripts for initial setup and configuration
+- `deployment/` - Scripts for deploying nodes and validators
+- `monitoring/` - Scripts for monitoring and health checks
+- `maintenance/` - Scripts for system maintenance and troubleshooting
+- `validator/` - Scripts for validator management
+- `utilities/` - Common utility functions and helpers
+
+Each script directory contains its own README with detailed information about the scripts it contains.
 
 ## Documentation
 
@@ -37,22 +52,67 @@ The following documentation is available to help you understand and use this pro
 - [Script Management](docs/SCRIPT_MANAGEMENT.md) - Guide for managing and using scripts
 - [Standardized Paths Guide](docs/STANDARDIZED_PATHS_GUIDE.md) - Overview of standardized paths
 - [Security Guide](docs/SECURITY.md) - Security best practices
+- [Installation Guide](docs/INSTALLATION.md)
+- [Configuration Guide](docs/CONFIGURATION.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Secret Management](docs/SECRET_MANAGEMENT.md)
+
+Each script directory also contains its own README with specific documentation:
+- [Setup Scripts](scripts/setup/README.md)
+- [Deployment Scripts](scripts/deployment/README.md)
+- [Monitoring Scripts](scripts/monitoring/README.md)
+- [Maintenance Scripts](scripts/maintenance/README.md)
+- [Validator Scripts](scripts/validator/README.md)
+
+## Recent Improvements
+
+The codebase has recently undergone improvements to address configuration consistency and security:
+
+### Configuration Standardization
+
+- Directory structure variables have been standardized. New code should use `ephemery_base_dir` consistently, while `ephemery_dir` is maintained for backward compatibility.
+- JWT secret file naming has been standardized to use `jwt.hex` consistently across all configurations.
+- Client configurations now use consistent paths for JWT files.
+
+### Security Enhancements
+
+- Pre-commit hooks have been added to detect unencrypted secrets in the codebase.
+- New documentation on secret management has been added (see [Secret Management](docs/SECRET_MANAGEMENT.md)).
+- Example files have been updated with clear instructions about using Ansible Vault for sensitive values.
 
 ## Validator Setup
 
 If you want to run validators on the Ephemery network, place your validator keys in a zip file at `ansible/files/validator_keys/validator_keys.zip` and run:
 
 ```bash
-./setup_ephemery_validator.sh
+./scripts/validator/setup_ephemery_validator.sh
 ```
 
 This script will:
+
 1. Extract the validator keys from the zip file
 2. Create password files for the validators
 3. Start a Lighthouse validator client
 4. Import the validator keys into the client
 
 Note: Your beacon node must be fully synced before validators can participate in the network.
+
+## Distributed Validator Setup (Obol)
+
+For enhanced validator security and reliability, this project supports Obol's Distributed Validator Technology (DVT). This allows multiple validator clients to work together to sign blocks and attestations. To set up a distributed validator:
+
+```bash
+./scripts/deployment/setup_obol_squadstaking.sh
+```
+
+This script will:
+
+1. Set up Obol Charon middleware
+2. Configure distributed validator clients
+3. Set up monitoring and metrics collection
+4. Enable dashboard integration for DVT metrics
+
+For detailed information about the Obol integration, see [Obol Integration Guide](docs/OBOL_INTEGRATION.md).
 
 ## Manual Setup
 
@@ -177,7 +237,7 @@ You can monitor the logs of the containers:
 
 ```bash
 # Use the monitoring script
-./monitor_ephemery.sh [options]
+./scripts/monitoring/monitor_ephemery.sh [options]
 
 # Options:
 #   -g, --geth         Monitor Geth logs only
@@ -195,19 +255,7 @@ docker logs -f ephemery-validator
 For comprehensive validator monitoring with advanced visualization and analytics, use the new validator dashboard:
 
 ```bash
-# Launch the enhanced validator dashboard
-./scripts/validator-dashboard.sh [options]
-
-# Options:
-#   -b, --beacon URL      Beacon node API URL (default: http://localhost:5052)
-#   -v, --validator URL   Validator API URL (default: http://localhost:5064)
-#   -r, --refresh N       Refresh interval in seconds (default: 10)
-#   -c, --compact         Use compact view (summary only)
-#   -d, --detailed        Use detailed view (includes validator details)
-#   -f, --full            Use full view with all information (default)
-#   -a, --analyze         Generate historical performance analysis report
-#   --period PERIOD       Analysis period (1d, 7d, 30d, 90d, all) for historical analysis
-#   --charts              Generate performance charts (requires gnuplot)
+./scripts/validator/dashboard/validator-dashboard.sh [options]
 ```
 
 The enhanced validator dashboard provides:
@@ -224,10 +272,10 @@ To analyze validator performance over time and identify trends:
 
 ```bash
 # Generate performance report for the last 7 days
-./scripts/validator-dashboard.sh --analyze
+./scripts/validator/dashboard/validator-dashboard.sh --analyze
 
 # Generate detailed report with charts for last 30 days
-./scripts/validator-dashboard.sh --analyze --period 30d --charts
+./scripts/validator/dashboard/validator-dashboard.sh --analyze --period 30d --charts
 
 # Generate PDF report (requires wkhtmltopdf)
 ./scripts/monitoring/validator_performance_analysis.sh --period 30d --pdf
@@ -260,7 +308,7 @@ You can run health checks on your Ephemery node to identify issues and monitor p
 
 ```bash
 # Use the health check script
-./health_check_ephemery.sh [options]
+./scripts/monitoring/health_check_ephemery.sh [options]
 
 # Options:
 #   -b, --basic         Run basic health checks (default)
@@ -272,6 +320,7 @@ You can run health checks on your Ephemery node to identify issues and monitor p
 ```
 
 The health check script provides:
+
 - Container status checks
 - Sync status monitoring
 - Disk space analysis
@@ -287,7 +336,7 @@ You can use the pruning script to manage disk space usage:
 
 ```bash
 # Use the pruning script (dry run by default, no changes made)
-./prune_ephemery_data.sh [options]
+./scripts/maintenance/prune_ephemery_data.sh [options]
 
 # Options:
 #   -s, --safe              Safe pruning (removes only non-essential data, default)
@@ -305,10 +354,10 @@ To backup and restore validator keys and slashing protection data:
 
 ```bash
 # Create a backup
-./backup_restore_validators.sh backup [options]
+./scripts/validator/backup_restore_validators.sh backup [options]
 
 # Restore from a backup
-./backup_restore_validators.sh restore --file BACKUP_FILE [options]
+./scripts/validator/backup_restore_validators.sh restore --file BACKUP_FILE [options]
 
 # Options:
 #   -d, --dir DIR          Directory to store backups or read from
@@ -410,29 +459,33 @@ pre-commit install
 To maintain the security of your Ephemery node and the entire system, follow these best practices:
 
 ### Configuration Security
+
 - Never commit sensitive information like passwords, private keys, or JWT secrets to version control
 - Use environment variables or secure vault solutions for sensitive data
 - Avoid using default or weak passwords for any component
 - Keep your host system updated with security patches
 
 ### Network Security
+
 - Use firewalls to restrict access to only necessary ports (8545, 8551, 30303, 5052, 9000, 8008)
 - Consider using a reverse proxy with TLS for API endpoints if they need to be publicly accessible
 - Configure execution and consensus client APIs to be accessible only from trusted sources
 - Use secure, unique JWT secrets for execution-consensus client authentication
 
 ### File System Security
+
 - Set appropriate permissions on all configuration files and directories
 - Ensure JWT secrets and validator keys have strict file permissions (e.g., `chmod 600`)
 - Regularly backup validator keys and slashing protection data securely
 - Encrypt backups containing sensitive data
 
 ### Monitoring & Maintenance
+
 - Regularly check logs for suspicious activity
 - Monitor resource usage to detect unexpected patterns
 - Keep all client software up-to-date with security patches
 - Regularly run the included health check script to identify issues
 
-For more comprehensive security guidelines, see the [SECURITY.md](SECURITY.md) file in this repository.
+For more comprehensive security guidelines, see the [Security Guide](docs/SECURITY.md) file in this repository.
 
 ## Contributing

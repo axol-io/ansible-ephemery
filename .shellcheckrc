@@ -16,4 +16,4 @@ enable=avoid-nullary-conditions
 external-sources=true
 
 # Shell type/dialect
-shell=bash 
+shell=bash

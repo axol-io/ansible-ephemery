@@ -25,4 +25,4 @@
     "polling_interval": 300,
     "retention_days": 30,
     "log_level": "INFO"
-} 
+}

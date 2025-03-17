@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # Script to generate tasks for all client combinations in tasks/clients directory
 
 # Define clients
@@ -23,41 +24,41 @@ create_client_tasks() {
   dir="tasks/clients/${el}-${cl}"
 
   # Capitalize first letter of client names for comments
-  first_char=$(echo "$el" | cut -c1 | tr '[:lower:]' '[:upper:]')
-  rest_chars=$(echo "$el" | cut -c2-)
+  first_char=$(echo "${el}" | cut -c1 | tr '[:lower:]' '[:upper:]')
+  rest_chars=$(echo "${el}" | cut -c2-)
   el_cap="${first_char}${rest_chars}"
 
-  first_char=$(echo "$cl" | cut -c1 | tr '[:lower:]' '[:upper:]')
-  rest_chars=$(echo "$cl" | cut -c2-)
+  first_char=$(echo "${cl}" | cut -c1 | tr '[:lower:]' '[:upper:]')
+  rest_chars=$(echo "${cl}" | cut -c2-)
   cl_cap="${first_char}${rest_chars}"
 
   # Get versions based on client
   el_version=""
   cl_version=""
 
-  case "$el" in
-    geth) el_version=$GETH_VERSION ;;
-    besu) el_version=$BESU_VERSION ;;
-    nethermind) el_version=$NETHERMIND_VERSION ;;
-    reth) el_version=$RETH_VERSION ;;
-    erigon) el_version=$ERIGON_VERSION ;;
+  case "${el}" in
+    geth) el_version=${GETH_VERSION} ;;
+    besu) el_version=${BESU_VERSION} ;;
+    nethermind) el_version=${NETHERMIND_VERSION} ;;
+    reth) el_version=${RETH_VERSION} ;;
+    erigon) el_version=${ERIGON_VERSION} ;;
   esac
 
-  case "$cl" in
-    lighthouse) cl_version=$LIGHTHOUSE_VERSION ;;
-    teku) cl_version=$TEKU_VERSION ;;
-    prysm) cl_version=$PRYSM_VERSION ;;
-    lodestar) cl_version=$LODESTAR_VERSION ;;
+  case "${cl}" in
+    lighthouse) cl_version=${LIGHTHOUSE_VERSION} ;;
+    teku) cl_version=${TEKU_VERSION} ;;
+    prysm) cl_version=${PRYSM_VERSION} ;;
+    lodestar) cl_version=${LODESTAR_VERSION} ;;
   esac
 
-  echo "Creating tasks for $dir (EL: $el v$el_version, CL: $cl v$cl_version)"
+  echo "Creating tasks for ${dir} (EL: ${el} v${el_version}, CL: ${cl} v${cl_version})"
 
   # Create directory if it doesn't exist
-  mkdir -p "$dir"
+  mkdir -p "${dir}"
 
   # Create firewall.yaml based on client combination
   # Note: Different clients may have different port requirements
-  cat > "$dir/firewall.yaml" << 'EOF'
+  cat >"${dir}/firewall.yaml" <<'EOF'
 ---
 # Firewall rules for ELCAP (execution client) and CLCAP (consensus client) combination
 firewall_allowed_tcp_ports:
@@ -68,28 +69,28 @@ EOF
 
   # Add client-specific ports based on the client combination
   # EL client ports
-  if [ "$el" = "geth" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  if [ "${el}" = "geth" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 30303 # Geth P2P
   - 8551  # Geth Engine API
 EOF
-  elif [ "$el" = "besu" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${el}" = "besu" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 30303 # Besu P2P
   - 8551  # Besu Engine API
 EOF
-  elif [ "$el" = "nethermind" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${el}" = "nethermind" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 30303 # Nethermind P2P
   - 8551  # Nethermind Engine API
 EOF
-  elif [ "$el" = "reth" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${el}" = "reth" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 30303 # Reth P2P
   - 8551  # Reth Engine API
 EOF
-  elif [ "$el" = "erigon" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${el}" = "erigon" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 30303 # Erigon P2P
   - 30304 # Erigon P2P
   - 8551  # Erigon Engine API
@@ -97,84 +98,84 @@ EOF
   fi
 
   # CL client ports
-  if [ "$cl" = "lighthouse" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  if [ "${cl}" = "lighthouse" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 9000  # Lighthouse P2P
   - 5052  # Lighthouse metrics
 EOF
-  elif [ "$cl" = "teku" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${cl}" = "teku" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 9000  # Teku P2P
   - 8008  # Teku metrics
 EOF
-  elif [ "$cl" = "prysm" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${cl}" = "prysm" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 9001  # Prysm P2P
   - 9999  # Prysm metrics
   - 3500  # Prysm RPC
 EOF
-  elif [ "$cl" = "lodestar" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${cl}" = "lodestar" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 9000  # Lodestar P2P
   - 5052  # Lodestar metrics
 EOF
   fi
 
   # UDP ports section for firewall rules
-  cat >> "$dir/firewall.yaml" << 'EOF'
+  cat >>"${dir}/firewall.yaml" <<'EOF'
 
 firewall_allowed_udp_ports:
 EOF
 
   # EL client UDP ports
-  if [ "$el" = "geth" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  if [ "${el}" = "geth" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 30303 # Geth P2P
 EOF
-  elif [ "$el" = "besu" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${el}" = "besu" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 30303 # Besu P2P
 EOF
-  elif [ "$el" = "nethermind" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${el}" = "nethermind" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 30303 # Nethermind P2P
 EOF
-  elif [ "$el" = "reth" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${el}" = "reth" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 30303 # Reth P2P
 EOF
-  elif [ "$el" = "erigon" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${el}" = "erigon" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 30303 # Erigon P2P
   - 30304 # Erigon P2P
 EOF
   fi
 
   # CL client UDP ports
-  if [ "$cl" = "lighthouse" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  if [ "${cl}" = "lighthouse" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 9000  # Lighthouse P2P
 EOF
-  elif [ "$cl" = "teku" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${cl}" = "teku" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 9000  # Teku P2P
 EOF
-  elif [ "$cl" = "prysm" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${cl}" = "prysm" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 9001  # Prysm P2P
 EOF
-  elif [ "$cl" = "lodestar" ]; then
-    cat >> "$dir/firewall.yaml" << 'EOF'
+  elif [ "${cl}" = "lodestar" ]; then
+    cat >>"${dir}/firewall.yaml" <<'EOF'
   - 9000  # Lodestar P2P
 EOF
   fi
 
   # Replace placeholders with actual values in firewall.yaml
-  sed -i "" "s/ELCAP/${el_cap}/g" "$dir/firewall.yaml"
-  sed -i "" "s/CLCAP/${cl_cap}/g" "$dir/firewall.yaml"
+  sed -i "" "s/ELCAP/${el_cap}/g" "${dir}/firewall.yaml"
+  sed -i "" "s/CLCAP/${cl_cap}/g" "${dir}/firewall.yaml"
 
   # Create molecule.yaml
-  cat > "$dir/molecule.yaml" << 'EOF'
+  cat >"${dir}/molecule.yaml" <<'EOF'
 ---
 - name: Check if client combination is selected
   ansible.builtin.set_fact:
@@ -200,8 +201,8 @@ EOF
 EOF
 
   # Add EL client specific container configuration
-  if [ "$el" = "geth" ]; then
-    cat >> "$dir/molecule.yaml" << EOF
+  if [ "${el}" = "geth" ]; then
+    cat >>"${dir}/molecule.yaml" <<EOF
 
 - name: 🚀 Start Geth (Execution Client)
   community.docker.docker_container:
@@ -236,8 +237,8 @@ EOF
       --authrpc.vhosts=*
   when: not client_skip
 EOF
-  elif [ "$el" = "besu" ]; then
-    cat >> "$dir/molecule.yaml" << EOF
+  elif [ "${el}" = "besu" ]; then
+    cat >>"${dir}/molecule.yaml" <<EOF
 
 - name: 🚀 Start Besu (Execution Client)
   community.docker.docker_container:
@@ -270,8 +271,8 @@ EOF
       --metrics-port=9545
   when: not client_skip
 EOF
-  elif [ "$el" = "nethermind" ]; then
-    cat >> "$dir/molecule.yaml" << EOF
+  elif [ "${el}" = "nethermind" ]; then
+    cat >>"${dir}/molecule.yaml" <<EOF
 
 - name: 🚀 Start Nethermind (Execution Client)
   community.docker.docker_container:
@@ -298,8 +299,8 @@ EOF
       --Metrics.ExposePort=9091
   when: not client_skip
 EOF
-  elif [ "$el" = "reth" ]; then
-    cat >> "$dir/molecule.yaml" << EOF
+  elif [ "${el}" = "reth" ]; then
+    cat >>"${dir}/molecule.yaml" <<EOF
 
 - name: 🚀 Start Reth (Execution Client)
   community.docker.docker_container:
@@ -328,8 +329,8 @@ EOF
       --authrpc.jwtsecret=/execution-auth.jwt
   when: not client_skip
 EOF
-  elif [ "$el" = "erigon" ]; then
-    cat >> "$dir/molecule.yaml" << EOF
+  elif [ "${el}" = "erigon" ]; then
+    cat >>"${dir}/molecule.yaml" <<EOF
 
 - name: 🚀 Start Erigon (Execution Client)
   community.docker.docker_container:
@@ -363,8 +364,8 @@ EOF
   fi
 
   # Add CL client specific container configuration
-  if [ "$cl" = "lighthouse" ]; then
-    cat >> "$dir/molecule.yaml" << EOF
+  if [ "${cl}" = "lighthouse" ]; then
+    cat >>"${dir}/molecule.yaml" <<EOF
 
 - name: 🚀 Start Lighthouse (Consensus Client)
   community.docker.docker_container:
@@ -392,8 +393,8 @@ EOF
       --disable-deposit-contract-sync
   when: not client_skip
 EOF
-  elif [ "$cl" = "teku" ]; then
-    cat >> "$dir/molecule.yaml" << EOF
+  elif [ "${cl}" = "teku" ]; then
+    cat >>"${dir}/molecule.yaml" <<EOF
 
 - name: 🚀 Start Teku (Consensus Client)
   community.docker.docker_container:
@@ -421,8 +422,8 @@ EOF
       --ee-jwt-secret-file=/execution-auth.jwt
   when: not client_skip
 EOF
-  elif [ "$cl" = "prysm" ]; then
-    cat >> "$dir/molecule.yaml" << EOF
+  elif [ "${cl}" = "prysm" ]; then
+    cat >>"${dir}/molecule.yaml" <<EOF
 
 - name: 🚀 Start Prysm (Consensus Client)
   community.docker.docker_container:
@@ -453,8 +454,8 @@ EOF
       --disable-blst
   when: not client_skip
 EOF
-  elif [ "$cl" = "lodestar" ]; then
-    cat >> "$dir/molecule.yaml" << EOF
+  elif [ "${cl}" = "lodestar" ]; then
+    cat >>"${dir}/molecule.yaml" <<EOF
 
 - name: 🚀 Start Lodestar (Consensus Client)
   community.docker.docker_container:
@@ -484,36 +485,36 @@ EOF
   fi
 
   # Replace placeholders with actual values in molecule.yaml
-  sed -i "" "s/ELNAME/${el}/g" "$dir/molecule.yaml"
-  sed -i "" "s/CLNAME/${cl}/g" "$dir/molecule.yaml"
+  sed -i "" "s/ELNAME/${el}/g" "${dir}/molecule.yaml"
+  sed -i "" "s/CLNAME/${cl}/g" "${dir}/molecule.yaml"
 
   # Create empty converge.yaml and verify.yaml files if they don't exist
-  touch "$dir/converge.yaml"
-  if [ ! -s "$dir/converge.yaml" ]; then
+  touch "${dir}/converge.yaml"
+  if [ ! -s "${dir}/converge.yaml" ]; then
     # Add document start marker to empty files
-    echo "---" > "$dir/converge.yaml"
+    echo "---" >"${dir}/converge.yaml"
   fi
 
-  touch "$dir/verify.yaml"
-  if [ ! -s "$dir/verify.yaml" ]; then
+  touch "${dir}/verify.yaml"
+  if [ ! -s "${dir}/verify.yaml" ]; then
     # Add document start marker to empty files
-    echo "---" > "$dir/verify.yaml"
+    echo "---" >"${dir}/verify.yaml"
   fi
 }
 
 # Generate all client task combinations
-for el in $EL_CLIENTS; do
-  for cl in $CL_CLIENTS; do
+for el in ${EL_CLIENTS}; do
+  for cl in ${CL_CLIENTS}; do
     # Check if the directory already exists with all required files
-    if [ -d "tasks/clients/${el}-${cl}" ] &&
-       [ -f "tasks/clients/${el}-${cl}/firewall.yaml" ] &&
-       [ -f "tasks/clients/${el}-${cl}/molecule.yaml" ] &&
-       [ -f "tasks/clients/${el}-${cl}/converge.yaml" ] &&
-       [ -f "tasks/clients/${el}-${cl}/verify.yaml" ] &&
-       [ -s "tasks/clients/${el}-${cl}/firewall.yaml" ]; then
+    if [ -d "tasks/clients/${el}-${cl}" ] \
+      && [ -f "tasks/clients/${el}-${cl}/firewall.yaml" ] \
+      && [ -f "tasks/clients/${el}-${cl}/molecule.yaml" ] \
+      && [ -f "tasks/clients/${el}-${cl}/converge.yaml" ] \
+      && [ -f "tasks/clients/${el}-${cl}/verify.yaml" ] \
+      && [ -s "tasks/clients/${el}-${cl}/firewall.yaml" ]; then
       echo "Skipping existing client tasks: ${el}-${cl}"
     else
-      create_client_tasks "$el" "$cl"
+      create_client_tasks "${el}" "${cl}"
     fi
   done
 done

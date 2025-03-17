@@ -29,8 +29,8 @@
         status_code: [200, 403, 404, 500, 503]
       register: alternative_urls
       loop:
-        - https://checkpoint-sync.holesky.ethpandaops.io
-        - https://beaconstate-holesky.chainsafe.io
+        - https://checkpoint-sync.ephemery.ethpandaops.io
+        - https://beaconstate-ephemery.chainsafe.io
         - https://checkpoint-sync.ephemery.dev
         - https://checkpoint.ephemery.eth.limo
       ignore_errors: true

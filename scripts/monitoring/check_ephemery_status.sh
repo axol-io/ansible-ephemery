@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # check_ephemery_status.sh - Script to verify checkpoint sync and resetter functionality
 
 # Colors for output
@@ -32,7 +33,7 @@ fi
 
 # Function to run remote commands
 run_remote() {
-  ssh $SSH_KEY $SERVER "$1"
+  ssh "${SSH_KEY}" "${SERVER}" "$1"
 }
 
 echo -e "${YELLOW}Connecting to server ${SERVER}...${NC}"
@@ -60,9 +61,8 @@ run_remote "docker logs ephemery-lighthouse 2>&1 | grep -i 'checkpoint' | tail -
 
 # Test checkpoint sync URLs
 echo -e "${YELLOW}Testing checkpoint sync URLs...${NC}"
-run_remote "curl -s https://checkpoint-sync.holesky.ethpandaops.io/eth/v1/beacon/states/finalized -o /dev/null -w 'Status: %{http_code}\n' || echo 'Failed to test URL'"
-run_remote "curl -s https://beaconstate-holesky.chainsafe.io/eth/v1/beacon/states/finalized -o /dev/null -w 'Status: %{http_code}\n' || echo 'Failed to test URL'"
-run_remote "curl -s https://checkpoint-sync.ephemery.dev/eth/v1/beacon/states/finalized -o /dev/null -w 'Status: %{http_code}\n' || echo 'Failed to test URL'"
+run_remote "curl -s https://checkpoint-sync.ephemery.ethpandaops.io/eth/v1/beacon/states/finalized -o /dev/null -w 'Status: %{http_code}\n' || echo 'Failed to test URL'"
+run_remote "curl -s https://beaconstate-ephemery.chainsafe.io/eth/v1/beacon/states/finalized -o /dev/null -w 'Status: %{http_code}\n' || echo 'Failed to test URL'"
 
 # Check Lighthouse sync status
 echo -e "${YELLOW}Checking Lighthouse sync status...${NC}"
@@ -93,7 +93,7 @@ echo -e "${BLUE}======================================================${NC}"
 # Check if Lighthouse is running
 echo -e "${YELLOW}Checking if Lighthouse container is running...${NC}"
 LIGHTHOUSE_RUNNING=$(run_remote "docker ps | grep ephemery-lighthouse" || echo "")
-if [ -n "$LIGHTHOUSE_RUNNING" ]; then
+if [ -n "${LIGHTHOUSE_RUNNING}" ]; then
   echo -e "${GREEN}Lighthouse container is running.${NC}"
 else
   echo -e "${RED}Lighthouse container is not running!${NC}"
@@ -102,7 +102,7 @@ fi
 # Check if Geth is running
 echo -e "${YELLOW}Checking if Geth container is running...${NC}"
 GETH_RUNNING=$(run_remote "docker ps | grep ephemery-geth" || echo "")
-if [ -n "$GETH_RUNNING" ]; then
+if [ -n "${GETH_RUNNING}" ]; then
   echo -e "${GREEN}Geth container is running.${NC}"
 else
   echo -e "${RED}Geth container is not running!${NC}"
@@ -111,7 +111,7 @@ fi
 # Check if validator is running (if enabled)
 echo -e "${YELLOW}Checking if validator container is running (if enabled)...${NC}"
 VALIDATOR_RUNNING=$(run_remote "docker ps | grep ephemery-validator" || echo "")
-if [ -n "$VALIDATOR_RUNNING" ]; then
+if [ -n "${VALIDATOR_RUNNING}" ]; then
   echo -e "${GREEN}Validator container is running.${NC}"
 else
   echo -e "${YELLOW}Validator container is not running. This may be expected if validators are not enabled.${NC}"

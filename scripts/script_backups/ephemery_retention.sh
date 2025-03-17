@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Ephemery Retention Script
 # =========================
@@ -26,18 +27,18 @@ set -o pipefail
 # Base directory for all Ephemery files
 HOME_DIR="/root/ephemery"
 # Directory for client data storage
-DATA_DIR="$HOME_DIR/data"
+DATA_DIR="${HOME_DIR}/data"
 # Directory for configuration files (genesis.json, etc.)
-CONFIG_DIR="$HOME_DIR/config"
+CONFIG_DIR="${HOME_DIR}/config"
 # Directory for log files
-LOG_DIR="$HOME_DIR/logs"
+LOG_DIR="${HOME_DIR}/logs"
 # GitHub repository for genesis files
 GENESIS_REPO="ephemery-testnet/ephemery-genesis"
 # Port for the consensus layer API
 CL_PORT=5052
 
 # Make sure log directory exists
-mkdir -p "$LOG_DIR"
+mkdir -p "${LOG_DIR}"
 
 # ========================
 # Client Management Functions
@@ -89,7 +90,7 @@ clear_datadirs() {
     # Recreate directory
     mkdir -p "${DATA_DIR}/geth"
     # Restore nodekey
-    echo "$GETH_NODEKEY" > "${DATA_DIR}/geth/nodekey"
+    echo "${GETH_NODEKEY}" >"${DATA_DIR}/geth/nodekey"
   else
     # If no nodekey exists, just clear the directory
     rm -rf "${DATA_DIR}/geth/"*
@@ -126,11 +127,14 @@ setup_genesis() {
 # Usage: latest_release=$(get_github_release "ephemery-testnet/ephemery-genesis")
 get_github_release() {
   # Use GitHub API to get latest release
-  curl --silent "https://api.github.com/repos/$1/releases/latest" | \
+  curl --silent "https://api.github.com/repos/$1/releases/latest" \
+    |
     # Extract the tag_name field from the JSON response
-    grep '"tag_name":' | \
+    grep '"tag_name":' \
+    |
     # Parse the value with sed
-    sed -E 's/.*"([^"]+)".*/\1/' | \
+    sed -E 's/.*"([^"]+)".*/\1/' \
+    |
     # Take only the first result
     head -n 1
 }
@@ -142,25 +146,25 @@ get_github_release() {
 # Usage: download_genesis_release "v1.2.3"
 download_genesis_release() {
   local release=$1
-  echo "$(date) - Downloading genesis files for release: $release"
+  echo "$(date) - Downloading genesis files for release: ${release}"
 
   # Ensure config directory exists
-  mkdir -p "$CONFIG_DIR"
+  mkdir -p "${CONFIG_DIR}"
   # Clear existing config files
-  rm -rf "$CONFIG_DIR"/*
+  rm -rf "${CONFIG_DIR}"/*
 
   # Download and extract the release tarball
-  echo "Downloading from: https://github.com/$GENESIS_REPO/releases/download/$release/testnet-all.tar.gz"
-  wget -qO- "https://github.com/$GENESIS_REPO/releases/download/$release/testnet-all.tar.gz" | tar xvz -C "$CONFIG_DIR"
+  echo "Downloading from: https://github.com/${GENESIS_REPO}/releases/download/${release}/testnet-all.tar.gz"
+  wget -qO- "https://github.com/${GENESIS_REPO}/releases/download/${release}/testnet-all.tar.gz" | tar xvz -C "${CONFIG_DIR}"
 
   # Extract variables from config.vars if it exists
-  if [ -f "$CONFIG_DIR/config.vars" ]; then
+  if [ -f "${CONFIG_DIR}/config.vars" ]; then
     # Source the config file to get variables
-    source "$CONFIG_DIR/config.vars"
+    source "${CONFIG_DIR}/config.vars"
     # Create retention.vars with key information
-    echo "CHAIN_ID=$CHAIN_ID" > "$CONFIG_DIR/retention.vars"
-    echo "ITERATION_RELEASE=$release" >> "$CONFIG_DIR/retention.vars"
-    echo "GENESIS_RESET_INTERVAL=$GENESIS_RESET_INTERVAL" >> "$CONFIG_DIR/retention.vars"
+    echo "CHAIN_ID=${CHAIN_ID}" >"${CONFIG_DIR}/retention.vars"
+    echo "ITERATION_RELEASE=${release}" >>"${CONFIG_DIR}/retention.vars"
+    echo "GENESIS_RESET_INTERVAL=${GENESIS_RESET_INTERVAL}" >>"${CONFIG_DIR}/retention.vars"
   fi
 }
 
@@ -174,7 +178,7 @@ reset_testnet() {
   # Orchestrate the reset process in proper sequence
   stop_clients
   clear_datadirs
-  download_genesis_release $1
+  download_genesis_release "$1"
   setup_genesis
   start_clients
   echo "$(date) - Reset completed successfully"
@@ -188,71 +192,71 @@ check_testnet() {
   current_time=$(date +%s)
 
   # Try to get genesis time from beacon node API
-  genesis_time=$(curl -s http://localhost:$CL_PORT/eth/v1/beacon/genesis |
-                 sed 's/.*"genesis_time":"\{0,1\}\([^,"]*\)"\{0,1\}.*/\1/' 2>/dev/null)
+  genesis_time=$(curl -s http://localhost:${CL_PORT}/eth/v1/beacon/genesis \
+    | sed 's/.*"genesis_time":"\{0,1\}\([^,"]*\)"\{0,1\}.*/\1/' 2>/dev/null)
 
   # If we can't get a valid genesis time, may need recovery or reset
-  if ! [[ $genesis_time =~ ^[0-9]+$ ]]; then
+  if ! [[ ${genesis_time} =~ ^[0-9]+$ ]]; then
     echo "$(date) - Could not get valid genesis time from beacon node, checking if reset needed..."
     # Check if we have a genesis file already
-    if [ -f "$CONFIG_DIR/genesis.json" ]; then
+    if [ -f "${CONFIG_DIR}/genesis.json" ]; then
       # Try to restart the clients first
       stop_clients
       sleep 5
       start_clients
       sleep 10
       # Try again to get genesis time
-      genesis_time=$(curl -s http://localhost:$CL_PORT/eth/v1/beacon/genesis |
-                     sed 's/.*"genesis_time":"\{0,1\}\([^,"]*\)"\{0,1\}.*/\1/' 2>/dev/null)
-      if ! [[ $genesis_time =~ ^[0-9]+$ ]]; then
+      genesis_time=$(curl -s http://localhost:${CL_PORT}/eth/v1/beacon/genesis \
+        | sed 's/.*"genesis_time":"\{0,1\}\([^,"]*\)"\{0,1\}.*/\1/' 2>/dev/null)
+      if ! [[ ${genesis_time} =~ ^[0-9]+$ ]]; then
         # If still can't get genesis time, force a reset
         echo "$(date) - Still could not get genesis time after restart, forcing reset..."
-        reset_testnet $(get_github_release $GENESIS_REPO)
+        reset_testnet $(get_github_release ${GENESIS_REPO})
       fi
     else
       # No genesis file, need initial setup
       echo "$(date) - No genesis file found, performing initial setup..."
-      reset_testnet $(get_github_release $GENESIS_REPO)
+      reset_testnet $(get_github_release ${GENESIS_REPO})
     fi
     return
   fi
 
   # Check if retention vars file exists
-  if ! [ -f "$CONFIG_DIR/retention.vars" ]; then
+  if ! [ -f "${CONFIG_DIR}/retention.vars" ]; then
     # Create default retention vars if missing
     echo "$(date) - Could not find retention.vars, creating default..."
-    echo "CHAIN_ID=unknown" > "$CONFIG_DIR/retention.vars"
-    echo "ITERATION_RELEASE=unknown" >> "$CONFIG_DIR/retention.vars"
-    echo "GENESIS_RESET_INTERVAL=86400" >> "$CONFIG_DIR/retention.vars"  # Default 1 day
+    echo "CHAIN_ID=unknown" >"${CONFIG_DIR}/retention.vars"
+    echo "ITERATION_RELEASE=unknown" >>"${CONFIG_DIR}/retention.vars"
+    echo "GENESIS_RESET_INTERVAL=86400" >>"${CONFIG_DIR}/retention.vars" # Default 1 day
   fi
 
   # Source the retention vars file to get variables
-  source "$CONFIG_DIR/retention.vars"
+  source "${CONFIG_DIR}/retention.vars"
 
   # Calculate timeout (5 minutes before actual reset)
-  testnet_timeout=$(expr $genesis_time + ${GENESIS_RESET_INTERVAL:-86400} - 300)
-  time_left=$(expr $testnet_timeout - $current_time)
-  echo "$(date) - Genesis timeout: $time_left seconds remaining"
+  testnet_timeout=$(expr "${genesis_time}" + "${GENESIS_RESET_INTERVAL:-86400}" - 300)
+  time_left=$(expr "${testnet_timeout}" - "${current_time}")
+  echo "$(date) - Genesis timeout: ${time_left} seconds remaining"
 
   # Check if it's time to reset
-  if [ "$testnet_timeout" -le "$current_time" ]; then
+  if [ "${testnet_timeout}" -le "${current_time}" ]; then
     echo "$(date) - Testnet timeout reached, checking for new genesis release..."
-    genesis_release=$(get_github_release $GENESIS_REPO)
+    genesis_release=$(get_github_release ${GENESIS_REPO})
 
     # Set default ITERATION_RELEASE if not defined
-    if ! [ "$ITERATION_RELEASE" ]; then
+    if ! [ -n "${ITERATION_RELEASE}" ]; then
       ITERATION_RELEASE=${CHAIN_ID:-unknown}
     fi
 
     # Check if there's a new release
-    if [ "$genesis_release" = "$ITERATION_RELEASE" ]; then
-      echo "$(date) - Could not find new genesis release (current: $genesis_release)"
+    if [ "${genesis_release}" = "${ITERATION_RELEASE}" ]; then
+      echo "$(date) - Could not find new genesis release (current: ${genesis_release})"
       return
     fi
 
     # New release found, perform reset
-    echo "$(date) - New genesis release found: $genesis_release, resetting..."
-    reset_testnet $genesis_release
+    echo "$(date) - New genesis release found: ${genesis_release}, resetting..."
+    reset_testnet "${genesis_release}"
   else
     echo "$(date) - No reset needed at this time"
   fi
@@ -272,10 +276,10 @@ main() {
   echo "$(date) - Starting Ephemery retention check..."
 
   # Check if genesis file exists
-  if ! [ -f "$CONFIG_DIR/genesis.json" ]; then
+  if ! [ -f "${CONFIG_DIR}/genesis.json" ]; then
     # No genesis file, need initial setup
     echo "$(date) - No genesis file found, performing initial setup..."
-    reset_testnet $(get_github_release $GENESIS_REPO)
+    reset_testnet $(get_github_release ${GENESIS_REPO})
   else
     # Genesis file exists, check if reset needed
     check_testnet

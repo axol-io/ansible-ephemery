@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Validator Monitoring Integration Script for Ephemery
 # ===================================================
@@ -76,11 +77,11 @@ function parse_args {
   if [[ $# -gt 0 ]]; then
     # First argument might be an operation
     case "$1" in
-      status|performance|health|dashboard)
+      status | performance | health | dashboard)
         OPERATION="$1"
         shift
         ;;
-      -h|--help)
+      -h | --help)
         show_help
         exit 0
         ;;
@@ -90,27 +91,27 @@ function parse_args {
   # Parse options
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -b|--beacon-api)
+      -b | --beacon-api)
         BEACON_API="$2"
         shift 2
         ;;
-      -v|--validator-api)
+      -v | --validator-api)
         VALIDATOR_API="$2"
         shift 2
         ;;
-      -m|--metrics-api)
+      -m | --metrics-api)
         VALIDATOR_METRICS_API="$2"
         shift 2
         ;;
-      -c|--continuous)
+      -c | --continuous)
         CONTINUOUS=true
         shift
         ;;
-      -i|--interval)
+      -i | --interval)
         INTERVAL="$2"
         shift 2
         ;;
-      -t|--threshold)
+      -t | --threshold)
         ALERT_THRESHOLD="$2"
         shift 2
         ;;
@@ -118,7 +119,7 @@ function parse_args {
         VERBOSE=true
         shift
         ;;
-      -h|--help)
+      -h | --help)
         show_help
         exit 0
         ;;
@@ -158,7 +159,7 @@ function get_validator_status {
 
   # Get validator metrics
   echo -e "${BLUE}Validator metrics:${NC}"
-  if curl -s "${VALIDATOR_METRICS_API}" > /dev/null; then
+  if curl -s "${VALIDATOR_METRICS_API}" >/dev/null; then
     # Extract key metrics
     ACTIVE_VALIDATORS=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_active | grep -v process | awk '{print $2}')
     TOTAL_VALIDATORS=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_total | grep -v process | awk '{print $2}')
@@ -187,7 +188,7 @@ function get_validator_status {
 
   # Check beacon node sync status
   echo -e "\n${BLUE}Beacon node sync status:${NC}"
-  if curl -s "${BEACON_API}/eth/v1/node/syncing" > /dev/null; then
+  if curl -s "${BEACON_API}/eth/v1/node/syncing" >/dev/null; then
     SYNC_STATUS=$(curl -s "${BEACON_API}/eth/v1/node/syncing")
     IS_SYNCING=$(echo "${SYNC_STATUS}" | jq -r '.data.is_syncing')
 
@@ -225,7 +226,7 @@ function get_validator_performance {
     echo -e "${YELLOW}Using basic performance monitoring...${NC}"
 
     # Basic performance monitoring
-    if curl -s "${VALIDATOR_METRICS_API}" > /dev/null; then
+    if curl -s "${VALIDATOR_METRICS_API}" >/dev/null; then
       # Extract performance metrics
       ATTESTATION_HITS=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_attestation_hits | awk '{print $2}')
       ATTESTATION_MISSES=$(curl -s "${VALIDATOR_METRICS_API}" | grep -i validator_attestation_misses | awk '{print $2}')
@@ -243,7 +244,7 @@ function get_validator_performance {
           echo -e "${GREEN}Attestation effectiveness: ${PERCENTAGE}%${NC}"
 
           # Check against threshold
-          if (( $(echo "${PERCENTAGE} < ${ALERT_THRESHOLD}" | bc -l) )); then
+          if (($(echo "${PERCENTAGE} < ${ALERT_THRESHOLD}" | bc -l))); then
             echo -e "${RED}⚠ Attestation effectiveness below threshold (${ALERT_THRESHOLD}%)${NC}"
           fi
         fi
@@ -268,7 +269,7 @@ function check_validator_health {
 
   # Check if validator is connected to beacon node
   echo -e "${BLUE}Checking connection to beacon node...${NC}"
-  if curl -s "${VALIDATOR_API}/lighthouse/health" > /dev/null; then
+  if curl -s "${VALIDATOR_API}/lighthouse/health" >/dev/null; then
     HEALTH_STATUS=$(curl -s "${VALIDATOR_API}/lighthouse/health")
     if [[ "${HEALTH_STATUS}" == "OK" ]]; then
       echo -e "${GREEN}✓ Validator is healthy${NC}"
@@ -281,7 +282,7 @@ function check_validator_health {
 
   # Check validator logs for errors
   echo -e "${BLUE}Checking validator logs for errors...${NC}"
-  if docker logs ephemery-validator 2>&1 | grep -i error | tail -5 > /dev/null; then
+  if docker logs ephemery-validator 2>&1 | grep -i error | tail -5 >/dev/null; then
     echo -e "${YELLOW}⚠ Recent errors found in validator logs:${NC}"
     docker logs ephemery-validator 2>&1 | grep -i error | tail -5
   else
@@ -290,7 +291,7 @@ function check_validator_health {
 
   # Check validator metrics for warnings
   echo -e "${BLUE}Checking validator metrics for warnings...${NC}"
-  if curl -s "${VALIDATOR_METRICS_API}" | grep -i warning > /dev/null; then
+  if curl -s "${VALIDATOR_METRICS_API}" | grep -i warning >/dev/null; then
     echo -e "${YELLOW}⚠ Warnings found in validator metrics:${NC}"
     curl -s "${VALIDATOR_METRICS_API}" | grep -i warning
   else
@@ -340,7 +341,7 @@ function show_dashboard {
       echo -e "${GREEN}Attestation effectiveness: ${PERCENTAGE}%${NC}"
 
       # Check against threshold
-      if (( $(echo "${PERCENTAGE} < ${ALERT_THRESHOLD}" | bc -l) )); then
+      if (($(echo "${PERCENTAGE} < ${ALERT_THRESHOLD}" | bc -l))); then
         echo -e "${RED}⚠ Attestation effectiveness below threshold (${ALERT_THRESHOLD}%)${NC}"
       fi
     fi

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # benchmark_sync.sh - Script to benchmark sync performance for Ephemery
 # This implements Phase 5 of the Fix Checkpoint Sync Roadmap
 
@@ -11,9 +12,9 @@ NC='\033[0m' # No Color
 
 # Load configuration if available
 CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"
-if [ -f "$CONFIG_FILE" ]; then
-  echo -e "${BLUE}Loading configuration from $CONFIG_FILE${NC}"
-  source "$CONFIG_FILE"
+if [ -f "${CONFIG_FILE}" ]; then
+  echo -e "${BLUE}Loading configuration from ${CONFIG_FILE}${NC}"
+  source "${CONFIG_FILE}"
 else
   echo -e "${YELLOW}Configuration file not found, using default paths${NC}"
   # Default paths if config not available
@@ -25,8 +26,8 @@ else
 fi
 
 # Script directory
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
 RESULTS_DIR="${PROJECT_ROOT}/benchmark_results"
 
 # API endpoints from config
@@ -57,21 +58,21 @@ check_dependencies() {
   echo -e "${YELLOW}Checking dependencies...${NC}"
 
   # Check for curl
-  if ! command -v curl &> /dev/null; then
+  if ! command -v curl &>/dev/null; then
     echo -e "${RED}Error: curl is not installed.${NC}"
     echo -e "Please install curl before running this script."
     exit 1
   fi
 
   # Check for jq
-  if ! command -v jq &> /dev/null; then
+  if ! command -v jq &>/dev/null; then
     echo -e "${RED}Error: jq is not installed.${NC}"
     echo -e "Please install jq before running this script."
     exit 1
   fi
 
   # Check for ansible-playbook
-  if ! command -v ansible-playbook &> /dev/null; then
+  if ! command -v ansible-playbook &>/dev/null; then
     echo -e "${RED}Error: ansible-playbook is not installed.${NC}"
     echo -e "Please install Ansible before running this script."
     exit 1
@@ -95,25 +96,25 @@ get_sync_status() {
 # Function to measure CPU usage
 measure_cpu_usage() {
   local container=$1
-  docker stats --no-stream --format "{{.CPUPerc}}" $container | sed 's/%//'
+  docker stats --no-stream --format "{{.CPUPerc}}" "${container}" | sed 's/%//'
 }
 
 # Function to measure memory usage
 measure_memory_usage() {
   local container=$1
-  docker stats --no-stream --format "{{.MemUsage}}" $container | awk '{print $1}'
+  docker stats --no-stream --format "{{.MemUsage}}" "${container}" | awk '{print $1}'
 }
 
 # Function to measure network bandwidth
 measure_network_bandwidth() {
   local container=$1
-  docker stats --no-stream --format "{{.NetIO}}" $container
+  docker stats --no-stream --format "{{.NetIO}}" "${container}"
 }
 
 # Function to run a single benchmark
 run_benchmark() {
   local test_name=$1
-  local config_params="${CONFIG_PARAMS[$test_name]}"
+  local config_params="${CONFIG_PARAMS[${test_name}]}"
   local test_result_dir
   test_result_dir="${RESULTS_DIR}/${test_name}_$(date +%Y%m%d_%H%M%S)"
 
@@ -128,7 +129,7 @@ run_benchmark() {
   mkdir -p "${test_result_dir}"
 
   # Save configuration
-  echo "${config_params}" > "${test_result_dir}/config.txt"
+  echo "${config_params}" >"${test_result_dir}/config.txt"
 
   # Update inventory file with test configuration
   echo -e "${YELLOW}Updating inventory file with test configuration...${NC}"
@@ -152,7 +153,7 @@ run_benchmark() {
   # Record start time
   local start_time
   start_time=$(date +%s)
-  echo "Benchmark started at: $(date)" > "${test_result_dir}/benchmark_log.txt"
+  echo "Benchmark started at: $(date)" >"${test_result_dir}/benchmark_log.txt"
 
   # Start containers with appropriate configuration
   echo -e "${YELLOW}Starting containers with test configuration...${NC}"
@@ -160,14 +161,14 @@ run_benchmark() {
 
   # Monitoring loop
   echo -e "${YELLOW}Starting performance monitoring...${NC}"
-  local monitoring_interval=60  # seconds
-  local max_duration=86400      # 24 hours maximum test duration
+  local monitoring_interval=60 # seconds
+  local max_duration=86400     # 24 hours maximum test duration
   local elapsed=0
   local is_synced=false
 
-  echo "timestamp,head_slot,sync_distance,cpu_lighthouse,cpu_geth,memory_lighthouse,memory_geth,network_io" > "${test_result_dir}/metrics.csv"
+  echo "timestamp,head_slot,sync_distance,cpu_lighthouse,cpu_geth,memory_lighthouse,memory_geth,network_io" >"${test_result_dir}/metrics.csv"
 
-  while [ $elapsed -lt $max_duration ] && [ "$is_synced" = false ]; do
+  while [ ${elapsed} -lt ${max_duration} ] && [ "${is_synced}" = false ]; do
     # Get sync status
     local sync_status
     sync_status=$(get_sync_status)
@@ -191,19 +192,19 @@ run_benchmark() {
     network_io=$(measure_network_bandwidth "ephemery-lighthouse")
 
     # Record metrics
-    echo "$(date +"%Y-%m-%d %H:%M:%S"),${head_slot},${sync_distance},${cpu_lighthouse},${cpu_geth},${memory_lighthouse},${memory_geth},${network_io}" >> "${test_result_dir}/metrics.csv"
+    echo "$(date +"%Y-%m-%d %H:%M:%S"),${head_slot},${sync_distance},${cpu_lighthouse},${cpu_geth},${memory_lighthouse},${memory_geth},${network_io}" >>"${test_result_dir}/metrics.csv"
 
     # Log progress
-    echo -e "Time elapsed: $(format_duration $elapsed) | Head slot: ${head_slot} | Sync distance: ${sync_distance} | CPU: ${cpu_lighthouse}% | Mem: ${memory_lighthouse}"
+    echo -e "Time elapsed: $(format_duration ${elapsed}) | Head slot: ${head_slot} | Sync distance: ${sync_distance} | CPU: ${cpu_lighthouse}% | Mem: ${memory_lighthouse}"
 
     # Check if sync is complete
-    if [ "$is_syncing" = "false" ]; then
+    if [ "${is_syncing}" = "false" ]; then
       is_synced=true
       echo -e "${GREEN}Sync completed!${NC}"
     fi
 
     # Sleep for monitoring interval
-    sleep $monitoring_interval
+    sleep ${monitoring_interval}
 
     # Update elapsed time
     elapsed=$(($(date +%s) - start_time))
@@ -213,15 +214,15 @@ run_benchmark() {
   local end_time=$(date +%s)
   local total_duration=$((end_time - start_time))
 
-  echo "Benchmark completed at: $(date)" >> "${test_result_dir}/benchmark_log.txt"
-  echo "Total duration: $(format_duration $total_duration)" >> "${test_result_dir}/benchmark_log.txt"
+  echo "Benchmark completed at: $(date)" >>"${test_result_dir}/benchmark_log.txt"
+  echo "Total duration: $(format_duration ${total_duration})" >>"${test_result_dir}/benchmark_log.txt"
 
   # Generate summary
   generate_summary "${test_result_dir}" "${test_name}" "${total_duration}"
 
   echo -e "${BLUE}======================================================${NC}"
   echo -e "${GREEN}Benchmark for ${test_name} completed!${NC}"
-  echo -e "Total duration: $(format_duration $total_duration)"
+  echo -e "Total duration: $(format_duration ${total_duration})"
   echo -e "Results saved to: ${test_result_dir}"
   echo -e "${BLUE}======================================================${NC}"
   echo ""
@@ -237,13 +238,13 @@ generate_summary() {
 
   echo -e "${YELLOW}Generating summary report...${NC}"
 
-  cat > "${result_dir}/summary.md" << EOF
+  cat >"${result_dir}/summary.md" <<EOF
 # Sync Performance Benchmark Summary
 
 ## Test Configuration: ${test_name}
 
 - **Date:** $(date +"%Y-%m-%d")
-- **Duration:** $(format_duration $duration)
+- **Duration:** $(format_duration "${duration}")
 - **Configuration Parameters:**
 \`\`\`
 $(cat "${result_dir}/config.txt")
@@ -264,7 +265,7 @@ $(awk -F, 'NR>1 && NR % 10 == 0 {print "- **Time Elapsed:** " $1 " | **Head Slot
 
 ## Conclusion
 
-Sync completed in $(format_duration $duration) using the ${test_name} method.
+Sync completed in $(format_duration "${duration}") using the ${test_name} method.
 
 EOF
 
@@ -274,16 +275,16 @@ EOF
 # Function to format duration
 format_duration() {
   local seconds=$1
-  local days=$((seconds/86400))
-  local hours=$(((seconds%86400)/3600))
-  local minutes=$(((seconds%3600)/60))
-  local remaining_seconds=$((seconds%60))
+  local days=$((seconds / 86400))
+  local hours=$(((seconds % 86400) / 3600))
+  local minutes=$(((seconds % 3600) / 60))
+  local remaining_seconds=$((seconds % 60))
 
-  if [ $days -gt 0 ]; then
+  if [ ${days} -gt 0 ]; then
     echo "${days}d ${hours}h ${minutes}m ${remaining_seconds}s"
-  elif [ $hours -gt 0 ]; then
+  elif [ ${hours} -gt 0 ]; then
     echo "${hours}h ${minutes}m ${remaining_seconds}s"
-  elif [ $minutes -gt 0 ]; then
+  elif [ ${minutes} -gt 0 ]; then
     echo "${minutes}m ${remaining_seconds}s"
   else
     echo "${remaining_seconds}s"
@@ -296,7 +297,7 @@ generate_comparative_report() {
 
   local report_file="${RESULTS_DIR}/comparative_report.md"
 
-  cat > "${report_file}" << EOF
+  cat >"${report_file}" <<EOF
 # Ephemery Sync Methods Comparative Analysis
 
 This report compares the performance of different sync methods for Ephemery nodes.
@@ -324,7 +325,7 @@ EOF
   # In practice, you would process the results of each test and add them to the table
   # This is a placeholder for demonstration purposes
 
-  cat >> "${report_file}" << EOF
+  cat >>"${report_file}" <<EOF
 | Sync Time | 26d 12h | 4d 8h | 10h 45m |
 | Avg CPU (Lighthouse) | 45% | 65% | 78% |
 | Avg CPU (Geth) | 60% | 75% | 85% |
@@ -377,7 +378,7 @@ main() {
   read -p "Enter your choice (1-5): " choice
   echo ""
 
-  case $choice in
+  case ${choice} in
     1)
       run_benchmark "genesis_no_optimizations"
       ;;
@@ -407,7 +408,7 @@ main() {
   echo -e "Results are saved in: ${RESULTS_DIR}"
   echo ""
 
-  if [[ $choice == 4 ]]; then
+  if [[ ${choice} == 4 ]]; then
     echo -e "A comparative report has been generated: ${RESULTS_DIR}/comparative_report.md"
   fi
 

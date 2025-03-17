@@ -59,6 +59,16 @@ This document tracks changes to the Ephemery Node project over time, detailing n
 - Improved error handling for missing configuration
 - Fixed compatibility issues with associative arrays in bash scripts
 
+### Improved
+- Shell script reliability and testing framework (March 2025)
+  - Fixed critical syntax errors in multiple shell scripts
+  - Enhanced test_reset_mechanism.sh to properly detect network resets
+  - Added test mode with isolated test environments to ephemery_retention.sh
+  - Improved variable handling to prevent readonly variable conflicts
+  - Added automated shell script fix utilities (fix_shell_scripts.sh, fix_sc2155_warnings.sh)
+  - Enhanced pre-commit hooks to catch shell script issues early
+  - Added proper version information to all scripts
+
 ## [1.4.0] - YYYY-MM-DD
 
 ### Added

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Ephemery Reset Script
 # This script resets the Ephemery testnet nodes to the latest iteration.
@@ -10,9 +11,9 @@ set -e
 
 # Load configuration if available
 CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"
-if [ -f "$CONFIG_FILE" ]; then
-  echo "Loading configuration from $CONFIG_FILE"
-  source "$CONFIG_FILE"
+if [ -f "${CONFIG_FILE}" ]; then
+  echo "Loading configuration from ${CONFIG_FILE}"
+  source "${CONFIG_FILE}"
 else
   echo "Configuration file not found, using default paths"
   # Default paths if config not available
@@ -26,7 +27,7 @@ fi
 GENESIS_REPO="ephemery-testnet/ephemery-genesis"
 
 # Create log directory if it doesn't exist
-mkdir -p "$EPHEMERY_LOGS_DIR"
+mkdir -p "${EPHEMERY_LOGS_DIR}"
 
 echo "$(date) - Starting Ephemery reset process"
 
@@ -40,11 +41,11 @@ rm -rf "${EPHEMERY_DATA_DIR}/geth/"* "${EPHEMERY_DATA_DIR}/beacon/"*
 
 # Download latest genesis files
 echo "Downloading latest genesis files..."
-LATEST_RELEASE=$(curl --silent "https://api.github.com/repos/$GENESIS_REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
+LATEST_RELEASE=$(curl --silent "https://api.github.com/repos/${GENESIS_REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
 
-echo "Latest release: $LATEST_RELEASE"
-mkdir -p "$EPHEMERY_CONFIG_DIR"
-wget -qO- "https://github.com/$GENESIS_REPO/releases/download/$LATEST_RELEASE/testnet-all.tar.gz" | tar xvz -C "$EPHEMERY_CONFIG_DIR"
+echo "Latest release: ${LATEST_RELEASE}"
+mkdir -p "${EPHEMERY_CONFIG_DIR}"
+wget -qO- "https://github.com/${GENESIS_REPO}/releases/download/${LATEST_RELEASE}/testnet-all.tar.gz" | tar xvz -C "${EPHEMERY_CONFIG_DIR}"
 
 # Initialize execution client (Geth)
 echo "Initializing Geth with new genesis..."
@@ -53,7 +54,7 @@ docker run --rm -v "${EPHEMERY_DATA_DIR}/geth:/data" -v "${EPHEMERY_CONFIG_DIR}:
 # Start containers
 echo "Starting containers..."
 docker start ephemery-geth
-sleep 10  # Wait for Geth to start
+sleep 10 # Wait for Geth to start
 docker start ephemery-lighthouse
 
 # Restart monitoring

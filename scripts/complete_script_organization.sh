@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Script to complete the organization of scripts directory according to the PRD roadmap
 # This implements the "Scripts Directory Consolidation" high-priority task from the roadmap
@@ -33,114 +34,114 @@ DEVELOPMENT_DESC="Scripts for development environment setup and testing"
 echo -e "\n${GREEN}Checking for remaining loose scripts in the scripts directory...${NC}"
 loose_scripts=$(find . -maxdepth 1 -type f -name "*.sh" | grep -v "complete_script_organization.sh" | grep -v "organize_scripts.sh")
 
-if [ -n "$loose_scripts" ]; then
-    echo -e "${YELLOW}Found $(echo "$loose_scripts" | wc -l | tr -d ' ') loose scripts that need organization:${NC}"
-    echo "$loose_scripts"
+if [ -n "${loose_scripts}" ]; then
+  echo -e "${YELLOW}Found $(echo "${loose_scripts}" | wc -l | tr -d ' ') loose scripts that need organization:${NC}"
+  echo "${loose_scripts}"
 else
-    echo -e "${GREEN}No loose scripts found! Basic organization is complete.${NC}"
+  echo -e "${GREEN}No loose scripts found! Basic organization is complete.${NC}"
 fi
 
 # Function to analyze scripts and provide categorization suggestions
 analyze_scripts() {
-    echo -e "\n${GREEN}Analyzing loose scripts and suggesting categorization...${NC}"
+  echo -e "\n${GREEN}Analyzing loose scripts and suggesting categorization...${NC}"
 
-    for script in $loose_scripts; do
-        script_name=$(basename "$script")
-        content=$(head -n 20 "$script")
+  for script in ${loose_scripts}; do
+    script_name=$(basename "${script}")
+    content=$(head -n 20 "${script}")
 
-        echo -e "${YELLOW}Script: $script_name${NC}"
+    echo -e "${YELLOW}Script: ${script_name}${NC}"
 
-        # Extract script description
-        description=$(grep -m 1 "^#" "$script" | sed 's/^#//' | sed 's/^ *//')
-        if [ -z "$description" ]; then
-            description="No description found"
-        fi
-        echo -e "  Description: $description"
+    # Extract script description
+    description=$(grep -m 1 "^#" "${script}" | sed 's/^#//' | sed 's/^ *//')
+    if [ -z "${description}" ]; then
+      description="No description found"
+    fi
+    echo -e "  Description: ${description}"
 
-        # Suggest category based on filename and content
-        suggested_category="utilities" # Default category
+    # Suggest category based on filename and content
+    suggested_category="utilities" # Default category
 
-        if [[ "$script_name" == *deploy* || "$script_name" == *setup* || "$script_name" == *install* ]]; then
-            suggested_category="deployment"
-        elif [[ "$script_name" == *monitor* || "$script_name" == *check* || "$script_name" == *status* ]]; then
-            suggested_category="monitoring"
-        elif [[ "$script_name" == *fix* || "$script_name" == *reset* || "$script_name" == *troubleshoot* ]]; then
-            suggested_category="maintenance"
-        elif [[ "$script_name" == *dev* || "$script_name" == *test* || "$script_name" == *standard* ]]; then
-            suggested_category="development"
-        elif [[ "$script_name" == *ephemery* || "$script_name" == *validator* ]]; then
-            suggested_category="core"
-        fi
+    if [[ "${script_name}" == *deploy* || "${script_name}" == *setup* || "${script_name}" == *install* ]]; then
+      suggested_category="deployment"
+    elif [[ "${script_name}" == *monitor* || "${script_name}" == *check* || "${script_name}" == *status* ]]; then
+      suggested_category="monitoring"
+    elif [[ "${script_name}" == *fix* || "${script_name}" == *reset* || "${script_name}" == *troubleshoot* ]]; then
+      suggested_category="maintenance"
+    elif [[ "${script_name}" == *dev* || "${script_name}" == *test* || "${script_name}" == *standard* ]]; then
+      suggested_category="development"
+    elif [[ "${script_name}" == *ephemery* || "${script_name}" == *validator* ]]; then
+      suggested_category="core"
+    fi
 
-        echo -e "  Suggested category: ${BLUE}$suggested_category${NC}"
-        echo ""
-    done
+    echo -e "  Suggested category: ${BLUE}${suggested_category}${NC}"
+    echo ""
+  done
 }
 
 # Step 1: Manually organize scripts
 organize_scripts_manually() {
-    echo -e "\n${GREEN}Manual script organization...${NC}"
+  echo -e "\n${GREEN}Manual script organization...${NC}"
 
-    echo -e "${YELLOW}Please use the following guidelines to organize scripts:${NC}"
-    echo -e "- core/: Core ephemery functionality scripts (ephemery_*.sh, validator core functionality)"
-    echo -e "- deployment/: Scripts for deploying ephemery nodes (deploy-*.sh, setup-*.sh)"
-    echo -e "- monitoring/: Monitoring and alerting scripts (check_*.sh, *_monitor.sh)"
-    echo -e "- maintenance/: Scripts for maintenance tasks (fix_*.sh, reset_*.sh, troubleshoot-*.sh)"
-    echo -e "- utilities/: Helper utilities and shared functions (common tools, key management)"
-    echo -e "- development/: Scripts for development environment setup and testing (dev-*.sh, test-*.sh)"
+  echo -e "${YELLOW}Please use the following guidelines to organize scripts:${NC}"
+  echo -e "- core/: Core ephemery functionality scripts (ephemery_*.sh, validator core functionality)"
+  echo -e "- deployment/: Scripts for deploying ephemery nodes (deploy-*.sh, setup-*.sh)"
+  echo -e "- monitoring/: Monitoring and alerting scripts (check_*.sh, *_monitor.sh)"
+  echo -e "- maintenance/: Scripts for maintenance tasks (fix_*.sh, reset_*.sh, troubleshoot-*.sh)"
+  echo -e "- utilities/: Helper utilities and shared functions (common tools, key management)"
+  echo -e "- development/: Scripts for development environment setup and testing (dev-*.sh, test-*.sh)"
 
-    echo -e "\n${GREEN}Suggested actions for loose scripts:${NC}"
+  echo -e "\n${GREEN}Suggested actions for loose scripts:${NC}"
 
-    for script in $loose_scripts; do
-        script_name=$(basename "$script")
+  for script in ${loose_scripts}; do
+    script_name=$(basename "${script}")
 
-        # Suggest category based on filename
-        target_dir="utilities" # Default category
+    # Suggest category based on filename
+    target_dir="utilities" # Default category
 
-        if [[ "$script_name" == *deploy* || "$script_name" == *setup* || "$script_name" == *install* ]]; then
-            target_dir="deployment"
-        elif [[ "$script_name" == *monitor* || "$script_name" == *check* || "$script_name" == *status* ]]; then
-            target_dir="monitoring"
-        elif [[ "$script_name" == *fix* || "$script_name" == *reset* || "$script_name" == *troubleshoot* ]]; then
-            target_dir="maintenance"
-        elif [[ "$script_name" == *dev* || "$script_name" == *test* || "$script_name" == *standard* ]]; then
-            target_dir="development"
-        elif [[ "$script_name" == *ephemery* || "$script_name" == *validator* ]]; then
-            target_dir="core"
-        fi
+    if [[ "${script_name}" == *deploy* || "${script_name}" == *setup* || "${script_name}" == *install* ]]; then
+      target_dir="deployment"
+    elif [[ "${script_name}" == *monitor* || "${script_name}" == *check* || "${script_name}" == *status* ]]; then
+      target_dir="monitoring"
+    elif [[ "${script_name}" == *fix* || "${script_name}" == *reset* || "${script_name}" == *troubleshoot* ]]; then
+      target_dir="maintenance"
+    elif [[ "${script_name}" == *dev* || "${script_name}" == *test* || "${script_name}" == *standard* ]]; then
+      target_dir="development"
+    elif [[ "${script_name}" == *ephemery* || "${script_name}" == *validator* ]]; then
+      target_dir="core"
+    fi
 
-        echo -e "${YELLOW}Move $script_name to $target_dir/${NC}"
+    echo -e "${YELLOW}Move ${script_name} to ${target_dir}/${NC}"
 
-        # Create directory if it doesn't exist
-        mkdir -p "$target_dir"
+    # Create directory if it doesn't exist
+    mkdir -p "${target_dir}"
 
-        # Ask whether to move the script
-        echo -e "${GREEN}Move $script_name to $target_dir/? (y/n)${NC}"
-        read -r answer
+    # Ask whether to move the script
+    echo -e "${GREEN}Move ${script_name} to ${target_dir}/? (y/n)${NC}"
+    read -r answer
 
-        if [[ "$answer" =~ ^[Yy]$ ]]; then
-            # Create backup
-            mkdir -p "script_backups"
-            cp "$script" "script_backups/"
+    if [[ "${answer}" =~ ^[Yy]$ ]]; then
+      # Create backup
+      mkdir -p "script_backups"
+      cp "${script}" "script_backups/"
 
-            # Move the script
-            mv "$script" "$target_dir/"
-            echo -e "${GREEN}Moved $script_name to $target_dir/${NC}"
-        else
-            echo -e "${YELLOW}Skipped $script_name${NC}"
-        fi
-    done
+      # Move the script
+      mv "${script}" "${target_dir}/"
+      echo -e "${GREEN}Moved ${script_name} to ${target_dir}/${NC}"
+    else
+      echo -e "${YELLOW}Skipped ${script_name}${NC}"
+    fi
+  done
 }
 
 # Step 2: Create a shared library for common functions
 create_shared_library() {
-    echo -e "\n${GREEN}Creating shared library for common functions...${NC}"
+  echo -e "\n${GREEN}Creating shared library for common functions...${NC}"
 
-    common_lib_dir="utilities/lib"
-    mkdir -p "$common_lib_dir"
+  common_lib_dir="utilities/lib"
+  mkdir -p "${common_lib_dir}"
 
-    # Create the common library file
-    cat > "$common_lib_dir/common.sh" << 'EOF'
+  # Create the common library file
+  cat >"${common_lib_dir}/common.sh" <<'EOF'
 #!/bin/bash
 #
 # Common utility functions for Ephemery scripts
@@ -275,11 +276,11 @@ confirm_action() {
 }
 EOF
 
-    chmod +x "$common_lib_dir/common.sh"
-    echo -e "${GREEN}Created common library at $common_lib_dir/common.sh${NC}"
+  chmod +x "${common_lib_dir}/common.sh"
+  echo -e "${GREEN}Created common library at ${common_lib_dir}/common.sh${NC}"
 
-    # Create a README for the common library
-    cat > "$common_lib_dir/README.md" << 'EOF'
+  # Create a README for the common library
+  cat >"${common_lib_dir}/README.md" <<'EOF'
 # Common Script Library
 
 This directory contains common utility functions and libraries that can be shared across all Ephemery scripts.
@@ -317,75 +318,75 @@ log_message "INFO" "Starting script execution"
 - `EPHEMERY_BASE_DIR` - Base directory of the Ephemery installation
 EOF
 
-    echo -e "${GREEN}Created README for common library${NC}"
+  echo -e "${GREEN}Created README for common library${NC}"
 }
 
 # Step 3: Update README files for each script directory
 update_readmes() {
-    echo -e "\n${GREEN}Updating README files for script directories...${NC}"
+  echo -e "\n${GREEN}Updating README files for script directories...${NC}"
 
-    # Process each directory
-    for dir in core deployment monitoring maintenance utilities development; do
-        if [ -d "$dir" ]; then
-            readme_file="$dir/README.md"
+  # Process each directory
+  for dir in core deployment monitoring maintenance utilities development; do
+    if [ -d "${dir}" ]; then
+      readme_file="${dir}/README.md"
 
-            # Get a list of scripts in the directory
-            scripts=$(find "$dir" -maxdepth 1 -type f -name "*.sh" | sort)
+      # Get a list of scripts in the directory
+      scripts=$(find "${dir}" -maxdepth 1 -type f -name "*.sh" | sort)
 
-            echo -e "${YELLOW}Updating README for $dir directory...${NC}"
+      echo -e "${YELLOW}Updating README for ${dir} directory...${NC}"
 
-            # Get directory description
-            dir_desc=""
-            case "$dir" in
-                "core") dir_desc="$CORE_DESC" ;;
-                "deployment") dir_desc="$DEPLOYMENT_DESC" ;;
-                "monitoring") dir_desc="$MONITORING_DESC" ;;
-                "maintenance") dir_desc="$MAINTENANCE_DESC" ;;
-                "utilities") dir_desc="$UTILITIES_DESC" ;;
-                "development") dir_desc="$DEVELOPMENT_DESC" ;;
-            esac
+      # Get directory description
+      dir_desc=""
+      case "${dir}" in
+        "core") dir_desc="${CORE_DESC}" ;;
+        "deployment") dir_desc="${DEPLOYMENT_DESC}" ;;
+        "monitoring") dir_desc="${MONITORING_DESC}" ;;
+        "maintenance") dir_desc="${MAINTENANCE_DESC}" ;;
+        "utilities") dir_desc="${UTILITIES_DESC}" ;;
+        "development") dir_desc="${DEVELOPMENT_DESC}" ;;
+      esac
 
-            # Create or update the README file
-            cat > "$readme_file" << EOF
+      # Create or update the README file
+      cat >"${readme_file}" <<EOF
 # ${dir^} Scripts
 
-$dir_desc
+${dir_desc}
 
 ## Scripts
 
 EOF
 
-            # Add script descriptions
-            for script in $scripts; do
-                script_name=$(basename "$script")
-                description=$(grep -m 1 "^#" "$script" | sed 's/^#//' | sed 's/^ *//')
-                if [ -z "$description" ]; then
-                    description="No description found"
-                fi
-                echo "- \`$script_name\`: $description" >> "$readme_file"
-            done
+      # Add script descriptions
+      for script in ${scripts}; do
+        script_name=$(basename "${script}")
+        description=$(grep -m 1 "^#" "${script}" | sed 's/^#//' | sed 's/^ *//')
+        if [ -z "${description}" ]; then
+          description="No description found"
+        fi
+        echo "- \`${script_name}\`: ${description}" >>"${readme_file}"
+      done
 
-            # Add usage section
-            cat >> "$readme_file" << EOF
+      # Add usage section
+      cat >>"${readme_file}" <<EOF
 
 ## Usage
 
 Please refer to the individual script comments or the main project documentation for usage information.
 EOF
 
-            echo -e "${GREEN}Updated $readme_file${NC}"
-        fi
-    done
+      echo -e "${GREEN}Updated ${readme_file}${NC}"
+    fi
+  done
 }
 
 # Step 4: Create standardization template for script development
 create_script_template() {
-    echo -e "\n${GREEN}Creating standardized script template...${NC}"
+  echo -e "\n${GREEN}Creating standardized script template...${NC}"
 
-    mkdir -p "development/templates"
-    template_file="development/templates/script_template.sh"
+  mkdir -p "development/templates"
+  template_file="development/templates/script_template.sh"
 
-    cat > "$template_file" << 'EOF'
+  cat >"${template_file}" <<'EOF'
 #!/bin/bash
 #
 # [SCRIPT PURPOSE]: Brief description of what this script does
@@ -459,11 +460,11 @@ main() {
 main
 EOF
 
-    chmod +x "$template_file"
-    echo -e "${GREEN}Created standardized script template at $template_file${NC}"
+  chmod +x "${template_file}"
+  echo -e "${GREEN}Created standardized script template at ${template_file}${NC}"
 
-    # Create a README for the template
-    cat > "development/templates/README.md" << 'EOF'
+  # Create a README for the template
+  cat >"development/templates/README.md" <<'EOF'
 # Script Templates
 
 This directory contains standardized templates for creating new scripts in the Ephemery project.
@@ -510,16 +511,16 @@ All scripts should follow this general structure:
 - Follow the principle of least privilege
 EOF
 
-    echo -e "${GREEN}Created README for templates directory${NC}"
+  echo -e "${GREEN}Created README for templates directory${NC}"
 }
 
 # Step 5: Update main scripts README
 update_main_readme() {
-    echo -e "\n${GREEN}Updating main scripts README...${NC}"
+  echo -e "\n${GREEN}Updating main scripts README...${NC}"
 
-    readme_file="README.md"
+  readme_file="README.md"
 
-    cat > "$readme_file" << 'EOF'
+  cat >"${readme_file}" <<'EOF'
 # Ephemery Scripts
 
 This directory contains scripts for deploying, managing, and maintaining Ephemery nodes.
@@ -564,7 +565,7 @@ For more detailed information about specific scripts, please refer to the README
 For a complete list of all available scripts and their purposes, see the README files in each subdirectory.
 EOF
 
-    echo -e "${GREEN}Updated main README at $readme_file${NC}"
+  echo -e "${GREEN}Updated main README at ${readme_file}${NC}"
 }
 
 # Main execution flow

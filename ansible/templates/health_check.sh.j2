@@ -30,25 +30,25 @@ check_node_health() {
     local node_ip=$1
     local node_name=$2
     local failures=0
-    
+
     # Check execution client (HTTP RPC)
     if ! curl -s -m $HEALTHCHECK_TIMEOUT -o /dev/null -w "%{http_code}" http://${node_ip}:8545/health | grep -q "200"; then
         log "WARN: ${node_name} execution client HTTP RPC health check failed"
         ((failures++))
     fi
-    
+
     # Check execution client (WebSocket)
     if ! nc -z -w $HEALTHCHECK_TIMEOUT ${node_ip} 8546 > /dev/null 2>&1; then
         log "WARN: ${node_name} execution client WebSocket health check failed"
         ((failures++))
     fi
-    
+
     # Check consensus client
     if ! curl -s -m $HEALTHCHECK_TIMEOUT -o /dev/null -w "%{http_code}" http://${node_ip}:5052/eth/v1/node/health | grep -q "200"; then
         log "WARN: ${node_name} consensus client health check failed"
         ((failures++))
     fi
-    
+
     # Return 0 if healthy, 1 if unhealthy
     [ $failures -lt $MAX_FAILURES ]
     return $?
@@ -59,9 +59,9 @@ update_load_balancer() {
     local action=$1  # "enable" or "disable"
     local node_name=$2
     local node_ip=$3
-    
+
     log "Updating load balancer: ${action} node ${node_name}"
-    
+
     if [ "$LB_TYPE" == "nginx" ]; then
         # Update NGINX upstream configuration
         # This is a simplified example and might need more complex logic
@@ -87,9 +87,9 @@ perform_failover() {
     local failed_node=$1
     local failed_node_ip=$2
     local new_primary=""
-    
+
     log "ALERT: Primary node ${failed_node} is unhealthy, initiating failover"
-    
+
     # Find a healthy backup node
     for i in "${!NODES[@]}"; do
         if [ "${NODES[$i]}" != "$failed_node" ]; then
@@ -99,30 +99,30 @@ perform_failover() {
             fi
         fi
     done
-    
+
     if [ -z "$new_primary" ]; then
         log "ERROR: No healthy backup nodes available for failover"
         notify "CRITICAL: Ephemery cluster has no healthy nodes available for failover"
         return 1
     fi
-    
+
     # Update load balancer configuration
     update_load_balancer "disable" "$failed_node" "$failed_node_ip"
-    
+
     log "SUCCESS: Failover completed, new primary node is ${new_primary}"
     notify "Ephemery cluster failover completed. New primary: ${new_primary}, failed node: ${failed_node}"
-    
+
     return 0
 }
 
 # Send notifications
 notify() {
     local message=$1
-    
+
     if [ "$NOTIFY_FAILURE" == "true" ] && [ ! -z "$SLACK_WEBHOOK" ]; then
         curl -s -X POST -H 'Content-type: application/json' --data "{\"text\":\"${message}\"}" $SLACK_WEBHOOK
     fi
-    
+
     log "NOTIFICATION: $message"
 }
 
@@ -133,13 +133,13 @@ all_healthy=true
 for i in "${!NODES[@]}"; do
     node_name="${NODES[$i]}"
     node_ip="${NODE_IPS[$i]}"
-    
+
     if check_node_health "$node_ip" "$node_name"; then
         log "Node ${node_name} is healthy"
     else
         log "ERROR: Node ${node_name} is unhealthy"
         all_healthy=false
-        
+
         # If this is the primary node and failover is enabled
         if [ "$node_name" == "$PRIMARY_NODE" ] && [ "$PERFORM_FAILOVER" == "true" ]; then
             perform_failover "$node_name" "$node_ip"
@@ -156,4 +156,4 @@ if $all_healthy; then
 fi
 
 log "Health check completed"
-exit 0 
+exit 0

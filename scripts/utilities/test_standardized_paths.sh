@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Test Standardized Paths
 # This script tests that all components work correctly with different base directories
@@ -15,10 +16,10 @@ NC='\033[0m' # No Color
 
 # Load configuration if available
 CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"
-if [ -f "$CONFIG_FILE" ]; then
-  echo -e "${BLUE}Loading configuration from $CONFIG_FILE${NC}"
+if [ -f "${CONFIG_FILE}" ]; then
+  echo -e "${BLUE}Loading configuration from ${CONFIG_FILE}${NC}"
   # shellcheck source=/opt/ephemery/config/ephemery_paths.conf
-  source "$CONFIG_FILE"
+  source "${CONFIG_FILE}"
 else
   echo -e "${YELLOW}Configuration file not found, using default paths${NC}"
   # Default paths if config not available
@@ -49,7 +50,7 @@ mkdir -p "${TEST_BASE_DIR}/scripts"
 TEST_CONFIG="${TEST_BASE_DIR}/config/ephemery_paths.conf"
 echo -e "${YELLOW}Creating test configuration: ${TEST_CONFIG}${NC}"
 
-cat > "${TEST_CONFIG}" << EOF
+cat >"${TEST_CONFIG}" <<EOF
 # Ephemery Paths Configuration - TEST VERSION
 # This file defines standard paths used across all Ephemery scripts and services
 
@@ -85,7 +86,7 @@ EOF
 
 # Create a JWT token for testing
 echo -e "${YELLOW}Creating test JWT token${NC}"
-openssl rand -hex 32 > "${TEST_BASE_DIR}/config/jwt.hex"
+openssl rand -hex 32 >"${TEST_BASE_DIR}/config/jwt.hex"
 
 # Copy key scripts for testing
 echo -e "${YELLOW}Copying scripts for testing${NC}"
@@ -99,29 +100,29 @@ echo -e "\n${BLUE}=== Testing Scripts ===${NC}"
 
 # Function to test a script
 test_script() {
-    local script_name="$1"
-    local script_path="${TEST_BASE_DIR}/scripts/${script_name}"
+  local script_name="$1"
+  local script_path="${TEST_BASE_DIR}/scripts/${script_name}"
 
-    echo -e "${YELLOW}Testing ${script_name}...${NC}"
+  echo -e "${YELLOW}Testing ${script_name}...${NC}"
 
-    # Make the script executable
-    chmod +x "${script_path}"
+  # Make the script executable
+  chmod +x "${script_path}"
 
-    # Run the script with CONFIG_FILE environment variable
-    if CONFIG_FILE="${TEST_CONFIG}" bash -c "cd ${TEST_BASE_DIR} && ${script_path} --dry-run" > /dev/null 2>&1; then
-        echo -e "${GREEN}✓ ${script_name} works with test configuration${NC}"
-        return 0
-    else
-        echo -e "${RED}✗ ${script_name} failed with test configuration${NC}"
-        return 1
-    fi
+  # Run the script with CONFIG_FILE environment variable
+  if CONFIG_FILE="${TEST_CONFIG}" bash -c "cd ${TEST_BASE_DIR} && ${script_path} --dry-run" >/dev/null 2>&1; then
+    echo -e "${GREEN}✓ ${script_name} works with test configuration${NC}"
+    return 0
+  else
+    echo -e "${RED}✗ ${script_name} failed with test configuration${NC}"
+    return 1
+  fi
 }
 
 # Add --dry-run support to scripts for testing
 echo -e "${YELLOW}Adding dry-run support to scripts${NC}"
 for script in "${TEST_BASE_DIR}/scripts/"*.sh; do
-    # Add dry-run support by adding a check at the beginning of the script
-    sed -i '1,10s|^#!/bin/bash|#!/bin/bash\n\n# Check for dry-run mode\nif [[ "$1" == "--dry-run" ]]; then\n  echo "Running in dry-run mode"\n  exit 0\nfi|' "$script"
+  # Add dry-run support by adding a check at the beginning of the script
+  sed -i '1,10s|^#!/bin/bash|#!/bin/bash\n\n# Check for dry-run mode\nif [[ "$1" == "--dry-run" ]]; then\n  echo "Running in dry-run mode"\n  exit 0\nfi|' "${script}"
 done
 
 # Test each script

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Validator Management Wrapper Script
 # This script provides a simple interface to the validator management scripts

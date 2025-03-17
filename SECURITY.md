@@ -16,7 +16,7 @@ This document outlines security best practices for working with this Ansible rep
    ```bash
    # Encrypt sensitive data
    ansible-vault encrypt_string --vault-id my_project@prompt 'secret_value' --name 'secret_key'
-   
+
    # Encrypt entire files
    ansible-vault encrypt vars/secrets.yml
    ```
@@ -62,9 +62,9 @@ Keep all dependencies up-to-date:
 # Update Ansible collections
 ansible-galaxy collection install --upgrade <collection>
 
-# Check for outdated Python dependencies  
+# Check for outdated Python dependencies
 pip list --outdated
 ```
 
 ---
-This document should be reviewed and updated regularly as part of the project maintenance. 
+This document should be reviewed and updated regularly as part of the project maintenance.

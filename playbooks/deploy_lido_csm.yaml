@@ -194,12 +194,12 @@
       debug:
         msg: |
           Lido CSM integration deployment completed.
-          
+
           CSM API Endpoint:  http://localhost:{{ csm_api_port }}
           CSM Metrics:       http://localhost:{{ csm_metrics_port }}
-          
+
           To view CSM logs, run:
             docker logs -f {{ csm_container_name }}
-          
+
           To monitor CSM, run:
-            {{ ephemery_base_dir }}/scripts/monitoring/monitor_lido_csm.sh 
+            {{ ephemery_base_dir }}/scripts/monitoring/monitor_lido_csm.sh

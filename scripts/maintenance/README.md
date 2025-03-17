@@ -1,56 +1,49 @@
 # Maintenance Scripts
 
-This directory contains scripts for maintaining the repository and ensuring code quality.
+This directory contains scripts for maintaining and troubleshooting Ephemery nodes.
 
 ## Available Scripts
 
-### `fix-repository-linting.sh`
+### System Maintenance
+- `fix_mainnet_deployment.sh` - Fixes common mainnet deployment issues
+- `manage-validator.sh` - Manages validator operations and maintenance
+- `complete_script_organization.sh` - Organizes and maintains script structure
 
-A comprehensive script to fix common linting issues in the repository:
-
-- **Trailing whitespace:** Removes trailing spaces from line endings
-- **End-of-file newlines:** Ensures files end with a newline character
-- **YAML file extensions:** Renames `.yml` files to use `.yaml` extension
-- **Python formatting:** Applies isort and black formatting to Python files
-
-#### Usage
-
-```bash
-# Run with all features
-./fix-repository-linting.sh
-
-# Skip Python formatting (if isort/black not installed)
-./fix-repository-linting.sh --no-python-format
-
-# Show help message
-./fix-repository-linting.sh --help
-```
-
-#### Requirements
-
-- Basic tools: `find`, `sed`, `git`
-- For Python formatting: `isort`, `black` (optional)
-
-#### Example
-
-```bash
-# Run from the repository root
-cd /path/to/ansible-ephemery
-./scripts/maintenance/fix-repository-linting.sh
-```
-
-### Other Maintenance Scripts
-
-- `fix-yaml-extensions.sh`: Specifically targets YAML file extensions
-- `fix-yaml-lint.sh`: Fixes YAML linting issues
-- `fix-yaml-line-length.sh`: Addresses line length issues in YAML files
-- `fix-yaml-quotes.sh`: Fixes quoting issues in YAML files
-- `troubleshoot-ephemery.sh`: Helps troubleshoot Ephemery node issues
-- `troubleshoot-ephemery-production.sh`: Production version of troubleshooting
-- `enhance_checkpoint_sync.sh`: Enhances checkpoint synchronization
-- `enhanced_checkpoint_sync.sh`: Improved checkpoint sync implementation
-- `reset_ephemery.sh`: Resets Ephemery nodes to original state
+### Data Management
+- `organize_scripts.sh` - Organizes script files and directories
+- `update_script_readmes.sh` - Updates documentation for scripts
 
 ## Usage
 
-Please refer to the individual script comments or the main project documentation for usage information.
+Most maintenance scripts support these common options:
+- `-h, --help` - Display help information
+- `-v, --verbose` - Enable verbose output
+- `-d, --dry-run` - Show what would be done without making changes
+- `-f, --force` - Force operations without confirmation
+
+## Features
+
+- Automated maintenance tasks
+- System health checks
+- Data cleanup and organization
+- Configuration validation
+- Error recovery procedures
+- Backup and restore capabilities
+
+## Best Practices
+
+1. Always run with --dry-run first
+2. Backup data before major maintenance
+3. Schedule regular maintenance windows
+4. Monitor system during maintenance
+5. Keep maintenance logs for reference
+
+## Safety Considerations
+
+- Always verify backups before maintenance
+- Test maintenance scripts in development first
+- Have a rollback plan ready
+- Monitor system resources during maintenance
+- Document all maintenance activities
+
+For detailed usage instructions, refer to the main [README.md](../../README.md) or run each script with the `--help` flag.

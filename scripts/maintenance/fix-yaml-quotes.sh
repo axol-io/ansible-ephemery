@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # Script to fix YAML string quoting issues in Ansible files
 # This script will replace double quotes with single quotes for string values
 
@@ -9,8 +10,8 @@ echo "Fixing YAML string quoting issues..."
 # Find all yaml/yml files excluding hidden directories
 YAML_FILES=$(find . -name "*.yaml" -o -name "*.yml" | grep -v "^\./\." | grep -v "node_modules")
 
-for file in $YAML_FILES; do
-  echo "Processing $file"
+for file in ${YAML_FILES}; do
+  echo "Processing ${file}"
 
   # Replace double quotes with single quotes, but be careful with:
   # - Jinja2 expressions like {{ var }}
@@ -18,7 +19,7 @@ for file in $YAML_FILES; do
   # - Raw tags {% raw %} {% endraw %}
 
   # Make a backup
-  cp "$file" "${file}.bak"
+  cp "${file}" "${file}.bak"
 
   # Ensure all strings are properly quoted with single quotes
   sed -i.tmp -E '
@@ -38,7 +39,7 @@ for file in $YAML_FILES; do
 
     # Also handle redundantly quoted strings
     s/: '\''([^'\''{}]*)'\'''/: '\''\\1'\''/g
-  ' "$file"
+  ' "${file}"
 
   # Remove temporary files
   rm -f "${file}.tmp"

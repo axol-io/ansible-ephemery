@@ -93,7 +93,7 @@ This test:
 To test the weekly reset mechanism:
 
 ```bash
-# Test reset functionality 
+# Test reset functionality
 scripts/development/test_reset_process.sh
 ```
 
@@ -216,7 +216,7 @@ execute() {
 verify() {
   echo "Verifying results..."
   # Verification code here
-  
+
   if [[ $expected == $actual ]]; then
     return 0
   else

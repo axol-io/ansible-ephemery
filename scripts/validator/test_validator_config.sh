@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Validator Configuration Test Script for Ephemery
 # ===============================================
@@ -91,11 +92,11 @@ function show_help {
 function parse_args {
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -i|--inventory)
+      -i | --inventory)
         INVENTORY_FILE="$2"
         shift 2
         ;;
-      -c|--container)
+      -c | --container)
         VALIDATOR_CONTAINER_NAME="$2"
         shift 2
         ;;
@@ -107,11 +108,11 @@ function parse_args {
         CONTAINER_ONLY=true
         shift
         ;;
-      -v|--verbose)
+      -v | --verbose)
         VERBOSE=true
         shift
         ;;
-      -h|--help)
+      -h | --help)
         show_help
         exit 0
         ;;
@@ -250,7 +251,7 @@ function check_validator_container {
     echo -e "${GREEN}✓ Container status: ${CONTAINER_STATUS}${NC}"
 
     # Check container logs for errors
-    if docker logs "${VALIDATOR_CONTAINER_NAME}" 2>&1 | grep -i error | tail -5 > /dev/null; then
+    if docker logs "${VALIDATOR_CONTAINER_NAME}" 2>&1 | grep -i error | tail -5 >/dev/null; then
       echo -e "${YELLOW}⚠ Recent errors found in container logs:${NC}"
       docker logs "${VALIDATOR_CONTAINER_NAME}" 2>&1 | grep -i error | tail -5
     else

@@ -1,20 +1,56 @@
 # Deployment Scripts
 
-Scripts for deploying ephemery nodes
+This directory contains scripts for deploying and managing Ephemery nodes and validators in various environments.
 
-## Scripts
+## Available Scripts
 
-- `deploy-ephemery.sh`: !/bin/bash
-- `deploy_enhanced_key_restore.sh`: !/bin/bash
-- `deploy_ephemery_retention.sh`: !/bin/bash
-- `deploy_key_performance_metrics.sh`: !/bin/bash
-- `fix_mainnet_deployment.sh`: !/bin/bash
-- `install-collections.sh`: !/usr/bin/env bash
-- `setup-dev-env.sh`: !/usr/bin/env bash
-- `setup-ephemery.sh`: !/bin/bash
-- `setup_dashboard.sh`: !/bin/bash
-- `setup_ephemery_cron.sh`: !/bin/bash
+### Node Deployment
+- `deploy_enhanced_validator_dashboard.sh` - Deploys the enhanced validator monitoring dashboard
+- `fix_mainnet_deployment.sh` - Fixes common mainnet deployment issues
+
+### Validator Deployment
+- `deploy-validator.sh` - Deploys a new validator node
+- `deploy-monitoring.sh` - Sets up monitoring for deployed validators
 
 ## Usage
 
-Please refer to the individual script comments or the main project documentation for usage information.
+Most deployment scripts support these common options:
+- `-h, --help` - Display help information
+- `-v, --verbose` - Enable verbose output
+- `-d, --dry-run` - Show what would be done without making changes
+- `-f, --force` - Force deployment without confirmation
+
+## Features
+
+- Automated deployment processes
+- Environment-specific configurations
+- Monitoring setup
+- Error handling and recovery
+- Deployment verification
+- Rolling updates support
+
+## Prerequisites
+
+1. Ansible installed and configured
+2. Required collections installed
+3. SSH access to target hosts
+4. Sufficient permissions
+5. Network connectivity
+
+## Best Practices
+
+1. Test deployments in staging first
+2. Use version control for configurations
+3. Maintain deployment documentation
+4. Monitor deployment progress
+5. Have rollback procedures ready
+
+## Security Considerations
+
+- Use secure communication channels
+- Follow least privilege principle
+- Protect sensitive configuration data
+- Regular security audits
+- Monitor for unauthorized access
+
+For detailed usage instructions, refer to the main [README.md](../../README.md) or run each script with the `--help` flag.

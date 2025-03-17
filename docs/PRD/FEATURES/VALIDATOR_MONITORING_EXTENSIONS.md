@@ -15,7 +15,7 @@ The validator alerts system provides real-time notifications for various validat
 #### Key Features
 
 - **Configurable Alert Thresholds**: Set custom thresholds for all key metrics
-- **Multiple Notification Methods**: 
+- **Multiple Notification Methods**:
   - Console output
   - Email notifications
   - Webhook integration with services like Slack, Discord, or Telegram
@@ -218,4 +218,4 @@ Future improvements to the validator monitoring extensions include:
 4. **Enhanced Security Features**:
    - Security-focused monitoring metrics
    - Intrusion detection integration
-   - Enhanced slashing protection monitoring 
+   - Enhanced slashing protection monitoring

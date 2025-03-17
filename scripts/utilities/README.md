@@ -1,25 +1,54 @@
-# Utilities Scripts
+# Utility Scripts
 
-Helper utilities and shared functions
+This directory contains common utility functions and helper scripts used across the Ephemery project.
 
-## Scripts
+## Available Scripts
 
-- `benchmark_sync.sh`: !/bin/bash
-- `common.sh`: !/usr/bin/env bash
-- `config.sh`: !/usr/bin/env bash
-- `create_all_client_configs.sh`: !/bin/bash
-- `create_client_tasks.sh`: !/bin/bash
-- `enhanced_key_restore.sh`: !/bin/bash
-- `ephemery_key_restore_wrapper.sh`: !/bin/bash
-- `key_performance_metrics.sh`: !/bin/bash
-- `logging.sh`: !/usr/bin/env bash
-- `manage-yaml-extension.sh`: !/bin/bash
-- `prune_migrated_docs.sh`: !/bin/bash
-- `run-fast-sync.sh`: !/bin/bash
-- `setup_ephemery_cron.sh`: !/bin/bash
-- `validation.sh`: !/usr/bin/env bash
-- `verify-collections.sh`: !/usr/bin/env bash
+### Common Utilities
+- `analyze_ansible_output.sh` - Analyzes and formats Ansible output
+- `filter_ansible_output.sh` - Filters Ansible output for relevant information
+- `ephemery_output.sh` - Formats Ephemery-specific output
+
+### Helper Functions
+- `run_ansible.sh` - Common functions for running Ansible playbooks
+- `monitor_logs.sh` - Shared log monitoring utilities
 
 ## Usage
 
-Please refer to the individual script comments or the main project documentation for usage information.
+Most utility scripts are designed to be sourced by other scripts:
+
+```bash
+source scripts/utilities/common_functions.sh
+```
+
+When used directly, they support these common options:
+- `-h, --help` - Display help information
+- `-v, --verbose` - Enable verbose output
+- `-d, --dry-run` - Show what would be done without making changes
+
+## Features
+
+- Common function libraries
+- Shared utilities
+- Output formatting
+- Error handling
+- Logging functions
+- Configuration helpers
+
+## Best Practices
+
+1. Keep utilities modular and focused
+2. Document function parameters
+3. Include usage examples
+4. Handle errors gracefully
+5. Follow consistent naming conventions
+
+## Development Guidelines
+
+- Write reusable functions
+- Include proper error handling
+- Document dependencies
+- Use consistent formatting
+- Add usage examples in comments
+
+For detailed usage instructions, refer to the main [README.md](../../README.md) or run each script with the `--help` flag.

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Version: 1.0.0
 # Script to generate Molecule scenario files
 
 set -eo pipefail
@@ -27,22 +28,22 @@ function print_usage() {
 # Function to cleanup a scenario
 function cleanup_scenario() {
   local scenario_name="$1"
-  local scenario_dir="$PROJECT_DIR/molecule/${scenario_name}"
+  local scenario_dir="${PROJECT_DIR}/molecule/${scenario_name}"
 
-  if [[ ! -d "$scenario_dir" ]]; then
-    echo "Error: Scenario directory not found: $scenario_dir"
+  if [[ ! -d "${scenario_dir}" ]]; then
+    echo "Error: Scenario directory not found: ${scenario_dir}"
     exit 1
   fi
 
-  echo "Cleaning up scenario: $scenario_name"
+  echo "Cleaning up scenario: ${scenario_name}"
 
   # First run molecule destroy to clean up any resources
-  cd "$PROJECT_DIR" && molecule destroy -s "$scenario_name" || true
+  cd "${PROJECT_DIR}" && molecule destroy -s "${scenario_name}" || true
 
   # Then remove the scenario directory
-  rm -rf "$scenario_dir"
+  rm -rf "${scenario_dir}"
 
-  echo "Scenario $scenario_name has been removed."
+  echo "Scenario ${scenario_name} has been removed."
 }
 
 # Default values
@@ -58,24 +59,24 @@ CLEANUP_NAME=""
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   key="$1"
-  case $key in
-    -t|--type)
+  case ${key} in
+    -t | --type)
       TYPE="$2"
       shift 2
       ;;
-    -n|--name)
+    -n | --name)
       NAME="$2"
       shift 2
       ;;
-    -e|--execution)
+    -e | --execution)
       EL_CLIENT="$2"
       shift 2
       ;;
-    -c|--consensus)
+    -c | --consensus)
       CL_CLIENT="$2"
       shift 2
       ;;
-    -v|--var)
+    -v | --var)
       ADDITIONAL_VARS+=("$2")
       shift 2
       ;;
@@ -88,7 +89,7 @@ while [[ $# -gt 0 ]]; do
       CLEANUP_NAME="$2"
       shift 2
       ;;
-    -h|--help)
+    -h | --help)
       print_usage
       exit 0
       ;;
@@ -103,30 +104,30 @@ done
 # Set up path variables
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Get the root directory of the project (one level up from molecule)
-PROJECT_DIR="$(cd "$SCRIPT_DIR/../../../" && pwd)"
+PROJECT_DIR="$(cd "${SCRIPT_DIR}/../../../" && pwd)"
 
 # If in cleanup mode, just do cleanup and exit
-if [[ "$CLEANUP_MODE" == true ]]; then
-  if [[ -z "$CLEANUP_NAME" ]]; then
+if [[ "${CLEANUP_MODE}" == true ]]; then
+  if [[ -z "${CLEANUP_NAME}" ]]; then
     echo "Error: Scenario name is required for cleanup"
     print_usage
     exit 1
   fi
 
-  cleanup_scenario "$CLEANUP_NAME"
+  cleanup_scenario "${CLEANUP_NAME}"
   exit 0
 fi
 
 # Validate inputs
-if [[ -z "$TYPE" ]]; then
+if [[ -z "${TYPE}" ]]; then
   echo "Error: Scenario type is required"
   print_usage
   exit 1
 fi
 
 # Handle client scenarios
-if [[ "$TYPE" == "clients" ]]; then
-  if [[ -z "$EL_CLIENT" || -z "$CL_CLIENT" ]]; then
+if [[ "${TYPE}" == "clients" ]]; then
+  if [[ -z "${EL_CLIENT}" || -z "${CL_CLIENT}" ]]; then
     echo "Error: Execution and consensus clients are required for client scenarios"
     print_usage
     exit 1
@@ -134,51 +135,51 @@ if [[ "$TYPE" == "clients" ]]; then
 
   NAME="${EL_CLIENT}-${CL_CLIENT}"
   # Create the scenario directory directly under molecule/
-  SCENARIO_DIR="$PROJECT_DIR/molecule/${NAME}"
+  SCENARIO_DIR="${PROJECT_DIR}/molecule/${NAME}"
 
   # Build variable string for j2
-  J2_VARS="-D el_client=$EL_CLIENT -D cl_client=$CL_CLIENT"
+  J2_VARS="-D el_client=${EL_CLIENT} -D cl_client=${CL_CLIENT}"
 
   # Add any additional variables
   for var in "${ADDITIONAL_VARS[@]}"; do
     key="${var%%=*}"
     value="${var#*=}"
-    J2_VARS="$J2_VARS -D $key=\"$value\""
+    J2_VARS="${J2_VARS} -D ${key}=\"${value}\""
   done
 
 # Handle custom scenarios
-elif [[ "$TYPE" == "custom" ]]; then
-  if [[ -z "$NAME" ]]; then
+elif [[ "${TYPE}" == "custom" ]]; then
+  if [[ -z "${NAME}" ]]; then
     echo "Error: Scenario name is required for custom scenarios"
     print_usage
     exit 1
   fi
 
   # Create the scenario directory directly under molecule/
-  SCENARIO_DIR="$PROJECT_DIR/molecule/${NAME}"
+  SCENARIO_DIR="${PROJECT_DIR}/molecule/${NAME}"
 
   # Build variable string for j2
-  J2_VARS="-D scenario_name=$NAME"
+  J2_VARS="-D scenario_name=${NAME}"
 
   # Add any additional variables
   for var in "${ADDITIONAL_VARS[@]}"; do
     key="${var%%=*}"
     value="${var#*=}"
-    J2_VARS="$J2_VARS -D $key=\"$value\""
+    J2_VARS="${J2_VARS} -D ${key}=\"${value}\""
   done
 else
-  echo "Error: Unknown scenario type: $TYPE"
+  echo "Error: Unknown scenario type: ${TYPE}"
   print_usage
   exit 1
 fi
 
 # Create scenario directory
-mkdir -p "$SCENARIO_DIR"
+mkdir -p "${SCENARIO_DIR}"
 
 # Replace the Python-based template rendering with a simpler approach
-if [[ "$TYPE" == "clients" ]]; then
+if [[ "${TYPE}" == "clients" ]]; then
   # Create molecule.yml file directly
-  cat > "$SCENARIO_DIR/molecule.yml" << EOF
+  cat >"${SCENARIO_DIR}/molecule.yml" <<EOF
 ---
 dependency:
   name: galaxy
@@ -202,14 +203,14 @@ provisioner:
 verifier:
   name: ansible
 EOF
-  echo "Successfully generated: $SCENARIO_DIR/molecule.yml"
+  echo "Successfully generated: ${SCENARIO_DIR}/molecule.yml"
 fi
 
 # Create or link converge.yml and verify.yml if they don't exist
-if [[ "$TYPE" == "clients" ]]; then
+if [[ "${TYPE}" == "clients" ]]; then
   # For client scenarios, we can link to the shared playbooks in the parent directory
-  if [[ ! -f "$SCENARIO_DIR/converge.yml" ]]; then
-    cat > "$SCENARIO_DIR/converge.yml" << EOF
+  if [[ ! -f "${SCENARIO_DIR}/converge.yml" ]]; then
+    cat >"${SCENARIO_DIR}/converge.yml" <<EOF
 ---
 - name: Converge
   hosts: all
@@ -223,8 +224,8 @@ if [[ "$TYPE" == "clients" ]]; then
 EOF
   fi
 
-  if [[ ! -f "$SCENARIO_DIR/verify.yml" ]]; then
-    cat > "$SCENARIO_DIR/verify.yml" << EOF
+  if [[ ! -f "${SCENARIO_DIR}/verify.yml" ]]; then
+    cat >"${SCENARIO_DIR}/verify.yml" <<EOF
 ---
 - name: Verify
   hosts: all
@@ -244,31 +245,31 @@ EOF
   fi
 else
   # For custom scenarios, create empty playbooks if they don't exist
-  if [[ ! -f "$SCENARIO_DIR/converge.yml" ]]; then
-    echo "---" > "$SCENARIO_DIR/converge.yml"
-    echo "- name: Converge" >> "$SCENARIO_DIR/converge.yml"
-    echo "  hosts: all" >> "$SCENARIO_DIR/converge.yml"
-    echo "  tasks:" >> "$SCENARIO_DIR/converge.yml"
-    echo "    - name: Include role" >> "$SCENARIO_DIR/converge.yml"
-    echo "      include_role:" >> "$SCENARIO_DIR/converge.yml"
-    echo "        name: ansible-ephemery" >> "$SCENARIO_DIR/converge.yml"
+  if [[ ! -f "${SCENARIO_DIR}/converge.yml" ]]; then
+    echo "---" >"${SCENARIO_DIR}/converge.yml"
+    echo "- name: Converge" >>"${SCENARIO_DIR}/converge.yml"
+    echo "  hosts: all" >>"${SCENARIO_DIR}/converge.yml"
+    echo "  tasks:" >>"${SCENARIO_DIR}/converge.yml"
+    echo "    - name: Include role" >>"${SCENARIO_DIR}/converge.yml"
+    echo "      include_role:" >>"${SCENARIO_DIR}/converge.yml"
+    echo "        name: ansible-ephemery" >>"${SCENARIO_DIR}/converge.yml"
   fi
 
-  if [[ ! -f "$SCENARIO_DIR/verify.yml" ]]; then
-    echo "---" > "$SCENARIO_DIR/verify.yml"
-    echo "- name: Verify" >> "$SCENARIO_DIR/verify.yml"
-    echo "  hosts: all" >> "$SCENARIO_DIR/verify.yml"
-    echo "  tasks:" >> "$SCENARIO_DIR/verify.yml"
-    echo "    - name: Example verification task" >> "$SCENARIO_DIR/verify.yml"
-    echo "      command: echo 'Success'" >> "$SCENARIO_DIR/verify.yml"
+  if [[ ! -f "${SCENARIO_DIR}/verify.yml" ]]; then
+    echo "---" >"${SCENARIO_DIR}/verify.yml"
+    echo "- name: Verify" >>"${SCENARIO_DIR}/verify.yml"
+    echo "  hosts: all" >>"${SCENARIO_DIR}/verify.yml"
+    echo "  tasks:" >>"${SCENARIO_DIR}/verify.yml"
+    echo "    - name: Example verification task" >>"${SCENARIO_DIR}/verify.yml"
+    echo "      command: echo 'Success'" >>"${SCENARIO_DIR}/verify.yml"
   fi
 fi
 
-echo "Scenario $NAME has been generated in $SCENARIO_DIR"
+echo "Scenario ${NAME} has been generated in ${SCENARIO_DIR}"
 
-if [[ "$TEMP_SCENARIO" == true ]]; then
+if [[ "${TEMP_SCENARIO}" == true ]]; then
   echo "This is a temporary scenario. You can clean it up later with:"
-  echo "  $0 --cleanup $NAME"
+  echo "  $0 --cleanup ${NAME}"
 fi
 
-echo "You can run it with: cd $PROJECT_DIR && molecule test -s $NAME"
+echo "You can run it with: cd ${PROJECT_DIR} && molecule test -s ${NAME}"

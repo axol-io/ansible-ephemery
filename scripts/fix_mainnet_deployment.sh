@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Ephemery Mainnet Deployment Fix Script
 # ======================================
@@ -62,23 +63,23 @@ function show_help {
 function parse_args {
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -i|--inventory)
+      -i | --inventory)
         INVENTORY="$2"
         shift 2
         ;;
-      -h|--host)
+      -h | --host)
         HOST="$2"
         shift 2
         ;;
-      -u|--user)
+      -u | --user)
         SSH_USER="$2"
         shift 2
         ;;
-      -k|--key)
+      -k | --key)
         SSH_KEY="$2"
         shift 2
         ;;
-      -d|--dir)
+      -d | --dir)
         EPHEMERY_BASE_DIR="$2"
         shift 2
         ;;
@@ -98,7 +99,7 @@ function parse_args {
         FORCE=true
         shift
         ;;
-      -v|--verbose)
+      -v | --verbose)
         VERBOSE=true
         shift
         ;;

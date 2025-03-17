@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # yaml-lint-fixer.sh - Consolidated script for YAML linting and fixing
 # Combines functionality from:
 # - fix-yaml-linting.sh
@@ -99,8 +100,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # If no specific fix is selected, fix all
-if [[ $FIX_QUOTED_STRINGS -eq 0 && $FIX_DOCUMENT_START -eq 0 && $FIX_TRUTHY_VALUES -eq 0 &&
-      $FIX_WHITESPACE -eq 0 && $FIX_JINJA_SPACING -eq 0 && $FIX_FQCN -eq 0 && $CHECK_LINE_LENGTH -eq 0 ]]; then
+if [[ ${FIX_QUOTED_STRINGS} -eq 0 && ${FIX_DOCUMENT_START} -eq 0 && ${FIX_TRUTHY_VALUES} -eq 0 &&
+  ${FIX_WHITESPACE} -eq 0 && ${FIX_JINJA_SPACING} -eq 0 && ${FIX_FQCN} -eq 0 && ${CHECK_LINE_LENGTH} -eq 0 ]]; then
   FIX_QUOTED_STRINGS=1
   FIX_DOCUMENT_START=1
   FIX_TRUTHY_VALUES=1
@@ -116,19 +117,19 @@ print_action() {
   local file="$2"
   local details="$3"
 
-  if [[ "$action" == "FIX" ]]; then
-    echo -e "\033[32m$action\033[0m: $file $details"
-  elif [[ "$action" == "SKIP" ]]; then
-    echo -e "\033[36m$action\033[0m: $file $details"
-  elif [[ "$action" == "ERROR" ]]; then
-    echo -e "\033[31m$action\033[0m: $file $details"
+  if [[ "${action}" == "FIX" ]]; then
+    echo -e "\033[32m${action}\033[0m: ${file} ${details}"
+  elif [[ "${action}" == "SKIP" ]]; then
+    echo -e "\033[36m${action}\033[0m: ${file} ${details}"
+  elif [[ "${action}" == "ERROR" ]]; then
+    echo -e "\033[31m${action}\033[0m: ${file} ${details}"
   else
-    echo "$action: $file $details"
+    echo "${action}: ${file} ${details}"
   fi
 }
 
 echo "Starting YAML linting fixes..."
-if [[ $DRY_RUN -eq 1 ]]; then
+if [[ ${DRY_RUN} -eq 1 ]]; then
   echo "DRY RUN MODE: No actual changes will be made"
 fi
 
@@ -136,11 +137,11 @@ fi
 YAML_FILES=$(find . -type f \( -name "*.yaml" -o -name "*.yml" \) -not -path "*/\.*" -not -path "*/venv/*" | sort)
 
 # Initialize line length report if needed
-if [[ $CHECK_LINE_LENGTH -eq 1 ]]; then
-  echo "# YAML Line Length Issues - $(date)" > "$REPORT_FILE"
-  echo "# Lines longer than $MAX_LINE_LENGTH characters" >> "$REPORT_FILE"
-  echo "# Format: FILE:LINE_NUMBER:LENGTH - CONTENT" >> "$REPORT_FILE"
-  echo "" >> "$REPORT_FILE"
+if [[ ${CHECK_LINE_LENGTH} -eq 1 ]]; then
+  echo "# YAML Line Length Issues - $(date)" >"${REPORT_FILE}"
+  echo "# Lines longer than ${MAX_LINE_LENGTH} characters" >>"${REPORT_FILE}"
+  echo "# Format: FILE:LINE_NUMBER:LENGTH - CONTENT" >>"${REPORT_FILE}"
+  echo "" >>"${REPORT_FILE}"
 fi
 
 # Counters
@@ -149,7 +150,7 @@ TOTAL_FILES=0
 TOTAL_LINE_ISSUES=0
 
 # Process each file
-for file in $YAML_FILES; do
+for file in ${YAML_FILES}; do
   TOTAL_FILES=$((TOTAL_FILES + 1))
   MODIFIED=0
   LINE_ISSUES=0
@@ -158,146 +159,146 @@ for file in $YAML_FILES; do
   temp_file=$(mktemp)
 
   # Fix document start marker
-  if [[ $FIX_DOCUMENT_START -eq 1 ]]; then
+  if [[ ${FIX_DOCUMENT_START} -eq 1 ]]; then
     # Check if file starts with --- and add if missing
-    if ! grep -q "^---" "$file"; then
-      if [[ $DRY_RUN -eq 0 ]]; then
-        sed '1s/^/---\n/' "$file" > "$temp_file"
-        mv "$temp_file" "$file"
+    if ! grep -q "^---" "${file}"; then
+      if [[ ${DRY_RUN} -eq 0 ]]; then
+        sed '1s/^/---\n/' "${file}" >"${temp_file}"
+        mv "${temp_file}" "${file}"
       fi
-      print_action "FIX" "$file" "(added document start marker)"
+      print_action "FIX" "${file}" "(added document start marker)"
       MODIFIED=1
     fi
   fi
 
   # Fix quoted strings issues
-  if [[ $FIX_QUOTED_STRINGS -eq 1 ]]; then
+  if [[ ${FIX_QUOTED_STRINGS} -eq 1 ]]; then
     # Look for redundant quotes and fix them
-    if grep -q "yaml\[quoted-strings\]: String value is redundantly quoted" <(ansible-lint --format=pep8 "$file" 2>/dev/null); then
+    if grep -q "yaml\[quoted-strings\]: String value is redundantly quoted" <(ansible-lint --format=pep8 "${file}" 2>/dev/null); then
       # Replace redundantly quoted strings: 'string': to string:
-      if [[ $DRY_RUN -eq 0 ]]; then
-        sed -E "s/([[:space:]]+)'([a-zA-Z0-9_-]+)':/\1\2:/g" "$file" > "$temp_file"
-        mv "$temp_file" "$file"
+      if [[ ${DRY_RUN} -eq 0 ]]; then
+        sed -E "s/([[:space:]]+)'([a-zA-Z0-9_-]+)':/\1\2:/g" "${file}" >"${temp_file}"
+        mv "${temp_file}" "${file}"
       fi
-      print_action "FIX" "$file" "(removed redundant quotes)"
+      print_action "FIX" "${file}" "(removed redundant quotes)"
       MODIFIED=1
     fi
 
     # Add missing single quotes
-    if grep -q "yaml\[quoted-strings\]: String value is not quoted with single quotes" <(ansible-lint --format=pep8 "$file" 2>/dev/null); then
+    if grep -q "yaml\[quoted-strings\]: String value is not quoted with single quotes" <(ansible-lint --format=pep8 "${file}" 2>/dev/null); then
       # This is a complex operation requiring a more intelligent tool
       # For simplicity, we'll just report it needs manual fixing
-      print_action "SKIP" "$file" "(missing quotes need manual fixing)"
+      print_action "SKIP" "${file}" "(missing quotes need manual fixing)"
     fi
   fi
 
   # Fix truthy values
-  if [[ $FIX_TRUTHY_VALUES -eq 1 ]]; then
-    if grep -q ": [Yy][Ee][Ss]$\|: [Nn][Oo]$" "$file"; then
-      if [[ $DRY_RUN -eq 0 ]]; then
+  if [[ ${FIX_TRUTHY_VALUES} -eq 1 ]]; then
+    if grep -q ": [Yy][Ee][Ss]$\|: [Nn][Oo]$" "${file}"; then
+      if [[ ${DRY_RUN} -eq 0 ]]; then
         # Replace yes/Yes/YES with true
-        sed -E 's/: [Yy][Ee][Ss]$/: true/g' "$file" > "$temp_file"
-        mv "$temp_file" "$file"
+        sed -E 's/: [Yy][Ee][Ss]$/: true/g' "${file}" >"${temp_file}"
+        mv "${temp_file}" "${file}"
 
         # Replace no/No/NO with false
-        sed -E 's/: [Nn][Oo]$/: false/g' "$file" > "$temp_file"
-        mv "$temp_file" "$file"
+        sed -E 's/: [Nn][Oo]$/: false/g' "${file}" >"${temp_file}"
+        mv "${temp_file}" "${file}"
       fi
-      print_action "FIX" "$file" "(normalized truthy values)"
+      print_action "FIX" "${file}" "(normalized truthy values)"
       MODIFIED=1
     fi
   fi
 
   # Fix trailing whitespace
-  if [[ $FIX_WHITESPACE -eq 1 ]]; then
-    if grep -q "[[:space:]]$" "$file"; then
-      if [[ $DRY_RUN -eq 0 ]]; then
-        sed 's/[[:space:]]*$//' "$file" > "$temp_file"
-        mv "$temp_file" "$file"
+  if [[ ${FIX_WHITESPACE} -eq 1 ]]; then
+    if grep -q "[[:space:]]$" "${file}"; then
+      if [[ ${DRY_RUN} -eq 0 ]]; then
+        sed 's/[[:space:]]*$//' "${file}" >"${temp_file}"
+        mv "${temp_file}" "${file}"
       fi
-      print_action "FIX" "$file" "(removed trailing whitespace)"
+      print_action "FIX" "${file}" "(removed trailing whitespace)"
       MODIFIED=1
     fi
   fi
 
   # Fix FQCN issues
-  if [[ $FIX_FQCN -eq 1 ]]; then
-    if grep -q "fqcn\[action-core\]" <(ansible-lint --format=pep8 "$file" 2>/dev/null); then
+  if [[ ${FIX_FQCN} -eq 1 ]]; then
+    if grep -q "fqcn\[action-core\]" <(ansible-lint --format=pep8 "${file}" 2>/dev/null); then
       # For modules like 'file', 'command', 'shell', etc.
-      if [[ $DRY_RUN -eq 0 ]]; then
+      if [[ ${DRY_RUN} -eq 0 ]]; then
         # This is a simplified approach; a more robust solution would parse the exact issues
-        sed -E 's/([[:space:]]+)(file|command|shell|copy|template|debug|apt|yum|service|systemd|git|uri|include_role|include_tasks|assert|set_fact|dnf): /\1ansible.builtin.\2: /g' "$file" > "$temp_file"
-        mv "$temp_file" "$file"
+        sed -E 's/([[:space:]]+)(file|command|shell|copy|template|debug|apt|yum|service|systemd|git|uri|include_role|include_tasks|assert|set_fact|dnf): /\1ansible.builtin.\2: /g' "${file}" >"${temp_file}"
+        mv "${temp_file}" "${file}"
       fi
-      print_action "FIX" "$file" "(added FQCN)"
+      print_action "FIX" "${file}" "(added FQCN)"
       MODIFIED=1
     fi
 
     # Fix canonical FQCN issues
-    if grep -q "fqcn\[canonical\]" <(ansible-lint --format=pep8 "$file" 2>/dev/null); then
-      if [[ $DRY_RUN -eq 0 ]]; then
+    if grep -q "fqcn\[canonical\]" <(ansible-lint --format=pep8 "${file}" 2>/dev/null); then
+      if [[ ${DRY_RUN} -eq 0 ]]; then
         # Fix firewalld module
-        sed -E 's/([[:space:]]+)ansible.builtin.firewalld:/\1ansible.posix.firewalld:/g' "$file" > "$temp_file"
-        mv "$temp_file" "$file"
+        sed -E 's/([[:space:]]+)ansible.builtin.firewalld:/\1ansible.posix.firewalld:/g' "${file}" >"${temp_file}"
+        mv "${temp_file}" "${file}"
       fi
-      print_action "FIX" "$file" "(fixed canonical FQCN)"
+      print_action "FIX" "${file}" "(fixed canonical FQCN)"
       MODIFIED=1
     fi
   fi
 
   # Fix Jinja spacing
-  if [[ $FIX_JINJA_SPACING -eq 1 ]]; then
-    if grep -q "jinja\[spacing\]" <(ansible-lint --format=pep8 "$file" 2>/dev/null); then
-      if [[ $DRY_RUN -eq 0 ]]; then
+  if [[ ${FIX_JINJA_SPACING} -eq 1 ]]; then
+    if grep -q "jinja\[spacing\]" <(ansible-lint --format=pep8 "${file}" 2>/dev/null); then
+      if [[ ${DRY_RUN} -eq 0 ]]; then
         # Fix common Jinja spacing issues
-        sed -E 's/\{\{([^ ])/\{\{ \1/g' "$file" | sed -E 's/([^ ])\}\}/\1 \}\}/g' | sed -E 's/\|([a-zA-Z0-9_]+)/\| \1/g' > "$temp_file"
-        mv "$temp_file" "$file"
+        sed -E 's/\{\{([^ ])/\{\{ \1/g' "${file}" | sed -E 's/([^ ])\}\}/\1 \}\}/g' | sed -E 's/\|([a-zA-Z0-9_]+)/\| \1/g' >"${temp_file}"
+        mv "${temp_file}" "${file}"
       fi
-      print_action "FIX" "$file" "(fixed Jinja spacing)"
+      print_action "FIX" "${file}" "(fixed Jinja spacing)"
       MODIFIED=1
     fi
   fi
 
   # Check line length
-  if [[ $CHECK_LINE_LENGTH -eq 1 ]]; then
+  if [[ ${CHECK_LINE_LENGTH} -eq 1 ]]; then
     LINE_NUM=0
 
     while IFS= read -r line; do
       LINE_NUM=$((LINE_NUM + 1))
       LINE_LENGTH=${#line}
 
-      if [ "$LINE_LENGTH" -gt "$MAX_LINE_LENGTH" ]; then
+      if [ "${LINE_LENGTH}" -gt "${MAX_LINE_LENGTH}" ]; then
         LINE_ISSUES=$((LINE_ISSUES + 1))
         TOTAL_LINE_ISSUES=$((TOTAL_LINE_ISSUES + 1))
 
         # Add to report file
-        echo "$file:$LINE_NUM:$LINE_LENGTH - $line" >> "$REPORT_FILE"
+        echo "${file}:${LINE_NUM}:${LINE_LENGTH} - ${line}" >>"${REPORT_FILE}"
 
         # Suggest fixes
-        if [[ "$line" == *command:* || "$line" == *shell:* || "$line" == *docker* ]]; then
-          echo "  - Consider breaking command into multiple lines using YAML folded style (>)" >> "$REPORT_FILE"
-        elif [[ "$line" == *'{{.Names}}'* ]]; then
-          echo "  - Consider assigning format template to a variable" >> "$REPORT_FILE"
-        elif [[ "$line" == *with_items:* || "$line" == *loop:* ]]; then
-          echo "  - Consider breaking list into multiple lines" >> "$REPORT_FILE"
+        if [[ "${line}" == *command:* || "${line}" == *shell:* || "${line}" == *docker* ]]; then
+          echo "  - Consider breaking command into multiple lines using YAML folded style (>)" >>"${REPORT_FILE}"
+        elif [[ "${line}" == *'{{.Names}}'* ]]; then
+          echo "  - Consider assigning format template to a variable" >>"${REPORT_FILE}"
+        elif [[ "${line}" == *with_items:* || "${line}" == *loop:* ]]; then
+          echo "  - Consider breaking list into multiple lines" >>"${REPORT_FILE}"
         fi
 
-        echo "" >> "$REPORT_FILE"
+        echo "" >>"${REPORT_FILE}"
       fi
-    done < "$file"
+    done <"${file}"
 
-    if [ "$LINE_ISSUES" -gt 0 ]; then
-      print_action "INFO" "$file" "(found $LINE_ISSUES lines exceeding $MAX_LINE_LENGTH characters)"
+    if [ "${LINE_ISSUES}" -gt 0 ]; then
+      print_action "INFO" "${file}" "(found ${LINE_ISSUES} lines exceeding ${MAX_LINE_LENGTH} characters)"
     fi
   fi
 
   # Count fixed files
-  if [[ $MODIFIED -eq 1 ]]; then
+  if [[ ${MODIFIED} -eq 1 ]]; then
     FIXED_FILES=$((FIXED_FILES + 1))
   fi
 
   # Clean up any temp file
-  rm -f "$temp_file"
+  rm -f "${temp_file}"
 done
 
 # Print summary
@@ -305,14 +306,14 @@ echo
 echo "========================================="
 echo "YAML Linting Fix Summary"
 echo "========================================="
-echo "Total files processed: $TOTAL_FILES"
-echo "Fixed files: $FIXED_FILES"
+echo "Total files processed: ${TOTAL_FILES}"
+echo "Fixed files: ${FIXED_FILES}"
 
-if [[ $CHECK_LINE_LENGTH -eq 1 ]]; then
-  echo "Files with line length issues: $TOTAL_LINE_ISSUES"
+if [[ ${CHECK_LINE_LENGTH} -eq 1 ]]; then
+  echo "Files with line length issues: ${TOTAL_LINE_ISSUES}"
 
-  if [ "$TOTAL_LINE_ISSUES" -gt 0 ]; then
-    echo "See $REPORT_FILE for line length issues and suggestions."
+  if [ "${TOTAL_LINE_ISSUES}" -gt 0 ]; then
+    echo "See ${REPORT_FILE} for line length issues and suggestions."
 
     # Show example fixes for line length issues
     echo ""
@@ -344,12 +345,12 @@ if [[ $CHECK_LINE_LENGTH -eq 1 ]]; then
   fi
 fi
 
-if [[ $DRY_RUN -eq 1 ]]; then
+if [[ ${DRY_RUN} -eq 1 ]]; then
   echo "No actual changes were made (dry run)"
 fi
 echo
 
-if [[ $FIXED_FILES -gt 0 && $DRY_RUN -eq 0 ]]; then
+if [[ ${FIXED_FILES} -gt 0 && ${DRY_RUN} -eq 0 ]]; then
   echo "Run ansible-lint again to check if there are remaining issues."
 fi
 

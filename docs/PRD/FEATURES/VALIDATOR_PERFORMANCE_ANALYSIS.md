@@ -218,4 +218,4 @@ The validator performance analysis system can be extended by:
 - [Validator Performance Monitoring](./VALIDATOR_PERFORMANCE_MONITORING.md)
 - [Validator Key Management](./VALIDATOR_KEY_MANAGEMENT.md)
 - [Dashboard Implementation](./DASHBOARD_IMPLEMENTATION.md)
-- [Ephemery Setup](./EPHEMERY_SETUP.md) 
+- [Ephemery Setup](./EPHEMERY_SETUP.md)

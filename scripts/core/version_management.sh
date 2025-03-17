@@ -9,7 +9,7 @@
 readonly _EPHEMERY_VERSION_MANAGEMENT_LOADED=1
 
 # Source path configuration if not already loaded
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 if [[ -z "${_EPHEMERY_PATH_CONFIG_LOADED}" && -f "${SCRIPT_DIR}/path_config.sh" ]]; then
   source "${SCRIPT_DIR}/path_config.sh"
 fi
@@ -22,7 +22,7 @@ declare -A EPHEMERY_DEPENDENCY_VERSIONS=(
   # Container client tools
   [DOCKER]="24.0.0"
   [DOCKER_COMPOSE]="2.24.0"
-  
+
   # Ethereum client versions
   [GETH]="1.13.14"
   [LIGHTHOUSE]="4.5.0"
@@ -30,7 +30,7 @@ declare -A EPHEMERY_DEPENDENCY_VERSIONS=(
   [TEKU]="24.3.0"
   [NETHERMIND]="1.25.0"
   [ERIGON]="2.57.0"
-  
+
   # Utility tools
   [TMUX]="3.3"
   [JQ]="1.6"
@@ -41,12 +41,12 @@ declare -A EPHEMERY_DEPENDENCY_VERSIONS=(
   [WGET]="1.21.0"
   [RSYNC]="3.2.7"
   [GIT]="2.41.0"
-  
+
   # Python dependencies
   [PYTHON]="3.10.0"
   [PIP]="23.0.0"
   [ANSIBLE]="8.1.0"
-  
+
   # Shell tools
   [SHELLCHECK]="0.9.0"
   [SHFMT]="3.7.0"
@@ -58,8 +58,8 @@ check_version() {
   local tool_name="$1"
   local min_version="$2"
   local actual_version=""
-  
-  case "$tool_name" in
+
+  case "${tool_name}" in
     docker)
       actual_version=$(docker --version | sed -n 's/Docker version \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
       ;;
@@ -109,18 +109,18 @@ check_version() {
       actual_version=$(shfmt --version)
       ;;
     *)
-      echo "Unknown tool: $tool_name"
+      echo "Unknown tool: ${tool_name}"
       return 1
       ;;
   esac
-  
-  if [ -z "$actual_version" ]; then
-    echo "Could not determine version of $tool_name"
+
+  if [ -z "${actual_version}" ]; then
+    echo "Could not determine version of ${tool_name}"
     return 1
   fi
-  
+
   # Compare versions
-  version_greater_equal "$actual_version" "$min_version"
+  version_greater_equal "${actual_version}" "${min_version}"
   return $?
 }
 
@@ -132,7 +132,7 @@ version_greater_equal() {
 
 # Helper function to check if a tool is installed
 is_installed() {
-  command -v "$1" &> /dev/null
+  command -v "$1" &>/dev/null
   return $?
 }
 
@@ -141,24 +141,24 @@ is_installed() {
 check_dependencies() {
   local required_tools="$1"
   local missing_deps=false
-  
-  for tool in $required_tools; do
-    if ! is_installed "$tool"; then
-      echo "Error: $tool is not installed. Please install $tool v${EPHEMERY_DEPENDENCY_VERSIONS[${tool^^}]} or later."
+
+  for tool in ${required_tools}; do
+    if ! is_installed "${tool}"; then
+      echo "Error: ${tool} is not installed. Please install ${tool} v${EPHEMERY_DEPENDENCY_VERSIONS[${tool^^}]} or later."
       missing_deps=true
     else
-      if check_version "$tool" "${EPHEMERY_DEPENDENCY_VERSIONS[${tool^^}]}"; then
-        echo "✓ $tool is installed with an acceptable version"
+      if check_version "${tool}" "${EPHEMERY_DEPENDENCY_VERSIONS[${tool^^}]}"; then
+        echo "✓ ${tool} is installed with an acceptable version"
       else
-        echo "Warning: $tool is installed but may be outdated. Recommended version: ${EPHEMERY_DEPENDENCY_VERSIONS[${tool^^}]} or later."
+        echo "Warning: ${tool} is installed but may be outdated. Recommended version: ${EPHEMERY_DEPENDENCY_VERSIONS[${tool^^}]} or later."
       fi
     fi
   done
-  
-  if [ "$missing_deps" = true ]; then
+
+  if [ "${missing_deps}" = true ]; then
     echo "Missing required dependencies. Please install them and try again."
     return 1
   fi
-  
+
   return 0
-} 
+}

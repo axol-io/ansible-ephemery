@@ -362,15 +362,15 @@
         width: 120px;
         height: 120px;
     }
-    
+
     .health-score .score-value {
         font-size: 2rem;
     }
-    
+
     .chart-container {
         height: 200px;
     }
-    
+
     .node-status-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
@@ -446,4 +446,4 @@
 
 .text-warning {
     color: #ffc107 !important;
-} 
+}

@@ -91,4 +91,4 @@ To test notifications:
 ```bash
 ../validator_alerts_system.sh --config-file config/alerts_config.json --test-mode \
   --test-notification email --alert-data '{"type": "missed_attestation", "message": "Test alert"}'
-``` 
+```

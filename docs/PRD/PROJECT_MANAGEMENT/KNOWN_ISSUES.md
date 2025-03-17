@@ -15,6 +15,21 @@ This document lists known issues with the Ansible Ephemery project and their cur
 
 The following issues have been resolved in recent updates:
 
+- [x] **Shell Script Syntax Errors**: Multiple scripts had incorrect function closing blocks using "fi" instead of "}"
+  - Fixed in scripts including ephemery_reset_handler.sh, validator_dashboard.sh, and others
+  - Created automated fix script to prevent future occurrences
+
+- [x] **Color Variable Conflicts**: Readonly variable conflicts between scripts when defining color constants
+  - Modified test_utils.sh to conditionally set variables only if not already defined
+  - Changed sourcing order in test scripts to prioritize compatibility
+
+- [x] **Test Reset Mechanism Failures**: The test_reset_mechanism.sh script was failing to detect network resets
+  - Enhanced ephemery_retention.sh with proper test mode support
+  - Added support for custom test directories to prevent interference with production
+
+- [x] **Missing Version Information**: Many scripts were missing proper version information
+  - Added standardized version information to script headers
+
 - [x] **Validator key count mismatch**: Expected 1000 keys but found 2000+ JSON files
   - Fixed with robust key count validation and reporting
 
@@ -95,6 +110,10 @@ The following issues have been resolved in recent updates:
 - [ ] **Insufficient integration tests**: Missing integration tests between execution and consensus clients
   - **Impact**: Integration issues may not be detected during development
   - **Workaround**: Perform thorough manual testing before deployment
+
+- [ ] **Validator keystore password mismatch**: Password files may not contain the correct password for encrypted keystores
+  - **Impact**: Validator client fails to start with "UnableToDecryptKeystore(InvalidPassword)" errors
+  - **Workaround**: Verify keystore password correctness and regenerate keystores if needed
 
 ## Related Documentation
 

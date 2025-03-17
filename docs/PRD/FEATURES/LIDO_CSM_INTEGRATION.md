@@ -67,7 +67,7 @@ CSM is designed as a permissionless entry pathway for independent community stak
    - Ejector optimization recommendations
 
 6. **Bond Management Integration**:
-   - Bond submission and tracking 
+   - Bond submission and tracking
    - Bond health monitoring and optimization
    - Bond rebase monitoring and analytics
    - Bond penalization risk assessment
@@ -529,4 +529,4 @@ After the initial implementation, the following enhancements are planned:
 - [Validator Management](./VALIDATOR_MANAGEMENT.md)
 - [Monitoring](./MONITORING.md)
 - [Dashboard Implementation](./DASHBOARD_IMPLEMENTATION.md)
-- [Genesis Validator Guide](../OPERATIONS/GENESIS_VALIDATOR.md) 
+- [Genesis Validator Guide](../OPERATIONS/GENESIS_VALIDATOR.md)

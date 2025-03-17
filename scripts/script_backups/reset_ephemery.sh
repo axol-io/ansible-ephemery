@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Ephemery Reset Script
 # This script resets the Ephemery testnet nodes to the latest iteration.
@@ -10,13 +11,13 @@ set -e
 
 # Configuration
 HOME_DIR="/root/ephemery"
-DATA_DIR="$HOME_DIR/data"
-CONFIG_DIR="$HOME_DIR/config"
-LOG_DIR="$HOME_DIR/logs"
+DATA_DIR="${HOME_DIR}/data"
+CONFIG_DIR="${HOME_DIR}/config"
+LOG_DIR="${HOME_DIR}/logs"
 GENESIS_REPO="ephemery-testnet/ephemery-genesis"
 
 # Create log directory if it doesn't exist
-mkdir -p "$LOG_DIR"
+mkdir -p "${LOG_DIR}"
 
 echo "$(date) - Starting Ephemery reset process"
 
@@ -30,11 +31,11 @@ rm -rf "${DATA_DIR}/geth/"* "${DATA_DIR}/beacon/"*
 
 # Download latest genesis files
 echo "Downloading latest genesis files..."
-LATEST_RELEASE=$(curl --silent "https://api.github.com/repos/$GENESIS_REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
+LATEST_RELEASE=$(curl --silent "https://api.github.com/repos/${GENESIS_REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
 
-echo "Latest release: $LATEST_RELEASE"
-mkdir -p "$CONFIG_DIR"
-wget -qO- "https://github.com/$GENESIS_REPO/releases/download/$LATEST_RELEASE/testnet-all.tar.gz" | tar xvz -C "$CONFIG_DIR"
+echo "Latest release: ${LATEST_RELEASE}"
+mkdir -p "${CONFIG_DIR}"
+wget -qO- "https://github.com/${GENESIS_REPO}/releases/download/${LATEST_RELEASE}/testnet-all.tar.gz" | tar xvz -C "${CONFIG_DIR}"
 
 # Initialize execution client (Geth)
 echo "Initializing Geth with new genesis..."
@@ -43,7 +44,7 @@ docker run --rm -v "${DATA_DIR}/geth:/data" -v "${CONFIG_DIR}:/config" pk910/eph
 # Start containers
 echo "Starting containers..."
 docker start ephemery-geth
-sleep 10  # Wait for Geth to start
+sleep 10 # Wait for Geth to start
 docker start ephemery-lighthouse
 
 # Restart monitoring

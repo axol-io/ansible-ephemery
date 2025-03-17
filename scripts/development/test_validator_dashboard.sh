@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Comprehensive Test Script for Validator Dashboard
 # This script tests the functionality of the validator dashboard with various configurations
@@ -46,9 +47,9 @@ print_header() {
 # Generate mock data for testing
 generate_mock_data() {
   echo -e "${YELLOW}Generating mock validator data for testing...${NC}"
-  
+
   # Create mock validator status data
-  cat > "${MOCK_DATA_DIR}/validator_status.json" << EOF
+  cat >"${MOCK_DATA_DIR}/validator_status.json" <<EOF
 {
   "data": [
     {
@@ -96,7 +97,7 @@ generate_mock_data() {
 EOF
 
   # Create mock validator performance data
-  cat > "${MOCK_DATA_DIR}/validator_performance.json" << EOF
+  cat >"${MOCK_DATA_DIR}/validator_performance.json" <<EOF
 {
   "attestation_effectiveness": {
     "0x8000000000000000000000000000000000000000000000000000000000000000": 100,
@@ -132,28 +133,28 @@ EOF
   # Create mock historical data for analysis
   mkdir -p "${MOCK_DATA_DIR}/history"
   for day in {1..7}; do
-    cat > "${MOCK_DATA_DIR}/history/validator_metrics_day_${day}.json" << EOF
+    cat >"${MOCK_DATA_DIR}/history/validator_metrics_day_${day}.json" <<EOF
 {
   "timestamp": "2023-03-${day}T12:00:00Z",
   "validators": {
     "0x8000000000000000000000000000000000000000000000000000000000000000": {
-      "balance": $((32000000000 + $RANDOM % 100000000)),
-      "effectiveness": $((95 + $RANDOM % 5)),
+      "balance": $((32000000000 + ${RANDOM} % 100000000)),
+      "effectiveness": $((95 + ${RANDOM} % 5)),
       "status": "active_ongoing"
     },
     "0x8100000000000000000000000000000000000000000000000000000000000000": {
-      "balance": $((31900000000 + $RANDOM % 100000000)),
-      "effectiveness": $((90 + $RANDOM % 10)),
+      "balance": $((31900000000 + ${RANDOM} % 100000000)),
+      "effectiveness": $((90 + ${RANDOM} % 10)),
       "status": "active_ongoing"
     },
     "0x8200000000000000000000000000000000000000000000000000000000000000": {
-      "balance": $((32050000000 + $RANDOM % 100000000)),
-      "effectiveness": $((95 + $RANDOM % 5)),
+      "balance": $((32050000000 + ${RANDOM} % 100000000)),
+      "effectiveness": $((95 + ${RANDOM} % 5)),
       "status": "active_ongoing"
     },
     "0x8300000000000000000000000000000000000000000000000000000000000000": {
-      "balance": $((31000000000 + $RANDOM % 100000000)),
-      "effectiveness": $((80 + $RANDOM % 10)),
+      "balance": $((31000000000 + ${RANDOM} % 100000000)),
+      "effectiveness": $((80 + ${RANDOM} % 10)),
       "status": "active_slashed"
     },
     "0x8400000000000000000000000000000000000000000000000000000000000000": {
@@ -165,7 +166,7 @@ EOF
 }
 EOF
   done
-  
+
   echo -e "${GREEN}Mock data generation complete${NC}"
 }
 
@@ -173,28 +174,28 @@ EOF
 test_dashboard() {
   local config=$1
   local output_file="${TEST_OUTPUT_DIR}/test_${config}.log"
-  
+
   echo -e "${YELLOW}Testing dashboard with ${config} configuration...${NC}"
-  
-  case $config in
+
+  case ${config} in
     compact)
-      ${DASHBOARD_SCRIPT} --compact --test-mode --data-dir="${MOCK_DATA_DIR}" > "${output_file}" 2>&1
+      ${DASHBOARD_SCRIPT} --compact --test-mode --data-dir="${MOCK_DATA_DIR}" >"${output_file}" 2>&1
       ;;
     detailed)
-      ${DASHBOARD_SCRIPT} --detailed --test-mode --data-dir="${MOCK_DATA_DIR}" > "${output_file}" 2>&1
+      ${DASHBOARD_SCRIPT} --detailed --test-mode --data-dir="${MOCK_DATA_DIR}" >"${output_file}" 2>&1
       ;;
     full)
-      ${DASHBOARD_SCRIPT} --full --test-mode --data-dir="${MOCK_DATA_DIR}" > "${output_file}" 2>&1
+      ${DASHBOARD_SCRIPT} --full --test-mode --data-dir="${MOCK_DATA_DIR}" >"${output_file}" 2>&1
       ;;
     analyze)
-      ${DASHBOARD_SCRIPT} --analyze --period 7d --test-mode --data-dir="${MOCK_DATA_DIR}" > "${output_file}" 2>&1
+      ${DASHBOARD_SCRIPT} --analyze --period 7d --test-mode --data-dir="${MOCK_DATA_DIR}" >"${output_file}" 2>&1
       ;;
     *)
       echo -e "${RED}Unknown configuration: ${config}${NC}"
       return 1
       ;;
   esac
-  
+
   if [[ $? -eq 0 ]]; then
     echo -e "${GREEN}✓ Test passed: ${config}${NC}"
     return 0
@@ -208,11 +209,11 @@ test_dashboard() {
 # Test monitoring script
 test_monitoring_script() {
   local output_file="${TEST_OUTPUT_DIR}/test_monitoring.log"
-  
+
   echo -e "${YELLOW}Testing monitoring script...${NC}"
-  
-  ${MONITOR_SCRIPT} --beacon-node mock --validator-client mock --test-mode --output-dir="${MOCK_DATA_DIR}" > "${output_file}" 2>&1
-  
+
+  ${MONITOR_SCRIPT} --beacon-node mock --validator-client mock --test-mode --output-dir="${MOCK_DATA_DIR}" >"${output_file}" 2>&1
+
   if [[ $? -eq 0 ]]; then
     echo -e "${GREEN}✓ Test passed: monitoring script${NC}"
     return 0
@@ -229,7 +230,7 @@ check_script_executable() {
     echo -e "${YELLOW}Making dashboard script executable...${NC}"
     chmod +x "${DASHBOARD_SCRIPT}"
   fi
-  
+
   if [[ ! -x "${MONITOR_SCRIPT}" ]]; then
     echo -e "${YELLOW}Making monitoring script executable...${NC}"
     chmod +x "${MONITOR_SCRIPT}"
@@ -239,21 +240,21 @@ check_script_executable() {
 # Run all tests
 run_all_tests() {
   local failures=0
-  
+
   # Test monitoring script
   test_monitoring_script || ((failures++))
-  
+
   # Test dashboard with different configurations
   for config in "${TEST_CONFIGS[@]}"; do
-    test_dashboard "$config" || ((failures++))
+    test_dashboard "${config}" || ((failures++))
   done
-  
+
   # Report results
   echo -e "\n${BLUE}========================================${NC}"
   echo -e "${BLUE}   Test Results${NC}"
   echo -e "${BLUE}========================================${NC}"
-  
-  if [[ $failures -eq 0 ]]; then
+
+  if [[ ${failures} -eq 0 ]]; then
     echo -e "${GREEN}All tests passed!${NC}"
     return 0
   else
@@ -273,4 +274,4 @@ main() {
 }
 
 # Execute main function
-main 
+main

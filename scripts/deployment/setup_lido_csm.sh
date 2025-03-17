@@ -147,7 +147,7 @@ while [[ $# -gt 0 ]]; do
       DEBUG_MODE=true
       shift
       ;;
-    -h|--help)
+    -h | --help)
       show_help
       exit 0
       ;;
@@ -162,7 +162,7 @@ done
 
 # Function to print debug messages
 function debug_log {
-  if [[ "$DEBUG_MODE" == true ]]; then
+  if [[ "${DEBUG_MODE}" == true ]]; then
     echo -e "${YELLOW}[DEBUG] $1${NC}"
   fi
 }
@@ -170,24 +170,24 @@ function debug_log {
 # Function to create directory if it doesn't exist
 function ensure_directory {
   local dir=$1
-  debug_log "Ensuring directory exists: $dir"
-  if [[ ! -d "$dir" ]]; then
-    mkdir -p "$dir"
-    echo -e "${GREEN}Created directory: $dir${NC}"
+  debug_log "Ensuring directory exists: ${dir}"
+  if [[ ! -d "${dir}" ]]; then
+    mkdir -p "${dir}"
+    echo -e "${GREEN}Created directory: ${dir}${NC}"
   fi
 }
 
 # Function to check if Docker is installed and running
 function check_docker {
   debug_log "Checking Docker installation"
-  if ! command -v docker &> /dev/null; then
+  if ! command -v docker &>/dev/null; then
     echo -e "${RED}Error: Docker is not installed${NC}"
     echo "Please install Docker first. See https://docs.docker.com/get-docker/"
     exit 1
   fi
 
   debug_log "Checking if Docker daemon is running"
-  if ! docker info &> /dev/null; then
+  if ! docker info &>/dev/null; then
     echo -e "${RED}Error: Docker daemon is not running${NC}"
     echo "Please start the Docker service"
     exit 1
@@ -197,15 +197,15 @@ function check_docker {
 # Function to check if Ephemery is already set up
 function check_ephemery {
   debug_log "Checking if Ephemery is set up"
-  if [[ ! -d "$EPHEMERY_BASE_DIR" ]]; then
-    echo -e "${RED}Error: Ephemery base directory not found: $EPHEMERY_BASE_DIR${NC}"
+  if [[ ! -d "${EPHEMERY_BASE_DIR}" ]]; then
+    echo -e "${RED}Error: Ephemery base directory not found: ${EPHEMERY_BASE_DIR}${NC}"
     echo "Please run the Ephemery setup script first"
     exit 1
   fi
 
   debug_log "Checking if Ephemery network exists"
-  if ! docker network inspect "$EPHEMERY_DOCKER_NETWORK" &> /dev/null; then
-    echo -e "${RED}Error: Ephemery Docker network not found: $EPHEMERY_DOCKER_NETWORK${NC}"
+  if ! docker network inspect "${EPHEMERY_DOCKER_NETWORK}" &>/dev/null; then
+    echo -e "${RED}Error: Ephemery Docker network not found: ${EPHEMERY_DOCKER_NETWORK}${NC}"
     echo "Please run the Ephemery setup script first to initialize the network"
     exit 1
   fi
@@ -215,8 +215,8 @@ function check_ephemery {
 function check_csm_exists {
   debug_log "Checking if CSM container exists"
   if docker ps -a --format '{{.Names}}' | grep -q "^${CSM_CONTAINER}$"; then
-    if [[ "$FORCE_RESET" != true ]]; then
-      echo -e "${YELLOW}CSM container already exists: $CSM_CONTAINER${NC}"
+    if [[ "${FORCE_RESET}" != true ]]; then
+      echo -e "${YELLOW}CSM container already exists: ${CSM_CONTAINER}${NC}"
       echo "Use --reset to force reset the CSM configuration and data"
       exit 0
     fi
@@ -226,10 +226,10 @@ function check_csm_exists {
 # Function to create CSM configuration
 function create_csm_config {
   debug_log "Creating CSM configuration"
-  ensure_directory "$CSM_CONFIG_DIR"
-  
+  ensure_directory "${CSM_CONFIG_DIR}"
+
   # Create CSM configuration file
-  cat > "${CSM_CONFIG_DIR}/config.yaml" <<EOF
+  cat >"${CSM_CONFIG_DIR}/config.yaml" <<EOF
 # Lido CSM Configuration for Ephemery
 csm:
   enabled: true
@@ -292,23 +292,23 @@ EOF
 # Function to deploy CSM container
 function deploy_csm_container {
   debug_log "Deploying CSM container"
-  
+
   # Pull the latest image
-  echo -e "${BLUE}Pulling CSM Docker image: $CSM_DOCKER_IMAGE${NC}"
-  docker pull "$CSM_DOCKER_IMAGE"
-  
+  echo -e "${BLUE}Pulling CSM Docker image: ${CSM_DOCKER_IMAGE}${NC}"
+  docker pull "${CSM_DOCKER_IMAGE}"
+
   # Remove existing container if it exists
   if docker ps -a --format '{{.Names}}' | grep -q "^${CSM_CONTAINER}$"; then
-    echo -e "${YELLOW}Removing existing CSM container: $CSM_CONTAINER${NC}"
-    docker stop "$CSM_CONTAINER" 2>/dev/null || true
-    docker rm "$CSM_CONTAINER" 2>/dev/null || true
+    echo -e "${YELLOW}Removing existing CSM container: ${CSM_CONTAINER}${NC}"
+    docker stop "${CSM_CONTAINER}" 2>/dev/null || true
+    docker rm "${CSM_CONTAINER}" 2>/dev/null || true
   fi
-  
+
   # Create and start the CSM container
-  echo -e "${BLUE}Creating CSM container: $CSM_CONTAINER${NC}"
+  echo -e "${BLUE}Creating CSM container: ${CSM_CONTAINER}${NC}"
   docker run -d \
-    --name "$CSM_CONTAINER" \
-    --network "$EPHEMERY_DOCKER_NETWORK" \
+    --name "${CSM_CONTAINER}" \
+    --network "${EPHEMERY_DOCKER_NETWORK}" \
     -p "${CSM_API_PORT}:${CSM_API_PORT}" \
     -p "${CSM_METRICS_PORT}:${CSM_METRICS_PORT}" \
     -v "${CSM_CONFIG_DIR}:/config" \
@@ -319,15 +319,15 @@ function deploy_csm_container {
     -e "CSM_CONFIG_FILE=/config/config.yaml" \
     -e "CSM_DATA_DIR=/data" \
     --restart unless-stopped \
-    "$CSM_DOCKER_IMAGE"
-  
+    "${CSM_DOCKER_IMAGE}"
+
   # Verify container is running
   if docker ps --format '{{.Names}}' | grep -q "^${CSM_CONTAINER}$"; then
-    echo -e "${GREEN}CSM container deployed successfully: $CSM_CONTAINER${NC}"
+    echo -e "${GREEN}CSM container deployed successfully: ${CSM_CONTAINER}${NC}"
   else
     echo -e "${RED}Failed to deploy CSM container${NC}"
     echo "Check container logs for details:"
-    echo "  docker logs $CSM_CONTAINER"
+    echo "  docker logs ${CSM_CONTAINER}"
     exit 1
   fi
 }
@@ -340,7 +340,7 @@ function setup_csm_monitoring {
   ensure_directory "${EPHEMERY_DATA_DIR}/monitoring/lido-csm"
 
   # Create Prometheus scrape config for CSM
-  cat > "${EPHEMERY_CONFIG_DIR}/prometheus/lido-csm.yaml" <<EOF
+  cat >"${EPHEMERY_CONFIG_DIR}/prometheus/lido-csm.yaml" <<EOF
 scrape_configs:
   - job_name: 'lido-csm'
     scrape_interval: 15s
@@ -361,60 +361,60 @@ EOF
 
 # Function to set up profitability calculator
 function setup_profitability_calculator {
-  if [[ "$CSM_PROFITABILITY_CALCULATOR" != true ]]; then
+  if [[ "${CSM_PROFITABILITY_CALCULATOR}" != true ]]; then
     return
   fi
-  
+
   debug_log "Setting up CSM profitability calculator"
-  
+
   # Create profitability calculator directory
   ensure_directory "${CSM_DATA_DIR}/profitability"
-  
+
   # Create empty profitability data file
   touch "${CSM_DATA_DIR}/profitability/data.json"
-  
+
   echo -e "${GREEN}Set up profitability calculator${NC}"
 }
 
 # Function to set up validator monitoring
 function setup_validator_monitoring {
-  if [[ "$CSM_VALIDATOR_MONITORING" != true ]]; then
+  if [[ "${CSM_VALIDATOR_MONITORING}" != true ]]; then
     return
   fi
-  
+
   debug_log "Setting up CSM validator monitoring"
-  
+
   # Create validator monitoring directory
   ensure_directory "${CSM_DATA_DIR}/validator-monitoring"
-  
+
   echo -e "${GREEN}Set up validator monitoring${NC}"
 }
 
 # Function to set up ejector monitoring
 function setup_ejector_monitoring {
-  if [[ "$CSM_EJECTOR_MONITORING" != true ]]; then
+  if [[ "${CSM_EJECTOR_MONITORING}" != true ]]; then
     return
   fi
-  
+
   debug_log "Setting up CSM ejector monitoring"
-  
+
   # Create ejector monitoring directory
   ensure_directory "${CSM_DATA_DIR}/ejector-monitoring"
-  
+
   echo -e "${GREEN}Set up ejector monitoring${NC}"
 }
 
 # Function to set up protocol monitoring
 function setup_protocol_monitoring {
-  if [[ "$CSM_PROTOCOL_MONITORING" != true ]]; then
+  if [[ "${CSM_PROTOCOL_MONITORING}" != true ]]; then
     return
   fi
-  
+
   debug_log "Setting up CSM protocol monitoring"
-  
+
   # Create protocol monitoring directory
   ensure_directory "${CSM_DATA_DIR}/protocol-monitoring"
-  
+
   echo -e "${GREEN}Set up protocol monitoring${NC}"
 }
 
@@ -422,12 +422,12 @@ function setup_protocol_monitoring {
 function main {
   echo -e "${BLUE}Lido CSM Integration Setup for Ephemery${NC}"
   echo ""
-  
+
   # Check prerequisites
   check_docker
   check_ephemery
   check_csm_exists
-  
+
   # Print configuration
   echo -e "${CYAN}Configuration:${NC}"
   echo "  Base Directory:        ${EPHEMERY_BASE_DIR}"
@@ -442,33 +442,33 @@ function main {
   echo "  Ejector Monitoring:    ${CSM_EJECTOR_MONITORING}"
   echo "  Protocol Monitoring:   ${CSM_PROTOCOL_MONITORING}"
   echo ""
-  
+
   # Confirm action
-  if [[ "$SKIP_CONFIRMATION" != true ]]; then
+  if [[ "${SKIP_CONFIRMATION}" != true ]]; then
     read -p "Continue with this configuration? (y/n) " -n 1 -r
     echo ""
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
       echo -e "${YELLOW}Aborted by user${NC}"
       exit 0
     fi
   fi
-  
+
   # Create necessary directories
-  ensure_directory "$CSM_DATA_DIR"
-  ensure_directory "$CSM_CONFIG_DIR"
-  ensure_directory "$CSM_LOGS_DIR"
-  
+  ensure_directory "${CSM_DATA_DIR}"
+  ensure_directory "${CSM_CONFIG_DIR}"
+  ensure_directory "${CSM_LOGS_DIR}"
+
   # Set up CSM
   create_csm_config
   deploy_csm_container
   setup_csm_monitoring
-  
+
   # Set up optional components
   setup_profitability_calculator
   setup_validator_monitoring
   setup_ejector_monitoring
   setup_protocol_monitoring
-  
+
   echo ""
   echo -e "${GREEN}Lido CSM integration setup completed successfully${NC}"
   echo ""
@@ -488,4 +488,4 @@ function main {
 }
 
 # Run main function
-main 
+main

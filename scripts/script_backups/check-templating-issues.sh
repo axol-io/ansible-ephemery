@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 
 # Script to check for templating issues in Ansible playbooks
 # This helps identify recursive variable references and templating problems
@@ -15,21 +16,21 @@ NC='\033[0m' # No Color
 
 # Function to run ansible-playbook in check mode with verbose output
 check_playbook() {
-    local playbook=$1
-    local inventory=$2
+  local playbook=$1
+  local inventory=$2
 
-    echo -e "${YELLOW}Checking playbook: $playbook with inventory: $inventory${NC}"
+  echo -e "${YELLOW}Checking playbook: ${playbook} with inventory: ${inventory}${NC}"
 
-    # Run ansible-playbook in check mode with verbose output
-    ansible-playbook -i "$inventory" "$playbook" --check -vvv
+  # Run ansible-playbook in check mode with verbose output
+  ansible-playbook -i "${inventory}" "${playbook}" --check -vvv
 
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ No templating issues found in $playbook${NC}"
-        return 0
-    else
-        echo -e "${RED}❌ Templating issues found in $playbook${NC}"
-        return 1
-    fi
+  if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✅ No templating issues found in ${playbook}${NC}"
+    return 0
+  else
+    echo -e "${RED}❌ Templating issues found in ${playbook}${NC}"
+    return 1
+  fi
 }
 
 # Check specific files
@@ -40,22 +41,22 @@ MAIN_PLAYBOOK="ansible/playbooks/ephemery.yaml"
 check_result=0
 
 echo "Checking main playbook..."
-check_playbook "$MAIN_PLAYBOOK" "$INVENTORY_FILE"
+check_playbook "${MAIN_PLAYBOOK}" "${INVENTORY_FILE}"
 if [ $? -ne 0 ]; then
-    check_result=1
+  check_result=1
 fi
 
 # If any checks failed, provide troubleshooting guidance
-if [ $check_result -ne 0 ]; then
-    echo -e "${RED}===== Templating issues detected! =====${NC}"
-    echo -e "${YELLOW}Troubleshooting tips:${NC}"
-    echo "1. Look for recursive variable references (variables that reference themselves)"
-    echo "2. Check for undefined variables or dictionary keys"
-    echo "3. Make sure all required variables are defined in inventory or defaults"
-    echo "4. Use '--syntax-check' flag with ansible-playbook for a more focused check"
-    echo "5. Consider using 'ansible-inventory -i inventory.yaml --graph --vars' to debug variable values"
-    exit 1
+if [ ${check_result} -ne 0 ]; then
+  echo -e "${RED}===== Templating issues detected! =====${NC}"
+  echo -e "${YELLOW}Troubleshooting tips:${NC}"
+  echo "1. Look for recursive variable references (variables that reference themselves)"
+  echo "2. Check for undefined variables or dictionary keys"
+  echo "3. Make sure all required variables are defined in inventory or defaults"
+  echo "4. Use '--syntax-check' flag with ansible-playbook for a more focused check"
+  echo "5. Consider using 'ansible-inventory -i inventory.yaml --graph --vars' to debug variable values"
+  exit 1
 else
-    echo -e "${GREEN}===== All templating checks passed! =====${NC}"
-    exit 0
+  echo -e "${GREEN}===== All templating checks passed! =====${NC}"
+  exit 0
 fi

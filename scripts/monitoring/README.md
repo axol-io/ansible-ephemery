@@ -1,113 +1,46 @@
 # Monitoring Scripts
 
-Advanced monitoring and alerting scripts for validator performance.
+This directory contains scripts for monitoring Ephemery nodes and validators.
 
-## System Components
+## Available Scripts
 
-The Advanced Validator Performance Monitoring system consists of several key components:
+### Node Monitoring
+- `monitor_logs.sh` - Monitor logs from Geth and Lighthouse clients
+- `diagnose_output.sh` - Analyze and diagnose node output for issues
+- `filter_ansible_output.sh` - Filter and format Ansible deployment output
 
-1. **Validator Alerts System** (`validator_alerts_system.sh`): 
-   - Provides real-time alerting for validator performance issues
-   - Monitors attestations, proposals, inclusion distance, and balance
-   - Configurable thresholds and notification channels
+### Validator Monitoring
+- `demo_validator_monitoring.sh` - Demonstrates validator monitoring capabilities
+- `ephemery_dashboard.sh` - Provides a comprehensive monitoring dashboard
+- `ephemery_output.sh` - Formats and displays validator output
 
-2. **Predictive Analytics System** (`validator_predictive_analytics.sh`):
-   - Analyzes historical performance data to identify trends
-   - Forecasts future validator performance
-   - Provides optimization recommendations
-
-3. **External Integration** (`validator_external_integration.sh`):
-   - Connects to external monitoring systems
-   - Provides webhooks and API endpoints
-   - Exports metrics in various formats
-
-4. **Dashboard** (`validator_dashboard.sh`):
-   - Displays validator performance metrics
-   - Shows alerts history and analytics
-   - Provides a unified view of the monitoring system
-
-## Installation
-
-1. Ensure you have all dependencies installed:
-   ```
-   sudo apt-get update
-   sudo apt-get install -y jq bc curl
-   ```
-
-2. Create the necessary directories:
-   ```
-   sudo mkdir -p /var/lib/validator/data
-   sudo mkdir -p /var/lib/validator/metrics
-   sudo mkdir -p /etc/validator
-   ```
-
-3. Copy the sample configuration:
-   ```
-   cp config/alerts_config.sample.json /etc/validator/alerts_config.json
-   cp config/predictive_analytics.sample.json /etc/validator/predictive_analytics.json
-   ```
+### Analysis Tools
+- `analyze_ansible_output.sh` - Analyzes Ansible deployment logs for issues
+- `monitor_logs.sh` - Advanced log monitoring and analysis
 
 ## Usage
 
-### Validator Alerts System
+Most monitoring scripts support these common options:
+- `-h, --help` - Display help information
+- `-v, --verbose` - Enable verbose output
+- `-f, --follow` - Follow log output in real-time
+- `-n, --lines N` - Show last N lines of output
 
-```bash
-./validator_alerts_system.sh --config-file /etc/validator/alerts_config.json
-```
+## Features
 
-Testing alerts:
+- Real-time log monitoring
+- Performance metrics collection
+- Error detection and diagnosis
+- Custom filtering and formatting
+- Dashboard integration
+- Alert generation for critical issues
 
-```bash
-./validator_alerts_system.sh --config-file /etc/validator/alerts_config.json --test-mode \
-  --test-data '{"missed_attestations": 3}' --alert-type missed_attestation
-```
+## Best Practices
 
-### Predictive Analytics
+1. Regularly check monitoring output
+2. Set up alerts for critical issues
+3. Keep logs for troubleshooting
+4. Monitor system resource usage
+5. Review performance metrics periodically
 
-```bash
-./validator_predictive_analytics.sh --config-file /etc/validator/predictive_analytics.json \
-  --output json --output-file /var/lib/validator/analytics_results.json
-```
-
-### Generate Test Data
-
-To generate test data for development and testing:
-
-```bash
-./generate_test_data.sh --validators 5 --days 60
-```
-
-## Configuration
-
-### Alerts Configuration
-
-The alerts configuration file defines thresholds for various alert conditions and notification methods. See `config/README.md` for details.
-
-### Predictive Analytics Configuration
-
-The predictive analytics configuration defines analysis parameters, forecast settings, and recommendation types. See `config/README.md` for details.
-
-## Scripts
-
-- `advanced_validator_monitoring.sh`: Main monitoring script that orchestrates all components
-- `validator_alerts_system.sh`: Real-time alerting system
-- `validator_predictive_analytics.sh`: Historical data analysis and forecasting
-- `validator_external_integration.sh`: Integration with external systems
-- `validator_dashboard.sh`: Performance visualization dashboard
-- `generate_test_data.sh`: Creates test data for development and testing
-- `check_ephemery_status.sh`: Checks Ephemery network status
-- `check_sync_status.sh`: Verifies node synchronization
-- `run_validator_monitoring.sh`: Simple wrapper to run monitoring tasks
-- `checkpoint_sync_alert.sh`: Alerts for checkpoint synchronization issues
-- `fix_checkpoint_sync.sh`: Fixes common checkpoint sync problems
-
-## Integration
-
-The monitoring system can be integrated with:
-
-- Prometheus/Grafana for metrics visualization
-- Email/SMS/Slack for notifications
-- External monitoring services
-- Custom dashboards and reporting tools
-
-Please refer to the individual script comments or `validator_external_integration.sh` for integration details.
+For detailed usage instructions, refer to the main [README.md](../../README.md) or run each script with the `--help` flag.

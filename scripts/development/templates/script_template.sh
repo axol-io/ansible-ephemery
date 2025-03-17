@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # [SCRIPT PURPOSE]: Brief description of what this script does
 #
@@ -27,25 +28,25 @@ CONFIG_FILE="${EPHEMERY_BASE_DIR}/inventory.yaml"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -h|--help)
-            echo "Usage: $(basename "$0") [options]"
-            echo ""
-            echo "Options:"
-            echo "  -h, --help     Display this help message"
-            echo "  -v, --verbose  Enable verbose output"
-            exit 0
-            ;;
-        -v|--verbose)
-            VERBOSE=true
-            shift
-            ;;
-        *)
-            log_message "ERROR" "Unknown option: $1"
-            echo "Use -h or --help for usage information"
-            exit 1
-            ;;
-    esac
+  case "$1" in
+    -h | --help)
+      echo "Usage: $(basename "$0") [options]"
+      echo ""
+      echo "Options:"
+      echo "  -h, --help     Display this help message"
+      echo "  -v, --verbose  Enable verbose output"
+      exit 0
+      ;;
+    -v | --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    *)
+      log_message "ERROR" "Unknown option: $1"
+      echo "Use -h or --help for usage information"
+      exit 1
+      ;;
+  esac
 done
 
 # Print banner
@@ -54,17 +55,17 @@ print_banner "[SCRIPT TITLE]"
 # Check prerequisites
 check_ansible || exit 1
 is_ephemery_environment || {
-    log_message "ERROR" "Not in an Ephemery environment"
-    exit 1
+  log_message "ERROR" "Not in an Ephemery environment"
+  exit 1
 }
 
 # Main function
 main() {
-    log_message "INFO" "Starting script execution"
+  log_message "INFO" "Starting script execution"
 
-    # TODO: Implement script logic here
+  # TODO: Implement script logic here
 
-    log_message "INFO" "Script completed successfully"
+  log_message "INFO" "Script completed successfully"
 }
 
 # Run the main function

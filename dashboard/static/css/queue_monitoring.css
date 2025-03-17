@@ -192,15 +192,15 @@
         height: 80px;
         font-size: 1.5rem;
     }
-    
+
     .status-card h2 {
         font-size: 2rem;
     }
-    
+
     .activation-card h3 {
         font-size: 1.5rem;
     }
-    
+
     .chart-container {
         height: 250px;
     }
@@ -260,4 +260,4 @@
 
 .trend .fa-arrow-down.text-danger {
     color: #e74a3b !important;
-} 
+}

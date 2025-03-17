@@ -40,7 +40,7 @@ frontend ephemery_execution_frontend
     bind *:{{ lb_http_port | default(8545) }}
     mode http
     default_backend ephemery_execution_backend
-    
+
     # Handle CORS preflight requests
     http-request add-header Access-Control-Allow-Origin "*" if METH_OPTIONS
     http-request add-header Access-Control-Allow-Methods "GET, POST, OPTIONS" if METH_OPTIONS
@@ -62,7 +62,7 @@ frontend ephemery_consensus_frontend
     bind *:{{ lb_consensus_port | default(5052) }}
     mode http
     default_backend ephemery_consensus_backend
-    
+
     # Handle CORS preflight requests
     http-request add-header Access-Control-Allow-Origin "*" if METH_OPTIONS
     http-request add-header Access-Control-Allow-Methods "GET, POST, OPTIONS" if METH_OPTIONS
@@ -110,4 +110,4 @@ backend ephemery_consensus_backend
     default-server inter 3s fall 3 rise 2
 {% for node in backend_nodes %}
     server {{ node }} {{ hostvars[node].ansible_host }}:5052 check
-{% endfor %} 
+{% endfor %}

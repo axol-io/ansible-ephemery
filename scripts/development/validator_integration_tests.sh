@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # validator_integration_tests.sh - Comprehensive integration testing framework for validator operations
 #
@@ -74,7 +75,7 @@ function log_message() {
   local message="$2"
   local timestamp
   timestamp=$(date "+%Y-%m-%d %H:%M:%S")
-  echo "[$timestamp] [$level] $message"
+  echo "[${timestamp}] [${level}] ${message}"
 }
 
 # Create test environment
@@ -97,13 +98,13 @@ function cleanup_test_environment() {
 function initialize_test_report() {
   log_message "INFO" "Initializing test report"
   TEST_REPORT_FILE="${LOG_DIR}/test_report_$(date '+%Y%m%d_%H%M%S').${REPORT_FORMAT}"
-  
+
   case "${REPORT_FORMAT}" in
     json)
-      echo "{\"test_results\": []}" > "${TEST_REPORT_FILE}"
+      echo "{\"test_results\": []}" >"${TEST_REPORT_FILE}"
       ;;
     html)
-      cat > "${TEST_REPORT_FILE}" << EOF
+      cat >"${TEST_REPORT_FILE}" <<EOF
 <!DOCTYPE html>
 <html>
 <head>
@@ -134,7 +135,7 @@ function initialize_test_report() {
 </html>
 EOF
       ;;
-    console|*)
+    console | *)
       # For console output, we'll just use standard out
       ;;
   esac
@@ -147,7 +148,7 @@ function record_test_result() {
   local status="$3"
   local duration="$4"
   local details="$5"
-  
+
   # Update counters
   TOTAL_TESTS=$((TOTAL_TESTS + 1))
   case "${status}" in
@@ -155,39 +156,39 @@ function record_test_result() {
     fail) FAILED_TESTS=$((FAILED_TESTS + 1)) ;;
     skip) SKIPPED_TESTS=$((SKIPPED_TESTS + 1)) ;;
   esac
-  
+
   # Log the result
-  log_message "TEST" "[$suite/$name] ${status} (${duration}s) - ${details}"
-  
+  log_message "TEST" "[${suite}/${name}] ${status} (${duration}s) - ${details}"
+
   # Record result based on format
   case "${REPORT_FORMAT}" in
     json)
       local temp_file="${TEMP_DIR}/test_report_temp.json"
-      jq --arg suite "$suite" \
-         --arg name "$name" \
-         --arg status "$status" \
-         --arg duration "$duration" \
-         --arg details "$details" \
-         --arg timestamp "$(date '+%Y-%m-%d %H:%M:%S')" \
-         '.test_results += [{
+      jq --arg suite "${suite}" \
+        --arg name "${name}" \
+        --arg status "${status}" \
+        --arg duration "${duration}" \
+        --arg details "${details}" \
+        --arg timestamp "$(date '+%Y-%m-%d %H:%M:%S')" \
+        '.test_results += [{
            "suite": $suite,
            "name": $name,
            "status": $status,
            "duration": $duration | tonumber,
            "details": $details,
            "timestamp": $timestamp
-         }]' "${TEST_REPORT_FILE}" > "${temp_file}"
+         }]' "${TEST_REPORT_FILE}" >"${temp_file}"
       mv "${temp_file}" "${TEST_REPORT_FILE}"
       ;;
     html)
       local status_class="${status}"
       local temp_file="${TEMP_DIR}/test_report_temp.html"
-      
+
       # Extract the existing content
-      sed -n '1,/<div id="test-results">/p' "${TEST_REPORT_FILE}" > "${temp_file}"
-      
+      sed -n '1,/<div id="test-results">/p' "${TEST_REPORT_FILE}" >"${temp_file}"
+
       # Append new test result
-      cat >> "${temp_file}" << EOF
+      cat >>"${temp_file}" <<EOF
     <div class="test-suite ${status_class}">
       <h3>${suite} - ${name}</h3>
       <p><strong>Status:</strong> ${status}</p>
@@ -196,13 +197,13 @@ function record_test_result() {
       <p><strong>Timestamp:</strong> $(date '+%Y-%m-%d %H:%M:%S')</p>
     </div>
 EOF
-      
+
       # Append the rest of the file
-      sed -n '/<div id="test-results">/,$p' "${TEST_REPORT_FILE}" | tail -n +2 >> "${temp_file}"
-      
+      sed -n '/<div id="test-results">/,$p' "${TEST_REPORT_FILE}" | tail -n +2 >>"${temp_file}"
+
       mv "${temp_file}" "${TEST_REPORT_FILE}"
       ;;
-    console|*)
+    console | *)
       # Console output already handled by log_message
       ;;
   esac
@@ -211,25 +212,25 @@ EOF
 # Finalize test report
 function finalize_test_report() {
   log_message "INFO" "Finalizing test report"
-  
+
   # Calculate summary statistics
   local pass_rate=0
   if [[ "${TOTAL_TESTS}" -gt 0 ]]; then
-    pass_rate=$(( (PASSED_TESTS * 100) / TOTAL_TESTS ))
+    pass_rate=$(((PASSED_TESTS * 100) / TOTAL_TESTS))
   fi
-  
+
   local summary="Total: ${TOTAL_TESTS}, Passed: ${PASSED_TESTS}, Failed: ${FAILED_TESTS}, Skipped: ${SKIPPED_TESTS}, Pass Rate: ${pass_rate}%"
   log_message "SUMMARY" "${summary}"
-  
+
   case "${REPORT_FORMAT}" in
     json)
       local temp_file="${TEMP_DIR}/test_report_temp.json"
       jq --arg total "${TOTAL_TESTS}" \
-         --arg passed "${PASSED_TESTS}" \
-         --arg failed "${FAILED_TESTS}" \
-         --arg skipped "${SKIPPED_TESTS}" \
-         --arg pass_rate "${pass_rate}" \
-         '. += {
+        --arg passed "${PASSED_TESTS}" \
+        --arg failed "${FAILED_TESTS}" \
+        --arg skipped "${SKIPPED_TESTS}" \
+        --arg pass_rate "${pass_rate}" \
+        '. += {
            "summary": {
              "total": $total | tonumber,
              "passed": $passed | tonumber,
@@ -237,22 +238,22 @@ function finalize_test_report() {
              "skipped": $skipped | tonumber,
              "pass_rate": $pass_rate | tonumber
            }
-         }' "${TEST_REPORT_FILE}" > "${temp_file}"
+         }' "${TEST_REPORT_FILE}" >"${temp_file}"
       mv "${temp_file}" "${TEST_REPORT_FILE}"
       ;;
     html)
       local temp_file="${TEMP_DIR}/test_report_temp.html"
-      
+
       # Update the summary section
-      sed "s|<div class=\"summary\" id=\"summary\">.*</div>|<div class=\"summary\" id=\"summary\"><p><strong>Summary:</strong> ${summary}</p></div>|" "${TEST_REPORT_FILE}" > "${temp_file}"
-      
+      sed "s|<div class=\"summary\" id=\"summary\">.*</div>|<div class=\"summary\" id=\"summary\"><p><strong>Summary:</strong> ${summary}</p></div>|" "${TEST_REPORT_FILE}" >"${temp_file}"
+
       mv "${temp_file}" "${TEST_REPORT_FILE}"
       ;;
-    console|*)
+    console | *)
       # Console output already handled by log_message
       ;;
   esac
-  
+
   log_message "INFO" "Test report available at: ${TEST_REPORT_FILE}"
 }
 
@@ -270,15 +271,15 @@ function test_validator_setup() {
   local duration
   local status="fail"
   local details="Test failed for unknown reason"
-  
+
   log_message "INFO" "Starting validator setup test for ${consensus_client}-${execution_client}"
-  
+
   start_time=$(date +%s)
-  
+
   # Setup test environment
   local test_dir="${TEMP_DIR}/${test_name}"
   mkdir -p "${test_dir}"
-  
+
   # Run setup test
   if setup_validator_test_environment "${consensus_client}" "${execution_client}" "${test_dir}"; then
     status="pass"
@@ -286,12 +287,12 @@ function test_validator_setup() {
   else
     details="Failed to set up validator environment"
   fi
-  
+
   end_time=$(date +%s)
   duration=$((end_time - start_time))
-  
+
   record_test_result "setup" "${test_name}" "${status}" "${duration}" "${details}"
-  
+
   return $([[ "${status}" == "pass" ]] && echo 0 || echo 1)
 }
 
@@ -300,24 +301,24 @@ function setup_validator_test_environment() {
   local consensus_client="$1"
   local execution_client="$2"
   local test_dir="$3"
-  
+
   log_message "INFO" "Setting up test environment in ${test_dir}"
-  
+
   # Create minimal test config
-  cat > "${test_dir}/test_config.yaml" << EOF
+  cat >"${test_dir}/test_config.yaml" <<EOF
 consensus_client: ${consensus_client}
 execution_client: ${execution_client}
 network: ephemery
 data_dir: ${test_dir}/data
 EOF
-  
+
   # Setup would run the actual validator setup script with test parameters
   # For now we'll simulate success for most combinations
   if [[ "${consensus_client}" == "lighthouse" && "${execution_client}" == "nethermind" ]]; then
     # Simulate a failure for testing
     return 1
   fi
-  
+
   # Simulate successful setup
   mkdir -p "${test_dir}/data"
   touch "${test_dir}/data/setup_complete"
@@ -334,15 +335,15 @@ function test_validator_sync() {
   local duration
   local status="fail"
   local details="Test failed for unknown reason"
-  
+
   log_message "INFO" "Starting validator sync test for ${consensus_client}-${execution_client}"
-  
+
   start_time=$(date +%s)
-  
+
   # Setup test environment
   local test_dir="${TEMP_DIR}/${test_name}"
   mkdir -p "${test_dir}"
-  
+
   # Run sync test
   if test_validator_setup "${consensus_client}" "${execution_client}"; then
     if test_sync_functionality "${consensus_client}" "${execution_client}" "${test_dir}"; then
@@ -355,12 +356,12 @@ function test_validator_sync() {
     status="skip"
     details="Skipped due to setup failure"
   fi
-  
+
   end_time=$(date +%s)
   duration=$((end_time - start_time))
-  
+
   record_test_result "sync" "${test_name}" "${status}" "${duration}" "${details}"
-  
+
   return $([[ "${status}" == "pass" ]] && echo 0 || echo 1)
 }
 
@@ -369,19 +370,19 @@ function test_sync_functionality() {
   local consensus_client="$1"
   local execution_client="$2"
   local test_dir="$3"
-  
+
   log_message "INFO" "Testing sync functionality in ${test_dir}"
-  
+
   # Create sync test data
   mkdir -p "${test_dir}/sync_data"
-  
+
   # This would run the actual sync testing
   # For now we'll simulate success for most combinations
   if [[ "${consensus_client}" == "teku" && "${execution_client}" == "besu" ]]; then
     # Simulate a failure for testing
     return 1
   fi
-  
+
   # Simulate successful sync
   touch "${test_dir}/sync_data/sync_complete"
   return 0
@@ -397,18 +398,18 @@ function test_validator_performance() {
   local duration
   local status="fail"
   local details="Test failed for unknown reason"
-  
+
   log_message "INFO" "Starting validator performance test for ${consensus_client}-${execution_client}"
-  
+
   start_time=$(date +%s)
-  
+
   # Setup test environment
   local test_dir="${TEMP_DIR}/${test_name}"
   mkdir -p "${test_dir}"
-  
+
   # Run performance test
-  if test_validator_setup "${consensus_client}" "${execution_client}" && 
-     test_sync_functionality "${consensus_client}" "${execution_client}" "${test_dir}"; then
+  if test_validator_setup "${consensus_client}" "${execution_client}" \
+    && test_sync_functionality "${consensus_client}" "${execution_client}" "${test_dir}"; then
     if benchmark_validator_performance "${consensus_client}" "${execution_client}" "${test_dir}"; then
       status="pass"
       details="Successfully benchmarked validator performance"
@@ -419,12 +420,12 @@ function test_validator_performance() {
     status="skip"
     details="Skipped due to setup or sync failure"
   fi
-  
+
   end_time=$(date +%s)
   duration=$((end_time - start_time))
-  
+
   record_test_result "performance" "${test_name}" "${status}" "${duration}" "${details}"
-  
+
   return $([[ "${status}" == "pass" ]] && echo 0 || echo 1)
 }
 
@@ -433,25 +434,25 @@ function benchmark_validator_performance() {
   local consensus_client="$1"
   local execution_client="$2"
   local test_dir="$3"
-  
+
   log_message "INFO" "Benchmarking validator performance in ${test_dir}"
-  
+
   # Create performance test data
   mkdir -p "${test_dir}/performance_data"
-  
+
   # This would run the actual performance testing
   # For now we'll simulate results
   if [[ "${consensus_client}" == "nimbus" && "${execution_client}" == "erigon" ]]; then
     # Simulate a failure for testing
     return 1
   fi
-  
+
   # Simulate successful performance test
   local cpu_usage=$((50 + RANDOM % 30))
   local memory_usage=$((1024 + RANDOM % 2048))
   local attestation_rate=$((95 + RANDOM % 6))
-  
-  cat > "${test_dir}/performance_data/benchmark.json" << EOF
+
+  cat >"${test_dir}/performance_data/benchmark.json" <<EOF
 {
   "cpu_usage_percent": ${cpu_usage},
   "memory_usage_mb": ${memory_usage},
@@ -459,7 +460,7 @@ function benchmark_validator_performance() {
   "timestamp": "$(date '+%Y-%m-%d %H:%M:%S')"
 }
 EOF
-  
+
   return 0
 }
 
@@ -473,15 +474,15 @@ function test_reset_handling() {
   local duration
   local status="fail"
   local details="Test failed for unknown reason"
-  
+
   log_message "INFO" "Starting reset handling test for ${consensus_client}-${execution_client}"
-  
+
   start_time=$(date +%s)
-  
+
   # Setup test environment
   local test_dir="${TEMP_DIR}/${test_name}"
   mkdir -p "${test_dir}"
-  
+
   # Run reset test
   if test_validator_setup "${consensus_client}" "${execution_client}"; then
     if simulate_network_reset "${consensus_client}" "${execution_client}" "${test_dir}"; then
@@ -494,12 +495,12 @@ function test_reset_handling() {
     status="skip"
     details="Skipped due to setup failure"
   fi
-  
+
   end_time=$(date +%s)
   duration=$((end_time - start_time))
-  
+
   record_test_result "reset" "${test_name}" "${status}" "${duration}" "${details}"
-  
+
   return $([[ "${status}" == "pass" ]] && echo 0 || echo 1)
 }
 
@@ -508,21 +509,21 @@ function simulate_network_reset() {
   local consensus_client="$1"
   local execution_client="$2"
   local test_dir="$3"
-  
+
   log_message "INFO" "Simulating network reset in ${test_dir}"
-  
+
   # Create reset test data
   mkdir -p "${test_dir}/reset_data"
-  
+
   # This would run the actual reset testing
   # For now we'll simulate results
   if [[ "${consensus_client}" == "prysm" && "${execution_client}" == "geth" ]]; then
     # Simulate a failure for testing
     return 1
   fi
-  
+
   # Simulate successful reset
-  cat > "${test_dir}/reset_data/reset_results.json" << EOF
+  cat >"${test_dir}/reset_data/reset_results.json" <<EOF
 {
   "pre_reset_validators": 10,
   "post_reset_validators": 10,
@@ -532,7 +533,7 @@ function simulate_network_reset() {
   "timestamp": "$(date '+%Y-%m-%d %H:%M:%S')"
 }
 EOF
-  
+
   return 0
 }
 
@@ -540,9 +541,9 @@ EOF
 function run_client_tests() {
   local consensus_client="$1"
   local execution_client="$2"
-  
+
   log_message "INFO" "Running all tests for ${consensus_client}-${execution_client}"
-  
+
   # Run tests based on the selected test suite
   case "${TEST_SUITE}" in
     setup)
@@ -573,10 +574,10 @@ function run_client_tests() {
 # Run tests in parallel
 function run_parallel_tests() {
   log_message "INFO" "Running tests with parallelism ${PARALLEL_TESTS}"
-  
+
   local pids=()
   local client_combos=()
-  
+
   # Build the list of client combinations to test
   if [[ "${CLIENT_COMBO}" == "all" ]]; then
     for consensus_client in "${CONSENSUS_CLIENTS[@]}"; do
@@ -585,24 +586,24 @@ function run_parallel_tests() {
       done
     done
   else
-    IFS='-' read -r consensus_client execution_client <<< "${CLIENT_COMBO}"
+    IFS='-' read -r consensus_client execution_client <<<"${CLIENT_COMBO}"
     if [[ -z "${consensus_client}" || -z "${execution_client}" ]]; then
       log_message "ERROR" "Invalid client combination format: ${CLIENT_COMBO}"
       exit 1
     fi
     client_combos=("${consensus_client}:${execution_client}")
   fi
-  
+
   # Run the tests in parallel batches
-  for ((i=0; i<${#client_combos[@]}; i+=PARALLEL_TESTS)); do
+  for ((i = 0; i < ${#client_combos[@]}; i += PARALLEL_TESTS)); do
     pids=()
-    for ((j=i; j<i+PARALLEL_TESTS && j<${#client_combos[@]}; j++)); do
-      IFS=':' read -r consensus_client execution_client <<< "${client_combos[j]}"
+    for ((j = i; j < i + PARALLEL_TESTS && j < ${#client_combos[@]}; j++)); do
+      IFS=':' read -r consensus_client execution_client <<<"${client_combos[j]}"
       log_message "INFO" "Starting test batch for ${consensus_client}-${execution_client}"
       run_client_tests "${consensus_client}" "${execution_client}" &
       pids+=($!)
     done
-    
+
     # Wait for all tests in this batch to complete
     for pid in "${pids[@]}"; do
       wait "${pid}"
@@ -694,4 +695,4 @@ if [[ "${FAILED_TESTS}" -gt 0 ]]; then
 else
   log_message "INFO" "All tests passed successfully"
   exit 0
-fi 
+fi

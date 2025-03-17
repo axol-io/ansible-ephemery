@@ -1,6 +1,6 @@
 #!/bin/bash
-#
-# Enhanced Validator Key Restore Script for Ephemery
+# Version: 1.0.0
+# Enhanced Key Restore - A utility for the Ephemery project to restore validator keys with additional features
 # This script provides robust key restore capabilities with validation and verification
 
 set -e
@@ -27,7 +27,7 @@ VERBOSE=false
 EXPECTED_KEY_COUNT=0
 
 # Help function
-function show_help {
+function show_help() {
   echo -e "${BLUE}Enhanced Validator Key Restore for Ephemery${NC}"
   echo ""
   echo "This script restores validator keys from backup with verification and validation."
@@ -53,39 +53,39 @@ function show_help {
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -b|--backup-dir)
+    -b | --backup-dir)
       BACKUP_DIR="$2"
       shift 2
       ;;
-    -t|--target-dir)
+    -t | --target-dir)
       TARGET_DIR="$2"
       shift 2
       ;;
-    -f|--force)
+    -f | --force)
       FORCE=true
       shift
       ;;
-    -d|--dry-run)
+    -d | --dry-run)
       DRY_RUN=true
       shift
       ;;
-    -n|--no-backup)
+    -n | --no-backup)
       CREATE_BACKUP=false
       shift
       ;;
-    -s|--skip-verify)
+    -s | --skip-verify)
       VERIFY=false
       shift
       ;;
-    -c|--count)
+    -c | --count)
       EXPECTED_KEY_COUNT="$2"
       shift 2
       ;;
-    -v|--verbose)
+    -v | --verbose)
       VERBOSE=true
       shift
       ;;
-    -h|--help)
+    -h | --help)
       show_help
       exit 0
       ;;
@@ -153,7 +153,7 @@ validate_json_files() {
   if [[ "$total_files" -eq 0 ]]; then
     log "ERROR" "No JSON files found in $dir"
     return 1
-  }
+  fi
 
   log "INFO" "Found $total_files JSON files"
 

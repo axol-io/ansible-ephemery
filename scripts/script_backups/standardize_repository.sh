@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Master script to standardize the repository structure and naming conventions
 # This script runs all the standardization scripts in the correct order

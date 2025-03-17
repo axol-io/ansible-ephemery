@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Version: 1.0.0
 #
 # Script Name: config.sh
 # Description: Configuration utility functions for Ephemery Node scripts
@@ -35,26 +36,26 @@ DEFAULT_CONFIG_FILE="${DEFAULT_CONFIG_DIR}/config.env"
 #   1 - Config file not found or could not be loaded
 # -----------------------------------------------------------------------------
 load_config() {
-  local config_file="${1:-$DEFAULT_CONFIG_FILE}"
+  local config_file="${1:-${DEFAULT_CONFIG_FILE}}"
 
   # Check if config file exists
-  if [[ ! -f "$config_file" ]]; then
+  if [[ ! -f "${config_file}" ]]; then
     if type log_warn &>/dev/null; then
-      log_warn "Config file not found: $config_file"
+      log_warn "Config file not found: ${config_file}"
     else
-      echo "WARN: Config file not found: $config_file" >&2
+      echo "WARN: Config file not found: ${config_file}" >&2
     fi
     return 1
   fi
 
   # Source the config file
   # shellcheck disable=SC1090
-  source "$config_file"
+  source "${config_file}"
 
   if type log_debug &>/dev/null; then
-    log_debug "Config loaded from: $config_file"
+    log_debug "Config loaded from: ${config_file}"
   else
-    echo "DEBUG: Config loaded from: $config_file" >&2
+    echo "DEBUG: Config loaded from: ${config_file}" >&2
   fi
 
   return 0
@@ -71,15 +72,15 @@ load_config() {
 #   1 - Could not save config file
 # -----------------------------------------------------------------------------
 save_config() {
-  local config_file="${1:-$DEFAULT_CONFIG_FILE}"
+  local config_file="${1:-${DEFAULT_CONFIG_FILE}}"
   shift
 
   # Create or truncate config file
-  > "$config_file" || {
+  >"${config_file}" || {
     if type log_error &>/dev/null; then
-      log_error "Could not create config file: $config_file"
+      log_error "Could not create config file: ${config_file}"
     else
-      echo "ERROR: Could not create config file: $config_file" >&2
+      echo "ERROR: Could not create config file: ${config_file}" >&2
     fi
     return 1
   }
@@ -89,19 +90,19 @@ save_config() {
     echo "# Ephemery Node Configuration"
     echo "# Generated on: $(date)"
     echo
-  } >> "$config_file"
+  } >>"${config_file}"
 
   # Save variables
   for var_name in "$@"; do
-    if [[ -v "$var_name" ]]; then
-      declare -p "$var_name" | sed 's/^declare -. //' >> "$config_file"
+    if [[ -v "${var_name}" ]]; then
+      declare -p "${var_name}" | sed 's/^declare -. //' >>"${config_file}"
     fi
   done
 
   if type log_debug &>/dev/null; then
-    log_debug "Config saved to: $config_file"
+    log_debug "Config saved to: ${config_file}"
   else
-    echo "DEBUG: Config saved to: $config_file" >&2
+    echo "DEBUG: Config saved to: ${config_file}" >&2
   fi
 
   return 0
@@ -120,10 +121,10 @@ get_config() {
   local var_name="$1"
   local default_value="${2:-}"
 
-  if [[ -v "$var_name" ]]; then
+  if [[ -v "${var_name}" ]]; then
     echo "${!var_name}"
   else
-    echo "$default_value"
+    echo "${default_value}"
   fi
 }
 
@@ -141,7 +142,7 @@ set_config() {
   local value="$2"
 
   # Export the variable
-  export "$var_name"="$value"
+  export "${var_name}"="${value}"
 }
 
 # Export functions

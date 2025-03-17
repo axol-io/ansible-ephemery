@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # run-tests.sh - Run all Molecule tests for the Ephemery project
 
 set -e
@@ -7,71 +8,71 @@ set -e
 MOLECULE_DRIVER=${MOLECULE_DRIVER:-docker}
 
 # Configure Docker host if using Docker driver
-if [ "$MOLECULE_DRIVER" = "docker" ]; then
-    # Try to detect the Docker socket path or use the provided one
-    DEFAULT_DOCKER_SOCK="/var/run/docker.sock"  # Default Linux path
+if [ "${MOLECULE_DRIVER}" = "docker" ]; then
+  # Try to detect the Docker socket path or use the provided one
+  DEFAULT_DOCKER_SOCK="/var/run/docker.sock" # Default Linux path
 
-    # Check for Mac-specific Docker socket
-    if [ -S "/Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker-cli.sock" ]; then
-        DEFAULT_DOCKER_SOCK="/Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker-cli.sock"
-    fi
+  # Check for Mac-specific Docker socket
+  if [ -S "/Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker-cli.sock" ]; then
+    DEFAULT_DOCKER_SOCK="/Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker-cli.sock"
+  fi
 
-    # Allow override via environment variable
-    DOCKER_HOST_SOCK=${DOCKER_HOST_SOCK:-$DEFAULT_DOCKER_SOCK}
-    export DOCKER_HOST="unix://${DOCKER_HOST_SOCK}"
-    echo "Using Docker driver with host: $DOCKER_HOST"
+  # Allow override via environment variable
+  DOCKER_HOST_SOCK=${DOCKER_HOST_SOCK:-${DEFAULT_DOCKER_SOCK}}
+  export DOCKER_HOST="unix://${DOCKER_HOST_SOCK}"
+  echo "Using Docker driver with host: ${DOCKER_HOST}"
 else
-    echo "Using $MOLECULE_DRIVER driver for Molecule tests"
+  echo "Using ${MOLECULE_DRIVER} driver for Molecule tests"
 fi
 
 # Function to run a single test scenario
 run_test() {
-    local scenario=$1
-    echo "=================================================================="
-    echo "Running test scenario: $scenario"
-    echo "=================================================================="
+  local scenario=$1
+  echo "=================================================================="
+  echo "Running test scenario: ${scenario}"
+  echo "=================================================================="
 
-    # Check if molecule.yml exists
-    if [ ! -f "$(dirname "$0")/$scenario/molecule.yml" ]; then
-        echo "❌ Scenario $scenario failed: molecule.yml not found"
-        return 1
-    fi
+  # Check if molecule.yml exists
+  if [ ! -f "$(dirname "$0")/${scenario}/molecule.yml" ]; then
+    echo "❌ Scenario ${scenario} failed: molecule.yml not found"
+    return 1
+  fi
 
-    # Set environment variables for molecule
-    export MOLECULE_DRIVER=$MOLECULE_DRIVER
+  # Set environment variables for molecule
+  export MOLECULE_DRIVER=${MOLECULE_DRIVER}
 
-    # Try to run the test with explicit molecule.yml path
-    MOLECULE_FILE="$(dirname "$0")/$scenario/molecule.yml" molecule test -s "$scenario" || {
-        echo "❌ Scenario $scenario failed"
-        return 1
-    }
+  # Try to run the test with explicit molecule.yml path
+  MOLECULE_FILE="$(dirname "$0")/${scenario}/molecule.yml" molecule test -s "${scenario}" || {
+    echo "❌ Scenario ${scenario} failed"
+    return 1
+  }
 
-    echo "✅ Scenario $scenario passed"
-    return 0
+  echo "✅ Scenario ${scenario} passed"
+  return 0
 }
 
 # Main function to run all tests
 run_all_tests() {
-    echo "Running all Molecule tests with driver: $MOLECULE_DRIVER"
+  echo "Running all Molecule tests with driver: ${MOLECULE_DRIVER}"
 
-    # Run default scenario first
-    run_test "default"
+  # Run default scenario first
+  run_test "default"
 
-    # Run other scenarios
-    local failed=0
+  # Run other scenarios
+  local failed=0
 
-    # Only run the default scenario for now
-    # for scenario in backup monitoring resource-limits security tests validator clients/*; do
-    #     run_test "$scenario" || failed=1
-    # done
+  # Only run the default scenario for now
+  # for scenario in backup monitoring resource-limits security tests validator clients/*; do
+  #     run_test "$scenario" || failed=1
+  # done
 
-    if [ $failed -eq 1 ]; then
-        echo "❌ Some tests failed"
-        exit 1
-    else
-        echo "✅ All tests passed"
-        exit 0
-    fi
+  if [ ${failed} -eq 1 ]; then
+    echo "❌ Some tests failed"
+    exit 1
+  else
+    echo "✅ All tests passed"
+    exit 0
+  fi
 }
 
 # Run all tests

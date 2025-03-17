@@ -33,9 +33,9 @@ collections/
 
 # venv files
 .venv/
-
 # Ansible inventory files (except examples)
 inventory.yaml
+
 /inventories/*-inventory.yaml
 !/inventories/*-inventory.yaml.example
 
@@ -173,6 +173,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+.dsgp
 
 # Logs
 logs/

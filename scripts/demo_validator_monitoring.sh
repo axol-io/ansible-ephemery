@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Validator Performance Monitoring Demo Script
 # This script demonstrates the Advanced Validator Performance Monitoring system
@@ -50,130 +51,130 @@ VERSION="1.0.0"
 
 # Show banner
 function show_banner() {
-    echo -e "${BLUE}=============================================================${NC}"
-    echo -e "${BLUE}    Validator Performance Monitoring Demo Script v${VERSION}  ${NC}"
-    echo -e "${BLUE}=============================================================${NC}"
-    echo -e "This script demonstrates the Advanced Validator Performance"
-    echo -e "Monitoring system and can simulate different kinds of alerts."
-    echo -e "${BLUE}=============================================================${NC}"
-    echo ""
+  echo -e "${BLUE}=============================================================${NC}"
+  echo -e "${BLUE}    Validator Performance Monitoring Demo Script v${VERSION}  ${NC}"
+  echo -e "${BLUE}=============================================================${NC}"
+  echo -e "This script demonstrates the Advanced Validator Performance"
+  echo -e "Monitoring system and can simulate different kinds of alerts."
+  echo -e "${BLUE}=============================================================${NC}"
+  echo ""
 }
 
 # Show usage information
 function show_usage() {
-    echo "Usage: $0 [options]"
-    echo ""
-    echo "Options:"
-    echo "  --simulate-attestation-issue    Simulate low attestation effectiveness"
-    echo "  --simulate-proposal-issue       Simulate missed proposal"
-    echo "  --simulate-balance-decrease     Simulate balance decrease"
-    echo "  --simulate-sync-issue           Simulate sync issues"
-    echo "  --simulate-resource-issue       Simulate high resource usage"
-    echo "  --simulate-peer-issue           Simulate low peer count"
-    echo "  --check-alerts                  Check current alerts"
-    echo "  --acknowledge-all               Acknowledge all alerts"
-    echo "  --dashboard                     Start Grafana dashboard"
-    echo "  --cleanup                       Remove simulated test data"
-    echo "  --help                          Show this help message"
-    echo ""
+  echo "Usage: $0 [options]"
+  echo ""
+  echo "Options:"
+  echo "  --simulate-attestation-issue    Simulate low attestation effectiveness"
+  echo "  --simulate-proposal-issue       Simulate missed proposal"
+  echo "  --simulate-balance-decrease     Simulate balance decrease"
+  echo "  --simulate-sync-issue           Simulate sync issues"
+  echo "  --simulate-resource-issue       Simulate high resource usage"
+  echo "  --simulate-peer-issue           Simulate low peer count"
+  echo "  --check-alerts                  Check current alerts"
+  echo "  --acknowledge-all               Acknowledge all alerts"
+  echo "  --dashboard                     Start Grafana dashboard"
+  echo "  --cleanup                       Remove simulated test data"
+  echo "  --help                          Show this help message"
+  echo ""
 }
 
 # Parse command line arguments
 function parse_args() {
-    if [[ $# -eq 0 ]]; then
+  if [[ $# -eq 0 ]]; then
+    show_banner
+    show_usage
+    exit 0
+  fi
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --simulate-attestation-issue)
+        SIMULATORS+=("attestation")
+        shift
+        ;;
+      --simulate-proposal-issue)
+        SIMULATORS+=("proposal")
+        shift
+        ;;
+      --simulate-balance-decrease)
+        SIMULATORS+=("balance")
+        shift
+        ;;
+      --simulate-sync-issue)
+        SIMULATORS+=("sync")
+        shift
+        ;;
+      --simulate-resource-issue)
+        SIMULATORS+=("resource")
+        shift
+        ;;
+      --simulate-peer-issue)
+        SIMULATORS+=("peer")
+        shift
+        ;;
+      --check-alerts)
+        CHECK_ALERTS=true
+        shift
+        ;;
+      --acknowledge-all)
+        ACKNOWLEDGE_ALL=true
+        shift
+        ;;
+      --dashboard)
+        ENABLE_DASHBOARD=true
+        shift
+        ;;
+      --cleanup)
+        CLEANUP=true
+        shift
+        ;;
+      --help)
         show_banner
         show_usage
         exit 0
-    fi
-
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --simulate-attestation-issue)
-                SIMULATORS+=("attestation")
-                shift
-                ;;
-            --simulate-proposal-issue)
-                SIMULATORS+=("proposal")
-                shift
-                ;;
-            --simulate-balance-decrease)
-                SIMULATORS+=("balance")
-                shift
-                ;;
-            --simulate-sync-issue)
-                SIMULATORS+=("sync")
-                shift
-                ;;
-            --simulate-resource-issue)
-                SIMULATORS+=("resource")
-                shift
-                ;;
-            --simulate-peer-issue)
-                SIMULATORS+=("peer")
-                shift
-                ;;
-            --check-alerts)
-                CHECK_ALERTS=true
-                shift
-                ;;
-            --acknowledge-all)
-                ACKNOWLEDGE_ALL=true
-                shift
-                ;;
-            --dashboard)
-                ENABLE_DASHBOARD=true
-                shift
-                ;;
-            --cleanup)
-                CLEANUP=true
-                shift
-                ;;
-            --help)
-                show_banner
-                show_usage
-                exit 0
-                ;;
-            *)
-                echo -e "${RED}[ERROR]${NC} Unknown option: $1"
-                show_usage
-                exit 1
-                ;;
-        esac
-    done
+        ;;
+      *)
+        echo -e "${RED}[ERROR]${NC} Unknown option: $1"
+        show_usage
+        exit 1
+        ;;
+    esac
+  done
 }
 
 # Check if the monitoring system is installed
 function check_installation() {
-    echo -e "${BLUE}[INFO]${NC} Checking installation..."
-    
-    # Check if the alerts directory exists
-    if [[ ! -d "${ALERTS_DIR}" ]]; then
-        echo -e "${RED}[ERROR]${NC} Alerts directory does not exist: ${ALERTS_DIR}"
-        echo -e "${YELLOW}[WARNING]${NC} The Advanced Validator Performance Monitoring system may not be installed."
-        echo -e "${YELLOW}[WARNING]${NC} Please run the setup script first: ./scripts/monitoring/setup_validator_alerts.sh"
-        exit 1
-    fi
-    
-    # Check if the alerts script exists
-    if [[ ! -f "${ALERTS_SCRIPT}" ]]; then
-        echo -e "${RED}[ERROR]${NC} Alerts script does not exist: ${ALERTS_SCRIPT}"
-        echo -e "${YELLOW}[WARNING]${NC} The Advanced Validator Performance Monitoring system may not be installed."
-        echo -e "${YELLOW}[WARNING]${NC} Please run the setup script first: ./scripts/monitoring/setup_validator_alerts.sh"
-        exit 1
-    fi
-    
-    # Create directories if they don't exist (for demo purposes)
-    mkdir -p "${METRICS_DIR}"
-    
-    echo -e "${GREEN}[SUCCESS]${NC} Installation check passed."
+  echo -e "${BLUE}[INFO]${NC} Checking installation..."
+
+  # Check if the alerts directory exists
+  if [[ ! -d "${ALERTS_DIR}" ]]; then
+    echo -e "${RED}[ERROR]${NC} Alerts directory does not exist: ${ALERTS_DIR}"
+    echo -e "${YELLOW}[WARNING]${NC} The Advanced Validator Performance Monitoring system may not be installed."
+    echo -e "${YELLOW}[WARNING]${NC} Please run the setup script first: ./scripts/monitoring/setup_validator_alerts.sh"
+    exit 1
+  fi
+
+  # Check if the alerts script exists
+  if [[ ! -f "${ALERTS_SCRIPT}" ]]; then
+    echo -e "${RED}[ERROR]${NC} Alerts script does not exist: ${ALERTS_SCRIPT}"
+    echo -e "${YELLOW}[WARNING]${NC} The Advanced Validator Performance Monitoring system may not be installed."
+    echo -e "${YELLOW}[WARNING]${NC} Please run the setup script first: ./scripts/monitoring/setup_validator_alerts.sh"
+    exit 1
+  fi
+
+  # Create directories if they don't exist (for demo purposes)
+  mkdir -p "${METRICS_DIR}"
+
+  echo -e "${GREEN}[SUCCESS]${NC} Installation check passed."
 }
 
 # Simulate attestation issue
 function simulate_attestation_issue() {
-    echo -e "${BLUE}[INFO]${NC} Simulating low attestation effectiveness..."
-    
-    # Create a metrics file with low attestation effectiveness
-    cat > "${METRICS_DIR}/attestation_performance.json" << EOF
+  echo -e "${BLUE}[INFO]${NC} Simulating low attestation effectiveness..."
+
+  # Create a metrics file with low attestation effectiveness
+  cat >"${METRICS_DIR}/attestation_performance.json" <<EOF
 {
     "timestamp": $(date +%s),
     "validators": [
@@ -183,7 +184,7 @@ function simulate_attestation_issue() {
             "effectiveness": 0.75,
             "expected_attestations": 100,
             "successful_attestations": 75,
-            "last_attestation_slot": $(( $(date +%s) / 12 ))
+            "last_attestation_slot": $(($(date +%s) / 12))
         },
         {
             "pubkey": "0x8000000000000000000000000000000000000000000000000000000000000001",
@@ -191,22 +192,22 @@ function simulate_attestation_issue() {
             "effectiveness": 0.88,
             "expected_attestations": 100,
             "successful_attestations": 88,
-            "last_attestation_slot": $(( $(date +%s) / 12 ))
+            "last_attestation_slot": $(($(date +%s) / 12))
         }
     ],
     "average_effectiveness": 0.815
 }
 EOF
-    
-    echo -e "${GREEN}[SUCCESS]${NC} Simulated low attestation effectiveness (81.5% average)"
+
+  echo -e "${GREEN}[SUCCESS]${NC} Simulated low attestation effectiveness (81.5% average)"
 }
 
 # Simulate proposal issue
 function simulate_proposal_issue() {
-    echo -e "${BLUE}[INFO]${NC} Simulating missed proposal..."
-    
-    # Create a metrics file with missed proposal
-    cat > "${METRICS_DIR}/proposal_performance.json" << EOF
+  echo -e "${BLUE}[INFO]${NC} Simulating missed proposal..."
+
+  # Create a metrics file with missed proposal
+  cat >"${METRICS_DIR}/proposal_performance.json" <<EOF
 {
     "timestamp": $(date +%s),
     "validators": [
@@ -217,7 +218,7 @@ function simulate_proposal_issue() {
             "expected_proposals": 5,
             "successful_proposals": 4,
             "missed_proposals": 1,
-            "last_proposal_slot": $(( $(date +%s) / 12 ))
+            "last_proposal_slot": $(($(date +%s) / 12))
         },
         {
             "pubkey": "0x8000000000000000000000000000000000000000000000000000000000000001",
@@ -226,22 +227,22 @@ function simulate_proposal_issue() {
             "expected_proposals": 3,
             "successful_proposals": 3,
             "missed_proposals": 0,
-            "last_proposal_slot": $(( $(date +%s) / 12 ))
+            "last_proposal_slot": $(($(date +%s) / 12))
         }
     ],
     "average_success_rate": 0.9
 }
 EOF
-    
-    echo -e "${GREEN}[SUCCESS]${NC} Simulated missed proposal (90% average success rate)"
+
+  echo -e "${GREEN}[SUCCESS]${NC} Simulated missed proposal (90% average success rate)"
 }
 
 # Simulate balance decrease
 function simulate_balance_decrease() {
-    echo -e "${BLUE}[INFO]${NC} Simulating balance decrease..."
-    
-    # Create a metrics file with balance decrease
-    cat > "${METRICS_DIR}/balance_trend.json" << EOF
+  echo -e "${BLUE}[INFO]${NC} Simulating balance decrease..."
+
+  # Create a metrics file with balance decrease
+  cat >"${METRICS_DIR}/balance_trend.json" <<EOF
 {
     "timestamp": $(date +%s),
     "validators": [
@@ -268,48 +269,48 @@ function simulate_balance_decrease() {
 }
 EOF
 
-    # Create file in analysis directory for deeper analysis
-    mkdir -p "${VALIDATOR_METRICS_DIR}/analysis"
-    cp "${METRICS_DIR}/balance_trend.json" "${VALIDATOR_METRICS_DIR}/analysis/balance_trend.json"
-    
-    echo -e "${GREEN}[SUCCESS]${NC} Simulated balance decrease (-0.67% average)"
+  # Create file in analysis directory for deeper analysis
+  mkdir -p "${VALIDATOR_METRICS_DIR}/analysis"
+  cp "${METRICS_DIR}/balance_trend.json" "${VALIDATOR_METRICS_DIR}/analysis/balance_trend.json"
+
+  echo -e "${GREEN}[SUCCESS]${NC} Simulated balance decrease (-0.67% average)"
 }
 
 # Simulate sync issue
 function simulate_sync_issue() {
-    echo -e "${BLUE}[INFO]${NC} Simulating sync issues..."
-    
-    # Create a metrics file with sync issues
-    cat > "${METRICS_DIR}/sync_status.json" << EOF
+  echo -e "${BLUE}[INFO]${NC} Simulating sync issues..."
+
+  # Create a metrics file with sync issues
+  cat >"${METRICS_DIR}/sync_status.json" <<EOF
 {
     "timestamp": $(date +%s),
     "beacon_node": {
         "syncing": true,
-        "head_slot": $(( $(date +%s) / 12 - 60 )),
-        "current_justified_epoch": $(( $(date +%s) / 12 / 32 - 2 )),
-        "finalized_epoch": $(( $(date +%s) / 12 / 32 - 3 )),
+        "head_slot": $(($(date +%s) / 12 - 60)),
+        "current_justified_epoch": $(($(date +%s) / 12 / 32 - 2)),
+        "finalized_epoch": $(($(date +%s) / 12 / 32 - 3)),
         "seconds_behind": 120,
         "sync_percentage": 99.5
     },
     "execution_node": {
         "syncing": true,
-        "current_block": $(( $(date +%s) / 12 - 50 )),
-        "highest_block": $(( $(date +%s) / 12 )),
+        "current_block": $(($(date +%s) / 12 - 50)),
+        "highest_block": $(($(date +%s) / 12)),
         "seconds_behind": 100,
         "sync_percentage": 99.8
     }
 }
 EOF
-    
-    echo -e "${GREEN}[SUCCESS]${NC} Simulated sync issues (120 seconds behind)"
+
+  echo -e "${GREEN}[SUCCESS]${NC} Simulated sync issues (120 seconds behind)"
 }
 
 # Simulate resource issue
 function simulate_resource_issue() {
-    echo -e "${BLUE}[INFO]${NC} Simulating high resource usage..."
-    
-    # Create a metrics file with high resource usage
-    cat > "${METRICS_DIR}/system_resources.json" << EOF
+  echo -e "${BLUE}[INFO]${NC} Simulating high resource usage..."
+
+  # Create a metrics file with high resource usage
+  cat >"${METRICS_DIR}/system_resources.json" <<EOF
 {
     "timestamp": $(date +%s),
     "cpu": {
@@ -337,16 +338,16 @@ function simulate_resource_issue() {
     }
 }
 EOF
-    
-    echo -e "${GREEN}[SUCCESS]${NC} Simulated high resource usage (CPU: 87.5%, Memory: 85%, Disk: 80%)"
+
+  echo -e "${GREEN}[SUCCESS]${NC} Simulated high resource usage (CPU: 87.5%, Memory: 85%, Disk: 80%)"
 }
 
 # Simulate peer issue
 function simulate_peer_issue() {
-    echo -e "${BLUE}[INFO]${NC} Simulating low peer count..."
-    
-    # Create a metrics file with low peer count
-    cat > "${METRICS_DIR}/network_status.json" << EOF
+  echo -e "${BLUE}[INFO]${NC} Simulating low peer count..."
+
+  # Create a metrics file with low peer count
+  cat >"${METRICS_DIR}/network_status.json" <<EOF
 {
     "timestamp": $(date +%s),
     "beacon_node": {
@@ -379,172 +380,172 @@ function simulate_peer_issue() {
     }
 }
 EOF
-    
-    echo -e "${GREEN}[SUCCESS]${NC} Simulated low peer count (Beacon: 8, Execution: 6)"
+
+  echo -e "${GREEN}[SUCCESS]${NC} Simulated low peer count (Beacon: 8, Execution: 6)"
 }
 
 # Check current alerts
 function check_current_alerts() {
-    echo -e "${BLUE}[INFO]${NC} Checking current alerts..."
-    
-    # Check if the alerts script exists
-    if [[ ! -f "${ALERTS_SCRIPT}" ]]; then
-        echo -e "${RED}[ERROR]${NC} Alerts script does not exist: ${ALERTS_SCRIPT}"
-        return 1
-    fi
-    
-    # Run the alerts script with check option
-    echo -e "${YELLOW}[RUNNING]${NC} ${ALERTS_SCRIPT} --check"
-    "${ALERTS_SCRIPT}" --check
-    
-    # Check if alerts JSON file exists
-    if [[ -f "${ALERTS_DIR}/alerts.json" ]]; then
-        echo -e "${BLUE}[INFO]${NC} Current alerts from ${ALERTS_DIR}/alerts.json:"
-        jq -r '.alerts[] | "[\(.severity | ascii_upcase)] \(.type): \(.message)"' "${ALERTS_DIR}/alerts.json" 2>/dev/null || echo "No alerts found."
-    else
-        echo -e "${YELLOW}[WARNING]${NC} No alerts file found at ${ALERTS_DIR}/alerts.json"
-    fi
+  echo -e "${BLUE}[INFO]${NC} Checking current alerts..."
+
+  # Check if the alerts script exists
+  if [[ ! -f "${ALERTS_SCRIPT}" ]]; then
+    echo -e "${RED}[ERROR]${NC} Alerts script does not exist: ${ALERTS_SCRIPT}"
+    return 1
+  fi
+
+  # Run the alerts script with check option
+  echo -e "${YELLOW}[RUNNING]${NC} ${ALERTS_SCRIPT} --check"
+  "${ALERTS_SCRIPT}" --check
+
+  # Check if alerts JSON file exists
+  if [[ -f "${ALERTS_DIR}/alerts.json" ]]; then
+    echo -e "${BLUE}[INFO]${NC} Current alerts from ${ALERTS_DIR}/alerts.json:"
+    jq -r '.alerts[] | "[\(.severity | ascii_upcase)] \(.type): \(.message)"' "${ALERTS_DIR}/alerts.json" 2>/dev/null || echo "No alerts found."
+  else
+    echo -e "${YELLOW}[WARNING]${NC} No alerts file found at ${ALERTS_DIR}/alerts.json"
+  fi
 }
 
 # Acknowledge all alerts
 function acknowledge_all_alerts() {
-    echo -e "${BLUE}[INFO]${NC} Acknowledging all alerts..."
-    
-    # Check if the alerts JSON file exists
-    if [[ ! -f "${ALERTS_DIR}/alerts.json" ]]; then
-        echo -e "${YELLOW}[WARNING]${NC} No alerts file found at ${ALERTS_DIR}/alerts.json"
-        return 0
-    fi
-    
-    # Create a temporary file with all alerts acknowledged
-    local tmpfile=$(mktemp)
-    jq '.alerts[] |= (.acknowledged = true)' "${ALERTS_DIR}/alerts.json" > "${tmpfile}"
-    mv "${tmpfile}" "${ALERTS_DIR}/alerts.json"
-    
-    echo -e "${GREEN}[SUCCESS]${NC} All alerts acknowledged."
+  echo -e "${BLUE}[INFO]${NC} Acknowledging all alerts..."
+
+  # Check if the alerts JSON file exists
+  if [[ ! -f "${ALERTS_DIR}/alerts.json" ]]; then
+    echo -e "${YELLOW}[WARNING]${NC} No alerts file found at ${ALERTS_DIR}/alerts.json"
+    return 0
+  fi
+
+  # Create a temporary file with all alerts acknowledged
+  local tmpfile=$(mktemp)
+  jq '.alerts[] |= (.acknowledged = true)' "${ALERTS_DIR}/alerts.json" >"${tmpfile}"
+  mv "${tmpfile}" "${ALERTS_DIR}/alerts.json"
+
+  echo -e "${GREEN}[SUCCESS]${NC} All alerts acknowledged."
 }
 
 # Launch Grafana dashboard
 function launch_dashboard() {
-    echo -e "${BLUE}[INFO]${NC} Launching Grafana dashboard..."
-    
-    # Check if Grafana is running
-    if command -v systemctl &> /dev/null && systemctl is-active --quiet grafana-server; then
-        echo -e "${GREEN}[SUCCESS]${NC} Grafana server is running."
-        echo -e "${BLUE}[INFO]${NC} Access the dashboard at: http://localhost:3000/d/validator-performance-advanced"
-    else
-        echo -e "${YELLOW}[WARNING]${NC} Grafana server may not be running."
-        echo -e "${YELLOW}[WARNING]${NC} To start Grafana server, run: systemctl start grafana-server"
-        echo -e "${YELLOW}[WARNING]${NC} Once started, access the dashboard at: http://localhost:3000/d/validator-performance-advanced"
-    fi
-    
-    # If using Docker, show alternative command
-    if command -v docker &> /dev/null; then
-        echo -e "${BLUE}[INFO]${NC} If using Docker, you can start Grafana with:"
-        echo -e "${CYAN}docker-compose -f ${REPO_ROOT}/dashboard/docker-compose.yaml up -d${NC}"
-    fi
+  echo -e "${BLUE}[INFO]${NC} Launching Grafana dashboard..."
+
+  # Check if Grafana is running
+  if command -v systemctl &>/dev/null && systemctl is-active --quiet grafana-server; then
+    echo -e "${GREEN}[SUCCESS]${NC} Grafana server is running."
+    echo -e "${BLUE}[INFO]${NC} Access the dashboard at: http://localhost:3000/d/validator-performance-advanced"
+  else
+    echo -e "${YELLOW}[WARNING]${NC} Grafana server may not be running."
+    echo -e "${YELLOW}[WARNING]${NC} To start Grafana server, run: systemctl start grafana-server"
+    echo -e "${YELLOW}[WARNING]${NC} Once started, access the dashboard at: http://localhost:3000/d/validator-performance-advanced"
+  fi
+
+  # If using Docker, show alternative command
+  if command -v docker &>/dev/null; then
+    echo -e "${BLUE}[INFO]${NC} If using Docker, you can start Grafana with:"
+    echo -e "${CYAN}docker-compose -f ${REPO_ROOT}/dashboard/docker-compose.yaml up -d${NC}"
+  fi
 }
 
 # Clean up simulated data
 function cleanup_simulation() {
-    echo -e "${BLUE}[INFO]${NC} Cleaning up simulated data..."
-    
-    # Remove simulation files
-    rm -f "${METRICS_DIR}/attestation_performance.json"
-    rm -f "${METRICS_DIR}/proposal_performance.json"
-    rm -f "${METRICS_DIR}/balance_trend.json"
-    rm -f "${METRICS_DIR}/sync_status.json"
-    rm -f "${METRICS_DIR}/system_resources.json"
-    rm -f "${METRICS_DIR}/network_status.json"
-    rm -f "${VALIDATOR_METRICS_DIR}/analysis/balance_trend.json"
-    
-    # Remove alerts
-    if [[ -f "${ALERTS_DIR}/alerts.json" ]]; then
-        rm -f "${ALERTS_DIR}/alerts.json"
-        echo -e "${BLUE}[INFO]${NC} Removed alerts file."
-    fi
-    
-    echo -e "${GREEN}[SUCCESS]${NC} Cleanup complete."
+  echo -e "${BLUE}[INFO]${NC} Cleaning up simulated data..."
+
+  # Remove simulation files
+  rm -f "${METRICS_DIR}/attestation_performance.json"
+  rm -f "${METRICS_DIR}/proposal_performance.json"
+  rm -f "${METRICS_DIR}/balance_trend.json"
+  rm -f "${METRICS_DIR}/sync_status.json"
+  rm -f "${METRICS_DIR}/system_resources.json"
+  rm -f "${METRICS_DIR}/network_status.json"
+  rm -f "${VALIDATOR_METRICS_DIR}/analysis/balance_trend.json"
+
+  # Remove alerts
+  if [[ -f "${ALERTS_DIR}/alerts.json" ]]; then
+    rm -f "${ALERTS_DIR}/alerts.json"
+    echo -e "${BLUE}[INFO]${NC} Removed alerts file."
+  fi
+
+  echo -e "${GREEN}[SUCCESS]${NC} Cleanup complete."
 }
 
 # Run the appropriate simulations
 function run_simulations() {
-    for simulator in "${SIMULATORS[@]}"; do
-        case "${simulator}" in
-            attestation)
-                simulate_attestation_issue
-                ;;
-            proposal)
-                simulate_proposal_issue
-                ;;
-            balance)
-                simulate_balance_decrease
-                ;;
-            sync)
-                simulate_sync_issue
-                ;;
-            resource)
-                simulate_resource_issue
-                ;;
-            peer)
-                simulate_peer_issue
-                ;;
-            *)
-                echo -e "${YELLOW}[WARNING]${NC} Unknown simulator: ${simulator}"
-                ;;
-        esac
-    done
+  for simulator in "${SIMULATORS[@]}"; do
+    case "${simulator}" in
+      attestation)
+        simulate_attestation_issue
+        ;;
+      proposal)
+        simulate_proposal_issue
+        ;;
+      balance)
+        simulate_balance_decrease
+        ;;
+      sync)
+        simulate_sync_issue
+        ;;
+      resource)
+        simulate_resource_issue
+        ;;
+      peer)
+        simulate_peer_issue
+        ;;
+      *)
+        echo -e "${YELLOW}[WARNING]${NC} Unknown simulator: ${simulator}"
+        ;;
+    esac
+  done
 }
 
 # Main function
 function main() {
-    show_banner
-    parse_args "$@"
-    check_installation
-    
-    # Run simulations if any were specified
-    if [[ ${#SIMULATORS[@]} -gt 0 ]]; then
-        run_simulations
-    fi
-    
-    # Check alerts if requested
-    if [[ "${CHECK_ALERTS}" == "true" ]]; then
-        check_current_alerts
-    fi
-    
-    # Acknowledge all alerts if requested
-    if [[ "${ACKNOWLEDGE_ALL}" == "true" ]]; then
-        acknowledge_all_alerts
-    fi
-    
-    # Launch Grafana dashboard if requested
-    if [[ "${ENABLE_DASHBOARD}" == "true" ]]; then
-        launch_dashboard
-    fi
-    
-    # Clean up if requested
-    if [[ "${CLEANUP}" == "true" ]]; then
-        cleanup_simulation
-    fi
-    
-    echo -e "${GREEN}[SUCCESS]${NC} Demo script completed successfully."
-    
-    # Provide hints for next steps
-    if [[ ${#SIMULATORS[@]} -gt 0 && "${CHECK_ALERTS}" != "true" ]]; then
-        echo -e "${BLUE}[INFO]${NC} Simulated issues have been created. To check for alerts, run:"
-        echo -e "${CYAN}$0 --check-alerts${NC}"
-    fi
-    
-    if [[ ${#SIMULATORS[@]} -gt 0 && "${ENABLE_DASHBOARD}" != "true" ]]; then
-        echo -e "${BLUE}[INFO]${NC} To visualize in the dashboard, run:"
-        echo -e "${CYAN}$0 --dashboard${NC}"
-    fi
-    
-    if [[ "${CLEANUP}" != "true" && ( ${#SIMULATORS[@]} -gt 0 || "${CHECK_ALERTS}" == "true" || "${ACKNOWLEDGE_ALL}" == "true" ) ]]; then
-        echo -e "${BLUE}[INFO]${NC} To clean up simulated data, run:"
-        echo -e "${CYAN}$0 --cleanup${NC}"
-    fi
+  show_banner
+  parse_args "$@"
+  check_installation
+
+  # Run simulations if any were specified
+  if [[ ${#SIMULATORS[@]} -gt 0 ]]; then
+    run_simulations
+  fi
+
+  # Check alerts if requested
+  if [[ "${CHECK_ALERTS}" == "true" ]]; then
+    check_current_alerts
+  fi
+
+  # Acknowledge all alerts if requested
+  if [[ "${ACKNOWLEDGE_ALL}" == "true" ]]; then
+    acknowledge_all_alerts
+  fi
+
+  # Launch Grafana dashboard if requested
+  if [[ "${ENABLE_DASHBOARD}" == "true" ]]; then
+    launch_dashboard
+  fi
+
+  # Clean up if requested
+  if [[ "${CLEANUP}" == "true" ]]; then
+    cleanup_simulation
+  fi
+
+  echo -e "${GREEN}[SUCCESS]${NC} Demo script completed successfully."
+
+  # Provide hints for next steps
+  if [[ ${#SIMULATORS[@]} -gt 0 && "${CHECK_ALERTS}" != "true" ]]; then
+    echo -e "${BLUE}[INFO]${NC} Simulated issues have been created. To check for alerts, run:"
+    echo -e "${CYAN}$0 --check-alerts${NC}"
+  fi
+
+  if [[ ${#SIMULATORS[@]} -gt 0 && "${ENABLE_DASHBOARD}" != "true" ]]; then
+    echo -e "${BLUE}[INFO]${NC} To visualize in the dashboard, run:"
+    echo -e "${CYAN}$0 --dashboard${NC}"
+  fi
+
+  if [[ "${CLEANUP}" != "true" && (${#SIMULATORS[@]} -gt 0 || "${CHECK_ALERTS}" == "true" || "${ACKNOWLEDGE_ALL}" == "true") ]]; then
+    echo -e "${BLUE}[INFO]${NC} To clean up simulated data, run:"
+    echo -e "${CYAN}$0 --cleanup${NC}"
+  fi
 }
 
 # Run the script
-main "$@" 
+main "$@"

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # Consolidated script to generate all client combinations
 
 # Define clients
@@ -23,16 +24,16 @@ create_client_config() {
   local dir="clients/${el}-${cl}"
 
   # Capitalize first letter of client names for comments
-  el_cap="$(echo ${el:0:1} | tr '[:lower:]' '[:upper:]')${el:1}"
-  cl_cap="$(echo ${cl:0:1} | tr '[:lower:]' '[:upper:]')${cl:1}"
+  el_cap="$(echo "${el:0:1}" | tr '[:lower:]' '[:upper:]')${el:1}"
+  cl_cap="$(echo "${cl:0:1}" | tr '[:lower:]' '[:upper:]')${cl:1}"
 
-  echo "Creating $dir"
+  echo "Creating ${dir}"
 
   # Create directory if it doesn't exist
-  mkdir -p "$dir"
+  mkdir -p "${dir}"
 
   # Create ephemery.yaml
-  cat > "$dir/ephemery.yaml" << 'EOF'
+  cat >"${dir}/ephemery.yaml" <<'EOF'
 ---
 - name: Deploy Ephemery Test Environment for ELCAP (ELNAME) + CLCAP (CLNAME)
   hosts: all
@@ -78,13 +79,13 @@ create_client_config() {
 EOF
 
   # Replace placeholders with actual values
-  sed -i "" "s/ELCAP/${el_cap}/g" "$dir/ephemery.yaml"
-  sed -i "" "s/CLCAP/${cl_cap}/g" "$dir/ephemery.yaml"
-  sed -i "" "s/ELNAME/${el}/g" "$dir/ephemery.yaml"
-  sed -i "" "s/CLNAME/${cl}/g" "$dir/ephemery.yaml"
+  sed -i "" "s/ELCAP/${el_cap}/g" "${dir}/ephemery.yaml"
+  sed -i "" "s/CLCAP/${cl_cap}/g" "${dir}/ephemery.yaml"
+  sed -i "" "s/ELNAME/${el}/g" "${dir}/ephemery.yaml"
+  sed -i "" "s/CLNAME/${cl}/g" "${dir}/ephemery.yaml"
 
   # Create el-client.yaml
-  cat > "$dir/el-${el}.yaml" << 'EOF'
+  cat >"${dir}/el-${el}.yaml" <<'EOF'
 ---
 # ELCAP-specific configuration tasks
 
@@ -107,11 +108,11 @@ EOF
 EOF
 
   # Replace placeholders with actual values
-  sed -i "" "s/ELCAP/${el_cap}/g" "$dir/el-${el}.yaml"
-  sed -i "" "s/ELNAME/${el}/g" "$dir/el-${el}.yaml"
+  sed -i "" "s/ELCAP/${el_cap}/g" "${dir}/el-${el}.yaml"
+  sed -i "" "s/ELNAME/${el}/g" "${dir}/el-${el}.yaml"
 
   # Create cl-client.yaml
-  cat > "$dir/cl-${cl}.yaml" << 'EOF'
+  cat >"${dir}/cl-${cl}.yaml" <<'EOF'
 ---
 # CLCAP-specific configuration tasks
 
@@ -132,21 +133,21 @@ EOF
 EOF
 
   # Replace placeholders with actual values
-  sed -i "" "s/CLCAP/${cl_cap}/g" "$dir/cl-${cl}.yaml"
-  sed -i "" "s/CLNAME/${cl}/g" "$dir/cl-${cl}.yaml"
+  sed -i "" "s/CLCAP/${cl_cap}/g" "${dir}/cl-${cl}.yaml"
+  sed -i "" "s/CLNAME/${cl}/g" "${dir}/cl-${cl}.yaml"
 }
 
 # Generate all client combinations
-for el in $EL_CLIENTS; do
-  for cl in $CL_CLIENTS; do
+for el in ${EL_CLIENTS}; do
+  for cl in ${CL_CLIENTS}; do
     # Check if the directory already exists and has all required files
-    if [ -d "clients/${el}-${cl}" ] &&
-       [ -f "clients/${el}-${cl}/ephemery.yaml" ] &&
-       [ -f "clients/${el}-${cl}/el-${el}.yaml" ] &&
-       [ -f "clients/${el}-${cl}/cl-${cl}.yaml" ]; then
+    if [ -d "clients/${el}-${cl}" ] \
+      && [ -f "clients/${el}-${cl}/ephemery.yaml" ] \
+      && [ -f "clients/${el}-${cl}/el-${el}.yaml" ] \
+      && [ -f "clients/${el}-${cl}/cl-${cl}.yaml" ]; then
       echo "Skipping existing client config: ${el}-${cl}"
     else
-      create_client_config "$el" "$cl"
+      create_client_config "${el}" "${cl}"
     fi
   done
 done

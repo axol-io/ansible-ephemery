@@ -22,7 +22,7 @@ We implemented a standardized container naming convention following the pattern 
 
 1. **Standardized Pattern**:
    - Execution clients: `{network}-execution-{client}` (e.g., `ephemery-execution-geth`)
-   - Consensus clients: `{network}-consensus-{client}` (e.g., `ephemery-consensus-lighthouse`) 
+   - Consensus clients: `{network}-consensus-{client}` (e.g., `ephemery-consensus-lighthouse`)
    - Validator clients: `{network}-validator-{client}` (e.g., `ephemery-validator-lighthouse`)
 
 2. **Shell Script Implementation**:
@@ -176,4 +176,4 @@ The following steps are planned to continue the Codebase Standardization initiat
 - [path_config.sh](../../scripts/core/path_config.sh)
 - [common.sh](../../scripts/core/common.sh)
 - [paths.yaml](../../ansible/vars/paths.yaml)
-- [validate_container_names.sh](../../scripts/utilities/validate_container_names.sh) 
+- [validate_container_names.sh](../../scripts/utilities/validate_container_names.sh)

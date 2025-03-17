@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Validator Dashboard Startup Script
 # ==================================
@@ -46,23 +47,23 @@ function show_help {
 function parse_args {
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -d|--dir)
+      -d | --dir)
         EPHEMERY_BASE_DIR="$2"
         shift 2
         ;;
-      -i|--interval)
+      -i | --interval)
         INTERVAL="$2"
         shift 2
         ;;
-      -f|--fullscreen)
+      -f | --fullscreen)
         FULLSCREEN=true
         shift
         ;;
-      -t|--theme)
+      -t | --theme)
         THEME="$2"
         shift 2
         ;;
-      -h|--help)
+      -h | --help)
         show_help
         exit 0
         ;;
@@ -77,7 +78,7 @@ function parse_args {
 
 # Check if required tools are installed
 function check_requirements {
-  if ! command -v docker &> /dev/null; then
+  if ! command -v docker &>/dev/null; then
     echo -e "${RED}Error: Docker is not installed${NC}"
     echo "Please install Docker and try again."
     exit 1

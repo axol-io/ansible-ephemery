@@ -4,21 +4,24 @@
 # This file provides reusable functions for all Ephemery scripts
 # Version: 1.0.0
 
+# Initialize variable before use to avoid "unbound variable" error
+: "${_EPHEMERY_COMMON_LOADED:=}"
+
 # Prevent sourcing more than once
 [[ -n "${_EPHEMERY_COMMON_LOADED}" ]] && return 0
 readonly _EPHEMERY_COMMON_LOADED=1
 
 # Load standardized paths configuration if available
 CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"
-if [ -f "$CONFIG_FILE" ]; then
-  echo "Loading configuration from $CONFIG_FILE"
-  source "$CONFIG_FILE"
+if [ -f "${CONFIG_FILE}" ]; then
+  echo "Loading configuration from ${CONFIG_FILE}"
+  source "${CONFIG_FILE}"
 else
   echo "Configuration file not found, using default paths"
 fi
 
 # Source configuration if available
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 if [[ -f "${SCRIPT_DIR}/ephemery_config.sh" ]]; then
   source "${SCRIPT_DIR}/ephemery_config.sh"
 fi
@@ -32,36 +35,36 @@ fi
 get_ephemery_path() {
   local path_type="$1"
   local environment="${EPHEMERY_ENVIRONMENT:-default}"
-  
+
   # Default base directories for different environments
   local default_base="/opt/ephemery"
-  local dev_base="$HOME/ephemery"
+  local dev_base="${HOME}/ephemery"
   local test_base="/tmp/ephemery"
-  
+
   # Set base directory based on environment
   local base_dir
-  case "$environment" in
-    development) base_dir="$dev_base" ;;
-    testing)     base_dir="$test_base" ;;
-    *)           base_dir="$default_base" ;;
+  case "${environment}" in
+    development) base_dir="${dev_base}" ;;
+    testing) base_dir="${test_base}" ;;
+    *) base_dir="${default_base}" ;;
   esac
-  
+
   # Override with EPHEMERY_BASE_DIR if defined
-  base_dir="${EPHEMERY_BASE_DIR:-$base_dir}"
-  
+  base_dir="${EPHEMERY_BASE_DIR:-${base_dir}}"
+
   # Return the requested path
-  case "$path_type" in
-    base)           echo "$base_dir" ;;
-    config)         echo "$base_dir/config" ;;
-    data)           echo "$base_dir/data" ;;
-    geth_data)      echo "$base_dir/data/geth" ;;
-    lighthouse_data) echo "$base_dir/data/lighthouse" ;;
-    validator_data) echo "$base_dir/data/lighthouse-validator" ;;
-    logs)           echo "$base_dir/logs" ;;
-    scripts)        echo "$base_dir/scripts" ;;
-    secrets)        echo "$base_dir/secrets" ;;
-    jwt_secret)     echo "$base_dir/jwt.hex" ;;
-    *)              echo "$base_dir/$path_type" ;;
+  case "${path_type}" in
+    base) echo "${base_dir}" ;;
+    config) echo "${base_dir}/config" ;;
+    data) echo "${base_dir}/data" ;;
+    geth_data) echo "${base_dir}/data/geth" ;;
+    lighthouse_data) echo "${base_dir}/data/lighthouse" ;;
+    validator_data) echo "${base_dir}/data/lighthouse-validator" ;;
+    logs) echo "${base_dir}/logs" ;;
+    scripts) echo "${base_dir}/scripts" ;;
+    secrets) echo "${base_dir}/secrets" ;;
+    jwt_secret) echo "${base_dir}/jwt.hex" ;;
+    *) echo "${base_dir}/${path_type}" ;;
   esac
 }
 
@@ -153,8 +156,8 @@ error_handler() {
 # Set up error handling in a script
 # Usage: setup_error_handling
 setup_error_handling() {
-  set -E           # Inherit ERR trap by functions
-  set -o pipefail  # Pipe fails if any command fails
+  set -E          # Inherit ERR trap by functions
+  set -o pipefail # Pipe fails if any command fails
   trap 'error_handler $? $LINENO' ERR
 }
 
@@ -300,12 +303,12 @@ parse_flag_value() {
 # Check if Docker is installed and running
 # Usage: check_docker || exit 1
 check_docker() {
-  if ! command -v docker &> /dev/null; then
+  if ! command -v docker &>/dev/null; then
     log_error "Docker is not installed. Please install Docker and try again."
     return 1
   fi
 
-  if ! docker info &> /dev/null; then
+  if ! docker info &>/dev/null; then
     log_error "Docker daemon is not running. Please start Docker and try again."
     return 1
   fi

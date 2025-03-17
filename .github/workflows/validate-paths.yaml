@@ -30,4 +30,4 @@ jobs:
         if: ${{ failure() }}
         run: |
           echo "::error::Some files are not compliant with standardized paths. Please update them according to the guidelines in docs/STANDARDIZED_PATHS_GUIDE.md"
-          exit 1 
+          exit 1

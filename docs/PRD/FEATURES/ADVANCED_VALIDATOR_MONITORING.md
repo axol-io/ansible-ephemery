@@ -240,4 +240,4 @@ The implementation will include:
 - [Validator Performance Monitoring](./VALIDATOR_PERFORMANCE_MONITORING.md)
 - [Dashboard Implementation](./DASHBOARD_IMPLEMENTATION.md)
 - [Genesis Validator Guide](../OPERATIONS/GENESIS_VALIDATOR.md)
-- [Ephemery Setup](./EPHEMERY_SETUP.md) 
+- [Ephemery Setup](./EPHEMERY_SETUP.md)

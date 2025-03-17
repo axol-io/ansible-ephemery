@@ -329,7 +329,7 @@ The following metrics will be collected for SSV operations:
    - Balance history
    - Inclusion distance for attestations
    - Threshold signature timing
-   - Consensus participation 
+   - Consensus participation
 
 3. **Node Performance**
    - Per-node contribution metrics
@@ -406,4 +406,4 @@ After the initial implementation, the following enhancements are planned:
 - [Validator Management](./VALIDATOR_MANAGEMENT.md)
 - [Monitoring](./MONITORING.md)
 - [Dashboard Implementation](./DASHBOARD_IMPLEMENTATION.md)
-- [Genesis Validator Guide](../OPERATIONS/GENESIS_VALIDATOR.md) 
+- [Genesis Validator Guide](../OPERATIONS/GENESIS_VALIDATOR.md)

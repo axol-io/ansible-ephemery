@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # yaml-extension-manager.sh - Consolidated script for YAML extension management
 # Combines functionality from:
 # - fix-yaml-extensions.sh
@@ -62,16 +63,16 @@ print_action() {
   local file="$2"
   local details="$3"
 
-  if [[ "$action" == "RENAME" ]]; then
-    echo -e "\033[33m$action\033[0m: $file $details"
-  elif [[ "$action" == "ISSUE" ]]; then
-    echo -e "\033[31m$action\033[0m: $file $details"
-  elif [[ "$action" == "SKIP" ]]; then
-    echo -e "\033[36m$action\033[0m: $file $details"
-  elif [[ "$action" == "OK" ]]; then
-    echo -e "\033[32m$action\033[0m: $file $details"
+  if [[ "${action}" == "RENAME" ]]; then
+    echo -e "\033[33m${action}\033[0m: ${file} ${details}"
+  elif [[ "${action}" == "ISSUE" ]]; then
+    echo -e "\033[31m${action}\033[0m: ${file} ${details}"
+  elif [[ "${action}" == "SKIP" ]]; then
+    echo -e "\033[36m${action}\033[0m: ${file} ${details}"
+  elif [[ "${action}" == "OK" ]]; then
+    echo -e "\033[32m${action}\033[0m: ${file} ${details}"
   else
-    echo "$action: $file $details"
+    echo "${action}: ${file} ${details}"
   fi
 }
 
@@ -85,22 +86,22 @@ check_extensions() {
 
   # Check for .yml files outside molecule directory
   while IFS= read -r file; do
-    if [[ ! "$file" =~ ^./molecule/ && ! "$file" =~ ^./collections/ && ! "$file" =~ ^./.github/ ]]; then
-      print_action "ISSUE" "$file" "(should use .yaml extension)"
+    if [[ ! "${file}" =~ ^./molecule/ && ! "${file}" =~ ^./collections/ && ! "${file}" =~ ^./.github/ ]]; then
+      print_action "ISSUE" "${file}" "(should use .yaml extension)"
       yml_outside_count=$((yml_outside_count + 1))
     else
-      print_action "OK" "$file" "(correct extension for its location)"
+      print_action "OK" "${file}" "(correct extension for its location)"
     fi
     total_files=$((total_files + 1))
   done < <(find . -type f -name "*.yml" | sort)
 
   # Check for .yaml files inside molecule directory
   while IFS= read -r file; do
-    if [[ "$file" =~ ^./molecule/ ]]; then
-      print_action "ISSUE" "$file" "(should use .yml extension)"
+    if [[ "${file}" =~ ^./molecule/ ]]; then
+      print_action "ISSUE" "${file}" "(should use .yml extension)"
       yaml_inside_count=$((yaml_inside_count + 1))
     else
-      print_action "OK" "$file" "(correct extension for its location)"
+      print_action "OK" "${file}" "(correct extension for its location)"
     fi
     total_files=$((total_files + 1))
   done < <(find . -type f -name "*.yaml" | sort)
@@ -110,18 +111,18 @@ check_extensions() {
   echo "========================================="
   echo "YAML Extension Check Summary"
   echo "========================================="
-  echo "Total YAML files: $total_files"
+  echo "Total YAML files: ${total_files}"
   echo "Issues found: $((yml_outside_count + yaml_inside_count))"
-  echo "  - .yml files outside molecule/: $yml_outside_count"
-  echo "  - .yaml files inside molecule/: $yaml_inside_count"
+  echo "  - .yml files outside molecule/: ${yml_outside_count}"
+  echo "  - .yaml files inside molecule/: ${yaml_inside_count}"
   echo ""
 
-  if [[ $yml_outside_count -gt 0 || $yaml_inside_count -gt 0 ]]; then
+  if [[ ${yml_outside_count} -gt 0 || ${yaml_inside_count} -gt 0 ]]; then
     echo "To fix these issues, run:"
-    if [[ $yml_outside_count -gt 0 ]]; then
+    if [[ ${yml_outside_count} -gt 0 ]]; then
       echo "  $0 --fix        # Convert .yml to .yaml outside molecule/"
     fi
-    if [[ $yaml_inside_count -gt 0 ]]; then
+    if [[ ${yaml_inside_count} -gt 0 ]]; then
       echo "  $0 --reverse    # Convert .yaml to .yml inside molecule/"
     fi
     return 1
@@ -139,19 +140,19 @@ fix_extensions() {
 
   # Find all .yml files outside molecule directory and collections directory
   while IFS= read -r file; do
-    if [[ ! "$file" =~ ^./molecule/ && ! "$file" =~ ^./collections/ && ! "$file" =~ ^./.github/ ]]; then
+    if [[ ! "${file}" =~ ^./molecule/ && ! "${file}" =~ ^./collections/ && ! "${file}" =~ ^./.github/ ]]; then
       new_file="${file%.yml}.yaml"
       total_files=$((total_files + 1))
 
-      if [[ $DRY_RUN -eq 1 ]]; then
-        print_action "RENAME" "$file" "-> $new_file"
+      if [[ ${DRY_RUN} -eq 1 ]]; then
+        print_action "RENAME" "${file}" "-> ${new_file}"
       else
-        mv "$file" "$new_file"
-        print_action "RENAME" "$file" "-> $new_file"
+        mv "${file}" "${new_file}"
+        print_action "RENAME" "${file}" "-> ${new_file}"
       fi
       fixed_count=$((fixed_count + 1))
     else
-      print_action "SKIP" "$file" "(in excluded directory)"
+      print_action "SKIP" "${file}" "(in excluded directory)"
     fi
   done < <(find . -type f -name "*.yml" | sort)
 
@@ -160,16 +161,16 @@ fix_extensions() {
   echo "========================================="
   echo "YAML Extension Fix Summary"
   echo "========================================="
-  echo "Total .yml files processed: $total_files"
-  echo "Files renamed: $fixed_count"
+  echo "Total .yml files processed: ${total_files}"
+  echo "Files renamed: ${fixed_count}"
 
-  if [[ $DRY_RUN -eq 1 ]]; then
+  if [[ ${DRY_RUN} -eq 1 ]]; then
     echo "No actual changes were made (dry run)"
   fi
   echo ""
 
   # Reminder about updating references
-  if [[ $fixed_count -gt 0 ]]; then
+  if [[ ${fixed_count} -gt 0 ]]; then
     echo "Note: You may need to update references to these files in:"
     echo "- Playbooks"
     echo "- Include statements"
@@ -188,15 +189,15 @@ fix_extensions_reverse() {
 
   # Find all .yaml files in molecule directory
   while IFS= read -r file; do
-    if [[ "$file" =~ molecule/.*\.yaml$ ]]; then
+    if [[ "${file}" =~ molecule/.*\.yaml$ ]]; then
       new_file="${file%.yaml}.yml"
       total_files=$((total_files + 1))
 
-      if [[ $DRY_RUN -eq 1 ]]; then
-        print_action "RENAME" "$file" "-> $new_file"
+      if [[ ${DRY_RUN} -eq 1 ]]; then
+        print_action "RENAME" "${file}" "-> ${new_file}"
       else
-        mv "$file" "$new_file"
-        print_action "RENAME" "$file" "-> $new_file"
+        mv "${file}" "${new_file}"
+        print_action "RENAME" "${file}" "-> ${new_file}"
       fi
       fixed_count=$((fixed_count + 1))
     fi
@@ -207,16 +208,16 @@ fix_extensions_reverse() {
   echo "========================================="
   echo "YAML Extension Fix Summary (Reverse)"
   echo "========================================="
-  echo "Total .yaml files processed in molecule/: $total_files"
-  echo "Files renamed: $fixed_count"
+  echo "Total .yaml files processed in molecule/: ${total_files}"
+  echo "Files renamed: ${fixed_count}"
 
-  if [[ $DRY_RUN -eq 1 ]]; then
+  if [[ ${DRY_RUN} -eq 1 ]]; then
     echo "No actual changes were made (dry run)"
   fi
   echo ""
 
   # Reminder about updating references
-  if [[ $fixed_count -gt 0 ]]; then
+  if [[ ${fixed_count} -gt 0 ]]; then
     echo "Note: You may need to update references to these files in:"
     echo "- Molecule configurations"
     echo "- Documentation"
@@ -227,7 +228,7 @@ fix_extensions_reverse() {
 }
 
 # Execute selected mode
-case "$MODE" in
+case "${MODE}" in
   check)
     check_extensions
     ;;

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # test_checkpoint_sync.sh - Script to test checkpoint sync performance
 # This implements Phase 5 of the Fix Checkpoint Sync Roadmap
 
@@ -10,8 +11,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Script directory
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
 TEST_RESULTS_DIR="${PROJECT_ROOT}/test_results"
 
 # Create test results directory if it doesn't exist
@@ -38,7 +39,7 @@ show_banner() {
 # Function to run tests
 run_test() {
   local config_name="$1"
-  local config="${TEST_CONFIGS[$config_name]}"
+  local config="${TEST_CONFIGS[${config_name}]}"
 
   echo -e "${BLUE}Running test for: ${config_name}${NC}"
   echo -e "Configuration: ${config}"
@@ -47,9 +48,9 @@ run_test() {
   local timestamp=$(date +"%Y%m%d_%H%M%S")
   local results_file="${TEST_RESULTS_DIR}/${config_name}_${timestamp}.log"
 
-  echo "Test started at: $(date)" > "${results_file}"
-  echo "Configuration: ${config}" >> "${results_file}"
-  echo "" >> "${results_file}"
+  echo "Test started at: $(date)" >"${results_file}"
+  echo "Configuration: ${config}" >>"${results_file}"
+  echo "" >>"${results_file}"
 
   # Apply configuration to inventory
   echo -e "${YELLOW}Applying configuration to inventory...${NC}"
@@ -74,43 +75,46 @@ run_test() {
 
   # Run Ansible playbook
   echo -e "${YELLOW}Running Ansible playbook...${NC}"
-  cd "${PROJECT_ROOT}" || { echo "Error: Failed to change directory to ${PROJECT_ROOT}"; exit 1; }
+  cd "${PROJECT_ROOT}" || {
+    echo "Error: Failed to change directory to ${PROJECT_ROOT}"
+    exit 1
+  }
   ansible-playbook -i inventory.yaml main.yaml -l test | tee -a "${results_file}"
 
   # Measure initial sync status
   echo -e "${YELLOW}Measuring initial sync status...${NC}"
-  echo "Initial sync status at $(date):" >> "${results_file}"
+  echo "Initial sync status at $(date):" >>"${results_file}"
 
   # Wait for Lighthouse to start
   sleep 30
 
   # Check Lighthouse sync status
   curl -s http://localhost:5052/eth/v1/node/syncing | tee -a "${results_file}"
-  echo "" >> "${results_file}"
+  echo "" >>"${results_file}"
 
   # Check Geth sync status
   curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' http://localhost:8545 | tee -a "${results_file}"
-  echo "" >> "${results_file}"
+  echo "" >>"${results_file}"
 
   # Monitor sync progress every 5 minutes for up to 2 hours
   echo -e "${YELLOW}Monitoring sync progress for 2 hours...${NC}"
 
-  local max_iterations=24  # 2 hours at 5-minute intervals
+  local max_iterations=24 # 2 hours at 5-minute intervals
   local iteration=0
 
   while [ "${iteration}" -lt "${max_iterations}" ]; do
-    sleep 300  # 5 minutes
+    sleep 300 # 5 minutes
 
     local current_time=$(date +%s)
     local elapsed_time=$((current_time - start_time))
     local elapsed_minutes=$((elapsed_time / 60))
 
-    echo "Sync status after ${elapsed_minutes} minutes:" >> "${results_file}"
+    echo "Sync status after ${elapsed_minutes} minutes:" >>"${results_file}"
 
     # Check Lighthouse sync status
     local lighthouse_status=$(curl -s http://localhost:5052/eth/v1/node/syncing)
     echo "${lighthouse_status}" | tee -a "${results_file}"
-    echo "" >> "${results_file}"
+    echo "" >>"${results_file}"
 
     # Extract sync metrics
     local is_syncing=$(echo "${lighthouse_status}" | grep -o '"is_syncing":[^,]*' | cut -d':' -f2 | tr -d ' "')
@@ -120,7 +124,7 @@ run_test() {
     # Check Geth sync status
     local geth_status=$(curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' http://localhost:8545)
     echo "${geth_status}" | tee -a "${results_file}"
-    echo "" >> "${results_file}"
+    echo "" >>"${results_file}"
 
     # Check if sync is complete or close enough
     if [[ "${is_syncing}" == "false" || "${sync_distance}" == "0" ]]; then
@@ -129,9 +133,9 @@ run_test() {
     fi
 
     # Get system resource usage
-    echo "System resource usage:" >> "${results_file}"
-    top -b -n 1 | head -n 20 >> "${results_file}"
-    echo "" >> "${results_file}"
+    echo "System resource usage:" >>"${results_file}"
+    top -b -n 1 | head -n 20 >>"${results_file}"
+    echo "" >>"${results_file}"
 
     ((iteration++))
   done
@@ -141,8 +145,8 @@ run_test() {
   local total_elapsed_time=$((end_time - start_time))
   local total_elapsed_minutes=$((total_elapsed_time / 60))
 
-  echo "Test completed at: $(date)" >> "${results_file}"
-  echo "Total test duration: ${total_elapsed_minutes} minutes" >> "${results_file}"
+  echo "Test completed at: $(date)" >>"${results_file}"
+  echo "Total test duration: ${total_elapsed_minutes} minutes" >>"${results_file}"
 
   # Restore original inventory
   mv "${PROJECT_ROOT}/inventory.yaml.bak" "${PROJECT_ROOT}/inventory.yaml"
@@ -164,12 +168,12 @@ compare_results() {
   # Create comparison file
   local comparison_file="${TEST_RESULTS_DIR}/comparison_$(date +"%Y%m%d_%H%M%S").md"
 
-  echo "# Ephemery Sync Method Comparison" > "${comparison_file}"
-  echo "" >> "${comparison_file}"
-  echo "## Summary" >> "${comparison_file}"
-  echo "" >> "${comparison_file}"
-  echo "| Sync Method | Duration | Final Sync Distance | Final Head Slot |" >> "${comparison_file}"
-  echo "|-------------|----------|---------------------|----------------|" >> "${comparison_file}"
+  echo "# Ephemery Sync Method Comparison" >"${comparison_file}"
+  echo "" >>"${comparison_file}"
+  echo "## Summary" >>"${comparison_file}"
+  echo "" >>"${comparison_file}"
+  echo "| Sync Method | Duration | Final Sync Distance | Final Head Slot |" >>"${comparison_file}"
+  echo "|-------------|----------|---------------------|----------------|" >>"${comparison_file}"
 
   # Extract metrics from each file if it exists
   if [ -n "${checkpoint_file}" ]; then
@@ -177,9 +181,9 @@ compare_results() {
     local checkpoint_distance=$(grep -A 10 "Sync status after" "${checkpoint_file}" | grep -o '"sync_distance":"[^"]*"' | tail -n 1 | cut -d':' -f2 | tr -d '"')
     local checkpoint_head_slot=$(grep -A 10 "Sync status after" "${checkpoint_file}" | grep -o '"head_slot":"[^"]*"' | tail -n 1 | cut -d':' -f2 | tr -d '"')
 
-    echo "| Checkpoint Sync | ${checkpoint_duration} min | ${checkpoint_distance} | ${checkpoint_head_slot} |" >> "${comparison_file}"
+    echo "| Checkpoint Sync | ${checkpoint_duration} min | ${checkpoint_distance} | ${checkpoint_head_slot} |" >>"${comparison_file}"
   else
-    echo "| Checkpoint Sync | No data | No data | No data |" >> "${comparison_file}"
+    echo "| Checkpoint Sync | No data | No data | No data |" >>"${comparison_file}"
   fi
 
   if [ -n "${optimized_file}" ]; then
@@ -187,9 +191,9 @@ compare_results() {
     local optimized_distance=$(grep -A 10 "Sync status after" "${optimized_file}" | grep -o '"sync_distance":"[^"]*"' | tail -n 1 | cut -d':' -f2 | tr -d '"')
     local optimized_head_slot=$(grep -A 10 "Sync status after" "${optimized_file}" | grep -o '"head_slot":"[^"]*"' | tail -n 1 | cut -d':' -f2 | tr -d '"')
 
-    echo "| Genesis Optimized | ${optimized_duration} min | ${optimized_distance} | ${optimized_head_slot} |" >> "${comparison_file}"
+    echo "| Genesis Optimized | ${optimized_duration} min | ${optimized_distance} | ${optimized_head_slot} |" >>"${comparison_file}"
   else
-    echo "| Genesis Optimized | No data | No data | No data |" >> "${comparison_file}"
+    echo "| Genesis Optimized | No data | No data | No data |" >>"${comparison_file}"
   fi
 
   if [ -n "${default_file}" ]; then
@@ -197,53 +201,53 @@ compare_results() {
     local default_distance=$(grep -A 10 "Sync status after" "${default_file}" | grep -o '"sync_distance":"[^"]*"' | tail -n 1 | cut -d':' -f2 | tr -d '"')
     local default_head_slot=$(grep -A 10 "Sync status after" "${default_file}" | grep -o '"head_slot":"[^"]*"' | tail -n 1 | cut -d':' -f2 | tr -d '"')
 
-    echo "| Genesis Default | ${default_duration} min | ${default_distance} | ${default_head_slot} |" >> "${comparison_file}"
+    echo "| Genesis Default | ${default_duration} min | ${default_distance} | ${default_head_slot} |" >>"${comparison_file}"
   else
-    echo "| Genesis Default | No data | No data | No data |" >> "${comparison_file}"
+    echo "| Genesis Default | No data | No data | No data |" >>"${comparison_file}"
   fi
 
-  echo "" >> "${comparison_file}"
-  echo "## Detailed Analysis" >> "${comparison_file}"
-  echo "" >> "${comparison_file}"
-  echo "### Checkpoint Sync" >> "${comparison_file}"
-  echo "" >> "${comparison_file}"
+  echo "" >>"${comparison_file}"
+  echo "## Detailed Analysis" >>"${comparison_file}"
+  echo "" >>"${comparison_file}"
+  echo "### Checkpoint Sync" >>"${comparison_file}"
+  echo "" >>"${comparison_file}"
   if [ -n "${checkpoint_file}" ]; then
-    echo "Duration: ${checkpoint_duration} minutes" >> "${comparison_file}"
-    echo "" >> "${comparison_file}"
-    echo "Configuration:" >> "${comparison_file}"
-    echo "\`\`\`" >> "${comparison_file}"
-    grep "Configuration:" "${checkpoint_file}" | head -n 1 | cut -d':' -f2- >> "${comparison_file}"
-    echo "\`\`\`" >> "${comparison_file}"
+    echo "Duration: ${checkpoint_duration} minutes" >>"${comparison_file}"
+    echo "" >>"${comparison_file}"
+    echo "Configuration:" >>"${comparison_file}"
+    echo "\`\`\`" >>"${comparison_file}"
+    grep "Configuration:" "${checkpoint_file}" | head -n 1 | cut -d':' -f2- >>"${comparison_file}"
+    echo "\`\`\`" >>"${comparison_file}"
   else
-    echo "No data available" >> "${comparison_file}"
+    echo "No data available" >>"${comparison_file}"
   fi
 
-  echo "" >> "${comparison_file}"
-  echo "### Genesis Optimized" >> "${comparison_file}"
-  echo "" >> "${comparison_file}"
+  echo "" >>"${comparison_file}"
+  echo "### Genesis Optimized" >>"${comparison_file}"
+  echo "" >>"${comparison_file}"
   if [ -n "${optimized_file}" ]; then
-    echo "Duration: ${optimized_duration} minutes" >> "${comparison_file}"
-    echo "" >> "${comparison_file}"
-    echo "Configuration:" >> "${comparison_file}"
-    echo "\`\`\`" >> "${comparison_file}"
-    grep "Configuration:" "${optimized_file}" | head -n 1 | cut -d':' -f2- >> "${comparison_file}"
-    echo "\`\`\`" >> "${comparison_file}"
+    echo "Duration: ${optimized_duration} minutes" >>"${comparison_file}"
+    echo "" >>"${comparison_file}"
+    echo "Configuration:" >>"${comparison_file}"
+    echo "\`\`\`" >>"${comparison_file}"
+    grep "Configuration:" "${optimized_file}" | head -n 1 | cut -d':' -f2- >>"${comparison_file}"
+    echo "\`\`\`" >>"${comparison_file}"
   else
-    echo "No data available" >> "${comparison_file}"
+    echo "No data available" >>"${comparison_file}"
   fi
 
-  echo "" >> "${comparison_file}"
-  echo "### Genesis Default" >> "${comparison_file}"
-  echo "" >> "${comparison_file}"
+  echo "" >>"${comparison_file}"
+  echo "### Genesis Default" >>"${comparison_file}"
+  echo "" >>"${comparison_file}"
   if [ -n "${default_file}" ]; then
-    echo "Duration: ${default_duration} minutes" >> "${comparison_file}"
-    echo "" >> "${comparison_file}"
-    echo "Configuration:" >> "${comparison_file}"
-    echo "\`\`\`" >> "${comparison_file}"
-    grep "Configuration:" "${default_file}" | head -n 1 | cut -d':' -f2- >> "${comparison_file}"
-    echo "\`\`\`" >> "${comparison_file}"
+    echo "Duration: ${default_duration} minutes" >>"${comparison_file}"
+    echo "" >>"${comparison_file}"
+    echo "Configuration:" >>"${comparison_file}"
+    echo "\`\`\`" >>"${comparison_file}"
+    grep "Configuration:" "${default_file}" | head -n 1 | cut -d':' -f2- >>"${comparison_file}"
+    echo "\`\`\`" >>"${comparison_file}"
   else
-    echo "No data available" >> "${comparison_file}"
+    echo "No data available" >>"${comparison_file}"
   fi
 
   echo -e "${GREEN}Comparison report generated: ${comparison_file}${NC}"

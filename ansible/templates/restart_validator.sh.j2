@@ -1,0 +1,120 @@
+#!/bin/bash
+# Ephemery Validator Restart Script
+# This script handles the safe restart of validator clients with password validation
+
+set -e
+
+CONTAINER_NAME="{{ validator_container_name }}"
+VALIDATOR_DIR="{{ validator_secrets_dir }}"
+KEYS_DIR="${VALIDATOR_DIR}/keys"
+PASSWORDS_DIR="${VALIDATOR_DIR}/passwords"
+LOG_FILE="{{ ephemery_base_dir }}/logs/validator_restart.log"
+CHECK_ONLY=false
+
+# Process command line arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --check-only)
+      CHECK_ONLY=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--check-only]"
+      exit 1
+      ;;
+  esac
+done
+
+# Logging function
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+# Check if validator container is running
+check_validator() {
+  if ! docker ps | grep -q "$CONTAINER_NAME"; then
+    log "ERROR: Validator container $CONTAINER_NAME is not running"
+    return 1
+  fi
+  log "Validator container $CONTAINER_NAME is running"
+  return 0
+}
+
+# Check if all keys have matching password files
+check_passwords() {
+  log "Checking password files for all validator keys..."
+  local missing_passwords=0
+
+  for keyfile in "$KEYS_DIR"/*.json; do
+    if [ -f "$keyfile" ]; then
+      local basename="${keyfile##*/}"
+      local passfile="$PASSWORDS_DIR/${basename%.json}.txt"
+
+      if [ ! -f "$passfile" ]; then
+        log "ERROR: Password file $passfile not found for key $basename"
+        ((missing_passwords++))
+      fi
+    fi
+  done
+
+  if [ "$missing_passwords" -gt 0 ]; then
+    log "Found $missing_passwords missing password files"
+    return 1
+  else
+    log "All validator keys have corresponding password files"
+    return 0
+  fi
+}
+
+# Restart validator container
+restart_validator() {
+  log "Restarting validator container $CONTAINER_NAME..."
+  docker restart "$CONTAINER_NAME"
+  sleep 5
+  if docker ps | grep -q "$CONTAINER_NAME"; then
+    log "Validator container $CONTAINER_NAME successfully restarted"
+    return 0
+  else
+    log "ERROR: Failed to restart validator container $CONTAINER_NAME"
+    return 1
+  fi
+}
+
+# Main execution flow
+main() {
+  log "Starting validator check/restart process"
+
+  # Check validator status
+  check_validator || {
+    log "Validator check failed"
+    return 1
+  }
+
+  # Check password files
+  {% if password_check_enabled %}
+  check_passwords || {
+    log "Password check failed, not proceeding with restart"
+    return 1
+  }
+  {% endif %}
+
+  # If only checking, exit here
+  if [ "$CHECK_ONLY" = true ]; then
+    log "Check-only mode, not performing restart"
+    return 0
+  fi
+
+  # Restart validator
+  restart_validator || {
+    log "Validator restart failed"
+    return 1
+  }
+
+  log "Validator check/restart process completed successfully"
+  return 0
+}
+
+# Run main function
+main
+exit $?

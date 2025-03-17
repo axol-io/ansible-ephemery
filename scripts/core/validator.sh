@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # validator.sh - Basic validation script for Ansible conditionals
 
 # Function to validate conditionals
@@ -9,7 +10,7 @@ function validate_conditionals {
   yaml_files=$(find . -name "*.yaml" -o -name "*.yml" | grep -v "^./\.")
 
   # Simple validation - just check if files exist
-  if [ -z "$yaml_files" ]; then
+  if [ -z "${yaml_files}" ]; then
     echo "No YAML files found to validate."
     exit 1
   fi

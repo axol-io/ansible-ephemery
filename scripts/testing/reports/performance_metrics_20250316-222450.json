@@ -1,0 +1,24 @@
+{
+  "benchmark": {
+    "date": "Sun Mar 16 22:40:02 CET 2025",
+    "duration": 900,
+    "execution_client": "geth",
+    "consensus_client": "lighthouse"
+  },
+  "execution_metrics": {
+    "avg_cpu": ,
+    "avg_memory": ,
+    "avg_peers": 0,
+    "avg_response_time": 0,
+    "block_progress": 0,
+    "blocks_per_minute": 0
+  },
+  "consensus_metrics": {
+    "avg_cpu": ,
+    "avg_memory": ,
+    "avg_peers": ,
+    "avg_response_time": .0333,
+    "slot_progress": 0,
+    "slots_per_minute": 0
+  }
+}

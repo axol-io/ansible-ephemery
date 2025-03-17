@@ -34,3 +34,65 @@
         success_msg: "Validator file {{ item.item }} exists"
       loop: "{{ validator_files.results }}"
       when: not test_mode | default(false) | bool
+
+    # New verification tests for password management
+    - name: Check if validator restart script exists
+      ansible.builtin.stat:
+        path: "{{ ephemery_base_dir | default('/opt/ephemery') }}/scripts/restart_validator.sh"
+      register: restart_script
+
+    - name: Assert restart script exists and is executable
+      ansible.builtin.assert:
+        that:
+          - restart_script.stat.exists
+          - restart_script.stat.executable
+        fail_msg: "Validator restart script does not exist or is not executable"
+        success_msg: "Validator restart script exists and is executable"
+
+    - name: Verify password directory structure
+      ansible.builtin.stat:
+        path: "{{ ephemery_base_dir | default('/opt/ephemery') }}/secrets/validator/passwords"
+      register: password_dir
+
+    - name: Assert password directory exists
+      ansible.builtin.assert:
+        that:
+          - password_dir.stat.exists
+          - password_dir.stat.isdir
+        fail_msg: "Validator password directory does not exist"
+        success_msg: "Validator password directory exists"
+
+    - name: Check password files for all validator keys
+      ansible.builtin.shell: |
+        KEYS_DIR="{{ ephemery_base_dir | default('/opt/ephemery') }}/secrets/validator/keys"
+        PASS_DIR="{{ ephemery_base_dir | default('/opt/ephemery') }}/secrets/validator/passwords"
+        MISSING=0
+
+        if [ -d "$KEYS_DIR" ]; then
+          for keyfile in "$KEYS_DIR"/*.json; do
+            if [ -f "$keyfile" ]; then
+              basename="${keyfile##*/}"
+              passfile="$PASS_DIR/${basename%.json}.txt"
+
+              if [ ! -f "$passfile" ]; then
+                echo "Missing password file for $basename"
+                MISSING=$((MISSING+1))
+              fi
+            fi
+          done
+        fi
+
+        echo "Missing password files: $MISSING"
+        exit $MISSING
+      register: password_check
+      changed_when: false
+      failed_when: password_check.rc > 0
+
+    - name: Check validator container status
+      ansible.builtin.command: docker ps -a --filter "name=ephemery-validator"
+      register: container_status
+      changed_when: false
+
+    - name: Debug container status
+      ansible.builtin.debug:
+        var: container_status.stdout_lines

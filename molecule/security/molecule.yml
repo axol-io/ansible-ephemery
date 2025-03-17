@@ -25,7 +25,7 @@ provisioner:
         ephemery_logs_dir: /home/ubuntu/ephemery/logs
         ephemery_scripts_dir: /home/ubuntu/ephemery/scripts
         ephemery_backup_dir: /home/ubuntu/ephemery/backups
-        jwt_secret_path: /home/ubuntu/ephemery/jwtsecret
+        jwt_secret_path: /home/ubuntu/ephemery/jwt.hex
         # Security specific settings
         validator_enabled: false
         backup_enabled: false

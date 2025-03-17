@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Validator Key Management Script for Ephemery
 # ===========================================
@@ -99,10 +100,10 @@ function parse_args {
 
   # Check if operation is valid
   case "${OPERATION}" in
-    generate|import|list|backup|restore|validate)
+    generate | import | list | backup | restore | validate)
       # Valid operation
       ;;
-    -h|--help)
+    -h | --help)
       show_help
       exit 0
       ;;
@@ -116,39 +117,39 @@ function parse_args {
   # Parse options
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -n|--network)
+      -n | --network)
         NETWORK="$2"
         shift 2
         ;;
-      -c|--client)
+      -c | --client)
         CLIENT="$2"
         shift 2
         ;;
-      -k|--key-count)
+      -k | --key-count)
         KEY_COUNT="$2"
         shift 2
         ;;
-      -m|--mnemonic)
+      -m | --mnemonic)
         MNEMONIC="$2"
         shift 2
         ;;
-      -w|--withdrawal)
+      -w | --withdrawal)
         WITHDRAWAL_ADDRESS="$2"
         shift 2
         ;;
-      -f|--fee-recipient)
+      -f | --fee-recipient)
         FEE_RECIPIENT_ADDRESS="$2"
         shift 2
         ;;
-      -s|--source)
+      -s | --source)
         SOURCE_PATH="$2"
         shift 2
         ;;
-      -b|--backup-dir)
+      -b | --backup-dir)
         VALIDATOR_BACKUP_DIR="$2"
         shift 2
         ;;
-      -t|--timestamp)
+      -t | --timestamp)
         BACKUP_TIMESTAMP="$2"
         shift 2
         ;;
@@ -160,11 +161,11 @@ function parse_args {
         DRY_RUN=true
         shift
         ;;
-      -v|--verbose)
+      -v | --verbose)
         VERBOSE=true
         shift
         ;;
-      -h|--help)
+      -h | --help)
         show_help
         exit 0
         ;;
@@ -302,7 +303,7 @@ function generate_keys {
 
     # Create password file if it doesn't exist
     if [[ ! -f "${VALIDATOR_PASSWORDS_DIR}/validators.txt" ]]; then
-      echo "ephemery" > "${VALIDATOR_PASSWORDS_DIR}/validators.txt"
+      echo "ephemery" >"${VALIDATOR_PASSWORDS_DIR}/validators.txt"
     fi
 
     # Clean up temporary directory
@@ -324,7 +325,7 @@ function import_keys {
   echo -e "${BLUE}Found ${KEY_COUNT} keys to import${NC}"
 
   # Backup existing keys
-  if [[ -d "${VALIDATOR_KEYS_DIR}" && "$(ls -A "${VALIDATOR_KEYS_DIR}" 2>/dev/null)" ]]; then
+  if [[ -d "${VALIDATOR_KEYS_DIR}" && -n "$(ls -A "${VALIDATOR_KEYS_DIR}" 2>/dev/null)" ]]; then
     echo -e "${YELLOW}Existing keys found. Creating backup...${NC}"
     BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
     BACKUP_PATH="${VALIDATOR_BACKUP_DIR}/${BACKUP_TIMESTAMP}"
@@ -374,7 +375,7 @@ function list_keys {
 function backup_keys {
   echo -e "${BLUE}Backing up validator keys...${NC}"
 
-  if [[ -d "${VALIDATOR_KEYS_DIR}" && "$(ls -A "${VALIDATOR_KEYS_DIR}" 2>/dev/null)" ]]; then
+  if [[ -d "${VALIDATOR_KEYS_DIR}" && -n "$(ls -A "${VALIDATOR_KEYS_DIR}" 2>/dev/null)" ]]; then
     KEY_COUNT=$(find "${VALIDATOR_KEYS_DIR}" -name "*.json" | wc -l)
     echo -e "${BLUE}Found ${KEY_COUNT} keys to backup${NC}"
 
@@ -425,7 +426,7 @@ function restore_keys {
   echo -e "${BLUE}Found ${KEY_COUNT} keys in backup${NC}"
 
   # Backup current keys before restoring
-  if [[ -d "${VALIDATOR_KEYS_DIR}" && "$(ls -A "${VALIDATOR_KEYS_DIR}" 2>/dev/null)" ]]; then
+  if [[ -d "${VALIDATOR_KEYS_DIR}" && -n "$(ls -A "${VALIDATOR_KEYS_DIR}" 2>/dev/null)" ]]; then
     echo -e "${YELLOW}Existing keys found. Creating backup before restore...${NC}"
     CURRENT_BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
     CURRENT_BACKUP_PATH="${VALIDATOR_BACKUP_DIR}/${CURRENT_BACKUP_TIMESTAMP}-pre-restore"

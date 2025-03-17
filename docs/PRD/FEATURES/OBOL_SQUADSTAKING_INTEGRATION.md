@@ -466,4 +466,4 @@ After the initial implementation, the following enhancements are planned:
 - [Validator Management](./VALIDATOR_MANAGEMENT.md)
 - [Monitoring](./MONITORING.md)
 - [Dashboard Implementation](./DASHBOARD_IMPLEMENTATION.md)
-- [Genesis Validator Guide](../OPERATIONS/GENESIS_VALIDATOR.md) 
+- [Genesis Validator Guide](../OPERATIONS/GENESIS_VALIDATOR.md)

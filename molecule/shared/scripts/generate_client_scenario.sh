@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Version: 1.0.0
 # Wrapper script for generating client scenarios
 
 set -eo pipefail
@@ -20,9 +21,9 @@ shift 2
 # Construct variable arguments
 VAR_ARGS=""
 for var in "$@"; do
-  VAR_ARGS="$VAR_ARGS --var $var"
+  VAR_ARGS="${VAR_ARGS} --var ${var}"
 done
 
 # Call the main script
-"$SCRIPT_DIR/generate_scenario.sh" --type clients --execution "$EL_CLIENT" --consensus "$CL_CLIENT" $VAR_ARGS
+"${SCRIPT_DIR}/generate_scenario.sh" --type clients --execution "${EL_CLIENT}" --consensus "${CL_CLIENT}" "${VAR_ARGS}"
 # Compare this snippet from molecule/shared/scripts/generate_scenario.sh:

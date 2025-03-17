@@ -12,7 +12,7 @@
 {% block content %}
 <div class="container-fluid">
     <h1 class="page-title">Obol SquadStaking Dashboard</h1>
-    
+
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="card health-card">
@@ -61,7 +61,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6">
             <div class="card trend-card">
                 <div class="card-header">
@@ -101,7 +101,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card cluster-card">
@@ -140,7 +140,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="row">
         <div class="col-md-6">
             <div class="card metrics-card">
@@ -154,7 +154,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6">
             <div class="card metrics-card">
                 <div class="card-header">
@@ -176,17 +176,17 @@
 <script>
     // Global variables
     let performanceChart = null;
-    
+
     // Helper function to format percentages
     function formatPercent(value) {
         return value.toFixed(2) + '%';
     }
-    
+
     // Helper function to format dates
     function formatDate(dateString) {
         return moment(dateString).format('YYYY-MM-DD HH:mm:ss');
     }
-    
+
     // Helper function to get trend icon
     function getTrendIcon(trend) {
         if (trend === 'improving') {
@@ -197,7 +197,7 @@
             return '<i class="fas fa-arrows-alt-h text-warning"></i>';
         }
     }
-    
+
     // Function to update health metrics
     function updateHealthMetrics() {
         fetch('/obol/api/analysis')
@@ -206,7 +206,7 @@
                 // Update health score
                 const healthScore = data.health_score;
                 document.getElementById('healthScore').querySelector('.score-value').textContent = healthScore.toFixed(1);
-                
+
                 // Update health score color
                 const healthScoreElement = document.getElementById('healthScore');
                 if (healthScore >= 90) {
@@ -218,25 +218,25 @@
                 } else {
                     healthScoreElement.className = 'health-score poor';
                 }
-                
+
                 // Update consensus rate
                 document.getElementById('consensusRate').textContent = formatPercent(data.consensus_rate);
-                
+
                 // Update duty performance metrics
                 document.getElementById('attestationEffectiveness').textContent = formatPercent(data.duty_performance.attestation_effectiveness);
                 document.getElementById('missedAttestations').textContent = data.duty_performance.missed_attestations;
                 document.getElementById('missedBlocks').textContent = data.duty_performance.missed_blocks;
-                
+
                 // Update trends
                 document.getElementById('attestationTrend').textContent = data.performance_trend.attestation_trend;
                 document.getElementById('attestationTrendIcon').innerHTML = getTrendIcon(data.performance_trend.attestation_trend);
-                
+
                 document.getElementById('consensusTrend').textContent = data.performance_trend.consensus_trend;
                 document.getElementById('consensusTrendIcon').innerHTML = getTrendIcon(data.performance_trend.consensus_trend);
-                
+
                 // Update last updated time
                 document.getElementById('lastUpdated').textContent = formatDate(data.timestamp);
-                
+
                 // Update performance chart if data is available
                 if (data.performance_trend.attestation_values && data.performance_trend.attestation_values.length > 0) {
                     updatePerformanceChart(
@@ -251,16 +251,16 @@
                 console.error('Error fetching analysis data:', error);
             });
     }
-    
+
     // Function to update performance chart
     function updatePerformanceChart(attestationTimestamps, attestationValues, consensusTimestamps, consensusValues) {
         // Format timestamps for display
         const formattedAttestationTimestamps = attestationTimestamps.map(ts => moment(ts).format('MM-DD HH:mm'));
         const formattedConsensusTimestamps = consensusTimestamps.map(ts => moment(ts).format('MM-DD HH:mm'));
-        
+
         // Create or update chart
         const ctx = document.getElementById('performanceChart').getContext('2d');
-        
+
         if (performanceChart) {
             // Update existing chart
             performanceChart.data.labels = formattedAttestationTimestamps;
@@ -324,7 +324,7 @@
             });
         }
     }
-    
+
     // Function to update cluster information
     function updateClusterInfo() {
         fetch('/obol/api/metrics')
@@ -332,16 +332,16 @@
             .then(data => {
                 // Extract cluster information from metrics
                 const charonMetrics = data.charon;
-                
+
                 // Update cluster size and threshold if available
                 if (charonMetrics && charonMetrics.charon_cluster_size) {
                     document.getElementById('clusterSize').textContent = charonMetrics.charon_cluster_size[0].value;
                 }
-                
+
                 if (charonMetrics && charonMetrics.charon_cluster_threshold) {
                     document.getElementById('threshold').textContent = charonMetrics.charon_cluster_threshold[0].value;
                 }
-                
+
                 // Update Charon version if available
                 if (charonMetrics && charonMetrics.charon_version_info) {
                     const versionInfo = charonMetrics.charon_version_info[0];
@@ -349,10 +349,10 @@
                         document.getElementById('charonVersion').textContent = versionInfo.labels.version;
                     }
                 }
-                
+
                 // Update node status grid
                 updateNodeStatusGrid(charonMetrics);
-                
+
                 // Update metrics containers
                 updateMetricsContainers(data);
             })
@@ -360,42 +360,42 @@
                 console.error('Error fetching metrics data:', error);
             });
     }
-    
+
     // Function to update node status grid
     function updateNodeStatusGrid(charonMetrics) {
         const nodeStatusGrid = document.getElementById('nodeStatusGrid');
         nodeStatusGrid.innerHTML = '';
-        
+
         // Check if we have peer metrics
         if (charonMetrics && charonMetrics.charon_peer_status) {
             const peerStatus = charonMetrics.charon_peer_status;
-            
+
             // Create a node status item for each peer
             peerStatus.forEach((peer, index) => {
                 if (peer.labels && peer.labels.peer_id) {
                     const peerId = peer.labels.peer_id;
                     const status = peer.value === 1 ? 'connected' : 'disconnected';
-                    
+
                     const nodeItem = document.createElement('div');
                     nodeItem.className = `node-status-item ${status}`;
-                    
+
                     const nodeId = document.createElement('div');
                     nodeId.className = 'node-id';
                     nodeId.textContent = `Node ${index + 1}`;
-                    
+
                     const nodeStatus = document.createElement('div');
                     nodeStatus.className = 'node-status';
                     nodeStatus.innerHTML = `<span class="status-indicator"></span> ${status}`;
-                    
+
                     const nodePeerId = document.createElement('div');
                     nodePeerId.className = 'node-peer-id';
                     nodePeerId.textContent = `${peerId.substring(0, 8)}...`;
                     nodePeerId.title = peerId;
-                    
+
                     nodeItem.appendChild(nodeId);
                     nodeItem.appendChild(nodeStatus);
                     nodeItem.appendChild(nodePeerId);
-                    
+
                     nodeStatusGrid.appendChild(nodeItem);
                 }
             });
@@ -404,21 +404,21 @@
             nodeStatusGrid.innerHTML = '<div class="no-data">No node status data available</div>';
         }
     }
-    
+
     // Function to update metrics containers
     function updateMetricsContainers(data) {
         const charonMetricsContainer = document.getElementById('charonMetricsContainer');
         const validatorMetricsContainer = document.getElementById('validatorMetricsContainer');
-        
+
         // Clear containers
         charonMetricsContainer.innerHTML = '';
         validatorMetricsContainer.innerHTML = '';
-        
+
         // Update Charon metrics
         if (data.charon && Object.keys(data.charon).length > 0) {
             const charonMetricsTable = document.createElement('table');
             charonMetricsTable.className = 'metrics-table';
-            
+
             // Add table header
             const charonHeader = document.createElement('thead');
             charonHeader.innerHTML = `
@@ -428,10 +428,10 @@
                 </tr>
             `;
             charonMetricsTable.appendChild(charonHeader);
-            
+
             // Add table body
             const charonBody = document.createElement('tbody');
-            
+
             // Filter and sort metrics for display
             const importantCharonMetrics = [
                 'charon_duties_total',
@@ -440,17 +440,17 @@
                 'charon_validator_api_requests_total',
                 'charon_beacon_client_requests_total'
             ];
-            
+
             // Add important metrics first
             importantCharonMetrics.forEach(metricName => {
                 if (data.charon[metricName]) {
                     data.charon[metricName].forEach(metric => {
                         const row = document.createElement('tr');
-                        
+
                         // Create metric name cell with labels
                         const nameCell = document.createElement('td');
                         nameCell.className = 'metric-name';
-                        
+
                         let displayName = metricName;
                         if (Object.keys(metric.labels).length > 0) {
                             const labelStr = Object.entries(metric.labels)
@@ -458,32 +458,32 @@
                                 .join(', ');
                             displayName += `{${labelStr}}`;
                         }
-                        
+
                         nameCell.textContent = displayName;
-                        
+
                         // Create value cell
                         const valueCell = document.createElement('td');
                         valueCell.className = 'metric-value';
                         valueCell.textContent = metric.value;
-                        
+
                         row.appendChild(nameCell);
                         row.appendChild(valueCell);
                         charonBody.appendChild(row);
                     });
                 }
             });
-            
+
             charonMetricsTable.appendChild(charonBody);
             charonMetricsContainer.appendChild(charonMetricsTable);
         } else {
             charonMetricsContainer.innerHTML = '<div class="no-data">No Charon metrics available</div>';
         }
-        
+
         // Update Validator metrics
         if (data.validator && Object.keys(data.validator).length > 0) {
             const validatorMetricsTable = document.createElement('table');
             validatorMetricsTable.className = 'metrics-table';
-            
+
             // Add table header
             const validatorHeader = document.createElement('thead');
             validatorHeader.innerHTML = `
@@ -493,10 +493,10 @@
                 </tr>
             `;
             validatorMetricsTable.appendChild(validatorHeader);
-            
+
             // Add table body
             const validatorBody = document.createElement('tbody');
-            
+
             // Filter and sort metrics for display
             const importantValidatorMetrics = [
                 'validator_effectiveness',
@@ -506,17 +506,17 @@
                 'validator_missed_attestations',
                 'validator_missed_blocks'
             ];
-            
+
             // Add important metrics first
             importantValidatorMetrics.forEach(metricName => {
                 if (data.validator[metricName]) {
                     data.validator[metricName].forEach(metric => {
                         const row = document.createElement('tr');
-                        
+
                         // Create metric name cell with labels
                         const nameCell = document.createElement('td');
                         nameCell.className = 'metric-name';
-                        
+
                         let displayName = metricName;
                         if (Object.keys(metric.labels).length > 0) {
                             const labelStr = Object.entries(metric.labels)
@@ -524,43 +524,43 @@
                                 .join(', ');
                             displayName += `{${labelStr}}`;
                         }
-                        
+
                         nameCell.textContent = displayName;
-                        
+
                         // Create value cell
                         const valueCell = document.createElement('td');
                         valueCell.className = 'metric-value';
                         valueCell.textContent = metric.value;
-                        
+
                         row.appendChild(nameCell);
                         row.appendChild(valueCell);
                         validatorBody.appendChild(row);
                     });
                 }
             });
-            
+
             validatorMetricsTable.appendChild(validatorBody);
             validatorMetricsContainer.appendChild(validatorMetricsTable);
         } else {
             validatorMetricsContainer.innerHTML = '<div class="no-data">No Validator metrics available</div>';
         }
     }
-    
+
     // Function to refresh all data
     function refreshAllData() {
         updateHealthMetrics();
         updateClusterInfo();
     }
-    
+
     // Event listeners
     document.addEventListener('DOMContentLoaded', function() {
         // Initial data load
         refreshAllData();
-        
+
         // Set up refresh button
         document.getElementById('refreshHealthBtn').addEventListener('click', function() {
             this.classList.add('rotating');
-            
+
             fetch('/obol/api/refresh', {
                 method: 'POST'
             })
@@ -576,7 +576,7 @@
                 document.getElementById('refreshHealthBtn').classList.remove('rotating');
             });
         });
-        
+
         // Set up trend period buttons
         document.querySelectorAll('.btn-group[role="group"] .btn').forEach(button => {
             button.addEventListener('click', function() {
@@ -585,10 +585,10 @@
                     btn.classList.remove('active');
                 });
                 this.classList.add('active');
-                
+
                 // Get selected days
                 const days = parseInt(this.getAttribute('data-days'));
-                
+
                 // Fetch history data for selected period
                 fetch(`/obol/api/history?days=${days}`)
                     .then(response => response.json())
@@ -598,7 +598,7 @@
                         const attestationTimestamps = [];
                         const consensusValues = [];
                         const consensusTimestamps = [];
-                        
+
                         // Process validator data
                         data.validator.forEach(entry => {
                             if (entry.metrics.validator_effectiveness) {
@@ -608,27 +608,27 @@
                                 });
                             }
                         });
-                        
+
                         // Process charon data
                         data.charon.forEach(entry => {
                             if (entry.metrics.charon_consensus_count) {
                                 let success = 0;
                                 let total = 0;
-                                
+
                                 entry.metrics.charon_consensus_count.forEach(item => {
                                     if (item.labels.result === 'success') {
                                         success += item.value;
                                     }
                                     total += item.value;
                                 });
-                                
+
                                 if (total > 0) {
                                     consensusValues.push((success / total) * 100);
                                     consensusTimestamps.push(entry.timestamp);
                                 }
                             }
                         });
-                        
+
                         // Update chart
                         updatePerformanceChart(
                             attestationTimestamps,
@@ -642,9 +642,9 @@
                     });
             });
         });
-        
+
         // Set up auto-refresh every 5 minutes
         setInterval(refreshAllData, 300000);
     });
 </script>
-{% endblock %} 
+{% endblock %}

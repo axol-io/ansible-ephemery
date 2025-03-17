@@ -26,10 +26,10 @@ upstream ephemery_consensus {
 server {
     listen {{ lb_http_port | default(8545) }};
     listen [::]:{{ lb_http_port | default(8545) }};
-    
+
     access_log /var/log/nginx/ephemery_http_access.log;
     error_log /var/log/nginx/ephemery_http_error.log;
-    
+
     location / {
         proxy_pass http://ephemery_execution;
         proxy_http_version 1.1;
@@ -39,13 +39,13 @@ server {
         proxy_cache_bypass $http_upgrade;
         proxy_read_timeout 180s;
         proxy_connect_timeout 10s;
-        
+
         # Add CORS headers
         add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
-        
+
         # Handle pre-flight requests
         if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
@@ -63,10 +63,10 @@ server {
 server {
     listen {{ lb_ws_port | default(8546) }};
     listen [::]:{{ lb_ws_port | default(8546) }};
-    
+
     access_log /var/log/nginx/ephemery_ws_access.log;
     error_log /var/log/nginx/ephemery_ws_error.log;
-    
+
     location / {
         proxy_pass http://ephemery_execution_ws;
         proxy_http_version 1.1;
@@ -84,10 +84,10 @@ server {
 server {
     listen {{ lb_consensus_port | default(5052) }};
     listen [::]:{{ lb_consensus_port | default(5052) }};
-    
+
     access_log /var/log/nginx/ephemery_consensus_access.log;
     error_log /var/log/nginx/ephemery_consensus_error.log;
-    
+
     location / {
         proxy_pass http://ephemery_consensus;
         proxy_http_version 1.1;
@@ -96,13 +96,13 @@ server {
         proxy_set_header Host $host;
         proxy_cache_bypass $http_upgrade;
         proxy_read_timeout 180s;
-        
+
         # Add CORS headers
         add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
-        
+
         # Handle pre-flight requests
         if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
@@ -114,4 +114,4 @@ server {
             return 204;
         }
     }
-} 
+}

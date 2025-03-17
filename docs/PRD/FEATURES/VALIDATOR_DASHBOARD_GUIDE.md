@@ -278,4 +278,4 @@ A pre-configured Grafana dashboard is available:
 
 ## Conclusion
 
-The Enhanced Validator Dashboard provides comprehensive monitoring tools for Ephemery validators. By using this dashboard regularly, you can ensure optimal validator performance, quickly identify and resolve issues, and maximize your staking rewards. 
+The Enhanced Validator Dashboard provides comprehensive monitoring tools for Ephemery validators. By using this dashboard regularly, you can ensure optimal validator performance, quickly identify and resolve issues, and maximize your staking rewards.

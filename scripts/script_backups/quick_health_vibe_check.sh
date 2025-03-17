@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Health check script for Ephemery nodes
 
@@ -7,15 +8,15 @@ set -e
 # Check execution client
 check_el() {
   local host=$1
-  echo "Checking execution client on $host..."
-  curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' "http://$host:8545"
+  echo "Checking execution client on ${host}..."
+  curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' "http://${host}:8545"
 }
 
 # Check consensus client
 check_cl() {
   local host=$1
-  echo "Checking consensus client on $host..."
-  curl -s "http://$host:5052/eth/v1/node/health"
+  echo "Checking consensus client on ${host}..."
+  curl -s "http://${host}:5052/eth/v1/node/health"
 }
 
 # Main

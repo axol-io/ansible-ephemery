@@ -570,18 +570,18 @@
             .charts-row {
                 grid-template-columns: 1fr;
             }
-            
+
             .dashboard-controls {
                 flex-direction: column;
                 align-items: flex-start;
             }
-            
+
             .control-group {
                 margin-top: 10px;
                 width: 100%;
                 justify-content: space-between;
             }
-            
+
             .search-box input {
                 width: 100%;
             }
@@ -832,7 +832,7 @@
                         </div>
                     </div>
                     <p>Configure alert thresholds for validator monitoring.</p>
-                    
+
                     <div class="alert-settings">
                         <div class="setting-card">
                             <div class="setting-title">Attestation Rate Alert</div>
@@ -842,7 +842,7 @@
                                 <input type="number" id="attestation-threshold" min="0" max="100" value="95">
                             </div>
                         </div>
-                        
+
                         <div class="setting-card">
                             <div class="setting-title">Balance Decrease Alert</div>
                             <p>Trigger an alert when balance decreases by more than threshold.</p>
@@ -851,7 +851,7 @@
                                 <input type="number" id="balance-threshold" min="0" step="0.01" value="0.01">
                             </div>
                         </div>
-                        
+
                         <div class="setting-card">
                             <div class="setting-title">Missed Proposal Alert</div>
                             <p>Trigger an alert when a validator misses a block proposal.</p>
@@ -861,7 +861,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div style="margin-top: 20px;">
                         <button id="save-settings" class="action-button">
                             <i class="fas fa-save"></i> Save Settings
@@ -937,17 +937,17 @@
                 { index: 5, status: "active", balance: 32.08, effectiveness: 99.2, last_attestation: "1m ago", proposals: "1/1", sync_participation: 98.9 }
             ],
             alerts: [
-                { 
-                    title: "Low Attestation Rate", 
+                {
+                    title: "Low Attestation Rate",
                     severity: "warning",
-                    timestamp: "2024-03-12T15:30:00Z", 
-                    message: "Validator #3 has missed 5 attestations in the last 24 hours." 
+                    timestamp: "2024-03-12T15:30:00Z",
+                    message: "Validator #3 has missed 5 attestations in the last 24 hours."
                 },
-                { 
-                    title: "Performance Warning", 
+                {
+                    title: "Performance Warning",
                     severity: "info",
-                    timestamp: "2024-03-12T09:15:00Z", 
-                    message: "Average balance for validator group is lower than network average by 0.15 ETH." 
+                    timestamp: "2024-03-12T09:15:00Z",
+                    message: "Average balance for validator group is lower than network average by 0.15 ETH."
                 }
             ],
             balance_history: [
@@ -1000,16 +1000,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Initial update with mock data
             updateDashboard(mockData);
-            
+
             // Setup charts
             setupCharts(mockData);
-            
+
             // Setup event listeners
             setupEventListeners();
-            
+
             // Setup tab system
             setupTabs();
-            
+
             // Countdown for auto-refresh
             startRefreshCountdown();
         });
@@ -1018,13 +1018,13 @@
         function updateDashboard(data) {
             // Update timestamp
             document.getElementById('last-updated').textContent = new Date(data.timestamp).toLocaleString();
-            
+
             // Update summary metrics
             document.getElementById('active-validators').textContent = data.active_validators;
             document.getElementById('attestation-rate').textContent = data.attestation_rate.toFixed(1) + '%';
             document.getElementById('avg-balance').textContent = data.avg_balance.toFixed(2) + ' ETH';
             document.getElementById('recent-proposals').textContent = data.recent_proposals;
-            
+
             // Update trends
             const validatorTrendEl = document.getElementById('validator-trend');
             if (data.validator_trend > 0) {
@@ -1037,7 +1037,7 @@
                 validatorTrendEl.className = 'metric-trend';
                 validatorTrendEl.innerHTML = `<i class="fas fa-equals"></i> <span>No change</span>`;
             }
-            
+
             const balanceTrendEl = document.getElementById('balance-trend');
             if (data.balance_trend > 0) {
                 balanceTrendEl.className = 'metric-trend up';
@@ -1049,23 +1049,23 @@
                 balanceTrendEl.className = 'metric-trend';
                 balanceTrendEl.innerHTML = `<i class="fas fa-equals"></i> <span>No change</span>`;
             }
-            
+
             // Update progress bars
             document.getElementById('attestation-progress').style.width = `${data.attestation_rate}%`;
             document.getElementById('missed-attestations').textContent = `${data.missed_attestations} missed`;
             document.getElementById('proposal-rate').textContent = `${data.proposal_rate}% success rate`;
-            
+
             // Update advanced metrics
             document.getElementById('participation-rate').textContent = `${data.participation_rate}%`;
             document.getElementById('network-sync').textContent = data.network_sync;
             document.getElementById('inclusion-distance').textContent = data.inclusion_distance;
-            
+
             // Update validator table
             updateValidatorTable(data.validators);
-            
+
             // Update alerts
             updateAlerts(data.alerts);
-            
+
             // Update charts if they exist
             updateCharts(data);
         }
@@ -1074,14 +1074,14 @@
         function updateValidatorTable(validators) {
             const tableBody = document.getElementById('validators-body');
             tableBody.innerHTML = '';
-            
+
             validators.forEach(validator => {
                 const row = document.createElement('tr');
-                
+
                 let statusClass = 'status-active';
                 if (validator.status === 'pending') statusClass = 'status-pending';
                 if (validator.status === 'error') statusClass = 'status-error';
-                
+
                 row.innerHTML = `
                     <td>${validator.index}</td>
                     <td><span class="status-indicator ${statusClass}"></span> ${validator.status}</td>
@@ -1096,10 +1096,10 @@
                         </button>
                     </td>
                 `;
-                
+
                 tableBody.appendChild(row);
             });
-            
+
             // Add event listeners to all detail buttons
             document.querySelectorAll('.view-details').forEach(button => {
                 button.addEventListener('click', () => {
@@ -1113,7 +1113,7 @@
         function updateAlerts(alerts) {
             const alertsContainer = document.getElementById('alerts-container');
             alertsContainer.innerHTML = '';
-            
+
             if (alerts.length === 0) {
                 alertsContainer.innerHTML = `
                     <div class="alert-card" style="margin-bottom: 15px; padding: 15px; border-left: 4px solid #4caf50; background-color: #e8f5e9;">
@@ -1128,7 +1128,7 @@
                 `;
             } else {
                 let alertBadgeCount = 0;
-                
+
                 alerts.forEach(alert => {
                     let borderColor, bgColor, textColor;
                     switch (alert.severity) {
@@ -1151,7 +1151,7 @@
                             textColor = '#0d47a1';
                             break;
                     }
-                    
+
                     alertsContainer.innerHTML += `
                         <div class="alert-card" style="margin-bottom: 15px; padding: 15px; border-left: 4px solid ${borderColor}; background-color: ${bgColor};">
                             <div class="alert-header" style="display: flex; justify-content: space-between; margin-bottom: 5px;">
@@ -1164,7 +1164,7 @@
                         </div>
                     `;
                 });
-                
+
                 // Update the alert badge
                 const alertBadge = document.getElementById('alert-badge');
                 if (alertBadgeCount > 0) {
@@ -1223,7 +1223,7 @@
                     }
                 }
             });
-            
+
             // Attestation performance chart
             const attestationCtx = document.getElementById('attestation-chart').getContext('2d');
             attestationChart = new Chart(attestationCtx, {
@@ -1233,9 +1233,9 @@
                     datasets: [{
                         label: 'Attestation Rate (%)',
                         data: data.attestation_history.map(item => item.value),
-                        backgroundColor: data.attestation_history.map(item => 
-                            item.value >= 99 ? 'rgba(76, 175, 80, 0.7)' : 
-                            item.value >= 95 ? 'rgba(255, 152, 0, 0.7)' : 
+                        backgroundColor: data.attestation_history.map(item =>
+                            item.value >= 99 ? 'rgba(76, 175, 80, 0.7)' :
+                            item.value >= 95 ? 'rgba(255, 152, 0, 0.7)' :
                             'rgba(244, 67, 54, 0.7)'
                         ),
                         borderWidth: 1
@@ -1280,13 +1280,13 @@
                 balanceChart.data.datasets[0].data = data.balance_history.map(item => item.value);
                 balanceChart.update();
             }
-            
+
             if (attestationChart) {
                 attestationChart.data.labels = data.attestation_history.map(item => new Date(item.date).toLocaleDateString());
                 attestationChart.data.datasets[0].data = data.attestation_history.map(item => item.value);
-                attestationChart.data.datasets[0].backgroundColor = data.attestation_history.map(item => 
-                    item.value >= 99 ? 'rgba(76, 175, 80, 0.7)' : 
-                    item.value >= 95 ? 'rgba(255, 152, 0, 0.7)' : 
+                attestationChart.data.datasets[0].backgroundColor = data.attestation_history.map(item =>
+                    item.value >= 99 ? 'rgba(76, 175, 80, 0.7)' :
+                    item.value >= 95 ? 'rgba(255, 152, 0, 0.7)' :
                     'rgba(244, 67, 54, 0.7)'
                 );
                 attestationChart.update();
@@ -1304,13 +1304,13 @@
                 });
                 restartRefreshCountdown();
             });
-            
+
             // Performance check button
             document.getElementById('performance-check').addEventListener('click', () => {
                 alert('Performance check initiated. This would trigger a backend validator performance check in a production environment.');
                 // In production, this would make an API call to run a performance check
             });
-            
+
             // Export data button
             document.getElementById('export-data').addEventListener('click', () => {
                 // In production, this would generate and download a report
@@ -1322,48 +1322,48 @@
                 downloadAnchorNode.click();
                 downloadAnchorNode.remove();
             });
-            
+
             // Settings button
             document.getElementById('settings-button').addEventListener('click', () => {
                 switchToTab('settings');
             });
-            
+
             // Save settings button
             document.getElementById('save-settings').addEventListener('click', () => {
                 alertSettings.attestationThreshold = parseInt(document.getElementById('attestation-threshold').value);
                 alertSettings.balanceThreshold = parseFloat(document.getElementById('balance-threshold').value);
                 alertSettings.enableProposalAlerts = document.getElementById('proposal-alert').checked;
-                
+
                 alert('Alert settings saved successfully!');
                 // In production, this would save settings to local storage or send to backend
             });
-            
+
             // Reset settings button
             document.getElementById('reset-settings').addEventListener('click', () => {
                 document.getElementById('attestation-threshold').value = 95;
                 document.getElementById('balance-threshold').value = 0.01;
                 document.getElementById('proposal-alert').checked = true;
-                
+
                 alertSettings = {
                     attestationThreshold: 95,
                     balanceThreshold: 0.01,
                     enableProposalAlerts: true
                 };
-                
+
                 alert('Alert settings reset to defaults.');
             });
-            
+
             // Validator search
             document.getElementById('validator-search').addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
                 const rows = document.querySelectorAll('#validators-body tr');
-                
+
                 rows.forEach(row => {
                     const text = row.textContent.toLowerCase();
                     row.style.display = text.includes(searchTerm) ? '' : 'none';
                 });
             });
-            
+
             // Close validator details panel
             document.getElementById('close-details').addEventListener('click', () => {
                 document.getElementById('validator-details').classList.remove('active');
@@ -1373,7 +1373,7 @@
         // Set up tab system
         function setupTabs() {
             const tabs = document.querySelectorAll('.tab-link');
-            
+
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     const tabId = tab.getAttribute('data-tab');
@@ -1388,11 +1388,11 @@
             document.querySelectorAll('.tab-link').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
+
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
-            
+
             // Add active class to selected tab and content
             document.querySelector(`.tab-link[data-tab="${tabId}"]`).classList.add('active');
             document.getElementById(`${tabId}-tab`).classList.add('active');
@@ -1407,9 +1407,9 @@
                 sync_participation: 99.0,
                 head_distance: 1.3
             };
-            
+
             if (!validator) return;
-            
+
             // Update validator details panel
             document.getElementById('detail-validator-index').textContent = validator.index;
             document.getElementById('detail-status').textContent = validator.status;
@@ -1420,12 +1420,12 @@
             document.getElementById('detail-inclusion').textContent = validatorDetails.inclusion_distance;
             document.getElementById('detail-sync').textContent = validatorDetails.sync_participation;
             document.getElementById('detail-head-distance').textContent = validatorDetails.head_distance;
-            
+
             // Create or update chart
             if (detailBalanceChart) {
                 detailBalanceChart.destroy();
             }
-            
+
             const detailChartCtx = document.getElementById('detail-balance-chart').getContext('2d');
             detailBalanceChart = new Chart(detailChartCtx, {
                 type: 'line',
@@ -1457,7 +1457,7 @@
                     }
                 }
             });
-            
+
             // Show the panel
             document.getElementById('validator-details').classList.add('active');
         }
@@ -1466,13 +1466,13 @@
         function startRefreshCountdown() {
             const countdownElement = document.getElementById('refresh-countdown');
             let countdown = 30;
-            
+
             countdownElement.textContent = countdown;
-            
+
             const interval = setInterval(() => {
                 countdown--;
                 countdownElement.textContent = countdown;
-                
+
                 if (countdown <= 0) {
                     clearInterval(interval);
                     // In a real implementation, this would fetch fresh data

@@ -6,12 +6,16 @@
 # Network and directory configuration
 network: ephemery
 home_dir: "{{ ansible_env.HOME }}"
+# IMPORTANT: Use ephemery_base_dir in new code. ephemery_dir is kept for backward
+# compatibility but will be standardized to ephemery_base_dir in future updates.
 ephemery_base_dir: "{{ home_dir }}/ephemery"
 ephemery_data_dir: "{{ ephemery_base_dir }}/data"
 ephemery_secrets_dir: "{{ ephemery_base_dir }}/secrets"
 ephemery_logs_dir: "{{ ephemery_base_dir }}/logs"
 ephemery_scripts_dir: "{{ ephemery_base_dir }}/scripts"
 ephemery_backup_dir: "{{ ephemery_base_dir }}/backups"
+# Backward compatibility - prefer using ephemery_base_dir in new code
+ephemery_dir: "{{ ephemery_base_dir }}"
 
 # Default client selection
 # NOTE: Currently, only the geth+lighthouse combination is fully implemented and supported.
@@ -43,6 +47,7 @@ bootstrap_nodes:
   - "/ip4/135.181.91.151/tcp/9000/udp/9000/p2p/16Uiu2HAmEP7X3JDcdAYLagNQxpJ24n3HDwLGxVVsWyv2aUHrXA5b"
 
 # JWT Secret configuration
+# IMPORTANT: This path should be used consistently across all client configurations
 jwt_secret_path: "{{ ephemery_base_dir }}/jwt.hex"
 jwt_secret_secure_generation: true
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Version: 1.0.0
 #
 # Script Name: validation.sh
 # Description: Validation utility functions for Ephemery Node scripts
@@ -30,11 +31,11 @@ set -euo pipefail
 validate_file_exists() {
   local file_path="$1"
 
-  if [[ ! -f "$file_path" ]]; then
+  if [[ ! -f "${file_path}" ]]; then
     if type log_error &>/dev/null; then
-      log_error "File does not exist: $file_path"
+      log_error "File does not exist: ${file_path}"
     else
-      echo "ERROR: File does not exist: $file_path" >&2
+      echo "ERROR: File does not exist: ${file_path}" >&2
     fi
     return 1
   fi
@@ -54,11 +55,11 @@ validate_file_exists() {
 validate_directory_exists() {
   local dir_path="$1"
 
-  if [[ ! -d "$dir_path" ]]; then
+  if [[ ! -d "${dir_path}" ]]; then
     if type log_error &>/dev/null; then
-      log_error "Directory does not exist: $dir_path"
+      log_error "Directory does not exist: ${dir_path}"
     else
-      echo "ERROR: Directory does not exist: $dir_path" >&2
+      echo "ERROR: Directory does not exist: ${dir_path}" >&2
     fi
     return 1
   fi
@@ -78,11 +79,11 @@ validate_directory_exists() {
 validate_is_executable() {
   local file_path="$1"
 
-  if [[ ! -x "$file_path" ]]; then
+  if [[ ! -x "${file_path}" ]]; then
     if type log_error &>/dev/null; then
-      log_error "File is not executable: $file_path"
+      log_error "File is not executable: ${file_path}"
     else
-      echo "ERROR: File is not executable: $file_path" >&2
+      echo "ERROR: File is not executable: ${file_path}" >&2
     fi
     return 1
   fi
@@ -102,23 +103,23 @@ validate_is_executable() {
 validate_ip_address() {
   local ip="$1"
 
-  if [[ ! "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  if [[ ! "${ip}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     if type log_error &>/dev/null; then
-      log_error "Invalid IP address: $ip"
+      log_error "Invalid IP address: ${ip}"
     else
-      echo "ERROR: Invalid IP address: $ip" >&2
+      echo "ERROR: Invalid IP address: ${ip}" >&2
     fi
     return 1
   fi
 
   # Check each octet
-  IFS='.' read -r -a octets <<< "$ip"
+  IFS='.' read -r -a octets <<<"${ip}"
   for octet in "${octets[@]}"; do
-    if (( octet < 0 || octet > 255 )); then
+    if ((octet < 0 || octet > 255)); then
       if type log_error &>/dev/null; then
-        log_error "Invalid IP address octet: $octet"
+        log_error "Invalid IP address octet: ${octet}"
       else
-        echo "ERROR: Invalid IP address octet: $octet" >&2
+        echo "ERROR: Invalid IP address octet: ${octet}" >&2
       fi
       return 1
     fi
@@ -139,11 +140,11 @@ validate_ip_address() {
 validate_port() {
   local port="$1"
 
-  if ! [[ "$port" =~ ^[0-9]+$ ]] || (( port < 1 || port > 65535 )); then
+  if ! [[ "${port}" =~ ^[0-9]+$ ]] || ((port < 1 || port > 65535)); then
     if type log_error &>/dev/null; then
-      log_error "Invalid port number: $port"
+      log_error "Invalid port number: ${port}"
     else
-      echo "ERROR: Invalid port number: $port" >&2
+      echo "ERROR: Invalid port number: ${port}" >&2
     fi
     return 1
   fi
@@ -163,11 +164,11 @@ validate_port() {
 validate_url() {
   local url="$1"
 
-  if [[ ! "$url" =~ ^https?:// ]]; then
+  if [[ ! "${url}" =~ ^https?:// ]]; then
     if type log_error &>/dev/null; then
-      log_error "Invalid URL: $url"
+      log_error "Invalid URL: ${url}"
     else
-      echo "ERROR: Invalid URL: $url" >&2
+      echo "ERROR: Invalid URL: ${url}" >&2
     fi
     return 1
   fi

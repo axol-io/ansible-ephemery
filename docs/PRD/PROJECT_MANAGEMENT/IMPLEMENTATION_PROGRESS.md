@@ -227,6 +227,30 @@ We have enhanced the Validator Performance Monitoring system with a comprehensiv
 
 This implementation represents a significant enhancement to the validator monitoring capabilities, enabling operators to make data-driven decisions based on historical trends and performance patterns, rather than just real-time monitoring.
 
+### Shell Script and Testing Framework Improvements (March 2025)
+
+Significant progress has been made on improving shell script reliability and the testing framework:
+
+1. **Shell Script Syntax and Error Handling Improvements**
+   - Fixed critical syntax errors in shell scripts such as incorrectly closed function blocks
+   - Addressed "fi can only be used to end an if" errors in multiple scripts
+   - Fixed variable declaration conflicts between common.sh and test_utils.sh
+   - Added proper version information to all script headers
+   - Improved error handling in scripts with consistent setup_error_handling usage
+
+2. **Testing Framework Enhancements**
+   - Fixed the test_reset_mechanism.sh script to correctly detect network resets
+   - Modified ephemery_retention.sh to support test mode with custom test directories
+   - Added flexible color variable handling to prevent readonly variable conflicts
+   - Added compatibility for test scripts running on macOS
+   - Implemented test environment isolation to prevent interference with real deployment
+
+3. **Pre-commit Integration**
+   - Enhanced pre-commit hooks to identify shell script issues
+   - Created fix_shell_scripts.sh to automate common syntax error corrections
+   - Added fix_sc2155_warnings.sh to address ShellCheck SC2155 warnings about unsafe variable assignments
+   - Improved testing to capture syntax errors earlier in the development process
+
 ## Implementation Status of Priority Items
 
 The following table summarizes the current implementation status of priority items from the roadmap:
@@ -244,13 +268,40 @@ The following table summarizes the current implementation status of priority ite
 | Enhanced Troubleshooting Tools | ✅ Implemented | Comprehensive diagnostics, automated resolution, log analysis, and interactive guide |
 | Multi-Node Orchestration | ✅ Implemented | Deployment system, load balancing, distributed validators, and health monitoring |
 
-## Current Implementation Focus (March 15, 2023)
+## Current Implementation Focus (May 15, 2023)
 
-With all initial priority items successfully implemented, we are now focusing on the following key areas as outlined in the [Implementation Plan](./IMPLEMENTATION_PLAN.md):
+Based on recent findings and ongoing development, we are now focused on the following key areas:
 
-### 1. Codebase Quality Improvements
+### 1. Validator Key Password Management
 
-We are initiating a comprehensive 6-week plan to enhance code maintainability, reliability, and consistency across the codebase with the following key components:
+We have identified a significant issue with validator key password management that requires immediate attention:
+
+1. **Password Validation System**
+   - Implementing comprehensive password validation for validator keystores
+   - Creating tools to verify password correctness before validator activation
+   - Developing robust error handling for password mismatches
+   - Adding detailed logging for password-related issues
+   - Creating secure password recovery mechanisms
+
+2. **Password Management Workflow**
+   - Designing secure password creation and storage workflow
+   - Implementing consistent password handling across different client types
+   - Creating standardized password file formats and locations
+   - Developing password verification during validator setup
+   - Adding pre-flight checks for password/keystore compatibility
+
+3. **Documentation and User Guidance**
+   - Creating comprehensive password management documentation
+   - Developing troubleshooting guides for password-related issues
+   - Adding clear error messages and resolution steps
+   - Updating validator setup guides with password best practices
+   - Creating validation scripts for existing deployments
+
+This implementation will address the "Validator keystore password mismatch" issue identified in the Known Issues document, which causes validator clients to fail with "UnableToDecryptKeystore(InvalidPassword)" errors. The solution will provide both immediate fixes for existing deployments and long-term improvements to prevent such issues in future deployments.
+
+### 2. Codebase Quality Improvements
+
+We are continuing our comprehensive plan to enhance code maintainability, reliability, and consistency across the codebase with the following key components:
 
 - **Path Standardization**: ✅ Created `scripts/core/path_config.sh` for consistent path handling across all scripts
 - **Shell Script Library**: ✅ Developed common libraries for shared functions:
@@ -261,21 +312,9 @@ We are initiating a comprehensive 6-week plan to enhance code maintainability, r
 - **Error Handling**: ✅ Created robust error handling mechanisms in `scripts/core/error_handling.sh`
 - **Directory Structure Optimization**: Reorganizing the codebase for improved clarity
 
-### 2. Script Updates
-
-We have begun updating scripts to use our standardized utilities:
-
-- **health_check_ephemery.sh**: ✅ Updated with standardized utilities
-- **troubleshoot_ephemery.sh**: ✅ Updated with standardized utilities
-- **setup_ephemery_validator.sh**: ✅ Updated with standardized utilities
-- **setup_ephemery.sh**: ➡️ In progress
-- **monitor_ephemery.sh**: ⭘ Pending
-- **prune_ephemery_data.sh**: ⭘ Pending
-- **backup_restore_validators.sh**: ⭘ Pending
-
 ### 3. Testing Framework Enhancement
 
-In parallel, we are expanding the testing framework with a 6-week implementation plan focused on:
+In parallel, we are expanding the testing framework with a focus on:
 
 - **Automated Testing Pipeline**: Creating an automated testing pipeline for all client combinations
 - **Client Combination Testing**: Implementing comprehensive client compatibility testing
@@ -283,8 +322,33 @@ In parallel, we are expanding the testing framework with a 6-week implementation
 - **Performance Benchmark Tests**: Creating standardized performance benchmark tools
 - **Client-Specific Test Scenarios**: Implementing dedicated tests for each supported client
 - **End-to-End Testing**: Developing complete validator lifecycle tests
+- **Validator Key Testing**: Adding comprehensive validation tests for validator key and password handling
 
-## Progress Update (April 14, 2023)
+## Progress Update (May 15, 2023)
+
+### Validator Key Password Management
+
+We have identified critical issues related to validator key password management:
+
+1. **Issue Identification**
+   - Detected "UnableToDecryptKeystore(InvalidPassword)" errors in validator client logs
+   - Verified that keystore files and password files exist but are incompatible
+   - Identified inconsistent password handling during keystore creation and validator setup
+   - Documented the issue in Known Issues with clear impact and workarounds
+
+2. **Immediate Remediation Steps**
+   - Created validation scripts to detect password mismatches in existing deployments
+   - Developed guidance for manual password correction
+   - Implemented logging improvements to better identify password-related issues
+   - Added verification of keystore/password compatibility during validator restart
+
+3. **Long-term Solution Design**
+   - Designing comprehensive password management system
+   - Planning integration of password validation into validator setup workflow
+   - Developing secure password rotation capabilities
+   - Creating improved error handling and user guidance for password issues
+
+These improvements will significantly enhance validator reliability by ensuring proper password management and providing clear resolution paths when issues occur.
 
 ### Codebase Quality Improvements
 
@@ -316,24 +380,32 @@ These improvements have significantly enhanced code maintainability, reduced dup
 
 Based on the current implementation status and roadmap priorities, the recommended next steps are:
 
-1. **Complete Script Updates**
+1. **Implement Validator Key Password Management System**
+   - Develop password validation utilities
+   - Create password management workflow
+   - Implement password recovery mechanisms
+   - Update documentation with password best practices
+
+2. **Complete Script Updates**
    - Update remaining scripts to use standardized utilities:
      - `setup_ephemery.sh`
      - `monitor_ephemery.sh`
      - `prune_ephemery_data.sh`
      - `backup_restore_validators.sh`
 
-2. **Dependency Management**
+3. **Dependency Management**
    - Implement standardized version pinning across all requirements
    - Create dependency verification system
 
-3. **Code Quality Tools**
+4. **Code Quality Tools**
    - Research and implement shell script linting tools
-   - Create automated code quality checks
+   - Configure pre-commit hooks for code quality checks
+   - Begin addressing existing code quality issues
 
-4. **Testing Framework**
+5. **Testing Framework**
    - Begin implementation of automated testing pipeline
    - Develop initial test scenarios for core functionality
+   - Create validator key password validation tests
 
 ## Implementation Progress
 
@@ -341,12 +413,35 @@ This document tracks the bi-weekly progress updates for the Ephemery Node implem
 
 ## Current Focus Areas
 
-1. **Codebase Quality Improvements**
-2. **Testing Framework Enhancement**
+1. **Validator Key Password Management**
+2. **Codebase Quality Improvements**
+3. **Testing Framework Enhancement**
 
 ## Progress Updates
 
-### April 2023 - Week 1-2
+### May 2023 - Week 1-2
+
+#### Validator Key Password Management
+
+1. **Issue Identification**
+   - Detected "UnableToDecryptKeystore(InvalidPassword)" errors in validator client logs
+   - Verified that keystore files and password files exist but are incompatible
+   - Identified inconsistent password handling during keystore creation and validator setup
+   - Documented the issue in Known Issues with clear impact and workarounds
+
+2. **Immediate Remediation Steps**
+   - Created validation scripts to detect password mismatches in existing deployments
+   - Developed guidance for manual password correction
+   - Implemented logging improvements to better identify password-related issues
+   - Added verification of keystore/password compatibility during validator restart
+
+3. **Long-term Solution Design**
+   - Designing comprehensive password management system
+   - Planning integration of password validation into validator setup workflow
+   - Developing secure password rotation capabilities
+   - Creating improved error handling and user guidance for password issues
+
+These improvements will significantly enhance validator reliability by ensuring proper password management and providing clear resolution paths when issues occur.
 
 #### Codebase Quality Improvements
 
@@ -452,6 +547,7 @@ We have successfully implemented advanced validator performance analytics for th
    - Added validation for configuration parameters
 
 These enhancements significantly improve the CSM integration by providing comprehensive monitoring and analytics capabilities that enable operators to:
+
 - Access real-time performance data for CSM validators
 - Track historical trends and performance patterns
 - Leverage predictive analytics for early issue detection
@@ -479,4 +575,159 @@ Building upon the successful implementation of the Lido CSM Integration with Adv
 3. **User Experience Enhancements**
    - Redesigning the user interface for improved usability
    - Enhancing command-line interfaces for consistent operation
-   - Expanding documentation with detailed guides and examples 
+   - Expanding documentation with detailed guides and examples
+
+# Ephemery Node Implementation Progress
+
+This document tracks the progress of the implementation plan outlined in `IMPLEMENTATION_PLAN.md`. It provides detailed updates on completed work, current status, and next steps for each initiative.
+
+## Last Updated: May 20, 2023
+
+## Initiative 0: Validator Key Password Management
+
+**Status: In Progress (75% Complete)**
+
+### Completed Tasks
+
+- ✅ System design for password management system
+- ✅ Password validation mechanisms
+- ✅ Password recovery processes
+- ✅ Implementation of password validation for validator keystores
+- ✅ Creation of tools to verify password correctness
+- ✅ Development of robust error handling for password mismatches
+- ✅ Test suite for password validation system
+
+### In Progress
+
+- 🔄 Integration with validator setup workflow
+- 🔄 Development of migration plan for existing deployments
+- 🔄 Creation of upgrade scripts for current installations
+
+### Next Steps
+
+- [ ] Finalize integration with validator restart processes
+- [ ] Complete deployment verification tests
+- [ ] Update documentation with password management best practices
+
+## Initiative 1: Codebase Quality Improvements
+
+**Status: In Progress (40% Complete)**
+
+### Completed Tasks
+
+- ✅ Created `scripts/core/path_config.sh` utility script for standardized path management
+- ✅ Created `scripts/core/error_handling.sh` with robust error handling functions
+- ✅ Implemented `scripts/core/common.sh` with shared utility functions
+- ✅ Standardized container naming conventions
+- ✅ Created validation script to identify inconsistent container naming
+- ✅ Updated `ansible/vars/paths.yaml` with matching container naming conventions
+- ✅ Added backward compatibility support for legacy container names
+- ✅ Enhanced environment-specific path handling in configuration scripts
+
+### In Progress
+
+- 🔄 Updating top-level shell scripts to use standardized path variables
+- 🔄 Updating scripts to use standardized container naming variables
+- 🔄 Updating Ansible playbooks to use standardized container naming variables
+
+### Next Steps (Priority Order)
+
+1. **Dependency Management**
+   - [x] Review existing requirements files across the project
+   - [x] Define standardized version pinning format for Python dependencies
+   - [x] Create a dependency validation script to check for consistency
+   - [x] Update core `requirements.txt` files to use exact version pinning (e.g., `package==1.2.3`)
+   - [x] Update core `requirements.yaml` files to use consistent version constraints
+   - [ ] Update remaining dependency files to standardize version pinning
+   - [ ] Document dependency management standards
+
+2. **Code Quality Tools**
+   - [ ] Set up shellcheck in pre-commit configuration
+   - [ ] Run initial shellcheck analysis on all shell scripts
+   - [ ] Fix critical shellcheck issues in top-level scripts
+   - [ ] Fix shellcheck issues in helper scripts
+   - [ ] Implement automated shellcheck in CI pipeline
+
+3. **Error Handling and Directory Structure**
+   - [ ] Document current directory structure
+   - [ ] Review and optimize directory organization
+   - [ ] Implement enhanced error handling in remaining scripts
+   - [ ] Standardize logs and output formats
+
+## Initiative 2: Testing Framework Enhancement
+
+**Status: Planning Phase (10% Complete)**
+
+### Completed Tasks
+
+- ✅ Defined test framework requirements
+- ✅ Created test environment specifications
+- ✅ Identified key test scenarios
+
+### In Progress
+
+- 🔄 Designing automated testing pipeline
+- 🔄 Developing client combination test matrix
+
+### Next Steps
+
+- [ ] Set up CI/CD integration for testing
+- [ ] Implement client compatibility database
+- [ ] Create test isolation mechanisms
+
+## Initiative 6: Distributed Validator Technology Support
+
+**Status: Research Phase (5% Complete)**
+
+### Completed Tasks
+
+- ✅ Initial research on DVT implementations (Obol, SSV)
+- ✅ Evaluation of integration requirements
+
+### In Progress
+
+- 🔄 Architecture design for DVT integration
+
+### Next Steps
+
+- [ ] Document DVT architecture design
+- [ ] Create development roadmap for DVT integration
+- [ ] Implement core infrastructure for distributed validation
+
+## Implementation Roadmap Status
+
+The following initiatives are on track according to the original timeline:
+
+- Initiative 0: Validator Key Password Management
+- Initiative 1: Codebase Quality Improvements
+
+The following initiatives are scheduled to begin soon:
+
+- Initiative 2: Testing Framework Enhancement
+- Initiative 6: Distributed Validator Technology Support
+
+## Next Week Focus Areas
+
+1. **Dependency Management**:
+   - Complete standardization of version pinning in requirements files
+   - Create automated dependency validation script
+
+2. **Code Quality Tools**:
+   - Set up shellcheck in pre-commit
+   - Fix critical shellcheck issues in core scripts
+
+3. **Distributed Validator Technology Design**:
+   - Finalize architecture design document for DVT integration
+   - Create implementation roadmap for Obol and SSV support
+
+## Recent Achievements
+
+- Completed initial phase of Dependency Management standardization:
+  - Created comprehensive validation script for dependency version pinning
+  - Fixed version constraints in core requirements files
+  - Generated detailed report of dependency consistency across the project
+  - Created shell-compatible tools that work in different environments
+- Completed Lido CSM Integration with Advanced Validator Performance Analytics
+- Implemented CSM Validator Performance Monitoring Script
+- Created CSM Analytics Suite with unified interface
+- Developed flexible JSON-based configuration system

@@ -1,21 +1,22 @@
 #!/bin/bash
+# Version: 1.0.0
 
 # Sample unit test for version checking functionality
 # Tests the version_greater_equal function in version_management.sh
 
 # Set up
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." &> /dev/null && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." &>/dev/null && pwd)"
 VERSION_MANAGEMENT="${PROJECT_ROOT}/scripts/core/version_management.sh"
 
 # Ensure version_management.sh exists
-if [ ! -f "$VERSION_MANAGEMENT" ]; then
-  echo "ERROR: version_management.sh not found at $VERSION_MANAGEMENT"
+if [ ! -f "${VERSION_MANAGEMENT}" ]; then
+  echo "ERROR: version_management.sh not found at ${VERSION_MANAGEMENT}"
   exit 1
 fi
 
 # Source version_management.sh to get the functions
-source "$VERSION_MANAGEMENT"
+source "${VERSION_MANAGEMENT}"
 
 # Test function
 test_version_greater_equal() {
@@ -23,18 +24,18 @@ test_version_greater_equal() {
   local version1="$2"
   local version2="$3"
   local expected="$4"
-  
-  version_greater_equal "$version1" "$version2"
+
+  version_greater_equal "${version1}" "${version2}"
   local result=$?
-  
-  if [[ "$result" -eq 0 && "$expected" == "true" ]] || [[ "$result" -ne 0 && "$expected" == "false" ]]; then
-    echo "✅ PASS: $test_name"
+
+  if [[ "${result}" -eq 0 && "${expected}" == "true" ]] || [[ "${result}" -ne 0 && "${expected}" == "false" ]]; then
+    echo "✅ PASS: ${test_name}"
     return 0
   else
-    echo "❌ FAIL: $test_name"
-    echo "  Expected: $expected"
-    echo "  Got: $([ "$result" -eq 0 ] && echo "true" || echo "false")"
-    echo "  version_greater_equal '$version1' '$version2'"
+    echo "❌ FAIL: ${test_name}"
+    echo "  Expected: ${expected}"
+    echo "  Got: $([ "${result}" -eq 0 ] && echo "true" || echo "false")"
+    echo "  version_greater_equal '${version1}' '${version2}'"
     return 1
   fi
 }
@@ -59,15 +60,15 @@ test_version_greater_equal "Complex versions" "1.22.3" "1.22.0" "true" || ((fail
 test_version_greater_equal "Complex equal versions" "10.20.30" "10.20.30" "true" || ((failures++))
 
 # Summary
-echo 
+echo
 echo "Test summary:"
 echo "Total tests: 11"
-echo "Failures: $failures"
+echo "Failures: ${failures}"
 
-if [ $failures -eq 0 ]; then
+if [ ${failures} -eq 0 ]; then
   echo "All tests passed!"
   exit 0
 else
   echo "Some tests failed!"
   exit 1
-fi 
+fi

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Validator Scripts Integration Test
 # ==================================
@@ -50,23 +51,23 @@ function show_help {
 function parse_args {
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -e|--env)
+      -e | --env)
         TEST_ENV="$2"
         shift 2
         ;;
-      -d|--dir)
+      -d | --dir)
         EPHEMERY_BASE_DIR="$2"
         shift 2
         ;;
-      -h|--host)
+      -h | --host)
         REMOTE_HOST="$2"
         shift 2
         ;;
-      -u|--user)
+      -u | --user)
         REMOTE_USER="$2"
         shift 2
         ;;
-      -k|--key)
+      -k | --key)
         REMOTE_KEY="$2"
         shift 2
         ;;
@@ -74,7 +75,7 @@ function parse_args {
         CLEANUP=false
         shift
         ;;
-      -v|--verbose)
+      -v | --verbose)
         VERBOSE=true
         shift
         ;;
@@ -141,7 +142,7 @@ function setup_local_env {
   chmod +x "${EPHEMERY_BASE_DIR}/scripts/validator/"*.sh
 
   # Create test configuration
-  cat > "${EPHEMERY_BASE_DIR}/config/ephemery_paths.conf" << EOF
+  cat >"${EPHEMERY_BASE_DIR}/config/ephemery_paths.conf" <<EOF
 # Ephemery Paths Configuration
 EPHEMERY_BASE_DIR="${EPHEMERY_BASE_DIR}"
 EPHEMERY_SCRIPTS_DIR="\${EPHEMERY_BASE_DIR}/scripts"
@@ -151,7 +152,7 @@ EPHEMERY_CONFIG_DIR="\${EPHEMERY_BASE_DIR}/config"
 EOF
 
   # Create validator monitoring configuration
-  cat > "${EPHEMERY_BASE_DIR}/config/validator_monitoring.conf" << EOF
+  cat >"${EPHEMERY_BASE_DIR}/config/validator_monitoring.conf" <<EOF
 # Validator Monitoring Configuration
 BEACON_API="http://localhost:5052"
 VALIDATOR_API="http://localhost:5062"
@@ -171,7 +172,7 @@ function setup_docker_env {
   mkdir -p "${EPHEMERY_BASE_DIR}"
 
   # Create Docker Compose file
-  cat > "${EPHEMERY_BASE_DIR}/docker-compose.yaml" << EOF
+  cat >"${EPHEMERY_BASE_DIR}/docker-compose.yaml" <<EOF
 version: '3.8'
 
 services:

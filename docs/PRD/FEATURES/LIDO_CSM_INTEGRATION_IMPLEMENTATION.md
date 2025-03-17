@@ -470,4 +470,4 @@ The CSM validator performance analytics tools integrate seamlessly with the exis
 - **Alert System**: Alerts incorporated into the existing notification framework
 - **Data Storage**: Performance data stored in standard metrics directory
 
-This integrated approach ensures operators have a comprehensive view of CSM validator performance within the context of their overall Ephemery node operations. 
+This integrated approach ensures operators have a comprehensive view of CSM validator performance within the context of their overall Ephemery node operations.

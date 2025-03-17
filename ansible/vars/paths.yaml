@@ -52,7 +52,7 @@ ephemery_clients:
 ephemery_containers:
   execution: "{{ ephemery_network }}-execution-{{ ephemery_clients.execution }}"
   consensus: "{{ ephemery_network }}-consensus-{{ ephemery_clients.consensus }}"
-  validator: "{{ ephemery_network }}-validator-{{ ephemery_clients.validator }}" 
+  validator: "{{ ephemery_network }}-validator-{{ ephemery_clients.validator }}"
   prometheus: "{{ ephemery_network }}-prometheus"
   grafana: "{{ ephemery_network }}-grafana"
 

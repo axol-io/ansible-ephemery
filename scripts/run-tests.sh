@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 # run-tests.sh - Wrapper script to run Molecule tests with any driver from any directory
 
 set -e
@@ -42,10 +43,10 @@ DOCKER_HOST_SOCK=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -h|--help)
+    -h | --help)
       show_help
       ;;
-    -d|--driver)
+    -d | --driver)
       MOLECULE_DRIVER="$2"
       shift 2
       ;;
@@ -53,7 +54,7 @@ while [[ $# -gt 0 ]]; do
       DOCKER_HOST_SOCK="$2"
       shift 2
       ;;
-    -v|--verbose)
+    -v | --verbose)
       VERBOSE=1
       shift
       ;;

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version: 1.0.0
 #
 # Validator Performance Monitoring Script
 # =======================================
@@ -31,105 +32,106 @@ mkdir -p "${METRICS_DIR}" "${HISTORY_DIR}" "${LOG_DIR}"
 
 # Detect client type if not specified
 detect_client_type() {
-    if [[ -z "${CLIENT_TYPE}" ]]; then
-        if docker ps | grep -q ephemery-lighthouse-validator; then
-            CLIENT_TYPE="lighthouse"
-            VALIDATOR_METRICS_PORT="8009"
-        elif docker ps | grep -q ephemery-teku-validator; then
-            CLIENT_TYPE="teku"
-            VALIDATOR_METRICS_PORT="8008"
-        elif docker ps | grep -q ephemery-prysm-validator; then
-            CLIENT_TYPE="prysm"
-            VALIDATOR_METRICS_PORT="8081"
-        elif docker ps | grep -q ephemery-nimbus-validator; then
-            CLIENT_TYPE="nimbus"
-            VALIDATOR_METRICS_PORT="8008"
-        elif docker ps | grep -q ephemery-lodestar-validator; then
-            CLIENT_TYPE="lodestar"
-            VALIDATOR_METRICS_PORT="8008"
-        else
-            echo "Unable to detect validator client type. Using default (lighthouse)."
-            CLIENT_TYPE="lighthouse"
-        fi
+  if [[ -z "${CLIENT_TYPE}" ]]; then
+    if docker ps | grep -q ephemery-lighthouse-validator; then
+      CLIENT_TYPE="lighthouse"
+      VALIDATOR_METRICS_PORT="8009"
+    elif docker ps | grep -q ephemery-teku-validator; then
+      CLIENT_TYPE="teku"
+      VALIDATOR_METRICS_PORT="8008"
+    elif docker ps | grep -q ephemery-prysm-validator; then
+      CLIENT_TYPE="prysm"
+      VALIDATOR_METRICS_PORT="8081"
+    elif docker ps | grep -q ephemery-nimbus-validator; then
+      CLIENT_TYPE="nimbus"
+      VALIDATOR_METRICS_PORT="8008"
+    elif docker ps | grep -q ephemery-lodestar-validator; then
+      CLIENT_TYPE="lodestar"
+      VALIDATOR_METRICS_PORT="8008"
+    else
+      echo "Unable to detect validator client type. Using default (lighthouse)."
+      CLIENT_TYPE="lighthouse"
     fi
-    echo "Detected validator client: ${CLIENT_TYPE}"
+  fi
+  echo "Detected validator client: ${CLIENT_TYPE}"
 }
 
 # Get validator public keys
 get_validator_pubkeys() {
-    local key_count=0
-    local pubkeys=()
+  local key_count=0
+  local pubkeys=()
 
-    for keyfile in "${VALIDATOR_KEYS_DIR}"/keystore-*.json; do
-        if [[ -f "$keyfile" ]]; then
-            # Extract pubkey from filename or file content
-            local pubkey
-            if [[ "$keyfile" =~ keystore-([0-9a-f]+)\.json ]]; then
-                pubkey="${BASH_REMATCH[1]}"
-            else
-                pubkey=$(grep -o '"pubkey":[[:space:]]*"[^"]*"' "$keyfile" | cut -d'"' -f4 || echo "")
-            fi
+  for keyfile in "${VALIDATOR_KEYS_DIR}"/keystore-*.json; do
+    if [[ -f "${keyfile}" ]]; then
+      # Extract pubkey from filename or file content
+      local pubkey
+      if [[ "${keyfile}" =~ keystore-([0-9a-f]+)\.json ]]; then
+        pubkey="${BASH_REMATCH[1]}"
+      else
+        pubkey=$(grep -o '"pubkey":[[:space:]]*"[^"]*"' "${keyfile}" | cut -d'"' -f4 || echo "")
+      fi
 
-            if [[ -n "$pubkey" ]]; then
-                pubkeys+=("$pubkey")
-                ((key_count++))
-            fi
-        fi
-    done
+      if [[ -n "${pubkey}" ]]; then
+        pubkeys+=("${pubkey}")
+        ((key_count++))
+      fi
+    fi
+  done
 
-    echo "Found ${key_count} validator keys"
-    echo "${pubkeys[@]}"
+  echo "Found ${key_count} validator keys"
+  echo "${pubkeys[@]}"
 }
 
 # Get validator status from beacon node
 get_validator_status() {
-    local pubkey="$1"
-    local status_json
+  local pubkey="$1"
+  local status_json
 
-    status_json=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/beacon/states/head/validators/${pubkey}" \
-        -H "Accept: application/json" || echo '{"data":{"status":"unknown"}}')
+  status_json=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/beacon/states/head/validators/${pubkey}" \
+    -H "Accept: application/json" || echo '{"data":{"status":"unknown"}}')
 
-    local status=$(echo "$status_json" | grep -o '"status":[[:space:]]*"[^"]*"' | cut -d'"' -f4 || echo "unknown")
-    echo "$status"
+  local status=$(echo "${status_json}" | grep -o '"status":[[:space:]]*"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+  echo "${status}"
 }
 
 # Get validator balance
 get_validator_balance() {
-    local pubkey="$1"
-    local balance_json
+  local pubkey="$1"
+  local balance_json
 
-    balance_json=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/beacon/states/head/validators/${pubkey}" \
-        -H "Accept: application/json" || echo '{"data":{"balance":"0"}}')
+  balance_json=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/beacon/states/head/validators/${pubkey}" \
+    -H "Accept: application/json" || echo '{"data":{"balance":"0"}}')
 
-    local balance=$(echo "$balance_json" | grep -o '"balance":[[:space:]]*"[^"]*"' | cut -d'"' -f4 || echo "0")
-    echo "$balance"
+  local balance=$(echo "${balance_json}" | grep -o '"balance":[[:space:]]*"[^"]*"' | cut -d'"' -f4 || echo "0")
+  echo "${balance}"
 }
 
 # Get validator effectiveness metrics from client
 get_validator_effectiveness() {
-    local metrics_json="{}"
+  local metrics_json="{}"
 
-    case "${CLIENT_TYPE}" in
-        lighthouse)
-            # Extract metrics from Lighthouse's Prometheus endpoint
-            if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" > /tmp/lighthouse_metrics.txt; then
-                local attestation_hits=$(grep 'validator_attestation_hits' /tmp/lighthouse_metrics.txt | awk '{print $2}' || echo "0")
-                local attestation_misses=$(grep 'validator_attestation_misses' /tmp/lighthouse_metrics.txt | awk '{print $2}' || echo "0")
-                local attestation_total=$((attestation_hits + attestation_misses))
-                local attestation_rate=0
-                if (( attestation_total > 0 )); then
-                    attestation_rate=$(echo "scale=4; ${attestation_hits}/${attestation_total}" | bc)
-                fi
+  case "${CLIENT_TYPE}" in
+    lighthouse)
+      # Extract metrics from Lighthouse's Prometheus endpoint
+      if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" >/tmp/lighthouse_metrics.txt; then
+        local attestation_hits=$(grep 'validator_attestation_hits' /tmp/lighthouse_metrics.txt | awk '{print $2}' || echo "0")
+        local attestation_misses=$(grep 'validator_attestation_misses' /tmp/lighthouse_metrics.txt | awk '{print $2}' || echo "0")
+        local attestation_total=$((attestation_hits + attestation_misses))
+        local attestation_rate=0
+        if ((attestation_total > 0)); then
+          attestation_rate=$(echo "scale=4; ${attestation_hits}/${attestation_total}" | bc)
+        fi
 
-                local proposals_hit=$(grep 'validator_proposal_hits' /tmp/lighthouse_metrics.txt | awk '{print $2}' || echo "0")
-                local proposals_miss=$(grep 'validator_proposal_misses' /tmp/lighthouse_metrics.txt | awk '{print $2}' || echo "0")
-                local proposals_total=$((proposals_hit + proposals_miss))
-                local proposal_rate=0
-                if (( proposals_total > 0 )); then
-                    proposal_rate=$(echo "scale=4; ${proposals_hit}/${proposals_total}" | bc)
-                fi
+        local proposals_hit=$(grep 'validator_proposal_hits' /tmp/lighthouse_metrics.txt | awk '{print $2}' || echo "0")
+        local proposals_miss=$(grep 'validator_proposal_misses' /tmp/lighthouse_metrics.txt | awk '{print $2}' || echo "0")
+        local proposals_total=$((proposals_hit + proposals_miss))
+        local proposal_rate=0
+        if ((proposals_total > 0)); then
+          proposal_rate=$(echo "scale=4; ${proposals_hit}/${proposals_total}" | bc)
+        fi
 
-                metrics_json=$(cat <<EOF
+        metrics_json=$(
+          cat <<EOF
 {
   "attestation_effectiveness": {
     "hits": ${attestation_hits},
@@ -145,30 +147,31 @@ get_validator_effectiveness() {
   }
 }
 EOF
-                )
-            fi
-            ;;
+        )
+      fi
+      ;;
 
-        teku)
-            # Extract metrics from Teku's Prometheus endpoint
-            if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" > /tmp/teku_metrics.txt; then
-                local attestation_published=$(grep 'beacon_attestation_published_total' /tmp/teku_metrics.txt | awk '{print $2}' || echo "0")
-                local attestation_failed=$(grep 'beacon_attestation_failed_total' /tmp/teku_metrics.txt | awk '{print $2}' || echo "0")
-                local attestation_total=$((attestation_published + attestation_failed))
-                local attestation_rate=0
-                if (( attestation_total > 0 )); then
-                    attestation_rate=$(echo "scale=4; ${attestation_published}/${attestation_total}" | bc)
-                fi
+    teku)
+      # Extract metrics from Teku's Prometheus endpoint
+      if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" >/tmp/teku_metrics.txt; then
+        local attestation_published=$(grep 'beacon_attestation_published_total' /tmp/teku_metrics.txt | awk '{print $2}' || echo "0")
+        local attestation_failed=$(grep 'beacon_attestation_failed_total' /tmp/teku_metrics.txt | awk '{print $2}' || echo "0")
+        local attestation_total=$((attestation_published + attestation_failed))
+        local attestation_rate=0
+        if ((attestation_total > 0)); then
+          attestation_rate=$(echo "scale=4; ${attestation_published}/${attestation_total}" | bc)
+        fi
 
-                local blocks_proposed=$(grep 'beacon_blocks_proposed_total' /tmp/teku_metrics.txt | awk '{print $2}' || echo "0")
-                local blocks_failed=$(grep 'beacon_blocks_proposed_failed_total' /tmp/teku_metrics.txt | awk '{print $2}' || echo "0")
-                local blocks_total=$((blocks_proposed + blocks_failed))
-                local proposal_rate=0
-                if (( blocks_total > 0 )); then
-                    proposal_rate=$(echo "scale=4; ${blocks_proposed}/${blocks_total}" | bc)
-                fi
+        local blocks_proposed=$(grep 'beacon_blocks_proposed_total' /tmp/teku_metrics.txt | awk '{print $2}' || echo "0")
+        local blocks_failed=$(grep 'beacon_blocks_proposed_failed_total' /tmp/teku_metrics.txt | awk '{print $2}' || echo "0")
+        local blocks_total=$((blocks_proposed + blocks_failed))
+        local proposal_rate=0
+        if ((blocks_total > 0)); then
+          proposal_rate=$(echo "scale=4; ${blocks_proposed}/${blocks_total}" | bc)
+        fi
 
-                metrics_json=$(cat <<EOF
+        metrics_json=$(
+          cat <<EOF
 {
   "attestation_effectiveness": {
     "hits": ${attestation_published},
@@ -184,30 +187,31 @@ EOF
   }
 }
 EOF
-                )
-            fi
-            ;;
+        )
+      fi
+      ;;
 
-        prysm)
-            # Extract metrics from Prysm's Prometheus endpoint
-            if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" > /tmp/prysm_metrics.txt; then
-                local attestation_sent=$(grep 'validator_attestation_sent_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
-                local attestation_missed=$(grep 'validator_attestation_missed_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
-                local attestation_total=$((attestation_sent + attestation_missed))
-                local attestation_rate=0
-                if (( attestation_total > 0 )); then
-                    attestation_rate=$(echo "scale=4; ${attestation_sent}/${attestation_total}" | bc)
-                fi
+    prysm)
+      # Extract metrics from Prysm's Prometheus endpoint
+      if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" >/tmp/prysm_metrics.txt; then
+        local attestation_sent=$(grep 'validator_attestation_sent_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
+        local attestation_missed=$(grep 'validator_attestation_missed_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
+        local attestation_total=$((attestation_sent + attestation_missed))
+        local attestation_rate=0
+        if ((attestation_total > 0)); then
+          attestation_rate=$(echo "scale=4; ${attestation_sent}/${attestation_total}" | bc)
+        fi
 
-                local blocks_proposed=$(grep 'validator_proposal_sent_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
-                local blocks_missed=$(grep 'validator_proposal_missed_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
-                local blocks_total=$((blocks_proposed + blocks_missed))
-                local proposal_rate=0
-                if (( blocks_total > 0 )); then
-                    proposal_rate=$(echo "scale=4; ${blocks_proposed}/${blocks_total}" | bc)
-                fi
+        local blocks_proposed=$(grep 'validator_proposal_sent_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
+        local blocks_missed=$(grep 'validator_proposal_missed_total' /tmp/prysm_metrics.txt | awk '{sum+=$2} END {print sum}' || echo "0")
+        local blocks_total=$((blocks_proposed + blocks_missed))
+        local proposal_rate=0
+        if ((blocks_total > 0)); then
+          proposal_rate=$(echo "scale=4; ${blocks_proposed}/${blocks_total}" | bc)
+        fi
 
-                metrics_json=$(cat <<EOF
+        metrics_json=$(
+          cat <<EOF
 {
   "attestation_effectiveness": {
     "hits": ${attestation_sent},
@@ -223,30 +227,31 @@ EOF
   }
 }
 EOF
-                )
-            fi
-            ;;
+        )
+      fi
+      ;;
 
-        nimbus)
-            # Extract metrics from Nimbus's Prometheus endpoint
-            if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" > /tmp/nimbus_metrics.txt; then
-                local attestations_sent=$(grep 'validator_attestations_sent_total' /tmp/nimbus_metrics.txt | awk '{print $2}' || echo "0")
-                local attestations_failed=$(grep 'validator_attestations_failed_total' /tmp/nimbus_metrics.txt | awk '{print $2}' || echo "0")
-                local attestation_total=$((attestations_sent + attestations_failed))
-                local attestation_rate=0
-                if (( attestation_total > 0 )); then
-                    attestation_rate=$(echo "scale=4; ${attestations_sent}/${attestation_total}" | bc)
-                fi
+    nimbus)
+      # Extract metrics from Nimbus's Prometheus endpoint
+      if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" >/tmp/nimbus_metrics.txt; then
+        local attestations_sent=$(grep 'validator_attestations_sent_total' /tmp/nimbus_metrics.txt | awk '{print $2}' || echo "0")
+        local attestations_failed=$(grep 'validator_attestations_failed_total' /tmp/nimbus_metrics.txt | awk '{print $2}' || echo "0")
+        local attestation_total=$((attestations_sent + attestations_failed))
+        local attestation_rate=0
+        if ((attestation_total > 0)); then
+          attestation_rate=$(echo "scale=4; ${attestations_sent}/${attestation_total}" | bc)
+        fi
 
-                local blocks_sent=$(grep 'validator_blocks_sent_total' /tmp/nimbus_metrics.txt | awk '{print $2}' || echo "0")
-                local blocks_failed=$(grep 'validator_blocks_failed_total' /tmp/nimbus_metrics.txt | awk '{print $2}' || echo "0")
-                local blocks_total=$((blocks_sent + blocks_failed))
-                local proposal_rate=0
-                if (( blocks_total > 0 )); then
-                    proposal_rate=$(echo "scale=4; ${blocks_sent}/${blocks_total}" | bc)
-                fi
+        local blocks_sent=$(grep 'validator_blocks_sent_total' /tmp/nimbus_metrics.txt | awk '{print $2}' || echo "0")
+        local blocks_failed=$(grep 'validator_blocks_failed_total' /tmp/nimbus_metrics.txt | awk '{print $2}' || echo "0")
+        local blocks_total=$((blocks_sent + blocks_failed))
+        local proposal_rate=0
+        if ((blocks_total > 0)); then
+          proposal_rate=$(echo "scale=4; ${blocks_sent}/${blocks_total}" | bc)
+        fi
 
-                metrics_json=$(cat <<EOF
+        metrics_json=$(
+          cat <<EOF
 {
   "attestation_effectiveness": {
     "hits": ${attestations_sent},
@@ -262,30 +267,31 @@ EOF
   }
 }
 EOF
-                )
-            fi
-            ;;
+        )
+      fi
+      ;;
 
-        lodestar)
-            # Extract metrics from Lodestar's Prometheus endpoint
-            if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" > /tmp/lodestar_metrics.txt; then
-                local attestations_published=$(grep 'lodestar_validator_published_attestations_total' /tmp/lodestar_metrics.txt | awk '{print $2}' || echo "0")
-                local attestations_missed=$(grep 'lodestar_validator_missed_attestations_total' /tmp/lodestar_metrics.txt | awk '{print $2}' || echo "0")
-                local attestation_total=$((attestations_published + attestations_missed))
-                local attestation_rate=0
-                if (( attestation_total > 0 )); then
-                    attestation_rate=$(echo "scale=4; ${attestations_published}/${attestation_total}" | bc)
-                fi
+    lodestar)
+      # Extract metrics from Lodestar's Prometheus endpoint
+      if curl -s "http://localhost:${VALIDATOR_METRICS_PORT}/metrics" >/tmp/lodestar_metrics.txt; then
+        local attestations_published=$(grep 'lodestar_validator_published_attestations_total' /tmp/lodestar_metrics.txt | awk '{print $2}' || echo "0")
+        local attestations_missed=$(grep 'lodestar_validator_missed_attestations_total' /tmp/lodestar_metrics.txt | awk '{print $2}' || echo "0")
+        local attestation_total=$((attestations_published + attestations_missed))
+        local attestation_rate=0
+        if ((attestation_total > 0)); then
+          attestation_rate=$(echo "scale=4; ${attestations_published}/${attestation_total}" | bc)
+        fi
 
-                local blocks_published=$(grep 'lodestar_validator_published_blocks_total' /tmp/lodestar_metrics.txt | awk '{print $2}' || echo "0")
-                local blocks_missed=$(grep 'lodestar_validator_missed_blocks_total' /tmp/lodestar_metrics.txt | awk '{print $2}' || echo "0")
-                local blocks_total=$((blocks_published + blocks_missed))
-                local proposal_rate=0
-                if (( blocks_total > 0 )); then
-                    proposal_rate=$(echo "scale=4; ${blocks_published}/${blocks_total}" | bc)
-                fi
+        local blocks_published=$(grep 'lodestar_validator_published_blocks_total' /tmp/lodestar_metrics.txt | awk '{print $2}' || echo "0")
+        local blocks_missed=$(grep 'lodestar_validator_missed_blocks_total' /tmp/lodestar_metrics.txt | awk '{print $2}' || echo "0")
+        local blocks_total=$((blocks_published + blocks_missed))
+        local proposal_rate=0
+        if ((blocks_total > 0)); then
+          proposal_rate=$(echo "scale=4; ${blocks_published}/${blocks_total}" | bc)
+        fi
 
-                metrics_json=$(cat <<EOF
+        metrics_json=$(
+          cat <<EOF
 {
   "attestation_effectiveness": {
     "hits": ${attestations_published},
@@ -301,167 +307,168 @@ EOF
   }
 }
 EOF
-                )
-            fi
-            ;;
+        )
+      fi
+      ;;
 
-        *)
-            echo "Unsupported client type: ${CLIENT_TYPE}"
-            metrics_json="{\"error\": \"unsupported_client\"}"
-            ;;
-    esac
+    *)
+      echo "Unsupported client type: ${CLIENT_TYPE}"
+      metrics_json="{\"error\": \"unsupported_client\"}"
+      ;;
+  esac
 
-    echo "${metrics_json}"
+  echo "${metrics_json}"
 }
 
 # Get current epoch and slots
 get_network_info() {
-    local network_json
+  local network_json
 
-    network_json=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/beacon/states/head" \
-        -H "Accept: application/json" || echo '{"data":{"slot":"0"}}')
+  network_json=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/beacon/states/head" \
+    -H "Accept: application/json" || echo '{"data":{"slot":"0"}}')
 
-    local current_slot=$(echo "$network_json" | grep -o '"slot":[[:space:]]*"[^"]*"' | cut -d'"' -f4 || echo "0")
-    local current_epoch=$((current_slot / 32))
+  local current_slot=$(echo "${network_json}" | grep -o '"slot":[[:space:]]*"[^"]*"' | cut -d'"' -f4 || echo "0")
+  local current_epoch=$((current_slot / 32))
 
-    echo "{\"current_slot\": ${current_slot}, \"current_epoch\": ${current_epoch}}"
+  echo "{\"current_slot\": ${current_slot}, \"current_epoch\": ${current_epoch}}"
 }
 
 # Check for sync issues
 check_sync_status() {
-    local sync_json
+  local sync_json
 
-    sync_json=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/node/syncing" \
-        -H "Accept: application/json" || echo '{"data":{"is_syncing":true,"sync_distance":"unknown"}}')
+  sync_json=$(curl -s "${BEACON_NODE_ENDPOINT}/eth/v1/node/syncing" \
+    -H "Accept: application/json" || echo '{"data":{"is_syncing":true,"sync_distance":"unknown"}}')
 
-    local is_syncing=$(echo "$sync_json" | grep -o '"is_syncing":[[:space:]]*[^,}]*' | cut -d':' -f2 | tr -d ' ' || echo "true")
-    local sync_distance=$(echo "$sync_json" | grep -o '"sync_distance":[[:space:]]*"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+  local is_syncing=$(echo "${sync_json}" | grep -o '"is_syncing":[[:space:]]*[^,}]*' | cut -d':' -f2 | tr -d ' ' || echo "true")
+  local sync_distance=$(echo "${sync_json}" | grep -o '"sync_distance":[[:space:]]*"[^"]*"' | cut -d'"' -f4 || echo "unknown")
 
-    echo "{\"is_syncing\": ${is_syncing}, \"sync_distance\": \"${sync_distance}\"}"
+  echo "{\"is_syncing\": ${is_syncing}, \"sync_distance\": \"${sync_distance}\"}"
 }
 
 # Check for slashing protection issues
 check_slashing_protection() {
-    local slashing_protection_file="${VALIDATOR_DIR}/slashing_protection.json"
-    local status="ok"
-    local message=""
+  local slashing_protection_file="${VALIDATOR_DIR}/slashing_protection.json"
+  local status="ok"
+  local message=""
 
-    if [[ -f "${slashing_protection_file}" ]]; then
-        # Check file size to ensure it's not empty or corrupted
-        local file_size=$(stat -c%s "${slashing_protection_file}" 2>/dev/null || stat -f%z "${slashing_protection_file}" 2>/dev/null)
+  if [[ -f "${slashing_protection_file}" ]]; then
+    # Check file size to ensure it's not empty or corrupted
+    local file_size=$(stat -c%s "${slashing_protection_file}" 2>/dev/null || stat -f%z "${slashing_protection_file}" 2>/dev/null)
 
-        if [[ ${file_size} -lt 100 ]]; then
-            status="warning"
-            message="Slashing protection database appears to be very small (${file_size} bytes). May be corrupted or incomplete."
-        fi
-    else
-        status="warning"
-        message="Slashing protection database not found at ${slashing_protection_file}"
+    if [[ ${file_size} -lt 100 ]]; then
+      status="warning"
+      message="Slashing protection database appears to be very small (${file_size} bytes). May be corrupted or incomplete."
     fi
+  else
+    status="warning"
+    message="Slashing protection database not found at ${slashing_protection_file}"
+  fi
 
-    echo "{\"status\": \"${status}\", \"message\": \"${message}\"}"
+  echo "{\"status\": \"${status}\", \"message\": \"${message}\"}"
 }
 
 # Generate alerts based on metrics
 generate_alerts() {
-    local effectiveness_json="$1"
-    local alerts=()
+  local effectiveness_json="$1"
+  local alerts=()
 
-    # Parse effectiveness rates
-    local attestation_rate=$(echo "$effectiveness_json" | grep -o '"rate":[[:space:]]*[0-9.]*' | head -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
-    local proposal_rate=$(echo "$effectiveness_json" | grep -o '"rate":[[:space:]]*[0-9.]*' | tail -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
+  # Parse effectiveness rates
+  local attestation_rate=$(echo "${effectiveness_json}" | grep -o '"rate":[[:space:]]*[0-9.]*' | head -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
+  local proposal_rate=$(echo "${effectiveness_json}" | grep -o '"rate":[[:space:]]*[0-9.]*' | tail -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
 
-    # Alert thresholds
-    local attestation_warning=0.95
-    local attestation_critical=0.9
-    local proposal_warning=0.95
-    local proposal_critical=0.9
+  # Alert thresholds
+  local attestation_warning=0.95
+  local attestation_critical=0.9
+  local proposal_warning=0.95
+  local proposal_critical=0.9
 
-    # Check attestation effectiveness
-    if (( $(echo "$attestation_rate < $attestation_critical" | bc -l) )); then
-        alerts+=("CRITICAL: Attestation effectiveness is critically low (${attestation_rate})")
-        log_alert "CRITICAL" "Attestation effectiveness is critically low: ${attestation_rate}"
-    elif (( $(echo "$attestation_rate < $attestation_warning" | bc -l) )); then
-        alerts+=("WARNING: Attestation effectiveness is below threshold (${attestation_rate})")
-        log_alert "WARNING" "Attestation effectiveness is below threshold: ${attestation_rate}"
+  # Check attestation effectiveness
+  if (($(echo "${attestation_rate} < ${attestation_critical}" | bc -l))); then
+    alerts+=("CRITICAL: Attestation effectiveness is critically low (${attestation_rate})")
+    log_alert "CRITICAL" "Attestation effectiveness is critically low: ${attestation_rate}"
+  elif (($(echo "${attestation_rate} < ${attestation_warning}" | bc -l))); then
+    alerts+=("WARNING: Attestation effectiveness is below threshold (${attestation_rate})")
+    log_alert "WARNING" "Attestation effectiveness is below threshold: ${attestation_rate}"
+  fi
+
+  # Check proposal effectiveness (if there have been any proposals)
+  local proposal_total=$(echo "${effectiveness_json}" | grep -o '"total":[[:space:]]*[0-9]*' | tail -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
+  if [[ "${proposal_total}" != "0" ]]; then
+    if (($(echo "${proposal_rate} < ${proposal_critical}" | bc -l))); then
+      alerts+=("CRITICAL: Block proposal effectiveness is critically low (${proposal_rate})")
+      log_alert "CRITICAL" "Block proposal effectiveness is critically low: ${proposal_rate}"
+    elif (($(echo "${proposal_rate} < ${proposal_warning}" | bc -l))); then
+      alerts+=("WARNING: Block proposal effectiveness is below threshold (${proposal_rate})")
+      log_alert "WARNING" "Block proposal effectiveness is below threshold: ${proposal_rate}"
     fi
+  fi
 
-    # Check proposal effectiveness (if there have been any proposals)
-    local proposal_total=$(echo "$effectiveness_json" | grep -o '"total":[[:space:]]*[0-9]*' | tail -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
-    if [[ "$proposal_total" != "0" ]]; then
-        if (( $(echo "$proposal_rate < $proposal_critical" | bc -l) )); then
-            alerts+=("CRITICAL: Block proposal effectiveness is critically low (${proposal_rate})")
-            log_alert "CRITICAL" "Block proposal effectiveness is critically low: ${proposal_rate}"
-        elif (( $(echo "$proposal_rate < $proposal_warning" | bc -l) )); then
-            alerts+=("WARNING: Block proposal effectiveness is below threshold (${proposal_rate})")
-            log_alert "WARNING" "Block proposal effectiveness is below threshold: ${proposal_rate}"
-        fi
-    fi
+  # Format alerts as JSON
+  local alerts_json="[]"
+  if [[ ${#alerts[@]} -gt 0 ]]; then
+    alerts_json="["
+    for i in "${!alerts[@]}"; do
+      alerts_json+="\"${alerts[${i}]}\""
+      if [[ ${i} -lt $((${#alerts[@]} - 1)) ]]; then
+        alerts_json+=", "
+      fi
+    done
+    alerts_json+="]"
+  fi
 
-    # Format alerts as JSON
-    local alerts_json="[]"
-    if [[ ${#alerts[@]} -gt 0 ]]; then
-        alerts_json="["
-        for i in "${!alerts[@]}"; do
-            alerts_json+="\"${alerts[$i]}\""
-            if [[ $i -lt $((${#alerts[@]} - 1)) ]]; then
-                alerts_json+=", "
-            fi
-        done
-        alerts_json+="]"
-    fi
-
-    echo "${alerts_json}"
+  echo "${alerts_json}"
 }
 
 # Log alerts to file
 log_alert() {
-    local level="$1"
-    local message="$2"
-    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  local level="$1"
+  local message="$2"
+  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-    echo "[${timestamp}] [${level}] ${message}" >> "${ALERT_LOG}"
+  echo "[${timestamp}] [${level}] ${message}" >>"${ALERT_LOG}"
 }
 
 # Main function to collect all metrics
 collect_metrics() {
-    local pubkeys
-    read -r -a pubkeys <<< "$(get_validator_pubkeys)"
+  local pubkeys
+  read -r -a pubkeys <<<"$(get_validator_pubkeys)"
 
-    # Initialize validators array
-    local validators_json="[]"
-    if [[ ${#pubkeys[@]} -gt 0 ]]; then
-        validators_json="["
-        for i in "${!pubkeys[@]}"; do
-            local pubkey="${pubkeys[$i]}"
-            local status=$(get_validator_status "$pubkey")
-            local balance=$(get_validator_balance "$pubkey")
+  # Initialize validators array
+  local validators_json="[]"
+  if [[ ${#pubkeys[@]} -gt 0 ]]; then
+    validators_json="["
+    for i in "${!pubkeys[@]}"; do
+      local pubkey="${pubkeys[${i}]}"
+      local status=$(get_validator_status "${pubkey}")
+      local balance=$(get_validator_balance "${pubkey}")
 
-            validators_json+="{\"pubkey\":\"${pubkey}\",\"status\":\"${status}\",\"balance\":\"${balance}\"}"
-            if [[ $i -lt $((${#pubkeys[@]} - 1)) ]]; then
-                validators_json+=", "
-            fi
-        done
-        validators_json+="]"
-    fi
+      validators_json+="{\"pubkey\":\"${pubkey}\",\"status\":\"${status}\",\"balance\":\"${balance}\"}"
+      if [[ ${i} -lt $((${#pubkeys[@]} - 1)) ]]; then
+        validators_json+=", "
+      fi
+    done
+    validators_json+="]"
+  fi
 
-    # Get effectiveness metrics
-    local effectiveness_json=$(get_validator_effectiveness)
+  # Get effectiveness metrics
+  local effectiveness_json=$(get_validator_effectiveness)
 
-    # Get network info
-    local network_json=$(get_network_info)
+  # Get network info
+  local network_json=$(get_network_info)
 
-    # Get sync status
-    local sync_json=$(check_sync_status)
+  # Get sync status
+  local sync_json=$(check_sync_status)
 
-    # Check slashing protection
-    local slashing_protection_json=$(check_slashing_protection)
+  # Check slashing protection
+  local slashing_protection_json=$(check_slashing_protection)
 
-    # Generate alerts
-    local alerts_json=$(generate_alerts "$effectiveness_json")
+  # Generate alerts
+  local alerts_json=$(generate_alerts "${effectiveness_json}")
 
-    # Combine all metrics into one JSON object
-    local combined_json=$(cat <<EOF
+  # Combine all metrics into one JSON object
+  local combined_json=$(
+    cat <<EOF
 {
   "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "validator_client": "${CLIENT_TYPE}",
@@ -474,48 +481,48 @@ collect_metrics() {
   "alerts": ${alerts_json}
 }
 EOF
-    )
+  )
 
-    # Save metrics to files
-    echo "${combined_json}" > "${METRICS_OUTPUT}"
-    echo "${combined_json}" > "${METRICS_HISTORY}"
+  # Save metrics to files
+  echo "${combined_json}" >"${METRICS_OUTPUT}"
+  echo "${combined_json}" >"${METRICS_HISTORY}"
 
-    # Output to stdout as well
-    echo "${combined_json}"
+  # Output to stdout as well
+  echo "${combined_json}"
 }
 
 # Export metrics to Prometheus format for scraping
 export_prometheus_metrics() {
-    local metrics_dir="${METRICS_DIR}/prometheus"
-    mkdir -p "${metrics_dir}"
-    local prom_file="${metrics_dir}/validator_metrics.prom"
+  local metrics_dir="${METRICS_DIR}/prometheus"
+  mkdir -p "${metrics_dir}"
+  local prom_file="${metrics_dir}/validator_metrics.prom"
 
-    # Extract metrics from the JSON file
-    if [[ -f "${METRICS_OUTPUT}" ]]; then
-        local json_content=$(cat "${METRICS_OUTPUT}")
+  # Extract metrics from the JSON file
+  if [[ -f "${METRICS_OUTPUT}" ]]; then
+    local json_content=$(cat "${METRICS_OUTPUT}")
 
-        # Validator count
-        local validator_count=$(echo "${json_content}" | grep -o '"validator_count":[[:space:]]*[0-9]*' | cut -d':' -f2 | tr -d ' ' || echo "0")
+    # Validator count
+    local validator_count=$(echo "${json_content}" | grep -o '"validator_count":[[:space:]]*[0-9]*' | cut -d':' -f2 | tr -d ' ' || echo "0")
 
-        # Attestation effectiveness
-        local attestation_hits=$(echo "${json_content}" | grep -o '"hits":[[:space:]]*[0-9]*' | head -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
-        local attestation_misses=$(echo "${json_content}" | grep -o '"misses":[[:space:]]*[0-9]*' | head -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
-        local attestation_rate=$(echo "${json_content}" | grep -o '"rate":[[:space:]]*[0-9.]*' | head -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
+    # Attestation effectiveness
+    local attestation_hits=$(echo "${json_content}" | grep -o '"hits":[[:space:]]*[0-9]*' | head -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
+    local attestation_misses=$(echo "${json_content}" | grep -o '"misses":[[:space:]]*[0-9]*' | head -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
+    local attestation_rate=$(echo "${json_content}" | grep -o '"rate":[[:space:]]*[0-9.]*' | head -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
 
-        # Proposal effectiveness
-        local proposal_hits=$(echo "${json_content}" | grep -o '"hits":[[:space:]]*[0-9]*' | tail -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
-        local proposal_misses=$(echo "${json_content}" | grep -o '"misses":[[:space:]]*[0-9]*' | tail -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
-        local proposal_rate=$(echo "${json_content}" | grep -o '"rate":[[:space:]]*[0-9.]*' | tail -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
+    # Proposal effectiveness
+    local proposal_hits=$(echo "${json_content}" | grep -o '"hits":[[:space:]]*[0-9]*' | tail -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
+    local proposal_misses=$(echo "${json_content}" | grep -o '"misses":[[:space:]]*[0-9]*' | tail -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
+    local proposal_rate=$(echo "${json_content}" | grep -o '"rate":[[:space:]]*[0-9.]*' | tail -1 | cut -d':' -f2 | tr -d ' ' || echo "0")
 
-        # Alert count
-        local alert_count=$(echo "${json_content}" | grep -o '"alerts":[[:space:]]*\[.*\]' | grep -o ',' | wc -l)
-        ((alert_count++))
-        if [[ "${alert_count}" == "1" && $(echo "${json_content}" | grep -o '"alerts":[[:space:]]*\[\]') ]]; then
-            alert_count=0
-        fi
+    # Alert count
+    local alert_count=$(echo "${json_content}" | grep -o '"alerts":[[:space:]]*\[.*\]' | grep -o ',' | wc -l)
+    ((alert_count++))
+    if [[ "${alert_count}" == "1" && -n $(echo "${json_content}" | grep -o '"alerts":[[:space:]]*\[\]') ]]; then
+      alert_count=0
+    fi
 
-        # Write Prometheus metrics
-        cat > "${prom_file}" <<EOF
+    # Write Prometheus metrics
+    cat >"${prom_file}" <<EOF
 # HELP ephemery_validator_count Number of validators managed by this client
 # TYPE ephemery_validator_count gauge
 ephemery_validator_count ${validator_count}
@@ -549,21 +556,21 @@ ephemery_proposal_rate ${proposal_rate}
 ephemery_validator_alerts ${alert_count}
 EOF
 
-        echo "Exported metrics to Prometheus format at ${prom_file}"
-    else
-        echo "Metrics file ${METRICS_OUTPUT} not found, skipping Prometheus export"
-    fi
+    echo "Exported metrics to Prometheus format at ${prom_file}"
+  else
+    echo "Metrics file ${METRICS_OUTPUT} not found, skipping Prometheus export"
+  fi
 }
 
 # Run all functions in sequence
 main() {
-    echo "Starting validator performance monitoring at $(date)"
+  echo "Starting validator performance monitoring at $(date)"
 
-    detect_client_type
-    local metrics_json=$(collect_metrics)
-    export_prometheus_metrics
+  detect_client_type
+  local metrics_json=$(collect_metrics)
+  export_prometheus_metrics
 
-    echo "Completed validator performance monitoring at $(date)"
+  echo "Completed validator performance monitoring at $(date)"
 }
 
 # Run the main function
