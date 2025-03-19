@@ -1,65 +1,48 @@
 ---
-# .ansible-lint configuration
-
-# Exclude molecule configuration files from playbook syntax checking
 exclude_paths:
-  - .git/
-  - .github/
-  - .cursor/
-  - .vscode/
-  - .ansible/
   - collections/
-  - /molecule/**
-  - molecule/shared/base_molecule.yml
-  - molecule/shared/common_vars.yml
-  - molecule/*/molecule.yml
-  - molecule/*/molecule.yaml
-  - playbooks/update.yaml # Temporarily exclude problematic playbooks
-  - tasks/firewall.yaml # Temporarily exclude problematic task files
-  - ephemery.yaml # Exclude main playbook with docker modules
-  - tasks/clients/*/molecule.yaml # Exclude client molecule files
-  - tasks/monitoring.yaml # Exclude monitoring tasks
-  - tasks/validator.yaml # Exclude validator tasks
-  - tasks/cadvisor.yaml # Exclude cadvisor tasks
-  - tasks/ephemery.yaml # Exclude ephemery tasks
-  - tasks/custom-validator-setup.yaml # Exclude validator setup tasks with docker
-  - "**/*docker*.yaml" # Exclude any files with docker in the name
-  - "**/*docker*.yml" # Exclude any files with docker in the name
+  - .git/
+  - molecule/
+  - .github/
+  - .vscode/
+  - ansible/playbooks/validator.yaml
+  - ansible/playbooks/firewall_setup.yaml
+  - ansible/playbooks/fix_checkpoint_sync.yaml
+  - scripts/testing/fixtures/  # Exclude test fixtures that have rule violations
+  - security.yml  # Non-existent file causing load-failure
+  - service.yml   # Non-existent file causing load-failure
+  - system_setup.yml  # Non-existent file causing load-failure
+  - system_tuning.yml  # Non-existent file causing load-failure
+  - teku.yml  # Non-existent file causing load-failure
+  - user.yml  # Non-existent file causing load-failure
 
-# Define file kinds (schema detection)
-kinds:
-  - yaml: "**/defaults/alert/*.yaml"
-    text: "true"
-  - yaml: "**/tasks/clients/**/firewall.yaml"
-    vars: "true"
-
-# Skip specific rules
 skip_list:
-  - yaml[truthy] # Allow yes/no in addition to true/false
-  - no-changed-when # Allow commands without changed_when
-  - command-instead-of-module # Allow shell/command when needed
-  - command-instead-of-shell # Allow command instead of shell when needed
-  - var-naming[no-role-prefix] # Skip role prefix requirement temporarily
-  - var-naming[pattern] # Skip variable naming pattern temporarily
-  - fqcn[action-core] # Skip FQCN requirement temporarily
-  - fqcn[action] # Skip FQCN requirement temporarily
-  - yaml[line-length] # Skip line length temporarily
-  - yaml[quoted-strings] # Skip quoted strings temporarily
-  - schema[meta] # Skip meta schema validation temporarily
-  - schema[tasks] # Skip tasks schema validation temporarily
-  - name[play] # Skip play naming temporarily
-  - name[missing] # Skip missing task names temporarily
-  - risky-shell-pipe # Skip risky shell pipe warnings temporarily
-  - ignore-errors # Skip ignore-errors warnings temporarily
-  - package-latest # Skip package-latest warnings temporarily
-  - risky-file-permissions # Skip file permissions warnings temporarily
-  - key-order[task] # Skip task key order warnings temporarily
+  - yaml[line-length]
+  - yaml[truthy]
+  - var-naming[no-role-prefix]
+  - name[casing]
+  - name[template]
+  - jinja[spacing]
+  - schema[tasks]
+  - no-handler
+  - no-changed-when
+  - no-relative-paths
+  - fqcn[action-core]  # Skip FQCN for builtin module actions requirement
+  - fqcn[action]       # Skip FQCN requirement for all actions
+  - command-instead-of-shell  # Skip command instead of shell warnings
+  - key-order          # Skip task key ordering requirements
+  - risky-file-permissions  # Skip risky file permissions warnings
+  - risky-shell-pipe   # Skip risky shell pipe warnings
+  - ignore-errors      # Skip ignore-errors warnings
+  - package-latest     # Skip package-latest warnings
+  - run-once           # Skip run-once warnings
 
-# Use more specific rule identifiers
-use_default_rules: true
-
-# Set warning-level rules that won't cause failure
 warn_list:
-  - ignore-errors
-  - risky-shell-pipe
-  - schema[meta]
+  - experimental
+  - unnamed-task
+
+use_default_rules: true
+parseable: true
+
+offline: false
+verbosity: 1

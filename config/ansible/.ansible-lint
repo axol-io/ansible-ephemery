@@ -9,6 +9,12 @@ exclude_paths:
   - ansible/playbooks/firewall_setup.yaml
   - ansible/playbooks/fix_checkpoint_sync.yaml
   - scripts/testing/fixtures/  # Exclude test fixtures that have rule violations
+  - security.yml  # Non-existent file causing load-failure
+  - service.yml   # Non-existent file causing load-failure
+  - system_setup.yml  # Non-existent file causing load-failure
+  - system_tuning.yml  # Non-existent file causing load-failure
+  - teku.yml  # Non-existent file causing load-failure
+  - user.yml  # Non-existent file causing load-failure
 
 skip_list:
   - yaml[line-length]
@@ -34,7 +40,6 @@ skip_list:
 warn_list:
   - experimental
   - unnamed-task
-  - load-failure       # Warn about but don't fail on file not found errors
 
 use_default_rules: true
 parseable: true
