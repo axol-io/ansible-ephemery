@@ -1,0 +1,144 @@
+[0;34m======================================[0m
+[0;34m    Ephemery Test Suite Runner        [0m
+[0;34m======================================[0m
+Date: Wed Mar 19 18:59:24 CET 2025
+Report file: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/reports/test_report_20250319_185924.txt
+
+[0;34mRunning test: test_jwt_auth.sh[0m
+----------------------------------------
+[0;32m✓ Test passed: test_jwt_auth.sh[0m
+
+[0;34mRunning test: test_network_disruption.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_network_disruption.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/chaos_testing/test_network_disruption.sh: Permission denied
+
+[0;34mRunning test: test_node_resilience.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_node_resilience.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/chaos_testing/test_node_resilience.sh: Permission denied
+
+[0;34mRunning test: test_geth_client.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_geth_client.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/client/test_geth_client.sh: Permission denied
+
+[0;34mRunning test: test_client_compatibility.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_client_compatibility.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/client_combinations/test_client_compatibility.sh: Permission denied
+
+[0;34mRunning test: test_config_validation.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_config_validation.sh[0m
+Error output:
+Common consolidated library loaded successfully
+Common consolidated library loaded successfully
+Configuration file not found: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/config/test_config.yml
+Using default paths
+=== Running Configuration Validation Tests ===
+Mock mode: false
+Verbose mode: false
+
+Testing configuration file existence...
+FAIL: Configuration file does not exist at /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/config/test_config.yml
+Testing configuration file syntax...
+grep: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/config/test_config.yml: No such file or directory
+FAIL: Configuration file appears to have invalid YAML syntax (basic check)
+Testing configuration file sections...
+grep: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/config/test_config.yml: No such file or directory
+FAIL: Missing required section 'environment'
+grep: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/config/test_config.yml: No such file or directory
+FAIL: Missing required section 'execution'
+grep: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/config/test_config.yml: No such file or directory
+FAIL: Missing required section 'playbooks'
+FAIL: Configuration file is missing 3 required sections
+Testing configuration file path values...
+grep: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/config/test_config.yml: No such file or directory
+FAIL: Missing required path 'REPORT_PATH'
+grep: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/config/test_config.yml: No such file or directory
+FAIL: Missing required path 'PLAYBOOKS_PATH'
+FAIL: Configuration file is missing 2 required path values
+
+=== Test Summary ===
+Passed: 0
+Failed: 4
+Total: 4
+
+[0;34mRunning test: test_genesis_validator_setup.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_genesis_validator_setup.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/genesis_validator/test_genesis_validator_setup.sh: Permission denied
+
+[0;34mRunning test: test_validator_lifecycle.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_validator_lifecycle.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/genesis_validator/test_validator_lifecycle.sh: Permission denied
+
+[0;34mRunning test: test_client_performance.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_client_performance.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/performance_benchmark/test_client_performance.sh: Permission denied
+
+[0;34mRunning test: test_sync_performance.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_sync_performance.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/performance_benchmark/test_sync_performance.sh: Permission denied
+
+[0;34mRunning test: test_ephemery_reset_handler.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_ephemery_reset_handler.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/reset_integration/test_ephemery_reset_handler.sh: Permission denied
+
+[0;34mRunning test: test_reset_mechanism.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_reset_mechanism.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/reset_integration/test_reset_mechanism.sh: Permission denied
+
+[0;34mRunning test: test_reset_recovery.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_reset_recovery.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/reset_integration/test_reset_recovery.sh: Permission denied
+
+[0;34mRunning test: test_template.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_template.sh[0m
+Error output:
+Common consolidated library loaded successfully
+Configuration file not found: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/config/test_config.yml
+Using default paths
+
+[0;34mRunning test: test_fix_validator_passwords.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_fix_validator_passwords.sh[0m
+Error output:
+./scripts/testing/run_all_tests.sh: line 214: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/tests/validator/test_fix_validator_passwords.sh: Permission denied
+
+[0;34mRunning test: test_version_check.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_version_check.sh[0m
+Error output:
+Common consolidated library loaded successfully
+Configuration file not found: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/config/test_config.yml
+Using default paths
+
+[0;34m======================================[0m
+[0;34m           Test Summary              [0m
+[0;34m======================================[0m
+Total tests: 16
+Passed tests: [0;32m1[0m
+Failed tests: [0;31m15[0m
+Skipped tests: [1;33m0[0m
+Summary written to: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/reports/test_summary_20250319_185924.txt
+[0;31mSome tests failed![0m
