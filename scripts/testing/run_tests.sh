@@ -12,7 +12,7 @@
 # Set up environment
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Source common libraries
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
