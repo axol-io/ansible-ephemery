@@ -8,8 +8,8 @@ charset-normalizer==3.1.0
 
 # Docker and Molecule
 docker==4.4.4
-idna==3.4
+idna==2.10
 molecule==25.3.1
 molecule-docker==2.1.0
 requests==2.25.1
-urllib3==2.0.2
+urllib3==1.26.16
