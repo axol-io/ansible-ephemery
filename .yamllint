@@ -21,4 +21,4 @@ rules:
   braces: disable
   colons: disable
   commas: disable
-  empty-lines: disable 
+  empty-lines: disable
