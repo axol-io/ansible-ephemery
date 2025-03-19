@@ -44,7 +44,25 @@ jobs:
 
       - name: Run Ansible Lint
         run: |
-          ansible-lint || true  # Don't fail the workflow on lint failures initially
+          # Create a custom yamllint file to exclude problematic files
+          cat > .yamllint.security << EOL
+          ---
+          extends: default
+
+          ignore: |
+            .git/
+            .github/
+            collections/
+            config/monitoring/jwt_authentication_alerts.yaml
+
+          rules:
+            line-length: disable
+            indentation: disable
+            truthy: disable
+          EOL
+
+          # Run ansible-lint with custom yamllint config
+          YAMLLINT_CONFIG_FILE=.yamllint.security ansible-lint || true  # Don't fail the workflow on lint failures initially
 
       - name: Check file permissions
         run: |

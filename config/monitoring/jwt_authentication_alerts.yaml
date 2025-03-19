@@ -1,74 +1,74 @@
 groups:
   - name: jwt_authentication_alerts
     rules:
-    - alert: JWTAuthenticationFailure
-      expr: sum(rate(eth_execution_jwt_auth_failures_total[5m])) > 0 or sum(rate(beacon_api_execution_auth_failures_total[5m])) > 0
-      for: 2m
-      labels:
-        severity: critical
-        service: ethereum
-        component: jwt
-      annotations:
-        summary: "JWT Authentication Failures Detected"
-        description: "There are JWT authentication failures between the execution and consensus clients. Check the JWT token configuration on both clients."
-        remediation: "Run the troubleshooting script or check documentation at https://your-docs-site.com/JWT_AUTHENTICATION_TROUBLESHOOTING"
+      - alert: JWTAuthenticationFailure
+        expr: sum(rate(eth_execution_jwt_auth_failures_total[5m])) > 0 or sum(rate(beacon_api_execution_auth_failures_total[5m])) > 0
+        for: 2m
+        labels:
+          severity: critical
+          service: ethereum
+          component: jwt
+        annotations:
+          summary: "JWT Authentication Failures Detected"
+          description: "There are JWT authentication failures between the execution and consensus clients. Check the JWT token configuration on both clients."
+          remediation: "Run the troubleshooting script or check documentation at https://your-docs-site.com/JWT_AUTHENTICATION_TROUBLESHOOTING"
 
-    - alert: JWTFilePermissionsWrong
-      expr: eth_jwt_file_permissions_incorrect == 1 or beacon_jwt_file_permissions_incorrect == 1
-      for: 5m
-      labels:
-        severity: warning
-        service: ethereum
-        component: jwt
-      annotations:
-        summary: "JWT File Has Incorrect Permissions"
-        description: "The JWT secret file has incorrect permissions. It should be set to 0600."
-        remediation: "Run 'chmod 600 /path/to/jwt.hex' to fix the permissions."
+      - alert: JWTFilePermissionsWrong
+        expr: eth_jwt_file_permissions_incorrect == 1 or beacon_jwt_file_permissions_incorrect == 1
+        for: 5m
+        labels:
+          severity: warning
+          service: ethereum
+          component: jwt
+        annotations:
+          summary: "JWT File Has Incorrect Permissions"
+          description: "The JWT secret file has incorrect permissions. It should be set to 0600."
+          remediation: "Run 'chmod 600 /path/to/jwt.hex' to fix the permissions."
 
-    - alert: JWTFileMissing
-      expr: eth_jwt_file_missing == 1 or beacon_jwt_file_missing == 1
-      for: 1m
-      labels:
-        severity: critical
-        service: ethereum
-        component: jwt
-      annotations:
-        summary: "JWT Secret File Missing"
-        description: "The JWT secret file is missing from the expected location."
-        remediation: "Generate a new JWT token with 'openssl rand -hex 32 | tr -d \"\\n\" > /path/to/jwt.hex && chmod 600 /path/to/jwt.hex'"
+      - alert: JWTFileMissing
+        expr: eth_jwt_file_missing == 1 or beacon_jwt_file_missing == 1
+        for: 1m
+        labels:
+          severity: critical
+          service: ethereum
+          component: jwt
+        annotations:
+          summary: "JWT Secret File Missing"
+          description: "The JWT secret file is missing from the expected location."
+          remediation: "Generate a new JWT token with 'openssl rand -hex 32 | tr -d \"\\n\" > /path/to/jwt.hex && chmod 600 /path/to/jwt.hex'"
 
-    - alert: ChainIDMismatch
-      expr: eth_chain_id != 39438144
-      for: 1m
-      labels:
-        severity: critical
-        service: ethereum
-        component: execution
-      annotations:
-        summary: "Incorrect Chain ID Detected"
-        description: "The execution client is not using the correct Ephemery chain ID (39438144)."
-        remediation: "Restart the execution client with the correct chain ID parameter (--networkid=39438144 for Geth)"
+      - alert: ChainIDMismatch
+        expr: eth_chain_id != 39438144
+        for: 1m
+        labels:
+          severity: critical
+          service: ethereum
+          component: execution
+        annotations:
+          summary: "Incorrect Chain ID Detected"
+          description: "The execution client is not using the correct Ephemery chain ID (39438144)."
+          remediation: "Restart the execution client with the correct chain ID parameter (--networkid=39438144 for Geth)"
 
-    - alert: ExecutionConsensusDisconnected
-      expr: beacon_head_state_execution_optimistic == 1
-      for: 10m
-      labels:
-        severity: warning
-        service: ethereum
-        component: consensus
-      annotations:
-        summary: "Consensus Client in Optimistic Mode"
-        description: "The consensus client is in optimistic mode, indicating it cannot verify execution payloads. This may be due to JWT authentication issues."
-        remediation: "Check JWT token configuration and logs for authentication errors."
+      - alert: ExecutionConsensusDisconnected
+        expr: beacon_head_state_execution_optimistic == 1
+        for: 10m
+        labels:
+          severity: warning
+          service: ethereum
+          component: consensus
+        annotations:
+          summary: "Consensus Client in Optimistic Mode"
+          description: "The consensus client is in optimistic mode, indicating it cannot verify execution payloads. This may be due to JWT authentication issues."
+          remediation: "Check JWT token configuration and logs for authentication errors."
 
-    - alert: HighJWTLatency
-      expr: avg(eth_execution_jwt_auth_latency_seconds) > 0.1
-      for: 5m
-      labels:
-        severity: warning
-        service: ethereum
-        component: jwt
-      annotations:
-        summary: "High JWT Authentication Latency"
-        description: "JWT authentication is taking longer than expected, which may indicate performance issues."
-        remediation: "Check system resources and execution client performance."
+      - alert: HighJWTLatency
+        expr: avg(eth_execution_jwt_auth_latency_seconds) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: ethereum
+          component: jwt
+        annotations:
+          summary: "High JWT Authentication Latency"
+          description: "JWT authentication is taking longer than expected, which may indicate performance issues."
+          remediation: "Check system resources and execution client performance."

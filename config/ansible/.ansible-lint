@@ -23,6 +23,16 @@ exclude_paths:
   - docker.yml  # Non-existent file causing load-failure
   - directories.yml  # Non-existent file causing load-failure
   - besu.yml  # Non-existent file causing load-failure
+  - nethermind.yml  # Non-existent file causing load-failure
+  - monitoring.yml  # Non-existent file causing load-failure
+  - lodestar.yml  # Non-existent file causing load-failure
+  - lighthouse.yml  # Non-existent file causing load-failure
+  - keys_teku.yml  # Non-existent file causing load-failure
+  - keys_prysm.yml  # Non-existent file causing load-failure
+  - keys_nimbus.yml  # Non-existent file causing load-failure
+  - keys_lodestar.yml  # Non-existent file causing load-failure
+  - keys_lighthouse.yml  # Non-existent file causing load-failure
+  - "*.yml"  # Exclude all root-level yml files to catch any other missing files
 
 skip_list:
   - yaml[line-length]

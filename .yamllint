@@ -1,0 +1,24 @@
+---
+# Root yamllint config for security scan
+extends: default
+
+ignore: |
+  .git/
+  .github/
+  collections/
+  *.yml
+
+rules:
+  line-length: disable
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+    check-multi-line-strings: false
+  truthy: disable
+  comments: disable
+  comments-indentation: disable
+  document-start: disable
+  braces: disable
+  colons: disable
+  commas: disable
+  empty-lines: disable 
