@@ -1,24 +1,26 @@
 ---
-# Root yamllint config for security scan
 extends: default
 
-ignore: |
-  .git/
-  .github/
-  collections/
-  *.yml
-
 rules:
-  line-length: disable
+  line-length:
+    max: 140
+    level: warning
+  truthy:
+    allowed-values: ["true", "false", "yes", "no"]
+    check-keys: false
   indentation:
     spaces: 2
     indent-sequences: consistent
-    check-multi-line-strings: false
-  truthy: disable
-  comments: disable
-  comments-indentation: disable
-  document-start: disable
-  braces: disable
-  colons: disable
-  commas: disable
-  empty-lines: disable
+  braces:
+    max-spaces-inside: 1
+    level: error
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: false
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+
+ignore: |
+  collections/
+  .git/

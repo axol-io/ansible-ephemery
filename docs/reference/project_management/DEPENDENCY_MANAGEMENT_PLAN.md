@@ -1,176 +1,121 @@
 # Dependency Management Plan
 
-## Overview
+## Introduction
 
-This document outlines the standardized approach to dependency management in the Ephemery Node project. Consistent dependency management practices are essential for ensuring reproducible builds, minimizing version conflicts, and maintaining security across the project.
+This document outlines the strategy for managing dependencies in the Ephemery project. Dependencies include Python packages, Ansible collections, and other external resources that the project relies on.
 
-## Current Status
+## Goals
 
-An analysis of the current dependency management practices has revealed the following:
+- Ensure consistent dependency versions across development, testing, and production environments
+- Minimize dependency conflicts
+- Document the purpose and usage of each dependency
+- Establish a clear process for adding, updating, and removing dependencies
+- Support reproducible builds and deployments
 
-1. Multiple `requirements.txt` and `requirements.yaml` files exist across the project
-2. Inconsistent version pinning formats are used (e.g., `>=`, `~=`, no version constraints)
-3. Lack of centralized dependency management standards
-4. No automated validation for dependency consistency
+## Current State
 
-## Standardization Goals
+Dependencies are managed using:
 
-1. Establish consistent version pinning practices across all dependency files
-2. Implement dependency validation tools to enforce standards
-3. Document dependency management procedures for contributors
-4. Create a centralized dependency update workflow
+- `requirements.txt` - Core Python dependencies
+- `requirements-dev.txt` - Development-only Python dependencies
+- `requirements.yaml` - Ansible collections
 
-## Version Pinning Standards
+## Dependency Management Guidelines
 
-### Python Dependencies (`requirements.txt`)
+### Python Dependencies
 
-All Python dependencies in `requirements.txt` files should follow these standards:
+1. **Version Pinning**:
+   - Core dependencies should use exact version pinning: `package==1.2.3`
+   - Development dependencies can use compatible release operator: `package~=1.2.3`
 
-1. **Core Dependencies**: Use exact version pinning with `==` to ensure reproducible builds
-   ```
-   # Example
-   ansible==2.9.13
-   certifi==2023.11.17
-   ```
+2. **Dependency Categories**:
+   - Runtime dependencies go in `requirements.txt`
+   - Development/testing dependencies go in `requirements-dev.txt`
+   - Group dependencies with comments to indicate their purpose
 
-2. **Development Dependencies**: Use compatible release operator `~=` to allow for minor updates while ensuring API compatibility
-   ```
-   # Example
-   pytest~=7.3.1
-   black~=23.3.0
-   ```
+3. **Updating Dependencies**:
+   - Review updates for breaking changes before upgrading
+   - Test thoroughly after updating dependencies
+   - Document significant updates in the changelog
 
-3. **Comments**: All dependencies should include a comment indicating their purpose/category
-   ```
-   # Monitoring tools
-   prometheus-client==1.0.0
-   grafana-api==1.0.3
-   ```
+### Ansible Collections
 
-4. **Organization**: Dependencies should be grouped by category with clear headers
+1. **Version Pinning**:
+   - Use exact version pinning for core collections: `version: "==1.2.3"`
+   - For less critical collections, use bounded version ranges: `version: ">=1.2.3,<2.0.0"`
 
-### Ansible Collections (`requirements.yaml`)
+2. **Collection Categories**:
+   - All collections are listed in `requirements.yaml`
+   - Group collections by purpose or provider
 
-All Ansible collections in `requirements.yaml` files should follow these standards:
+3. **Updating Collections**:
+   - Test collection updates with integration tests
+   - Document role compatibility with collection versions
 
-1. **Core Collections**: Use exact version pinning
-   ```yaml
-   collections:
-     - name: ansible.netcommon
-       version: "==2.5.0"
-   ```
+## Tools and Automation
 
-2. **Less Critical Collections**: Use minimum version with compatible minor updates
-   ```yaml
-   collections:
-     - name: community.general
-       version: ">=4.0.0,<5.0.0"
-   ```
+### Dependency Verification
 
-3. **Organization**: Collections should be alphabetically ordered by name
+The `validate_versions.sh` script checks that:
+- All packages have proper version pinning
+- Dependencies are consistent across files
+- No conflicting dependencies exist
 
-## Implementation Plan
+### Installation
 
-### Phase 1: Inventory and Analysis (Week 1)
+Installation should be done using the provided scripts:
+```bash
+# Install all dependencies
+./scripts/install_dependencies.sh
 
-1. **Complete inventory of all dependency files**
-   - Identify all `requirements.txt` and `requirements.yaml` files
-   - Document current version constraints used
-   - Note any inconsistencies or potential conflicts
+# Install only Python dependencies
+./scripts/install_dependencies.sh --python-only
 
-2. **Create dependency graph**
-   - Map dependencies and their relationships
-   - Identify potential dependency conflicts
-   - Document minimum required versions
+# Install only Ansible collections
+./scripts/install_dependencies.sh --ansible-only
 
-### Phase 2: Standardization (Week 2)
-
-1. **Update `requirements.txt` files**
-   - Apply standardized version pinning to all dependencies
-   - Organize dependencies by category
-   - Add appropriate comments
-
-2. **Update `requirements.yaml` files**
-   - Apply standardized version pinning to all collections
-   - Organize collections alphabetically
-   - Ensure consistency across all files
-
-3. **Create centralized dependency documentation**
-   - Document all major dependencies and their purpose
-   - Include update procedures and compatibility notes
-   - Add security considerations
-
-### Phase 3: Validation and Enforcement (Week 3)
-
-1. **Create dependency validation script**
-   - Implement tool to check for consistency across all dependency files
-   - Verify version pinning follows standards
-   - Check for inconsistent versions of the same dependency
-
-2. **Set up pre-commit hooks**
-   - Add dependency validation to pre-commit process
-   - Prevent commits with non-standard version constraints
-   - Add helpful error messages for easy resolution
-
-3. **Integrate with CI/CD pipeline**
-   - Run dependency validation on pull requests
-   - Ensure all dependency updates pass validation
-   - Generate dependency reports as part of CI process
-
-## Dependency Update Workflow
-
-To ensure controlled and secure dependency updates, the following workflow should be followed:
-
-1. **Regular security scans**
-   - Run weekly scans for security vulnerabilities
-   - Prioritize security updates for immediate action
-
-2. **Quarterly dependency reviews**
-   - Review all dependencies for available updates
-   - Test compatibility of new versions
-   - Update version pins as appropriate
-
-3. **Update process**
-   - Create dedicated branch for dependency updates
-   - Update version pins according to standards
-   - Run validation script to ensure consistency
-   - Run all tests to verify compatibility
-   - Update documentation as needed
-
-## Responsibilities
-
-- **DevOps Lead**: Maintain dependency validation tools
-- **Security Engineer**: Regular security scans of dependencies
-- **Lead Developer**: Approve dependency updates
-- **All Contributors**: Follow dependency management standards
-
-## Success Criteria
-
-The dependency management standardization will be considered successful when:
-
-1. All dependency files follow consistent version pinning standards
-2. Automated validation tools are in place and integrated with CI/CD
-3. Dependency documentation is complete and up-to-date
-4. Regular dependency review process is established
-
-## Appendix: Dependency File Locations
-
-The following dependency files have been identified in the project:
-
+# Install development dependencies
+./scripts/install_dependencies.sh --dev
 ```
-./.config/requirements/requirements.yaml
-./.config/requirements/requirements.txt
-./requirements.yaml
-./requirements.txt
-./dashboard/app/requirements.txt
-./collections/ansible_collections/ansible/posix/requirements.txt
-./collections/ansible_collections/ansible/posix/tests/unit/requirements.txt
-./collections/ansible_collections/ansible/netcommon/requirements.txt
-./collections/ansible_collections/ansible/netcommon/tests/unit/requirements.txt
-./collections/ansible_collections/ansible/utils/requirements.txt
-./collections/ansible_collections/ansible/utils/tests/unit/requirements.txt
-./collections/ansible_collections/ansible/utils/tests/integration/requirements.txt
-./collections/ansible_collections/community/docker/tests/unit/requirements.txt
-./collections/ansible_collections/community/general/tests/unit/requirements.txt
-./collections/ansible_collections/community/library_inventory_filtering_v1/tests/unit/requirements.txt
-``` 
+
+## Dependency Locations
+
+Primary dependency files:
+- `./requirements.yaml`
+- `./requirements.txt`
+
+## Rollback Process
+
+If dependency updates cause issues:
+
+1. Revert to previous dependency files
+2. Run installation script to downgrade
+3. Document the issue for future reference
+
+## Dependency Documentation
+
+Each new dependency added should be documented:
+- Purpose and functionality it provides
+- Why the specific version was chosen
+- Any known limitations or issues
+
+## Dependency Review Process
+
+When adding new dependencies:
+1. Evaluate alternatives and select the most appropriate option
+2. Check license compatibility
+3. Assess security implications
+4. Test compatibility with existing dependencies
+5. Document the dependency as outlined above
+6. Submit for review with justification
+
+## Security Considerations
+
+1. Regularly check dependencies for security vulnerabilities
+2. Update vulnerable dependencies promptly
+3. Maintain a Software Bill of Materials (SBOM)
+4. Prefer well-maintained dependencies with active communities
+
+## Conclusion
+
+Following this dependency management plan will help maintain a stable, reproducible environment across all stages of development and deployment. 
