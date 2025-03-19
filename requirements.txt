@@ -1,5 +1,4 @@
 # Ansible
-ansible==2.9.13
 ansible-core==2.13.13
 ansible-lint==25.1.3
 # Core dependencies
