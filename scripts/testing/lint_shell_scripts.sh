@@ -137,10 +137,12 @@ install_shellharden() {
   echo -e "${GREEN}shellharden installed successfully.${NC}"
 }
 
-# Function to build find exclude arguments
-build_exclude_args() {
+# Find all shell scripts in the repository
+find_shell_scripts() {
+  local search_path="${1:-$PROJECT_ROOT}"
   local exclude_args=()
 
+  # Build the exclude arguments
   for dir in "${exclude_dirs[@]}"; do
     exclude_args+=("-not" "-path" "*/${dir}/*")
   done
@@ -148,15 +150,6 @@ build_exclude_args() {
   for file in "${exclude_files[@]}"; do
     exclude_args+=("-not" "-name" "${file}")
   done
-
-  echo "${exclude_args[@]}"
-}
-
-# Find all shell scripts in the repository
-find_shell_scripts() {
-  local search_path="${1:-$PROJECT_ROOT}"
-  local exclude_args
-  mapfile -t exclude_args < <(build_exclude_args)
 
   if [[ -f "$search_path" ]]; then
     # If the path is a file, check if it's a shell script
@@ -207,7 +200,7 @@ display_context() {
   echo -e "${CYAN}Context (lines ${start_line}-${end_line}):${NC}"
   sed -n "${start_line},${end_line}p" "$file" | nl -v "$start_line" -w4 -s "  " \
     | while read -r context_line; do
-      if [[ $context_line =~ ^[[:space:]]*$line_number[[:space:]] ]]; then
+      if [[ $context_line =~ ^[[:space:]]*${line_number}[[:space:]] ]]; then
         echo -e "${RED}$context_line${NC}"
       else
         echo "$context_line"
