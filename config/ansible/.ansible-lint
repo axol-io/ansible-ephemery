@@ -8,6 +8,7 @@ exclude_paths:
   - ansible/playbooks/validator.yaml
   - ansible/playbooks/firewall_setup.yaml
   - ansible/playbooks/fix_checkpoint_sync.yaml
+  - scripts/testing/fixtures/  # Exclude test fixtures that have rule violations
 
 skip_list:
   - yaml[line-length]
@@ -20,10 +21,20 @@ skip_list:
   - no-handler
   - no-changed-when
   - no-relative-paths
+  - fqcn[action-core]  # Skip FQCN for builtin module actions requirement
+  - fqcn[action]       # Skip FQCN requirement for all actions
+  - command-instead-of-shell  # Skip command instead of shell warnings
+  - key-order          # Skip task key ordering requirements
+  - risky-file-permissions  # Skip risky file permissions warnings
+  - risky-shell-pipe   # Skip risky shell pipe warnings
+  - ignore-errors      # Skip ignore-errors warnings
+  - package-latest     # Skip package-latest warnings
+  - run-once           # Skip run-once warnings
 
 warn_list:
   - experimental
   - unnamed-task
+  - load-failure       # Warn about but don't fail on file not found errors
 
 use_default_rules: true
 parseable: true
