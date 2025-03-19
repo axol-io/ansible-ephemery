@@ -1,1 +1,1 @@
-scripts/utilities/verify-collections.sh
+utilities/verify-collections.sh
