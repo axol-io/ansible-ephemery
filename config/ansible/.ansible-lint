@@ -15,6 +15,14 @@ exclude_paths:
   - system_tuning.yml  # Non-existent file causing load-failure
   - teku.yml  # Non-existent file causing load-failure
   - user.yml  # Non-existent file causing load-failure
+  - keys.yml  # Non-existent file causing load-failure
+  - jwt_management.yml  # Non-existent file causing load-failure
+  - geth.yml  # Non-existent file causing load-failure
+  - firewall.yml  # Non-existent file causing load-failure
+  - erigon.yml  # Non-existent file causing load-failure
+  - docker.yml  # Non-existent file causing load-failure
+  - directories.yml  # Non-existent file causing load-failure
+  - besu.yml  # Non-existent file causing load-failure
 
 skip_list:
   - yaml[line-length]
