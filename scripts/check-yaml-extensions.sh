@@ -1,1 +1,1 @@
-maintenance/check-yaml-extensions.sh
+scripts/monitoring/check-yaml-extensions.sh
