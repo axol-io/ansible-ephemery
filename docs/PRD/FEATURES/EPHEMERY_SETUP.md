@@ -109,6 +109,23 @@ cat deposit_data-*.json | jq ".[] | \"0x\" + .pubkey + \":\" + .withdrawal_crede
 - Check network connectivity and peer counts
 - Verify your hardware meets the requirements
 
+### JWT Authentication Issues
+
+JWT authentication problems are one of the most common causes of sync failures in Ethereum nodes. If you experience issues with Geth and Lighthouse communication, specifically:
+
+- Consensus client logs showing: "Execution endpoint is not synced"
+- Execution client logs showing: "Beacon client online, but no consensus updates received"
+- Clients running but stuck in "syncing" or "optimistic" mode
+
+These may indicate JWT authentication issues. Common root causes include:
+
+1. **Mismatched JWT secrets** between execution and consensus clients
+2. **Incorrect JWT file paths** in container configuration
+3. **Chain ID mismatches** (Geth must use 39438144 for Ephemery)
+4. **Container networking issues** preventing client communication
+
+For a detailed troubleshooting guide and fixes, see [JWT Authentication Troubleshooting](./JWT_AUTHENTICATION_TROUBLESHOOTING.md).
+
 ### Logs and Monitoring
 
 Key logs to monitor:

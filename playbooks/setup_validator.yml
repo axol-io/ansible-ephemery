@@ -1,0 +1,60 @@
+---
+# Validator setup playbook
+# This playbook sets up an Ethereum validator node
+# It depends on having a consensus and execution client already set up
+
+- name: Set up Ethereum validator node
+  hosts: "{{ target | default('all') }}"
+  become: true
+  gather_facts: true
+  vars_files:
+    - "{{ playbook_dir }}/../config/default.yml"
+  
+  pre_tasks:
+    - name: Include node-specific variables
+      include_vars:
+        file: "{{ playbook_dir }}/../config/nodes/{{ inventory_hostname }}.yml"
+      when: inventory_hostname is defined
+      
+    - name: Check if consensus client is running
+      command: systemctl is-active {{ cl_client_name }}
+      register: cl_status
+      changed_when: false
+      ignore_errors: true
+      
+    - name: Fail if consensus client is not running
+      fail:
+        msg: "Consensus client ({{ cl_client_name }}) is not running! Please set up a consensus client first."
+      when: cl_status.stdout != "active"
+      
+  roles:
+    - role: common
+      tags: ['common']
+      
+    - role: validator
+      validator_client_name: "{{ cl_client_name }}"
+      tags: ['validator']
+      
+  post_tasks:
+    - name: Check validator status
+      command: "systemctl status {{ validator_client_name }}-validator"
+      register: validator_status
+      changed_when: false
+      ignore_errors: true
+      
+    - name: Display validator status
+      debug:
+        msg: "Validator service status: {{ validator_status.stdout_lines }}"
+        
+    - name: Verify validator metrics endpoint
+      uri:
+        url: "http://localhost:{{ validator_metrics_port | default(8009) }}/metrics"
+        method: GET
+        status_code: 200
+      register: metrics_check
+      changed_when: false
+      ignore_errors: true
+      
+    - name: Display metrics check result
+      debug:
+        msg: "Validator metrics endpoint {% if metrics_check.status == 200 %}is available{% else %}is not available{% endif %}" 

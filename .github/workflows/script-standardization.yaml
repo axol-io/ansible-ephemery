@@ -1,0 +1,203 @@
+name: Script Standardization Check
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'scripts/**/*.sh'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'scripts/**/*.sh'
+  workflow_dispatch:
+
+jobs:
+  check-script-standardization:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck bc jq
+
+      - name: Run shellcheck
+        run: |
+          find scripts -type f -name "*.sh" -exec shellcheck -x {} \;
+
+      - name: Check for common library inclusion
+        run: |
+          echo "Checking scripts for common library inclusion..."
+          missing_common=()
+          for script in $(find scripts -type f -name "*.sh" -not -path "scripts/lib/*"); do
+            if ! grep -q "source.*lib/common.sh" "$script"; then
+              missing_common+=("$script")
+            fi
+          done
+          
+          if [ ${#missing_common[@]} -gt 0 ]; then
+            echo "::error::The following scripts don't source the common library:"
+            printf "  - %s\n" "${missing_common[@]}"
+            exit 1
+          else
+            echo "All scripts include common library. ✓"
+          fi
+
+      - name: Check for version information
+        run: |
+          echo "Checking scripts for version information..."
+          missing_version=()
+          for script in $(find scripts -type f -name "*.sh" -not -path "scripts/lib/*"); do
+            if ! grep -q "# Version:" "$script"; then
+              missing_version+=("$script")
+            fi
+          done
+          
+          if [ ${#missing_version[@]} -gt 0 ]; then
+            echo "::error::The following scripts don't have version information:"
+            printf "  - %s\n" "${missing_version[@]}"
+            exit 1
+          else
+            echo "All scripts include version information. ✓"
+          fi
+
+      - name: Check for proper error handling
+        run: |
+          echo "Checking scripts for proper error handling..."
+          missing_error_handling=()
+          for script in $(find scripts -type f -name "*.sh" -not -path "scripts/lib/*"); do
+            if ! grep -q "set -e" "$script" && ! grep -q "setup_error_trap" "$script"; then
+              missing_error_handling+=("$script")
+            fi
+          done
+          
+          if [ ${#missing_error_handling[@]} -gt 0 ]; then
+            echo "::error::The following scripts don't have proper error handling:"
+            printf "  - %s\n" "${missing_error_handling[@]}"
+            exit 1
+          else
+            echo "All scripts include error handling. ✓"
+          fi
+
+      - name: Check for standard path definitions
+        run: |
+          echo "Checking scripts for standard path definitions..."
+          missing_paths=()
+          for script in $(find scripts -type f -name "*.sh" -not -path "scripts/lib/*"); do
+            if ! grep -q "SCRIPT_DIR=" "$script" || ! grep -q "PROJECT_ROOT=" "$script"; then
+              missing_paths+=("$script")
+            fi
+          done
+          
+          if [ ${#missing_paths[@]} -gt 0 ]; then
+            echo "::error::The following scripts don't define standard paths:"
+            printf "  - %s\n" "${missing_paths[@]}"
+            exit 1
+          else
+            echo "All scripts define standard paths. ✓"
+          fi
+
+      - name: Check for direct echo statements instead of logging
+        run: |
+          echo "Checking scripts for direct echo statements..."
+          
+          # First check if the script sources common.sh
+          for script in $(find scripts -type f -name "*.sh" -not -path "scripts/lib/*"); do
+            if grep -q "source.*lib/common.sh" "$script"; then
+              # Count direct echo statements that don't appear in usage information sections
+              echo_count=$(grep -v "# Usage:" -A 20 "$script" | grep -c "^[[:space:]]*echo" || true)
+              
+              if [ "$echo_count" -gt 3 ]; then
+                echo "::warning::Script $script has $echo_count direct echo statements, consider using log_* functions instead"
+              fi
+            fi
+          done
+          
+          echo "Direct echo statement check complete."
+
+      - name: Check for dependency verification
+        run: |
+          echo "Checking scripts for dependency verification..."
+          missing_dependency_check=()
+          for script in $(find scripts -type f -name "*.sh" -not -path "scripts/lib/*"); do
+            if ! grep -q "check_dependencies" "$script" && ! grep -q "is_command_available" "$script"; then
+              missing_dependency_check+=("$script")
+            fi
+          done
+          
+          if [ ${#missing_dependency_check[@]} -gt 0 ]; then
+            echo "::warning::The following scripts don't check for dependencies:"
+            printf "  - %s\n" "${missing_dependency_check[@]}"
+          else
+            echo "All scripts include dependency checks. ✓"
+          fi
+
+      - name: Generate documentation report
+        run: |
+          mkdir -p docs/reports
+          
+          echo "# Script Standardization Report" > docs/reports/standardization.md
+          echo "" >> docs/reports/standardization.md
+          echo "Generated on: $(date)" >> docs/reports/standardization.md
+          echo "" >> docs/reports/standardization.md
+          
+          # Count total scripts
+          total_scripts=$(find scripts -type f -name "*.sh" -not -path "scripts/lib/*" | wc -l)
+          echo "## Summary" >> docs/reports/standardization.md
+          echo "" >> docs/reports/standardization.md
+          echo "- Total scripts: $total_scripts" >> docs/reports/standardization.md
+          
+          # Count scripts with common library
+          with_common=$(find scripts -type f -name "*.sh" -not -path "scripts/lib/*" -exec grep -l "source.*lib/common.sh" {} \; | wc -l)
+          echo "- Scripts using common library: $with_common ($(( with_common * 100 / total_scripts ))%)" >> docs/reports/standardization.md
+          
+          # Count scripts with version info
+          with_version=$(find scripts -type f -name "*.sh" -not -path "scripts/lib/*" -exec grep -l "# Version:" {} \; | wc -l)
+          echo "- Scripts with version information: $with_version ($(( with_version * 100 / total_scripts ))%)" >> docs/reports/standardization.md
+          
+          # Count scripts with error handling
+          with_error_handling=$(find scripts -type f -name "*.sh" -not -path "scripts/lib/*" -exec grep -l -E "set -e|setup_error_trap" {} \; | wc -l)
+          echo "- Scripts with error handling: $with_error_handling ($(( with_error_handling * 100 / total_scripts ))%)" >> docs/reports/standardization.md
+          
+          # Count scripts with standard paths
+          with_paths=$(find scripts -type f -name "*.sh" -not -path "scripts/lib/*" -exec grep -l -E "SCRIPT_DIR=|PROJECT_ROOT=" {} \; | wc -l)
+          echo "- Scripts with standard path definitions: $with_paths ($(( with_paths * 100 / total_scripts ))%)" >> docs/reports/standardization.md
+          
+          # Count scripts with dependency checks
+          with_dependency_checks=$(find scripts -type f -name "*.sh" -not -path "scripts/lib/*" -exec grep -l -E "check_dependencies|is_command_available" {} \; | wc -l)
+          echo "- Scripts with dependency checks: $with_dependency_checks ($(( with_dependency_checks * 100 / total_scripts ))%)" >> docs/reports/standardization.md
+          
+          echo "" >> docs/reports/standardization.md
+          echo "## Recommendations" >> docs/reports/standardization.md
+          echo "" >> docs/reports/standardization.md
+          
+          if [ "$with_common" -lt "$total_scripts" ]; then
+            echo "- Add common library sourcing to $(( total_scripts - with_common )) scripts" >> docs/reports/standardization.md
+          fi
+          
+          if [ "$with_version" -lt "$total_scripts" ]; then
+            echo "- Add version information to $(( total_scripts - with_version )) scripts" >> docs/reports/standardization.md
+          fi
+          
+          if [ "$with_error_handling" -lt "$total_scripts" ]; then
+            echo "- Add proper error handling to $(( total_scripts - with_error_handling )) scripts" >> docs/reports/standardization.md
+          fi
+          
+          if [ "$with_paths" -lt "$total_scripts" ]; then
+            echo "- Add standard path definitions to $(( total_scripts - with_paths )) scripts" >> docs/reports/standardization.md
+          fi
+          
+          if [ "$with_dependency_checks" -lt "$total_scripts" ]; then
+            echo "- Add dependency checks to $(( total_scripts - with_dependency_checks )) scripts" >> docs/reports/standardization.md
+          fi
+          
+          echo "Documentation report generated: docs/reports/standardization.md"
+
+      - name: Upload artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v3
+        with:
+          name: standardization-report
+          path: docs/reports/standardization.md 

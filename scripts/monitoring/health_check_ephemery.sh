@@ -4,15 +4,19 @@
 # This script performs health checks and performance monitoring for Ephemery nodes
 # Version: 1.1.0
 
-# Source core utilities
+# Get the absolute path to the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-CORE_DIR="${SCRIPT_DIR}/scripts/core"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+CORE_DIR="${SCRIPT_DIR}/../core"
 
 # Source path configuration
 if [ -f "${CORE_DIR}/path_config.sh" ]; then
   source "${CORE_DIR}/path_config.sh"
 else
-  echo "Warning: Path configuration not found. Using legacy path definitions."
+  log_warn "Path configuration not found. Using legacy path definitions."
   # Fallback to local definitions if common config not found
   EPHEMERY_BASE_DIR=~/ephemery
   EPHEMERY_GETH_CONTAINER="ephemery-geth"
@@ -34,32 +38,24 @@ if [ -f "${CORE_DIR}/common.sh" ]; then
   source "${CORE_DIR}/common.sh"
 fi
 
-# Color definitions
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Default settings
+CHECK_MODE="basic"
+CUSTOM_BASE_DIR=""
 
 # Function to display usage information
 show_usage() {
-  if type log_info &>/dev/null; then
     log_info "Ephemery Node Health Check Script"
-  else
-    echo -e "${BLUE}Ephemery Node Health Check Script${NC}"
-  fi
-  
-  echo ""
-  echo "Usage: $0 [options]"
-  echo ""
-  echo "Options:"
-  echo "  -b, --basic           Run basic health checks (default)"
-  echo "  -f, --full            Run comprehensive health checks"
-  echo "  -p, --performance     Run performance checks"
-  echo "  -n, --network         Run network checks"
-  echo "  --base-dir PATH       Specify a custom base directory (default: ${EPHEMERY_BASE_DIR:-~/ephemery})"
-  echo "  -h, --help            Show this help message"
-  echo ""
+    echo ""
+    echo "Usage: $0 [options]"
+    echo ""
+    echo "Options:"
+    echo "  -b, --basic           Run basic health checks (default)"
+    echo "  -f, --full            Run comprehensive health checks"
+    echo "  -p, --performance     Run performance checks"
+    echo "  -n, --network         Run network checks"
+    echo "  --base-dir PATH       Specify a custom base directory (default: ${EPHEMERY_BASE_DIR})"
+    echo "  -h, --help            Show this help message"
+    echo ""
 }
 
 # Parse command line arguments
@@ -95,7 +91,7 @@ while [[ $# -gt 0 ]]; do
       if type handle_error &>/dev/null; then
         handle_error "ERROR" "Unknown option: $1" "${EXIT_CODES[INVALID_ARGUMENT]}"
       else
-        echo -e "${RED}Unknown option: $1${NC}"
+        log_error "Unknown option: $1"
         show_usage
         exit 1
       fi
@@ -103,8 +99,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-echo -e "${BLUE}===== Ephemery Node Health Check =====${NC}"
-echo -e "Running ${CHECK_TYPE} health check..."
+log_info "===== Ephemery Node Health Check ====="
+log_info "Running ${CHECK_TYPE} health check..."
 echo ""
 
 # Basic container status check
@@ -114,7 +110,7 @@ check_container_status() {
   if type log_info &>/dev/null; then
     log_info "Checking ${container_name} status..."
   else
-    echo -e "${BLUE}Checking ${container_name} status...${NC}"
+    log_info "Checking ${container_name} status..."
   fi
 
   if type is_container_running &>/dev/null; then
@@ -122,24 +118,24 @@ check_container_status() {
       if type log_success &>/dev/null; then
         log_success "${container_name} is running"
       else
-        echo -e "${GREEN}✓ ${container_name} is running${NC}"
+        log_success "${container_name} is running"
       fi
       return 0
     else
       if type log_error &>/dev/null; then
         log_error "${container_name} is not running"
       else
-        echo -e "${RED}✗ ${container_name} is not running${NC}"
+        log_error "${container_name} is not running"
       fi
       return 1
     fi
   else
     # Fallback if common.sh is not available
     if docker ps | grep -q "${container_name}"; then
-      echo -e "${GREEN}✓ ${container_name} is running${NC}"
+      log_success "${container_name} is running"
       return 0
     else
-      echo -e "${RED}✗ ${container_name} is not running${NC}"
+      log_error "${container_name} is not running"
       return 1
     fi
   fi
@@ -152,7 +148,7 @@ check_container_resources() {
   if type log_info &>/dev/null; then
     log_info "Checking ${container_name} resource usage..."
   else
-    echo -e "${BLUE}Checking ${container_name} resource usage...${NC}"
+    log_info "Checking ${container_name} resource usage..."
   fi
 
   if type is_container_running &>/dev/null; then
@@ -176,20 +172,20 @@ check_container_resources() {
         if type log_error &>/dev/null; then
           log_error "High memory usage detected"
         else
-          echo -e "${RED}✗ High memory usage detected${NC}"
+          log_error "High memory usage detected"
         fi
       else
         if type log_success &>/dev/null; then
           log_success "Memory usage within normal range"
         else
-          echo -e "${GREEN}✓ Memory usage within normal range${NC}"
+          log_success "Memory usage within normal range"
         fi
       fi
     else
       if type log_error &>/dev/null; then
         log_error "Container not running, cannot check resources"
       else
-        echo -e "${RED}✗ Container not running, cannot check resources${NC}"
+        log_error "Container not running, cannot check resources"
       fi
       return 1
     fi
@@ -206,12 +202,12 @@ check_container_resources() {
 
       # Check if memory usage is high (>85%)
       if [[ ${mem_perc} > 85% ]]; then
-        echo -e "${RED}✗ High memory usage detected${NC}"
+        log_error "High memory usage detected"
       else
-        echo -e "${GREEN}✓ Memory usage within normal range${NC}"
+        log_success "Memory usage within normal range"
       fi
     else
-      echo -e "${RED}✗ Container not running, cannot check resources${NC}"
+      log_error "Container not running, cannot check resources"
       return 1
     fi
   fi
@@ -222,7 +218,7 @@ check_disk_space() {
   if type log_info &>/dev/null; then
     log_info "Checking disk space..."
   else
-    echo -e "${BLUE}Checking disk space...${NC}"
+    log_info "Checking disk space..."
   fi
 
   # Use standardized path if available
@@ -253,16 +249,16 @@ check_disk_space() {
   if [[ ${use_percentage%\%} -gt 85 ]]; then
     if type log_error &>/dev/null; then
       log_error "Disk usage is high (${use_percentage})"
-      log_warning "Consider pruning data or adding more storage"
+      log_warn "Consider pruning data or adding more storage"
     else
-      echo -e "${RED}✗ Disk usage is high (${use_percentage})${NC}"
-      echo -e "${YELLOW}Consider pruning data or adding more storage${NC}"
+      log_error "Disk usage is high (${use_percentage})"
+      log_warn "Consider pruning data or adding more storage"
     fi
   else
     if type log_success &>/dev/null; then
       log_success "Disk usage within normal range"
     else
-      echo -e "${GREEN}✓ Disk usage within normal range${NC}"
+      log_success "Disk usage within normal range"
     fi
   fi
 }
@@ -272,7 +268,7 @@ check_geth_sync_status() {
   if type log_info &>/dev/null; then
     log_info "Checking Geth sync status..."
   else
-    echo -e "${BLUE}Checking Geth sync status...${NC}"
+    log_info "Checking Geth sync status..."
   fi
 
   local geth_endpoint="http://localhost:8545"
@@ -289,7 +285,7 @@ check_geth_sync_status() {
       if type log_success &>/dev/null; then
         log_success "Geth is fully synced"
       else
-        echo -e "${GREEN}✓ Geth is fully synced${NC}"
+        log_success "Geth is fully synced"
       fi
 
       # Get latest block info
@@ -305,10 +301,10 @@ check_geth_sync_status() {
         echo -e "Latest Block: ${block_dec}"
       fi
     else
-      if type log_warning &>/dev/null; then
-        log_warning "Geth is syncing"
+      if type log_warn &>/dev/null; then
+        log_warn "Geth is syncing"
       else
-        echo -e "${YELLOW}⟳ Geth is syncing${NC}"
+        log_warn "Geth is syncing"
       fi
 
       # Extract sync information
@@ -331,7 +327,7 @@ check_geth_sync_status() {
     if type log_error &>/dev/null; then
       log_error "Failed to connect to Geth API"
     else
-      echo -e "${RED}✗ Failed to connect to Geth API${NC}"
+      log_error "Failed to connect to Geth API"
     fi
   fi
 }
@@ -341,7 +337,7 @@ check_lighthouse_sync_status() {
   if type log_info &>/dev/null; then
     log_info "Checking Lighthouse sync status..."
   else
-    echo -e "${BLUE}Checking Lighthouse sync status...${NC}"
+    log_info "Checking Lighthouse sync status..."
   fi
 
   local lighthouse_endpoint="http://localhost:5052/eth/v1/node/syncing"
@@ -359,7 +355,7 @@ check_lighthouse_sync_status() {
       if type log_success &>/dev/null; then
         log_success "Lighthouse is fully synced"
       else
-        echo -e "${GREEN}✓ Lighthouse is fully synced${NC}"
+        log_success "Lighthouse is fully synced"
       fi
       
       # Get current head slot
@@ -374,10 +370,10 @@ check_lighthouse_sync_status() {
         echo -e "Current Head Slot: ${slot}"
       fi
     else
-      if type log_warning &>/dev/null; then
-        log_warning "Lighthouse is syncing"
+      if type log_warn &>/dev/null; then
+        log_warn "Lighthouse is syncing"
       else
-        echo -e "${YELLOW}⟳ Lighthouse is syncing${NC}"
+        log_warn "Lighthouse is syncing"
       fi
       
       # Extract sync information if available
@@ -401,7 +397,7 @@ check_lighthouse_sync_status() {
     if type log_error &>/dev/null; then
       log_error "Failed to connect to Lighthouse API"
     else
-      echo -e "${RED}✗ Failed to connect to Lighthouse API${NC}"
+      log_error "Failed to connect to Lighthouse API"
     fi
   fi
 }
@@ -411,23 +407,23 @@ check_validators() {
   if type log_info &>/dev/null; then
     log_info "Checking validators..."
   else
-    echo -e "${BLUE}Checking validators...${NC}"
+    log_info "Checking validators..."
   fi
 
   if type is_container_running &>/dev/null; then
     if ! is_container_running "${EPHEMERY_VALIDATOR_CONTAINER}"; then
-      if type log_warning &>/dev/null; then
-        log_warning "Validator client not running"
+      if type log_warn &>/dev/null; then
+        log_warn "Validator client not running"
       else
-        echo -e "${YELLOW}⚠ Validator client not running${NC}"
+        log_warn "Validator client not running"
       fi
       return 1
     fi
   elif ! docker ps | grep -q "${EPHEMERY_VALIDATOR_CONTAINER}"; then
-    if type log_warning &>/dev/null; then
-      log_warning "Validator client not running"
+    if type log_warn &>/dev/null; then
+      log_warn "Validator client not running"
     else
-      echo -e "${YELLOW}⚠ Validator client not running${NC}"
+      log_warn "Validator client not running"
     fi
     return 1
   fi
@@ -445,7 +441,7 @@ check_validators() {
     if type log_success &>/dev/null; then
       log_success "${validator_count} validators configured"
     else
-      echo -e "${GREEN}✓ ${validator_count} validators configured${NC}"
+      log_success "${validator_count} validators configured"
     fi
 
     # Try to get active validators
@@ -463,14 +459,14 @@ check_validators() {
         if type log_success &>/dev/null; then
           log_success "${active_count} validators active"
         else
-          echo -e "${GREEN}✓ ${active_count} validators active${NC}"
+          log_success "${active_count} validators active"
         fi
       fi
       if [ "${pending_count}" -gt 0 ]; then
-        if type log_warning &>/dev/null; then
-          log_warning "${pending_count} validators pending activation"
+        if type log_warn &>/dev/null; then
+          log_warn "${pending_count} validators pending activation"
         else
-          echo -e "${YELLOW}⚠ ${pending_count} validators pending activation${NC}"
+          log_warn "${pending_count} validators pending activation"
         fi
       fi
     fi
@@ -478,7 +474,7 @@ check_validators() {
     if type log_error &>/dev/null; then
       log_error "No validators configured or unable to access validator data"
     else
-      echo -e "${RED}✗ No validators configured or unable to access validator data${NC}"
+      log_error "No validators configured or unable to access validator data"
     fi
   fi
 }
@@ -488,7 +484,7 @@ check_network_connectivity() {
   if type log_info &>/dev/null; then
     log_info "Checking network connectivity..."
   else
-    echo -e "${BLUE}Checking network connectivity...${NC}"
+    log_info "Checking network connectivity..."
   fi
 
   # Check Geth peer count
@@ -508,20 +504,20 @@ check_network_connectivity() {
       if type log_error &>/dev/null; then
         log_error "Low peer count for Geth (< 5)"
       else
-        echo -e "${RED}✗ Low peer count for Geth (< 5)${NC}"
+        log_error "Low peer count for Geth (< 5)"
       fi
     else
       if type log_success &>/dev/null; then
         log_success "Geth peer count is good"
       else
-        echo -e "${GREEN}✓ Geth peer count is good${NC}"
+        log_success "Geth peer count is good"
       fi
     fi
   else
     if type log_error &>/dev/null; then
       log_error "Unable to get Geth peer count"
     else
-      echo -e "${RED}✗ Unable to get Geth peer count${NC}"
+      log_error "Unable to get Geth peer count"
     fi
   fi
 
@@ -541,20 +537,20 @@ check_network_connectivity() {
       if type log_error &>/dev/null; then
         log_error "Low peer count for Lighthouse (< 5)"
       else
-        echo -e "${RED}✗ Low peer count for Lighthouse (< 5)${NC}"
+        log_error "Low peer count for Lighthouse (< 5)"
       fi
     else
       if type log_success &>/dev/null; then
         log_success "Lighthouse peer count is good"
       else
-        echo -e "${GREEN}✓ Lighthouse peer count is good${NC}"
+        log_success "Lighthouse peer count is good"
       fi
     fi
   else
     if type log_error &>/dev/null; then
       log_error "Unable to get Lighthouse peer count"
     else
-      echo -e "${RED}✗ Unable to get Lighthouse peer count${NC}"
+      log_error "Unable to get Lighthouse peer count"
     fi
   fi
 }
@@ -564,7 +560,7 @@ run_performance_checks() {
   if type log_info &>/dev/null; then
     log_info "Running performance checks..."
   else
-    echo -e "${BLUE}Running performance checks...${NC}"
+    log_info "Running performance checks..."
   fi
 
   # Check Geth performance
@@ -588,7 +584,7 @@ run_performance_checks() {
   if type log_info &>/dev/null; then
     log_info "Checking disk I/O performance..."
   else
-    echo -e "${BLUE}Checking disk I/O performance...${NC}"
+    log_info "Checking disk I/O performance..."
   fi
 
   if which iostat > /dev/null 2>&1; then
@@ -598,12 +594,12 @@ run_performance_checks() {
       iostat -x | grep -v loop | grep -v ram
     fi
   else
-    if type log_warning &>/dev/null; then
-      log_warning "iostat not available, skipping detailed I/O statistics"
+    if type log_warn &>/dev/null; then
+      log_warn "iostat not available, skipping detailed I/O statistics"
       log_info "Basic disk performance:"
     else
-      echo -e "${YELLOW}iostat not available, skipping detailed I/O statistics${NC}"
-      echo -e "${BLUE}Basic disk performance:${NC}"
+      log_warn "iostat not available, skipping detailed I/O statistics"
+      log_info "Basic disk performance:"
     fi
 
     # Use standardized path if available
@@ -629,7 +625,7 @@ run_performance_checks() {
 if type log_info &>/dev/null; then
   log_info "Starting health check (type: ${CHECK_TYPE})"
 else
-  echo -e "${BLUE}Starting health check (type: ${CHECK_TYPE})${NC}"
+  log_info "Starting health check (type: ${CHECK_TYPE})"
 fi
 
 case ${CHECK_TYPE} in
@@ -637,7 +633,7 @@ case ${CHECK_TYPE} in
     if type log_info &>/dev/null; then
       log_info "Running basic health checks..."
     else
-      echo -e "${BLUE}Running basic health checks...${NC}"
+      log_info "Running basic health checks..."
     fi
     check_container_status "${EPHEMERY_GETH_CONTAINER}"
     check_container_status "${EPHEMERY_LIGHTHOUSE_CONTAINER}"
@@ -650,7 +646,7 @@ case ${CHECK_TYPE} in
     if type log_info &>/dev/null; then
       log_info "Running comprehensive health checks..."
     else
-      echo -e "${BLUE}Running comprehensive health checks...${NC}"
+      log_info "Running comprehensive health checks..."
     fi
     check_container_status "${EPHEMERY_GETH_CONTAINER}"
     check_container_status "${EPHEMERY_LIGHTHOUSE_CONTAINER}"
@@ -669,7 +665,7 @@ case ${CHECK_TYPE} in
     if type log_info &>/dev/null; then
       log_info "Running network checks..."
     else
-      echo -e "${BLUE}Running network checks...${NC}"
+      log_info "Running network checks..."
     fi
     check_container_status "${EPHEMERY_GETH_CONTAINER}"
     check_container_status "${EPHEMERY_LIGHTHOUSE_CONTAINER}"
@@ -679,7 +675,7 @@ case ${CHECK_TYPE} in
     if type handle_error &>/dev/null; then
       handle_error "ERROR" "Unknown check type: ${CHECK_TYPE}" "${EXIT_CODES[INVALID_ARGUMENT]}"
     else
-      echo -e "${RED}Unknown check type: ${CHECK_TYPE}${NC}"
+      log_error "Unknown check type: ${CHECK_TYPE}"
       show_usage
       exit 1
     fi
@@ -689,5 +685,5 @@ esac
 if type log_success &>/dev/null; then
   log_success "Health checks completed"
 else
-  echo -e "${GREEN}Health checks completed${NC}"
+  log_success "Health checks completed"
 fi

@@ -13,6 +13,8 @@ cd "${PROJECT_ROOT}" || {
 
 # Source path configuration to get standardized names
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 CORE_DIR="${PROJECT_ROOT}/scripts/core"
 if [[ -f "${CORE_DIR}/path_config.sh" ]]; then
   source "${CORE_DIR}/path_config.sh"

@@ -1,68 +1,78 @@
 # Ephemery Scripts
 
-This directory contains scripts for managing and operating Ephemery nodes and validators.
-
-## Script Categories
-
-### Setup and Deployment
-- `setup/setup_ephemery.sh` - Sets up an Ephemery node with both execution (Geth) and consensus (Lighthouse) clients
-- `validator/setup_ephemery_validator.sh` - Sets up a Lighthouse validator client for participating in the Ephemery network
-- `deployment/setup_obol_squadstaking.sh` - Sets up Obol distributed validator technology integration
-
-### Monitoring and Health Checks
-- `monitoring/monitor_ephemery.sh` - Monitors logs and status of running Ephemery clients
-- `monitoring/health_check_ephemery.sh` - Performs health checks on node performance, sync status, and more
-
-### Maintenance and Troubleshooting
-- `maintenance/prune_ephemery_data.sh` - Manages disk space by pruning unnecessary data
-- `maintenance/troubleshoot_ephemery.sh` - Diagnoses and fixes common issues with Ephemery nodes
-
-### Validator Management
-- `validator/backup_restore_validators.sh` - Backs up and restores validator keys and slashing protection data
-
-## Usage Guidelines
-
-1. **Script Location**: All scripts are organized in subdirectories based on their functionality.
-
-2. **Configuration**: Most scripts source common configuration from shared utilities. Modify these for default settings.
-
-3. **Execution**: Run scripts from the repository root, for example:
-   ```bash
-   ./scripts/setup/setup_ephemery.sh
-   ```
-
-4. **Help Options**: All scripts provide help information with the `-h` or `--help` option.
-
-## Best Practices
-
-1. **Backup First**: Always backup important data before running maintenance scripts.
-
-2. **Dry Run**: Many scripts have a dry run option to show what would be done without making changes.
-
-3. **Test in Development**: Test scripts in a development environment before using in production.
-
-4. **Check Logs**: Monitor logs after running scripts to ensure operations completed successfully.
-
-5. **Security**: Be careful with scripts that modify validator keys or authentication data.
+This directory contains scripts used for deploying, maintaining, and monitoring Ephemery nodes.
 
 ## Directory Structure
 
-- `setup/` - Scripts for initial setup and configuration
-  - `setup_ephemery.sh` - Main setup script for Ephemery node
+The scripts are organized into the following directories:
 
-- `validator/` - Scripts for validator management
-  - `setup_ephemery_validator.sh` - Setup script for validator nodes
-  - `backup_restore_validators.sh` - Backup and restore utilities for validator keys
+- `deployment/`: Scripts for deployment operations
+- `maintenance/`: Scripts for maintenance tasks
+- `monitoring/`: Scripts for monitoring and alerting
+- `utilities/`: Helper scripts and tools
+- `testing/`: Scripts for testing deployments
 
-- `monitoring/` - Scripts for monitoring and health checks
-  - `monitor_ephemery.sh` - Main monitoring script
-  - `health_check_ephemery.sh` - Health check utilities
+## Script Standards
 
-- `maintenance/` - Scripts for system maintenance
-  - `prune_ephemery_data.sh` - Data pruning utilities
-  - `troubleshoot_ephemery.sh` - Troubleshooting utilities
+All scripts in this repository follow these standards:
 
-- `deployment/` - Scripts for deployment and integration
-  - `setup_obol_squadstaking.sh` - Obol DVT integration setup
+1. **Naming Convention**: All scripts use `snake_case` naming
+2. **Standard Header**: Each script includes a header with:
+   - Purpose
+   - Usage instructions
+   - Parameter descriptions
+   - Author information
 
-For detailed usage instructions for each script, please refer to the main [README.md](../README.md) or run the script with the `--help` flag.
+3. **Error Handling**: Proper error handling and validation
+4. **Common Utilities**: Shared utility functions from `utilities/` directory
+
+## Common Operations
+
+### Deployment
+
+```bash
+# Deploy a new Ephemery node
+./scripts/deployment/deploy_node.sh
+
+# Apply genesis configuration
+./scripts/deployment/apply_genesis.sh
+```
+
+### Maintenance
+
+```bash
+# Check node sync status
+./scripts/maintenance/check_sync_status.sh
+
+# Monitor logs
+./scripts/maintenance/monitor_logs.sh
+```
+
+### Monitoring
+
+```bash
+# Deploy monitoring dashboard
+./scripts/monitoring/deploy_dashboard.sh
+
+# Check validator status
+./scripts/monitoring/check_validator_status.sh
+```
+
+## Contributing
+
+When adding new scripts:
+
+1. Place them in the appropriate directory
+2. Follow the naming convention
+3. Include the standard header
+4. Use the common utility functions where applicable
+5. Add appropriate error handling
+6. Update documentation if necessary
+
+## Integration with Ansible Roles
+
+Scripts are designed to work with the role-based structure:
+
+- They reference standardized variable names
+- They work with the consolidated playbooks
+- They support all client combinations

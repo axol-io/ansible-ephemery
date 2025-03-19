@@ -1,0 +1,34 @@
+# Ansible managed: Ephemery user sudoers configuration
+
+# Allow ephemery user to restart services without password
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl restart geth
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl restart lighthouse
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl restart prysm
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl restart nethermind
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl restart besu
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl restart teku
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl restart nimbus
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl restart lodestar
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl restart erigon
+
+# Allow ephemery user to check service status without password
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl status geth
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl status lighthouse
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl status prysm
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl status nethermind
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl status besu
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl status teku
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl status nimbus
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl status lodestar
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/systemctl status erigon
+
+# Allow ephemery user to view logs without password
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/journalctl -fu geth
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/journalctl -fu lighthouse
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/journalctl -fu prysm
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/journalctl -fu nethermind
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/journalctl -fu besu
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/journalctl -fu teku
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/journalctl -fu nimbus
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/journalctl -fu lodestar
+{{ common_user }} ALL=(ALL) NOPASSWD: /bin/journalctl -fu erigon 

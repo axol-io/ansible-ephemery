@@ -1,0 +1,28 @@
+---
+# Fixture for client combinations testing
+# This is a minimal Ansible playbook for testing different client combinations
+
+- name: Client Combinations Test Fixture
+  hosts: localhost
+  gather_facts: false
+  vars:
+    execution_clients:
+      - geth
+      - nethermind
+      - besu
+    consensus_clients:
+      - lighthouse
+      - teku
+      - nimbus
+      - prysm
+    network_name: "ephemery_test"
+
+  tasks:
+    - name: Test each client combination
+      include_tasks: client_combination_task.yaml
+      vars:
+        execution_client: "{{ item[0] }}"
+        consensus_client: "{{ item[1] }}"
+      loop: "{{ execution_clients | product(consensus_clients) | list }}"
+      loop_control:
+        label: "{{ item[0] }} + {{ item[1] }}" 

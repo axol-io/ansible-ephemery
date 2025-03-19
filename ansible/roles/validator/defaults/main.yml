@@ -1,0 +1,65 @@
+---
+# Default variables for the validator role
+
+# Client selection - this should match the consensus client
+validator_client_name: "lighthouse"  # Options: lighthouse, prysm, teku, nimbus, lodestar
+
+# Client versions (latest by default)
+validator_lighthouse_version: "latest"
+validator_prysm_version: "latest"
+validator_teku_version: "latest"
+validator_nimbus_version: "latest"
+validator_lodestar_version: "latest"
+
+# Data directories
+validator_data_dir: "{{ data_dir }}/validator"
+lighthouse_validator_data_dir: "{{ validator_data_dir }}/lighthouse"
+prysm_validator_data_dir: "{{ validator_data_dir }}/prysm"
+teku_validator_data_dir: "{{ validator_data_dir }}/teku"
+nimbus_validator_data_dir: "{{ validator_data_dir }}/nimbus"
+lodestar_validator_data_dir: "{{ validator_data_dir }}/lodestar"
+
+# Keys and secrets
+validator_keys_dir: "{{ validator_data_dir }}/keys"
+validator_secrets_dir: "{{ validator_data_dir }}/secrets"
+
+# Logging
+validator_log_dir: "{{ log_dir }}/validator"
+validator_log_level: "info"
+
+# Service configuration
+validator_service_enabled: true
+validator_service_restart: "on-failure"
+validator_service_restart_sec: 10
+
+# Validator graffiti
+validator_graffiti: "ephemery"
+
+# Fee recipient address (for post-merge)
+validator_fee_recipient: "0x0000000000000000000000000000000000000000"
+
+# Monitoring
+validator_monitoring_enabled: true
+validator_metrics_enabled: "{{ enable_metrics }}"
+validator_metrics_port: 8009
+
+# Beacon node endpoint(s)
+validator_beacon_nodes: ["http://localhost:5052"]
+
+# Client-specific settings
+# Lighthouse specific
+lighthouse_validator_debug_level: "info"
+
+# Prysm specific
+prysm_validator_accept_terms_of_use: true
+prysm_validator_verbosity: "info"
+
+# Teku specific
+teku_validator_log_level: "INFO"
+teku_validator_rest_api_enabled: true
+
+# Nimbus specific
+nimbus_validator_log_level: "INFO"
+
+# Lodestar specific
+lodestar_validator_log_level: "info" 

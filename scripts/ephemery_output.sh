@@ -6,15 +6,14 @@
 # Usage: ./scripts/ephemery_output.sh [command] [options]
 
 # Colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 # Ensure all scripts are executable
 chmod +x "${SCRIPT_DIR}/filter_ansible_output.sh" 2>/dev/null

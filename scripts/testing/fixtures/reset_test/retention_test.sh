@@ -1,4 +1,11 @@
 source "/Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/fixtures/reset_test/get_genesis_time.sh"
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 GENESIS_TIME_FILE="/Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/fixtures/reset_test/genesis_time.txt"
 #!/bin/bash
 # Version: 1.0.0

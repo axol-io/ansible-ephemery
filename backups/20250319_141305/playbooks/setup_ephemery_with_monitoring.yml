@@ -1,0 +1,151 @@
+---
+# Playbook for setting up Ephemery nodes with enhanced monitoring and auto-recovery
+# This playbook extends the standard Ephemery setup with additional monitoring
+# and recovery mechanisms to prevent and address sync issues
+
+- name: Set up Ephemery Node with Enhanced Monitoring
+  hosts: all
+  become: true
+  vars:
+    # Default values - can be overridden in host_vars
+    sync_check_enabled: true
+    sync_check_interval: 15  # minutes
+    peer_alert_threshold: 2
+    auto_recovery_enabled: true
+    max_recovery_attempts: 3
+    recovery_wait_time: 300  # seconds
+    docker_network_recreate: false
+    jwt_secret_backup: true
+    sync_strategy: "genesis"  # Can be genesis, checkpoint, or auto
+    
+  pre_tasks:
+    - name: Create backup directory if it doesn't exist
+      file:
+        path: "{{ ephemery_backup_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check Docker installation
+      command: docker --version
+      register: docker_version_check
+      changed_when: false
+      failed_when: false
+
+    - name: Set fact for Docker installation
+      set_fact:
+        docker_installed: "{{ docker_version_check.rc == 0 }}"
+
+    - name: Ensure Docker network is present with proper subnet
+      docker_network:
+        name: "{{ docker_network_name }}"
+        driver: bridge
+        ipam_config:
+          - subnet: "{{ docker_network_subnet | default('172.20.0.0/16') }}"
+        state: present
+        force: "{{ docker_network_recreate | default(false) }}"
+      when: docker_installed
+
+  tasks:
+    - name: Include JWT secret management tasks
+      include_tasks: ../tasks/jwt-secret.yaml
+      tags: [jwt, security]
+
+    - name: Include monitoring setup tasks
+      include_tasks: ../tasks/install_monitoring.yml
+      tags: [monitoring]
+
+    # Main Ephemery tasks including container setup
+    - name: Include main Ephemery setup tasks
+      include_tasks: ../tasks/ephemery.yaml
+      tags: [ephemery, setup]
+
+    - name: Configure sync strategy based on selected option
+      block:
+        - name: Configure genesis sync
+          set_fact:
+            use_checkpoint_sync: false
+            cl_extra_opts: "{{ cl_extra_opts }} --allow-insecure-genesis-sync --genesis-backfill --disable-backfill-rate-limiting"
+          when: sync_strategy == "genesis"
+
+        - name: Configure checkpoint sync
+          set_fact:
+            use_checkpoint_sync: true
+          when: sync_strategy == "checkpoint"
+
+        - name: Configure auto sync strategy
+          block:
+            - name: Test checkpoint sync endpoints
+              uri:
+                url: "https://checkpoint-sync.ethereum.org"
+                method: GET
+                status_code: 200
+                timeout: 10
+              register: checkpoint_test
+              failed_when: false
+              
+            - name: Set sync strategy based on checkpoint availability
+              set_fact:
+                use_checkpoint_sync: "{{ checkpoint_test.status == 200 }}"
+                cl_extra_opts: "{{ cl_extra_opts }} {% if checkpoint_test.status != 200 %}--allow-insecure-genesis-sync --genesis-backfill --disable-backfill-rate-limiting{% endif %}"
+          when: sync_strategy == "auto"
+
+  post_tasks:
+    # Verify container configurations
+    - name: Create container verification script
+      template:
+        src: "../templates/scripts/verify_containers.sh.j2"
+        dest: "{{ ephemery_scripts_dir }}/verify_containers.sh"
+        mode: '0755'
+      tags: [verification]
+
+    - name: Run container verification script
+      command: "{{ ephemery_scripts_dir }}/verify_containers.sh"
+      register: container_verification
+      changed_when: false
+      tags: [verification]
+
+    - name: Display container verification results
+      debug:
+        var: container_verification.stdout_lines
+      tags: [verification]
+
+    # Network verification
+    - name: Verify container network connectivity
+      shell: "{{ ephemery_scripts_dir }}/check_docker_network.sh"
+      register: network_check
+      changed_when: false
+      
+    - name: Display network check results
+      debug:
+        var: network_check.stdout_lines
+        
+    # Sync verification
+    - name: Run sync check script
+      shell: "{{ ephemery_scripts_dir }}/check_sync.sh"
+      register: sync_check
+      changed_when: false
+      when: sync_check_enabled | default(false) | bool
+        
+    - name: Display sync check results
+      debug:
+        var: sync_check.stdout_lines
+      when: sync_check_enabled | default(false) | bool
+
+    # Set up automated recovery tasks for sync and connection issues
+    - name: Create cron job for regular sync monitoring
+      cron:
+        name: "Monitor Ephemery sync status"
+        minute: "*/{{ sync_check_interval }}"
+        job: "{{ ephemery_scripts_dir }}/check_sync.sh --auto-recover"
+      when: auto_recovery_enabled | default(false) | bool
+
+    # Provide summary information
+    - name: Display deployment summary
+      debug:
+        msg:
+          - "Ephemery node setup completed with {{ el }} execution client and {{ cl }} consensus client"
+          - "Sync strategy: {{ sync_strategy }}"
+          - "JWT secret path: {{ jwt_secret_path }}"
+          - "Auto recovery: {{ auto_recovery_enabled | default(false) | bool }}"
+          - "Data directory: {{ ephemery_dir }}/data"
+          - "Monitoring: {{ sync_check_enabled | default(false) | bool }}" 

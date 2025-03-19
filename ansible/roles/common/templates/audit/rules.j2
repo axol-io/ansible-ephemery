@@ -1,0 +1,62 @@
+# Ephemery Node Audit Rules
+
+# Delete all existing rules
+-D
+
+# Set buffer size to avoid event loss
+-b 8192
+
+# Failure mode: 0=silent, 1=printk, 2=panic
+-f 1
+
+# Record events that modify date/time
+-a always,exit -F arch=b64 -S adjtimex -S settimeofday -S stime -S clock_settime -k time-change
+-a always,exit -F arch=b32 -S adjtimex -S settimeofday -S stime -S clock_settime -k time-change
+
+# Record user/group modifications
+-w /etc/group -p wa -k identity
+-w /etc/passwd -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/sudoers -p wa -k identity
+
+# Record login/logout events
+-w /var/log/wtmp -p wa -k session
+-w /var/log/btmp -p wa -k session
+-w /var/run/utmp -p wa -k session
+
+# Record authorization config changes
+-w /etc/pam.d/ -p wa -k auth-config
+-w /etc/ssh/sshd_config -p wa -k auth-config
+
+# Monitoring Ethereum-related directories
+-w {{ data_dir }}/jwt -p wa -k ethereum-secrets
+-w {{ config_dir }} -p wa -k ethereum-config
+
+# Monitor Docker related files
+-w /usr/bin/docker -p wa -k docker
+-w /var/lib/docker -p wa -k docker
+-w /etc/docker -p wa -k docker
+-w /usr/lib/systemd/system/docker.service -p wa -k docker
+-w /usr/lib/systemd/system/docker.socket -p wa -k docker
+
+# Record system administration actions
+-w /etc/crontab -p wa -k cron
+-w /var/spool/cron/crontabs/ -p wa -k cron
+
+# Kernel module operations
+-w /sbin/insmod -p x -k modules
+-w /sbin/rmmod -p x -k modules
+-w /sbin/modprobe -p x -k modules
+
+# Privileged commands
+-a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-sudo
+
+# Record all successful authentications
+-w /var/log/auth.log -p r -k auth-log
+
+# Record use of privileged commands
+-a always,exit -F path=/bin/umount -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged
+-a always,exit -F path=/bin/mount -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged
+
+# Make the configuration immutable - reboot required to change audit rules
+-e 2 

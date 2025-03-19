@@ -22,6 +22,10 @@ fi
 
 # Source configuration if available
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 if [[ -f "${SCRIPT_DIR}/ephemery_config.sh" ]]; then
   source "${SCRIPT_DIR}/ephemery_config.sh"
 fi

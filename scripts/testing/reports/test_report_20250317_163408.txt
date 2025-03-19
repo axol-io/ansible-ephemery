@@ -1,0 +1,99 @@
+[0;34m======================================[0m
+[0;34m    Ephemery Test Suite Runner        [0m
+[0;34m======================================[0m
+Date: Mon Mar 17 16:34:08 CET 2025
+Report file: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/reports/test_report_20250317_163408.txt
+
+[0;34mRunning test: test_jwt_auth.sh[0m
+----------------------------------------
+[0;32m✓ Test passed: test_jwt_auth.sh[0m
+
+[0;34mRunning test: test_network_disruption.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_network_disruption.sh[0m
+Error output:
+Configuration file not found, using default paths
+Configuration file not found, using default paths
+Configuration file not found, using default paths
+[0;32m[2025-03-17 16:34:09] [INFO] Error handling initialized[0m
+[0;34mNetwork Disruption Chaos Test[0m
+[0;31mError: Missing required tools: tc ip iptables[0m
+Please install these tools before running this test.
+
+[0;34mRunning test: test_node_resilience.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_node_resilience.sh[0m
+Error output:
+Configuration file not found, using default paths
+Configuration file not found, using default paths
+Configuration file not found, using default paths
+[0;32m[2025-03-17 16:34:09] [INFO] Error handling initialized[0m
+[0;34mStarting Ephemery node chaos testing[0m
+Testing client combination: geth + lighthouse
+[0;34mSetting up chaos testing environment[0m
+ERROR! the playbook: /Users/droo/Documents/CODE/ansible-ephemery/ansible/playbooks/deploy_ephemery.yaml could not be found
+✗ Deployment failed, cannot proceed with chaos tests
+
+[0;34mRunning test: test_client_compatibility.sh[0m
+----------------------------------------
+[0;32m✓ Test passed: test_client_compatibility.sh[0m
+
+[0;34mRunning test: test_genesis_validator_setup.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_genesis_validator_setup.sh[0m
+Error output:
+Configuration file not found, using default paths
+Configuration file not found, using default paths
+Configuration file not found, using default paths
+[0;32m[2025-03-17 16:34:13] [INFO] Error handling initialized[0m
+[0;34mStarting Ephemery genesis validator tests[0m
+[0;34mSetting up genesis validator test environment[0m
+[0;32m✓ Test environment setup complete[0m
+[0;34mTesting validator key import[0m
+ERROR! the playbook: /Users/droo/Documents/CODE/ansible-ephemery/ansible/playbooks/deploy_ephemery.yaml could not be found
+[0;31m✗ Validator key import test failed[0m
+[0;34mTesting validator deployment[0m
+ERROR! the playbook: /Users/droo/Documents/CODE/ansible-ephemery/ansible/playbooks/deploy_ephemery.yaml could not be found
+[0;31m✗ Validator deployment test failed[0m
+[0;34mTesting validator key backup[0m
+[0;32m✓ Validator key backup test passed[0m
+[0;34mTesting validator monitoring[0m
+[1;33m⚠️ Validator monitoring test skipped[0m
+[0;34mTesting reset handling for genesis validators[0m
+[1;33m⚠️ Reset handling test skipped[0m
+
+Genesis Validator Test Summary
+=============================
+Tests completed: 5
+Tests passed: 0
+Tests skipped: 0
+Tests failed: 2
+OVERALL RESULT: FAILED
+[0;34mCleaning up genesis validator test environment[0m
+Error response from daemon: No such container: ephemery_lighthouse_validator
+Error response from daemon: No such container: ephemery_lighthouse
+Error response from daemon: No such container: ephemery_geth
+Error response from daemon: No such container: ephemery_lighthouse_validator
+Error response from daemon: No such container: ephemery_lighthouse
+Error response from daemon: No such container: ephemery_geth
+[0;32mGenesis validator testing completed. Full report available at:[0m
+/Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/reports/genesis_validator_test_20250317-163413.log
+[0;31m[2025-03-17 16:34:27] [ERROR] Command 'return ${errors}' failed with error code 2 in test_genesis_validator_setup.sh on line 352[0m
+/Users/droo/Documents/CODE/ansible-ephemery/scripts/core/error_handling.sh: line 184: /opt/ephemery/logs/ephemery_error.log: No such file or directory
+
+[0;34mRunning test: test_validator_lifecycle.sh[0m
+----------------------------------------
+[0;31m✗ Test failed: test_validator_lifecycle.sh[0m
+Error output:
+Configuration file not found, using default paths
+Configuration file not found, using default paths
+Configuration file not found, using default paths
+Configuration file not found, using default paths
+[0;32m[2025-03-17 16:34:27] [INFO] Error handling initialized[0m
+/Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/reports/validator_lifecycle_20250317-163427.log
+[0;34mGenesis Validator Lifecycle Test[0m
+[0;31mError: Missing required tools: systemctl[0m
+Please install these tools before running this test.
+
+[0;34mRunning test: test_client_performance.sh[0m
+----------------------------------------

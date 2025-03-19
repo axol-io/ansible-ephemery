@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 # advanced_validator_metrics.sh - Enhanced validator metrics collection for Ephemery nodes
 # Part of the Advanced Validator Performance Monitoring system

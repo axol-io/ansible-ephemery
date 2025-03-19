@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 #
 # Script Name: logging.sh
@@ -28,13 +35,6 @@ LOG_LEVELS=([DEBUG]=0 [INFO]=1 [WARN]=2 [ERROR]=3 [CRITICAL]=4)
 
 # ANSI colors
 RESET="\033[0m"
-RED="\033[0;31m"
-GREEN="\033[0;32m"
-YELLOW="\033[0;33m"
-BLUE="\033[0;34m"
-PURPLE="\033[0;35m"
-CYAN="\033[0;36m"
-GRAY="\033[0;37m"
 
 # -----------------------------------------------------------------------------
 # Function: should_log

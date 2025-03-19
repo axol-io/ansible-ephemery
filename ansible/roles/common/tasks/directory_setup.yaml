@@ -1,0 +1,30 @@
+---
+# Standardized directory setup for Ephemery nodes
+
+- name: Create base directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user | default('root') }}"
+    group: "{{ ansible_user | default('root') }}"
+  loop:
+    - "{{ ephemery_base_dir }}"
+    - "{{ ephemery_data_dir }}"
+    - "{{ ephemery_logs_dir }}"
+    - "{{ ephemery_scripts_dir }}"
+    - "{{ backup_dir }}"
+
+- name: Create client data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user | default('root') }}"
+    group: "{{ ansible_user | default('root') }}"
+  loop:
+    - "{{ ephemery_data_dir }}/{{ el_client_name }}"
+    - "{{ ephemery_data_dir }}/{{ cl_client_name }}"
+  when: 
+    - el_client_name is defined
+    - cl_client_name is defined 

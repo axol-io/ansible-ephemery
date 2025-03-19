@@ -1,4 +1,11 @@
 #!/bin/bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 # Script to check the sync status of Ethereum clients for Ephemery
 # Usage: ./check_sync_status.sh
@@ -6,11 +13,6 @@
 set -e
 
 # Colors for prettier output
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
 
 # Load configuration if available
 CONFIG_FILE="/opt/ephemery/config/ephemery_paths.conf"

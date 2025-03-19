@@ -9,21 +9,108 @@ set -e
 
 # Define base directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../../" &> /dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 
-# Source core utilities
-source "${PROJECT_ROOT}/scripts/core/path_config.sh"
-source "${PROJECT_ROOT}/scripts/core/error_handling.sh"
-source "${PROJECT_ROOT}/scripts/core/common.sh"
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+source "${PROJECT_ROOT}/scripts/lib/test_config.sh"
+source "${PROJECT_ROOT}/scripts/lib/test_mock.sh"
 
-# Setup error handling
-setup_error_handling
+# Source core utilities with error handling if not found
+source "${PROJECT_ROOT}/scripts/core/path_config.sh" 2>/dev/null || echo "Warning: path_config.sh not found"
+source "${PROJECT_ROOT}/scripts/core/error_handling.sh" 2>/dev/null || echo "Warning: error_handling.sh not found"
+source "${PROJECT_ROOT}/scripts/core/common.sh" 2>/dev/null || echo "Warning: core/common.sh not found"
 
-# Test configuration
-GENESIS_TEST_DIR="${PROJECT_ROOT}/scripts/testing/fixtures/genesis_validator_test"
-RESULTS_FILE="${PROJECT_ROOT}/scripts/testing/reports/genesis_validator_test_$(date +%Y%m%d-%H%M%S).log"
+# Parse command line arguments
+MOCK_MODE=false
+VERBOSE=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mock)
+      MOCK_MODE=true
+      shift
+      ;;
+    --verbose)
+      VERBOSE=true
+      export MOCK_VERBOSE=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--mock] [--verbose]"
+      exit 1
+      ;;
+  esac
+done
+
+# Initialize test environment
+export TEST_MOCK_MODE="${MOCK_MODE}"
+export TEST_VERBOSE="${VERBOSE}"
+
+# Load configuration
+load_config
+
+# Initialize test environment
+init_test_env() {
+  # Create test report directory if it doesn't exist
+  TEST_REPORT_DIR="${PROJECT_ROOT}/scripts/testing/reports"
+  mkdir -p "${TEST_REPORT_DIR}"
+  
+  # Set up mock environment if enabled
+  if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+    # Ensure test_mock.sh is sourced
+    if ! type mock_init &>/dev/null; then
+      source "${PROJECT_ROOT}/scripts/lib/test_mock.sh"
+      mock_init
+      override_commands
+    fi
+    
+    # Register default mock behavior for common tools
+    mock_register "systemctl" "success"
+    mock_register "curl" "success"
+    mock_register "ansible-playbook" "success"
+    mock_register "geth" "success"
+    mock_register "lighthouse" "success"
+    
+    # Use shorter test duration in mock mode
+    MOCK_TEST_DURATION=60  # 1 minute for mock testing
+  fi
+  
+  # Create a temporary directory for test artifacts
+  TEST_TMP_DIR=$(mktemp -d -t "ephemery_test_XXXXXX")
+  export TEST_TMP_DIR
+  
+  # Set the fixture directory
+  TEST_FIXTURE_DIR="${PROJECT_ROOT}/scripts/testing/fixtures"
+  export TEST_FIXTURE_DIR
+  
+  echo "Test environment initialized"
+  echo "- Project root: ${PROJECT_ROOT}"
+  echo "- Report directory: ${TEST_REPORT_DIR}"
+  echo "- Temporary directory: ${TEST_TMP_DIR}"
+  echo "- Mock mode: ${TEST_MOCK_MODE:-false}"
+  echo "- Fixture directory: ${TEST_FIXTURE_DIR}"
+}
+
+# Initialize test environment
+init_test_env
+
+# Setup error handling if function exists
+if type setup_error_handling &>/dev/null; then
+  setup_error_handling
+fi
+
+# Test configuration - adjust based on mock mode
+GENESIS_TEST_DIR="${TEST_FIXTURE_DIR}/genesis_validator_test"
+RESULTS_FILE="${TEST_REPORT_DIR}/genesis_validator_test_$(date +%Y%m%d-%H%M%S).log"
 TEST_VALIDATOR_KEYS="${GENESIS_TEST_DIR}/validator_keys"
-TEST_DURATION=600  # 10 minutes for the full test
+
+if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+  TEST_DURATION=${MOCK_TEST_DURATION:-60}  # 1 minute for mock testing
+else
+  TEST_DURATION=600  # 10 minutes for the full test
+fi
 
 # Create results directory
 mkdir -p "$(dirname "${RESULTS_FILE}")"
@@ -341,6 +428,11 @@ main() {
   
   echo -e "${GREEN}Genesis validator testing completed. Full report available at:${NC}"
   echo "${RESULTS_FILE}"
+  
+  # Cleanup mock environment if used
+  if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+    restore_commands
+  fi
   
   return ${errors}
 }

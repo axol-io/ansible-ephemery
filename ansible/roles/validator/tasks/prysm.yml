@@ -1,0 +1,120 @@
+---
+# Prysm-specific validator tasks
+
+- name: Check if Prysm is installed
+  command: which beacon-chain
+  register: prysm_installed
+  failed_when: false
+  changed_when: false
+
+- name: Fail if Prysm is not installed
+  fail:
+    msg: "Prysm is not installed. Please install the consensus client role with prysm first."
+  when: prysm_installed.rc != 0
+
+- name: Download Prysm validator installation script
+  get_url:
+    url: https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.sh
+    dest: /tmp/prysm.sh
+    mode: '0755'
+  become: true
+  register: prysm_validator_script
+
+- name: Install Prysm validator
+  command: /tmp/prysm.sh validator
+  args:
+    creates: /usr/local/bin/validator
+  become: true
+  register: prysm_validator_install
+
+- name: Get Prysm validator version
+  command: /usr/local/bin/validator --version
+  register: prysm_validator_version_output
+  changed_when: false
+
+- name: Display Prysm validator version
+  debug:
+    msg: "Installed Prysm validator version: {{ prysm_validator_version_output.stdout.split(' ')[1] | default('unknown') }}"
+
+- name: Create Prysm validator data directory
+  file:
+    path: "{{ prysm_validator_data_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Accept Prysm terms of use
+  file:
+    path: "{{ common_user_home }}/.eth2validators/prysm_agreement"
+    state: touch
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0644'
+  become: true
+  when: prysm_validator_accept_terms_of_use | bool
+
+- name: Create Prysm validator wallet directory
+  file:
+    path: "{{ prysm_validator_data_dir }}/wallet"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0700'
+  become: true
+
+- name: Import validator keys if needed
+  block:
+    - name: Check if wallet exists
+      stat:
+        path: "{{ prysm_validator_data_dir }}/wallet/direct/accounts"
+      register: prysm_wallet_exists
+
+    - name: Create Prysm wallet
+      command: >
+        /usr/local/bin/validator wallet create
+        --wallet-dir={{ prysm_validator_data_dir }}/wallet
+        --wallet-password-file={{ validator_secrets_dir }}/password.txt
+        --accept-terms-of-use
+      become: true
+      become_user: "{{ common_user }}"
+      when: not prysm_wallet_exists.stat.exists
+
+    - name: Import validator keys to Prysm
+      command: >
+        /usr/local/bin/validator accounts import
+        --wallet-dir={{ prysm_validator_data_dir }}/wallet
+        --wallet-password-file={{ validator_secrets_dir }}/password.txt
+        --keys-dir={{ validator_keys_dir }}
+        --account-password-file={{ validator_secrets_dir }}/password.txt
+        --accept-terms-of-use
+      become: true
+      become_user: "{{ common_user }}"
+      when: need_key_import
+  when: need_key_import
+
+- name: Create Prysm validator systemd service
+  template:
+    src: prysm-validator.service.j2
+    dest: /etc/systemd/system/prysm-validator.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: prysm_validator_service
+  notify: restart prysm-validator
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when: prysm_validator_service.changed
+
+- name: Enable and start Prysm validator service
+  systemd:
+    name: prysm-validator
+    enabled: yes
+    state: started
+  become: true
+  when: validator_service_enabled | bool 

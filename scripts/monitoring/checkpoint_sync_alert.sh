@@ -1,14 +1,16 @@
 #!/bin/bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 # checkpoint_sync_alert.sh - Monitors checkpoint sync and sends alerts when issues are detected
 # Part of the Ephemery checkpoint sync fix implementation
 
 # Colors for terminal output
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
 
 # Configuration - Edit these variables as needed
 ALERT_EMAIL=""         # Set email address to receive alerts

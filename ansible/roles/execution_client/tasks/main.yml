@@ -1,0 +1,46 @@
+---
+# Main tasks file for the execution_client role
+
+- name: Set up execution client directories
+  include_tasks: directories.yml
+  tags:
+    - execution
+    - directories
+
+- name: Install execution client
+  block:
+    - name: Include client-specific tasks - Geth
+      include_tasks: geth.yml
+      when: el_client_name == "geth"
+      tags:
+        - execution
+        - geth
+
+    - name: Include client-specific tasks - Nethermind
+      include_tasks: nethermind.yml
+      when: el_client_name == "nethermind"
+      tags:
+        - execution
+        - nethermind
+
+    - name: Include client-specific tasks - Besu
+      include_tasks: besu.yml
+      when: el_client_name == "besu"
+      tags:
+        - execution
+        - besu
+
+    - name: Include client-specific tasks - Erigon
+      include_tasks: erigon.yml
+      when: el_client_name == "erigon"
+      tags:
+        - execution
+        - erigon
+  tags:
+    - execution
+
+- name: Set up execution client service
+  include_tasks: service.yml
+  tags:
+    - execution
+    - services 

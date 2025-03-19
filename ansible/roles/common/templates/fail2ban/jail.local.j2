@@ -1,0 +1,37 @@
+[DEFAULT]
+ignoreip = 127.0.0.1/8 ::1
+bantime = 600
+findtime = 600
+maxretry = 3
+banaction = iptables-multiport
+backend = auto
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+bantime = 3600
+maxretry = 5
+
+[nginx-http-auth]
+enabled = true
+filter = nginx-http-auth
+port = http,https
+logpath = /var/log/nginx/error.log
+maxretry = 3
+
+[nginx-botsearch]
+enabled = true
+filter = nginx-botsearch
+port = http,https
+logpath = /var/log/nginx/access.log
+maxretry = 2
+
+[ethereum-rpc]
+enabled = true
+port = 8545,8546
+filter = ethereum-rpc
+logpath = {{ log_dir }}/execution_client/*.log
+maxretry = 3
+bantime = 7200 

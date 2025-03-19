@@ -8,6 +8,10 @@ set -eo pipefail
 
 # Script directory and paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PLAYBOOK="${REPO_ROOT}/playbooks/setup_enhanced_key_restore.yml"
 
@@ -20,11 +24,6 @@ CUSTOM_SCHEDULE="*/15 * * * *"
 HOST_LIMIT=""
 
 # Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
 
 # Print usage information
 function print_usage() {

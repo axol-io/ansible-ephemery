@@ -1,0 +1,70 @@
+---
+# System setup tasks for common role
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+  become: true
+
+- name: Install common packages
+  package:
+    name: "{{ common_packages }}"
+    state: present
+  become: true
+
+- name: Check timezone configuration
+  command: timedatectl status
+  register: timedatectl_result
+  changed_when: false
+  failed_when: false
+
+- name: Set timezone to UTC
+  timezone:
+    name: UTC
+  when: "'Time zone: UTC' not in timedatectl_result.stdout"
+  become: true
+
+- name: Check if chrony is installed
+  package:
+    name: chrony
+    state: present
+  become: true
+
+- name: Ensure chrony service is enabled and started
+  service:
+    name: chrony
+    state: started
+    enabled: yes
+  become: true
+
+- name: Configure system limits for Ethereum nodes
+  pam_limits:
+    domain: "{{ common_user }}"
+    limit_type: "{{ item.limit_type }}"
+    limit_item: "{{ item.limit_item }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { limit_type: soft, limit_item: nofile, value: 1000000 }
+    - { limit_type: hard, limit_item: nofile, value: 1000000 }
+    - { limit_type: soft, limit_item: nproc, value: 65535 }
+    - { limit_type: hard, limit_item: nproc, value: 65535 }
+  become: true
+
+- name: Create sysctl entries for networking optimization
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  with_items:
+    - { name: 'net.core.somaxconn', value: '65535' }
+    - { name: 'net.core.netdev_max_backlog', value: '65536' }
+    - { name: 'net.ipv4.tcp_max_syn_backlog', value: '65536' }
+    - { name: 'net.ipv4.tcp_tw_reuse', value: '1' }
+    - { name: 'net.ipv4.tcp_fin_timeout', value: '15' }
+    - { name: 'net.ipv4.tcp_keepalive_time', value: '600' }
+    - { name: 'net.ipv4.tcp_keepalive_probes', value: '5' }
+    - { name: 'net.ipv4.tcp_keepalive_intvl', value: '15' }
+  become: true 

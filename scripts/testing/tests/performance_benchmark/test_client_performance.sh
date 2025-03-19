@@ -8,7 +8,10 @@ set -e
 
 # Define base directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../../" &> /dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 # Source core utilities
 source "${PROJECT_ROOT}/scripts/core/path_config.sh"

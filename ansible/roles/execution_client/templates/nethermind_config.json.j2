@@ -1,0 +1,65 @@
+{
+  "Init": {
+    "WebSocketsEnabled": true,
+    "StoreReceipts": true,
+    "IsMining": false,
+    "ChainSpecPath": null,
+    "GenesisHash": null,
+    "BaseDbPath": "{{ nethermind_data_dir }}",
+    "LogFileName": "nethermind.log",
+    "MemoryHint": 1024000000
+  },
+  "Network": {
+    "DiscoveryPort": {{ el_p2p_port }},
+    "P2PPort": {{ el_p2p_port }},
+    "ExternalIp": null,
+    "LocalIp": "0.0.0.0",
+    "NetworkId": {{ el_network_id }},
+    "ChainId": {{ el_chain_id }}
+  },
+  "TxPool": {
+    "Size": 1024,
+    "PriceLimit": 1,
+    "BaseFeeMaxFactor": 10.0
+  },
+  "JsonRpc": {
+    "Enabled": {{ el_http_enabled | lower }},
+    "Host": "0.0.0.0",
+    "Port": {{ el_http_port }},
+    "WebSocketsPort": {{ el_ws_port }},
+    "EnabledModules": [{% for module in el_http_api.split(',') %}"{{ module }}"{% if not loop.last %}, {% endif %}{% endfor %}],
+    "JwtSecretFile": "{{ el_jwt_path }}",
+    "EngineHost": "localhost", 
+    "EnginePort": 8551
+  },
+  "Metrics": {
+    "NodeName": "{{ el_client_name }}_{{ inventory_hostname }}",
+    "Enabled": {{ el_metrics_enabled | lower }},
+    "PushGatewayUrl": "http://localhost:9091/metrics",
+    "IntervalSeconds": 30
+  },
+  "HealthChecks": {
+    "Enabled": true,
+    "Slug": "/health",
+    "AccessToken": ""
+  },
+  "Sync": {
+    "FastSync": false,
+    "SnapSync": true,
+    "FastBlocks": true,
+    "DownloadBodiesInFastSync": true,
+    "DownloadReceiptsInFastSync": true,
+    "AncientBodiesBarrier": {{ el_chain_id }},
+    "AncientReceiptsBarrier": {{ el_chain_id }}
+  },
+  "Mining": {
+    "Enabled": false
+  },
+  "EthStats": {
+    "Enabled": false,
+    "Server": "wss://ethstats.net/api",
+    "Name": "{{ el_client_name }}_{{ inventory_hostname }}",
+    "Secret": "secret",
+    "Contact": ""
+  }
+} 

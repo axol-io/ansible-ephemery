@@ -1,4 +1,11 @@
 #!/bin/bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 
 # filter_ansible_output.sh
@@ -6,12 +13,6 @@
 # Usage: ansible-playbook playbook.yml | ./scripts/filter_ansible_output.sh
 
 # Set colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 

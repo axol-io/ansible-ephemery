@@ -1,0 +1,95 @@
+---
+# Tasks to set up monitoring and auto-recovery for Ephemery nodes
+
+- name: Create directories for scripts and logs
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ ephemery_scripts_dir }}"
+    - "{{ ephemery_logs_dir }}"
+
+- name: Install sync check script
+  template:
+    src: ../templates/scripts/check_sync.sh.j2
+    dest: "{{ ephemery_scripts_dir }}/check_sync.sh"
+    mode: '0755'
+  when: sync_check_enabled | default(false) | bool
+
+- name: Set up cron job for sync check
+  cron:
+    name: "Check Ephemery node sync status"
+    job: "{{ ephemery_scripts_dir }}/check_sync.sh > /dev/null 2>&1"
+    minute: "*/{{ sync_check_interval | default(15) }}"
+    state: present
+  when: sync_check_enabled | default(false) | bool
+
+- name: Create Docker network with specified subnet
+  docker_network:
+    name: "{{ docker_network_name }}"
+    driver: bridge
+    ipam_config:
+      - subnet: "{{ docker_network_subnet | default('172.20.0.0/16') }}"
+    state: present
+    force: "{{ docker_network_recreate | default(false) | bool }}"
+  when: docker_installed | bool
+
+- name: Install Docker network test script
+  template:
+    src: ../templates/scripts/check_docker_network.sh.j2
+    dest: "{{ ephemery_scripts_dir }}/check_docker_network.sh"
+    mode: '0755'
+  when: docker_installed | bool
+
+- name: Template for JWT verification script
+  copy:
+    dest: "{{ ephemery_scripts_dir }}/check_jwt.sh"
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      # Script to verify JWT token is properly set up
+
+      JWT_PATH="{{ jwt_secret_path }}"
+
+      echo "Checking JWT token setup..."
+
+      # Check if JWT file exists
+      if [ ! -f "$JWT_PATH" ]; then
+        echo "ERROR: JWT token file does not exist at $JWT_PATH"
+        echo "Creating new JWT token..."
+        openssl rand -hex 32 > "$JWT_PATH"
+        echo "JWT token created. You need to restart clients to apply the change."
+        exit 1
+      fi
+
+      # Check if JWT file is non-empty and valid hex
+      if [ ! -s "$JWT_PATH" ]; then
+        echo "ERROR: JWT token file is empty"
+        echo "Creating new JWT token..."
+        openssl rand -hex 32 > "$JWT_PATH"
+        echo "JWT token created. You need to restart clients to apply the change."
+        exit 1
+      fi
+
+      # Check if JWT token is valid hex
+      if ! grep -q '^[0-9a-f]\{64\}$' "$JWT_PATH"; then
+        echo "WARNING: JWT token is not a valid 32-byte hex string"
+        echo "Current token: $(cat "$JWT_PATH")"
+        echo "Creating new JWT token..."
+        openssl rand -hex 32 > "$JWT_PATH"
+        echo "JWT token created. You need to restart clients to apply the change."
+        exit 1
+      fi
+
+      echo "JWT token is valid."
+      exit 0
+
+- name: Backup existing JWT token
+  shell: |
+    if [ -s "{{ jwt_secret_path }}" ]; then
+      cp "{{ jwt_secret_path }}" "{{ ephemery_backup_dir }}/jwt.hex.$(date +%Y%m%d%H%M%S)"
+    fi
+  args:
+    executable: /bin/bash
+  when: jwt_secret_backup | default(false) | bool

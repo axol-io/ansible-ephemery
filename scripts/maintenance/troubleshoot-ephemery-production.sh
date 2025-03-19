@@ -1,15 +1,17 @@
 #!/bin/bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 
 # Ephemery Production Node Troubleshooting Script
 # This script helps diagnose and fix common issues with Ephemery production nodes
 
 # Colors for better readability
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
 
 echo -e "${BLUE}=== Ephemery Production Node Troubleshooting ===${NC}"
 echo -e "${BLUE}Starting comprehensive diagnostics...${NC}"

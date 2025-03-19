@@ -10,6 +10,9 @@ set -euo pipefail
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 UTILITIES_DIR="${SCRIPT_DIR}"
 ENHANCED_KEY_RESTORE="${UTILITIES_DIR}/enhanced_key_restore.sh"
 
@@ -31,10 +34,6 @@ START_VALIDATOR=true
 VALIDATOR_CONTAINER="${DEFAULT_VALIDATOR_CONTAINER}"
 
 # Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Print usage information

@@ -1,0 +1,45 @@
+# Shellharden configuration file
+# This file contains common linting rules for shellharden
+
+# Exclude directories from linting
+exclude_dirs=(
+    ".git"
+    ".vscode"
+    "node_modules"
+    "venv"
+)
+
+# Exclude files from linting
+exclude_files=(
+    "*.md"
+    "*.txt"
+    "*.log"
+)
+
+# Shellharden linting rules
+# These options are passed to shellharden
+
+# Always quote variables unless it's a special case
+enforce_quotes=true
+
+# Replace deprecated backticks with $() syntax
+replace_backticks=true
+
+# Check for unquoted variables
+check_unquoted_vars=true
+
+# Check for missing shebang
+check_shebang=true
+
+# Replace 'echo' with 'printf' when containing escape sequences
+replace_echo=true
+
+# Check for common script problems
+check_common_issues=true
+
+# Exit codes for lint failures
+# 0 = success
+# 1 = warnings
+# 2 = errors
+exit_code_warning=1
+exit_code_error=2 

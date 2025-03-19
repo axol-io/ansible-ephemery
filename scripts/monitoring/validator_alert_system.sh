@@ -10,6 +10,10 @@ set -e
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 BASE_DIR=${BASE_DIR:-"/root/ephemery"}
 CONFIG_DIR="${BASE_DIR}/config"
 DATA_DIR="${BASE_DIR}/data"

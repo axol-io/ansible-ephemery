@@ -1,410 +1,342 @@
-#!/bin/bash
-
-# Ephemery Automated Testing Script
-# This script runs the testing pipeline for Ephemery shell scripts
+#!/usr/bin/env bash
 # Version: 1.0.0
+#
+# Script Name: run_tests.sh
+# Description: Main test runner for Ephemery testing
+# Author: Ephemery Team
+# Created: 2025-03-21
+# Last Modified: 2025-03-21
+#
+# This script runs all tests for the Ephemery project.
 
-# Exit on any error
+# Set up environment
 set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
 
-# Define base directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." &>/dev/null && pwd)"
+# Source common libraries
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+source "${PROJECT_ROOT}/scripts/lib/test_config.sh"
 
-# Source core utilities if available
-if [ -f "${PROJECT_ROOT}/scripts/core/path_config.sh" ]; then
-  source "${PROJECT_ROOT}/scripts/core/path_config.sh"
-fi
-
-if [ -f "${PROJECT_ROOT}/scripts/core/error_handling.sh" ]; then
-  source "${PROJECT_ROOT}/scripts/core/error_handling.sh"
-  # Set up error handling
-  setup_error_handling
-fi
-
-if [ -f "${PROJECT_ROOT}/scripts/core/common.sh" ]; then
-  source "${PROJECT_ROOT}/scripts/core/common.sh"
-fi
-
-# Color definitions in case common.sh not available
-if [ -z "${GREEN}" ]; then
-  GREEN='\033[0;32m'
-  YELLOW='\033[1;33m'
-  RED='\033[0;31m'
-  BLUE='\033[0;34m'
-  NC='\033[0m' # No Color
-fi
-
-# Define test directories
-TEST_DIR="${PROJECT_ROOT}/scripts/testing/tests"
-FIXTURE_DIR="${PROJECT_ROOT}/scripts/testing/fixtures"
-REPORT_DIR="${PROJECT_ROOT}/scripts/testing/reports"
-
-# Ensure test directories exist
-mkdir -p "${TEST_DIR}" "${FIXTURE_DIR}" "${REPORT_DIR}"
-
-# Default settings
-RUN_SHELL_TESTS=true
-RUN_LINT_TESTS=true
-RUN_INTEGRATION_TESTS=false
-VERBOSE=false
-
-# Function to display usage information
-show_usage() {
-  echo -e "${BLUE}Ephemery Automated Testing Script${NC}"
-  echo ""
-  echo "Usage: $0 [options]"
-  echo ""
-  echo "Options:"
-  echo "  -s, --shell-only       Run only shell script unit tests"
-  echo "  -l, --lint-only        Run only linting tests"
-  echo "  -i, --integration      Also run integration tests (may take longer)"
-  echo "  -v, --verbose          Enable verbose output"
-  echo "  -h, --help             Show this help message"
-  echo ""
-  echo "Examples:"
-  echo "  $0                     # Run all standard tests"
-  echo "  $0 --shell-only        # Run only shell script unit tests"
-  echo "  $0 --lint-only         # Run only linting tests"
-  echo "  $0 --integration       # Run all tests including integration tests"
-}
+# Define colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
 # Parse command line arguments
+MOCK_MODE=false
+VERBOSE=false
+LINT_SCRIPTS=false
+SPECIFIC_TEST=""
+REPORT_DIR="${SCRIPT_DIR}/reports"
+mkdir -p "${REPORT_DIR}"
+REPORT_FILE="${REPORT_DIR}/test_report_$(date +%Y%m%d-%H%M%S).log"
+
+print_usage() {
+  echo "Usage: $0 [options] [test_path]"
+  echo "Options:"
+  echo "  --mock                 Run tests in mock mode"
+  echo "  --verbose              Run tests in verbose mode"
+  echo "  --lint                 Lint shell scripts before running tests"
+  echo "  --help                 Show this help message"
+  echo "  test_path              Path to a specific test or test directory"
+  echo
+  echo "Examples:"
+  echo "  $0                     Run all tests"
+  echo "  $0 --mock              Run all tests in mock mode"
+  echo "  $0 --lint              Lint scripts and run all tests"
+  echo "  $0 tests/version_checker/test_version_check.sh  Run a specific test"
+}
+
 while [[ $# -gt 0 ]]; do
-  key="$1"
-  case ${key} in
-    -s | --shell-only)
-      RUN_SHELL_TESTS=true
-      RUN_LINT_TESTS=false
-      RUN_INTEGRATION_TESTS=false
+  case "$1" in
+    --mock)
+      MOCK_MODE=true
       shift
       ;;
-    -l | --lint-only)
-      RUN_SHELL_TESTS=false
-      RUN_LINT_TESTS=true
-      RUN_INTEGRATION_TESTS=false
-      shift
-      ;;
-    -i | --integration)
-      RUN_INTEGRATION_TESTS=true
-      shift
-      ;;
-    -v | --verbose)
+    --verbose)
       VERBOSE=true
       shift
       ;;
-    -h | --help)
-      show_usage
+    --lint)
+      LINT_SCRIPTS=true
+      shift
+      ;;
+    --help)
+      print_usage
       exit 0
       ;;
     *)
-      # Unknown option
-      echo "Unknown option: $1"
-      show_usage
-      exit 1
+      if [[ -z "${SPECIFIC_TEST}" ]]; then
+        SPECIFIC_TEST="$1"
+      else
+        echo "Error: Unknown option or multiple test paths specified: $1"
+        print_usage
+        exit 1
+      fi
+      shift
       ;;
   esac
 done
 
-# Function for verbose logging
-log() {
-  if [ "${VERBOSE}" = true ]; then
-    echo -e "$@"
-  fi
-}
+# Initialize test environment
+export TEST_MOCK_MODE="${MOCK_MODE}"
+export TEST_VERBOSE="${VERBOSE}"
 
-# Function to run ShellCheck on scripts
-run_shellcheck() {
-  echo -e "${BLUE}Running ShellCheck linting...${NC}"
+# Load configuration
+load_config
 
-  # Replace mapfile with a more compatible approach
-  SHELL_SCRIPTS=()
-  while IFS= read -r line; do
-    SHELL_SCRIPTS+=("$line")
-  done < <(find "${PROJECT_ROOT}" -type f -name "*.sh" -not -path "*/\.*" -not -path "*/collections/*")
-
-  local shellcheck_errors=0
-  local shellcheck_report="${REPORT_DIR}/shellcheck-report-$(date +%Y%m%d-%H%M%S).txt"
-
-  # Ensure shellcheck is installed
-  if ! command -v shellcheck &>/dev/null; then
-    echo -e "${RED}Error: ShellCheck is not installed. Please install it to run linting tests.${NC}"
+# Function to run shellharden linting
+run_shellharden_lint() {
+  echo "Running shellharden linting..."
+  local lint_script="${SCRIPT_DIR}/lint_shell_scripts.sh"
+  
+  if [[ ! -x "$lint_script" ]]; then
+    echo -e "${YELLOW}Warning: lint_shell_scripts.sh not found or not executable.${NC}"
     return 1
   fi
-
-  echo "Found ${#SHELL_SCRIPTS[@]} shell scripts to check"
-  echo "Results will be saved to ${shellcheck_report}"
-
-  # Create report header
-  echo "ShellCheck Report - $(date)" >"${shellcheck_report}"
-  echo "=========================" >>"${shellcheck_report}"
-  echo "" >>"${shellcheck_report}"
-
-  for script in "${SHELL_SCRIPTS[@]}"; do
-    log "${YELLOW}Checking: ${script}${NC}"
-
-    # Run shellcheck and capture output
-    if shellcheck_output=$(shellcheck -x "${script}" 2>&1); then
-      echo -e "${GREEN}✓ ${script}${NC}"
-      echo "✓ ${script} - Passed" >>"${shellcheck_report}"
-    else
-      echo -e "${RED}✗ ${script}${NC}"
-      echo -e "✗ ${script}\n" >>"${shellcheck_report}"
-      echo -e "${shellcheck_output}\n" >>"${shellcheck_report}"
-      echo -e "------------------------\n" >>"${shellcheck_report}"
-      shellcheck_errors=$((shellcheck_errors + 1))
-    fi
-  done
-
-  # Display results summary
-  echo ""
-  echo -e "${BLUE}ShellCheck Summary:${NC}"
-  echo "Scripts checked: ${#SHELL_SCRIPTS[@]}"
-  echo "Scripts with errors: ${shellcheck_errors}"
-  echo "Report saved to: ${shellcheck_report}"
-
-  if [ ${shellcheck_errors} -gt 0 ]; then
-    echo -e "${RED}ShellCheck found ${shellcheck_errors} scripts with issues${NC}"
-    return 1
+  
+  # Run in check mode but don't fail if issues are found
+  if [[ "${VERBOSE}" == "true" ]]; then
+    "$lint_script" --verbose
   else
-    echo -e "${GREEN}ShellCheck tests passed!${NC}"
-    return 0
+    "$lint_script"
   fi
+  
+  echo "Linting completed."
+  echo
 }
 
-# Function to run shfmt on scripts
-run_shfmt() {
-  echo -e "${BLUE}Running shfmt formatting check...${NC}"
+# Initialize report file
+{
+  echo "Ephemery Test Report"
+  echo "===================="
+  echo "Date: $(date)"
+  echo "Environment: $(hostname)"
+  echo "Mock Mode: ${TEST_MOCK_MODE}"
+  echo "Verbose Mode: ${TEST_VERBOSE}"
+  echo "------------------------------------------"
+  echo
+} > "${REPORT_FILE}"
 
-  mapfile -t SHELL_SCRIPTS < <(find "${PROJECT_ROOT}" -type f -name "*.sh" -not -path "*/\.*" -not -path "*/collections/*")
+# Run shellharden linting if requested
+if [[ "${LINT_SCRIPTS}" == "true" ]]; then
+  run_shellharden_lint
+fi
 
-  local shfmt_errors=0
-  local shfmt_report="${REPORT_DIR}/shfmt-report-$(date +%Y%m%d-%H%M%S).txt"
-
-  # Ensure shfmt is installed
-  if ! command -v shfmt &>/dev/null; then
-    echo -e "${RED}Error: shfmt is not installed. Please install it to run formatting tests.${NC}"
-    return 1
-  fi
-
-  echo "Found ${#SHELL_SCRIPTS[@]} shell scripts to check"
-  echo "Results will be saved to ${shfmt_report}"
-
-  # Create report header
-  echo "shfmt Report - $(date)" >"${shfmt_report}"
-  echo "===================" >>"${shfmt_report}"
-  echo "" >>"${shfmt_report}"
-
-  for script in "${SHELL_SCRIPTS[@]}"; do
-    log "${YELLOW}Checking: ${script}${NC}"
-
-    # Check if file is formatted correctly
-    if shfmt -d -i 2 -ci "${script}" &>/dev/null; then
-      echo -e "${GREEN}✓ ${script}${NC}"
-      echo "✓ ${script} - Properly formatted" >>"${shfmt_report}"
-    else
-      echo -e "${RED}✗ ${script}${NC}"
-      echo -e "✗ ${script} - Not properly formatted\n" >>"${shfmt_report}"
-      if [ "${VERBOSE}" = true ]; then
-        shfmt -d -i 2 -ci "${script}" >>"${shfmt_report}"
-      fi
-      echo -e "------------------------\n" >>"${shfmt_report}"
-      shfmt_errors=$((shfmt_errors + 1))
-    fi
-  done
-
-  # Display results summary
-  echo ""
-  echo -e "${BLUE}shfmt Summary:${NC}"
-  echo "Scripts checked: ${#SHELL_SCRIPTS[@]}"
-  echo "Scripts with formatting issues: ${shfmt_errors}"
-  echo "Report saved to: ${shfmt_report}"
-
-  if [ ${shfmt_errors} -gt 0 ]; then
-    echo -e "${RED}shfmt found ${shfmt_errors} scripts with formatting issues${NC}"
-    return 1
-  else
-    echo -e "${GREEN}shfmt tests passed!${NC}"
-    return 0
-  fi
-}
-
-# Function to run shell script unit tests
-run_shell_tests() {
-  echo -e "${BLUE}Running shell script unit tests...${NC}"
-
-  # Check if bats is installed (Bash Automated Testing System)
-  if ! command -v bats &>/dev/null; then
-    echo -e "${YELLOW}Warning: bats is not installed. Shell unit tests will be limited.${NC}"
-    echo "Consider installing bats: https://github.com/bats-core/bats-core"
-  fi
-
-  local test_count=0
-  local failed_count=0
-
-  # Look for test files
-  if [ -d "${TEST_DIR}" ]; then
-    mapfile -t TEST_FILES < <(find "${TEST_DIR}" -type f -name "*_test.sh" -o -name "test_*.sh" -o -name "*.bats")
-
-    if [ ${#TEST_FILES[@]} -eq 0 ]; then
-      echo -e "${YELLOW}No test files found in ${TEST_DIR}${NC}"
-      echo "Tests should be named *_test.sh, test_*.sh, or *.bats"
-      return 0
-    fi
-
-    echo "Found ${#TEST_FILES[@]} test files to run"
-
-    for test_file in "${TEST_FILES[@]}"; do
-      echo -e "${YELLOW}Running test: ${test_file}${NC}"
-      test_count=$((test_count + 1))
-
-      # Run the test file
-      if [[ "${test_file}" == *.bats ]]; then
-        # Run with bats if available
-        if command -v bats &>/dev/null; then
-          if bats "${test_file}"; then
-            echo -e "${GREEN}✓ Test passed: ${test_file}${NC}"
-          else
-            echo -e "${RED}✗ Test failed: ${test_file}${NC}"
-            failed_count=$((failed_count + 1))
-          fi
-        else
-          echo -e "${RED}Cannot run .bats file without bats installed${NC}"
-          failed_count=$((failed_count + 1))
-        fi
+# Find and run tests
+find_and_run_tests() {
+  local test_dir="$1"
+  local test_args="$2"
+  local tests_found=0
+  local tests_passed=0
+  local tests_failed=0
+  local tests_skipped=0
+  local failed_tests=()
+  
+  echo -e "${BLUE}=== Running tests in ${test_dir} ===${NC}"
+  echo "=== Running tests in ${test_dir} ===" >> "${REPORT_FILE}"
+  
+  # Find all test scripts in the directory
+  while IFS= read -r test_script; do
+    if [[ -x "${test_script}" && "${test_script}" == *test_*.sh ]]; then
+      tests_found=$((tests_found + 1))
+      
+      echo -e "${BLUE}Running test: ${test_script}${NC}"
+      echo "Running test: ${test_script}" >> "${REPORT_FILE}"
+      
+      # Run the test script
+      if "${test_script}" ${test_args}; then
+        echo -e "${GREEN}✓ Test passed: ${test_script}${NC}"
+        echo "✓ Test passed: ${test_script}" >> "${REPORT_FILE}"
+        tests_passed=$((tests_passed + 1))
       else
-        # Run regular shell test
-        if bash "${test_file}"; then
-          echo -e "${GREEN}✓ Test passed: ${test_file}${NC}"
+        local exit_code=$?
+        if [[ ${exit_code} -eq 77 ]]; then
+          echo -e "${YELLOW}⚠ Test skipped: ${test_script}${NC}"
+          echo "⚠ Test skipped: ${test_script}" >> "${REPORT_FILE}"
+          tests_skipped=$((tests_skipped + 1))
         else
-          echo -e "${RED}✗ Test failed: ${test_file}${NC}"
-          failed_count=$((failed_count + 1))
+          echo -e "${RED}✗ Test failed: ${test_script} (exit code: ${exit_code})${NC}"
+          echo "✗ Test failed: ${test_script} (exit code: ${exit_code})" >> "${REPORT_FILE}"
+          tests_failed=$((tests_failed + 1))
+          failed_tests+=("${test_script}")
         fi
       fi
+      
+      echo "" >> "${REPORT_FILE}"
+    fi
+  done < <(find "${test_dir}" -type f -name "test_*.sh" | sort)
+  
+  # Print summary for this directory
+  echo
+  echo -e "${BLUE}=== Summary for ${test_dir} ===${NC}"
+  echo "=== Summary for ${test_dir} ===" >> "${REPORT_FILE}"
+  echo -e "Tests found: ${tests_found}"
+  echo -e "Tests passed: ${GREEN}${tests_passed}${NC}"
+  echo -e "Tests failed: ${RED}${tests_failed}${NC}"
+  echo -e "Tests skipped: ${YELLOW}${tests_skipped}${NC}"
+  
+  echo "Tests found: ${tests_found}" >> "${REPORT_FILE}"
+  echo "Tests passed: ${tests_passed}" >> "${REPORT_FILE}"
+  echo "Tests failed: ${tests_failed}" >> "${REPORT_FILE}"
+  echo "Tests skipped: ${tests_skipped}" >> "${REPORT_FILE}"
+  
+  if [[ ${tests_failed} -gt 0 ]]; then
+    echo
+    echo -e "${RED}Failed tests:${NC}"
+    echo "Failed tests:" >> "${REPORT_FILE}"
+    for failed_test in "${failed_tests[@]}"; do
+      echo -e "  ${RED}${failed_test}${NC}"
+      echo "  ${failed_test}" >> "${REPORT_FILE}"
     done
-
-    # Display results summary
-    echo ""
-    echo -e "${BLUE}Shell Test Summary:${NC}"
-    echo "Tests run: ${test_count}"
-    echo "Tests failed: ${failed_count}"
-
-    if [ ${failed_count} -gt 0 ]; then
-      echo -e "${RED}${failed_count} tests failed${NC}"
-      return 1
-    else
-      echo -e "${GREEN}All shell tests passed!${NC}"
-      return 0
-    fi
-  else
-    echo -e "${YELLOW}Test directory not found: ${TEST_DIR}${NC}"
-    return 0
   fi
+  
+  echo
+  echo "------------------------------------------" >> "${REPORT_FILE}"
+  echo >> "${REPORT_FILE}"
+  
+  # Return the number of failed tests
+  return ${tests_failed}
 }
 
-# Function to run integration tests
-run_integration_tests() {
-  echo -e "${BLUE}Running integration tests...${NC}"
-
-  # Look for integration test files
-  local integration_dir="${TEST_DIR}/integration"
-
-  if [ ! -d "${integration_dir}" ]; then
-    echo -e "${YELLOW}Integration test directory not found: ${integration_dir}${NC}"
-    echo "Create this directory and add integration tests to enable this feature."
-    return 0
-  fi
-
-  mapfile -t INTEGRATION_FILES < <(find "${integration_dir}" -type f -name "*_integration.sh" -o -name "integration_*.sh")
-
-  if [ ${#INTEGRATION_FILES[@]} -eq 0 ]; then
-    echo -e "${YELLOW}No integration test files found in ${integration_dir}${NC}"
-    echo "Integration tests should be named *_integration.sh or integration_*.sh"
-    return 0
-  fi
-
-  echo "Found ${#INTEGRATION_FILES[@]} integration test files to run"
-
-  local test_count=0
-  local failed_count=0
-
-  for test_file in "${INTEGRATION_FILES[@]}"; do
-    echo -e "${YELLOW}Running integration test: ${test_file}${NC}"
-    test_count=$((test_count + 1))
-
-    # Run the integration test file
-    if bash "${test_file}"; then
-      echo -e "${GREEN}✓ Integration test passed: ${test_file}${NC}"
+# Function to run a specific test
+run_specific_test() {
+  local test_path="$1"
+  local test_args="$2"
+  local exit_code=0
+  
+  echo -e "${BLUE}=== Running specific test: ${test_path} ===${NC}"
+  echo "=== Running specific test: ${test_path} ===" >> "${REPORT_FILE}"
+  
+  if [[ -x "${test_path}" ]]; then
+    if "${test_path}" ${test_args}; then
+      echo -e "${GREEN}✓ Test passed: ${test_path}${NC}"
+      echo "✓ Test passed: ${test_path}" >> "${REPORT_FILE}"
+      exit_code=0
     else
-      echo -e "${RED}✗ Integration test failed: ${test_file}${NC}"
-      failed_count=$((failed_count + 1))
+      exit_code=$?
+      if [[ ${exit_code} -eq 77 ]]; then
+        echo -e "${YELLOW}⚠ Test skipped: ${test_path}${NC}"
+        echo "⚠ Test skipped: ${test_path}" >> "${REPORT_FILE}"
+        exit_code=0
+      else
+        echo -e "${RED}✗ Test failed: ${test_path} (exit code: ${exit_code})${NC}"
+        echo "✗ Test failed: ${test_path} (exit code: ${exit_code})" >> "${REPORT_FILE}"
+      fi
     fi
-  done
+  else
+    echo -e "${RED}Error: Test file is not executable: ${test_path}${NC}"
+    echo "Error: Test file is not executable: ${test_path}" >> "${REPORT_FILE}"
+    exit_code=1
+  fi
+  
+  return ${exit_code}
+}
 
-  # Display results summary
-  echo ""
-  echo -e "${BLUE}Integration Test Summary:${NC}"
-  echo "Tests run: ${test_count}"
-  echo "Tests failed: ${failed_count}"
-
-  if [ ${failed_count} -gt 0 ]; then
-    echo -e "${RED}${failed_count} integration tests failed${NC}"
+# Function to run all tests
+run_all_tests() {
+  local test_args="$1"
+  local total_failed=0
+  local total_tests_found=0
+  
+  # Debug: List all test scripts
+  echo "Searching for test scripts in: ${PROJECT_ROOT}/scripts/testing/tests"
+  find "${PROJECT_ROOT}/scripts/testing/tests" -type f -name "test_*.sh" | sort
+  
+  # Find all test scripts directly
+  while IFS= read -r test_script; do
+    if [[ -x "${test_script}" && "${test_script}" != *"/template/"* ]]; then
+      echo -e "${BLUE}Running test: ${test_script}${NC}"
+      echo "Running test: ${test_script}" >> "${REPORT_FILE}"
+      
+      total_tests_found=$((total_tests_found + 1))
+      
+      # Run the test script
+      if "${test_script}" ${test_args}; then
+        echo -e "${GREEN}✓ Test passed: ${test_script}${NC}"
+        echo "✓ Test passed: ${test_script}" >> "${REPORT_FILE}"
+      else
+        local exit_code=$?
+        if [[ ${exit_code} -eq 77 ]]; then
+          echo -e "${YELLOW}⚠ Test skipped: ${test_script}${NC}"
+          echo "⚠ Test skipped: ${test_script}" >> "${REPORT_FILE}"
+        else
+          echo -e "${RED}✗ Test failed: ${test_script} (exit code: ${exit_code})${NC}"
+          echo "✗ Test failed: ${test_script} (exit code: ${exit_code})" >> "${REPORT_FILE}"
+          total_failed=$((total_failed + 1))
+        fi
+      fi
+      
+      echo "" >> "${REPORT_FILE}"
+    fi
+  done < <(find "${PROJECT_ROOT}/scripts/testing/tests" -type f -name "test_*.sh" 2>/dev/null | grep -v "/template/" | sort)
+  
+  # Print overall summary
+  echo
+  echo -e "${BLUE}=== Overall Test Summary ===${NC}"
+  echo "=== Overall Test Summary ===" >> "${REPORT_FILE}"
+  echo -e "Total tests found: ${total_tests_found}"
+  echo "Total tests found: ${total_tests_found}" >> "${REPORT_FILE}"
+  
+  if [[ ${total_failed} -eq 0 ]]; then
+    echo -e "${GREEN}All tests passed!${NC}"
+    echo "All tests passed!" >> "${REPORT_FILE}"
+    return 0
+  else
+    echo -e "${RED}${total_failed} tests failed!${NC}"
+    echo "${total_failed} tests failed!" >> "${REPORT_FILE}"
     return 1
-  else
-    echo -e "${GREEN}All integration tests passed!${NC}"
-    return 0
   fi
 }
 
-# Run tests as specified
-ERRORS=0
-
-# Run lint tests if enabled
-if [ "${RUN_LINT_TESTS}" = true ]; then
-  echo -e "${BLUE}========== RUNNING LINTING TESTS ==========${NC}"
-
-  run_shellcheck
-  SHELLCHECK_RESULT=$?
-  [ ${SHELLCHECK_RESULT} -ne 0 ] && ERRORS=$((ERRORS + 1))
-
-  echo ""
-
-  run_shfmt
-  SHFMT_RESULT=$?
-  [ ${SHFMT_RESULT} -ne 0 ] && ERRORS=$((ERRORS + 1))
-
-  echo ""
-fi
-
-# Run shell tests if enabled
-if [ "${RUN_SHELL_TESTS}" = true ]; then
-  echo -e "${BLUE}========== RUNNING SHELL SCRIPT TESTS ==========${NC}"
-
-  run_shell_tests
-  SHELL_TEST_RESULT=$?
-  [ ${SHELL_TEST_RESULT} -ne 0 ] && ERRORS=$((ERRORS + 1))
-
-  echo ""
-fi
-
-# Run integration tests if enabled
-if [ "${RUN_INTEGRATION_TESTS}" = true ]; then
-  echo -e "${BLUE}========== RUNNING INTEGRATION TESTS ==========${NC}"
-
-  run_integration_tests
-  INTEGRATION_TEST_RESULT=$?
-  [ ${INTEGRATION_TEST_RESULT} -ne 0 ] && ERRORS=$((ERRORS + 1))
-
-  echo ""
-fi
-
-# Display final summary
-echo -e "${BLUE}========== TEST SUMMARY ==========${NC}"
-if [ ${ERRORS} -eq 0 ]; then
-  echo -e "${GREEN}All tests passed successfully!${NC}"
-  exit 0
+# Run tests
+if [[ -n "${SPECIFIC_TEST}" ]]; then
+  # Run a specific test
+  if [[ -f "${SPECIFIC_TEST}" ]]; then
+    # Single test file
+    test_args=""
+    if [[ "${MOCK_MODE}" == "true" ]]; then
+      test_args="${test_args} --mock"
+    fi
+    if [[ "${VERBOSE}" == "true" ]]; then
+      test_args="${test_args} --verbose"
+    fi
+    
+    run_specific_test "${SPECIFIC_TEST}" "${test_args}"
+    exit $?
+  elif [[ -d "${SPECIFIC_TEST}" ]]; then
+    # Directory of tests
+    test_args=""
+    if [[ "${MOCK_MODE}" == "true" ]]; then
+      test_args="${test_args} --mock"
+    fi
+    if [[ "${VERBOSE}" == "true" ]]; then
+      test_args="${test_args} --verbose"
+    fi
+    
+    find_and_run_tests "${SPECIFIC_TEST}" "${test_args}"
+    exit $?
+  else
+    echo -e "${RED}Error: Test path not found: ${SPECIFIC_TEST}${NC}"
+    echo "Error: Test path not found: ${SPECIFIC_TEST}" >> "${REPORT_FILE}"
+    exit 1
+  fi
 else
-  echo -e "${RED}${ERRORS} test categories had failures${NC}"
-  echo "Please check the reports for more details"
-  exit 1
+  # Run all tests
+  echo -e "${BLUE}=== Running all tests ===${NC}"
+  echo "=== Running all tests ===" >> "${REPORT_FILE}"
+  
+  test_args=""
+  if [[ "${MOCK_MODE}" == "true" ]]; then
+    test_args="${test_args} --mock"
+  fi
+  if [[ "${VERBOSE}" == "true" ]]; then
+    test_args="${test_args} --verbose"
+  fi
+  
+  run_all_tests "${test_args}"
+  exit $?
 fi

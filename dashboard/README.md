@@ -1,4 +1,5 @@
-# Ephemery Checkpoint Sync Dashboard
+# dashboard
+
 
 A real-time monitoring and visualization dashboard for Ephemery node synchronization, with focus on checkpoint sync status and performance metrics.
 
@@ -138,3 +139,12 @@ This dashboard is released under the same license as the Ephemery project.
 
 - The Ephemery team for their excellent work on the base project
 - The checkpoint sync implementation team for creating the foundation for this dashboard
+
+## Contents
+
+- **Dockerfile**: File
+- **docker-compose.yaml**: YAML configuration file
+- **prometheus.yaml**: YAML configuration file
+- **validator-dashboard.json**: File
+- **validator_dashboard.html**: File
+- **validator_dashboard.service**: File

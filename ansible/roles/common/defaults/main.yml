@@ -1,0 +1,68 @@
+---
+# Default variables for the common role
+
+# User and group configuration
+common_user: "ephemery"
+common_group: "ephemery"
+common_user_home: "/home/{{ common_user }}"
+create_common_user: true
+
+# Directory structure
+data_dir: "/opt/ephemery"
+log_dir: "{{ data_dir }}/logs"
+config_dir: "{{ data_dir }}/config"
+scripts_dir: "{{ data_dir }}/scripts"
+
+# JWT configuration
+jwt_secret_path: "{{ data_dir }}/jwt/jwt.hex"
+jwt_create_symlinks: true
+jwt_backup_existing: true
+
+# General settings
+enable_monitoring: true
+enable_metrics: true 
+metrics_port: 9090
+
+# Security configuration
+enable_security: true
+security_harden_ssh: true
+security_fail2ban_enable: true
+security_audit_enable: true
+security_malware_detection: true
+security_docker_hardening: true
+
+# System tuning configuration
+enable_tuning: true
+system_disks_are_ssd: true
+tuning_profile: "ethereum-node"
+
+# Network configuration
+network_id: "13337"
+chain_id: "13337"
+ephemery_network: "ephemery"
+
+# System packages
+common_packages:
+  - git
+  - curl
+  - wget
+  - jq
+  - python3
+  - python3-pip
+  - ca-certificates
+  - gnupg
+  - lsb-release
+  - apt-transport-https
+  - software-properties-common
+
+# Docker settings
+docker_install: true
+docker_compose_install: true
+docker_compose_version: "v2.5.0"
+
+# Firewall settings
+configure_firewall: true
+firewall_allowed_tcp_ports:
+  - 22  # SSH
+  - 30303  # Ethereum P2P port
+  - 9000  # Consensus P2P port 

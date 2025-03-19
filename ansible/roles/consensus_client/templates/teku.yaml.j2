@@ -1,0 +1,44 @@
+# Teku configuration file
+
+# Network
+network: {{ cl_network }}
+
+# Data path
+data-path: {{ teku_data_dir }}
+
+# Execution layer
+ee-endpoint: {{ el_engine_api_url }}
+ee-jwt-secret-file: {{ jwt_secret_path }}
+
+# P2P
+p2p-enabled: true
+p2p-port: {{ cl_p2p_port | default(9000) }}
+p2p-interface: 0.0.0.0
+{% if cl_max_peers is defined and cl_max_peers %}
+p2p-peer-upper-bound: {{ cl_max_peers }}
+{% endif %}
+
+# REST API
+rest-api-enabled: true
+rest-api-port: {{ cl_api_port | default(5051) }}
+rest-api-interface: 0.0.0.0
+rest-api-host-allowlist: {{ cl_api_allow_list | default('127.0.0.1,localhost') }}
+
+# Metrics
+metrics-enabled: true
+metrics-port: {{ cl_metrics_port | default(8008) }}
+metrics-interface: 0.0.0.0
+metrics-host-allowlist: {{ cl_metrics_allow_list | default('127.0.0.1,localhost') }}
+
+# Logging
+log-destination: CONSOLE
+log-file: {{ cl_log_dir }}/teku.log
+log-file-name-pattern: {{ cl_log_dir }}/teku_%d{yyyy-MM-dd}.log
+
+# Validators
+validators-graffiti: {{ cl_graffiti | default('ephemery') }}
+
+# Misc
+{% if cl_additional_options is defined and cl_additional_options %}
+{{ cl_additional_options }}
+{% endif %} 

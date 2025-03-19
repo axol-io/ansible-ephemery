@@ -1,0 +1,79 @@
+---
+# Geth-specific tasks for the execution_client role
+
+- name: Add Ethereum PPA repository
+  apt_repository:
+    repo: ppa:ethereum/ethereum
+    state: present
+    update_cache: yes
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install Geth
+  package:
+    name: ethereum
+    state: present
+  become: true
+  register: geth_install
+
+- name: Get Geth version
+  command: geth version
+  register: geth_version_output
+  changed_when: false
+
+- name: Display Geth version
+  debug:
+    msg: "Installed Geth version: {{ geth_version_output.stdout | regex_search('Version: (\\d+\\.\\d+\\.\\d+)', '\\1') }}"
+
+- name: Create Geth data directory
+  file:
+    path: "{{ geth_data_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Geth log directory
+  file:
+    path: "{{ el_log_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Geth configuration
+  template:
+    src: geth_config.j2
+    dest: "{{ config_dir }}/geth_config.toml"
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0644'
+  become: true
+  notify: restart geth
+
+- name: Create Geth systemd service
+  template:
+    src: geth.service.j2
+    dest: /etc/systemd/system/geth.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: geth_service
+  notify: restart geth
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when: geth_service.changed
+
+- name: Enable and start Geth service
+  systemd:
+    name: geth
+    enabled: yes
+    state: started
+  become: true
+  when: el_service_enabled | bool 

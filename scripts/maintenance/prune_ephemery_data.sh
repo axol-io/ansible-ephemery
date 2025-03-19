@@ -4,16 +4,20 @@
 # This script helps manage disk space by providing options to prune old data
 # Version: 1.2.0
 
-# Source core utilities
+# Get the absolute path to the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-CORE_DIR="${SCRIPT_DIR}/scripts/core"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 # Source path configuration
+CORE_DIR="${SCRIPT_DIR}/../core"
 if [ -f "${CORE_DIR}/path_config.sh" ]; then
   source "${CORE_DIR}/path_config.sh"
 else
-  echo "Error: Path configuration not found at ${CORE_DIR}/path_config.sh"
-  echo "Please ensure the core scripts are properly installed."
+  log_error "Path configuration not found at ${CORE_DIR}/path_config.sh"
+  log_error "Please ensure the core scripts are properly installed."
   exit 1
 fi
 
@@ -48,17 +52,15 @@ EPHEMERY_GETH_CONTAINER="${EPHEMERY_GETH_CONTAINER:-ephemery-geth}"
 EPHEMERY_LIGHTHOUSE_CONTAINER="${EPHEMERY_LIGHTHOUSE_CONTAINER:-ephemery-lighthouse}"
 EPHEMERY_VALIDATOR_CONTAINER="${EPHEMERY_VALIDATOR_CONTAINER:-ephemery-validator}"
 
-# Color definitions
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
 # Default settings
-PRUNE_TYPE="safe"
-DRY_RUN=true
-CONFIRM=false
+PRUNE_MODE="interactive"
+PRUNE_GETH=false
+PRUNE_LIGHTHOUSE=false
+PRUNE_LOGS=false
+PRUNE_ALL=false
+CUSTOM_BASE_DIR=""
+FORCE=false
+VERBOSE=false
 
 # Function to show help
 show_help() {

@@ -8,26 +8,21 @@
 
 set -e
 
-# Define color codes for output
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
+# Get the absolute path to the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 # Source common functions if available
-COMMON_SCRIPT="${REPO_ROOT}/scripts/core/common.sh"
+COMMON_SCRIPT="${PROJECT_ROOT}/scripts/core/common.sh"
 if [[ -f "${COMMON_SCRIPT}" ]]; then
   source "${COMMON_SCRIPT}"
 fi
 
 # Default values
-OUTPUT_DIR="${REPO_ROOT}/validator_metrics"
+OUTPUT_DIR="${PROJECT_ROOT}/validator_metrics"
 REPORT_FILE="${OUTPUT_DIR}/validator_report.json"
 HISTORY_DIR="${OUTPUT_DIR}/history"
 ANALYSIS_DIR="${OUTPUT_DIR}/analysis"

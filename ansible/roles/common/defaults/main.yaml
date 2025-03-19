@@ -1,0 +1,28 @@
+---
+# Default variables for common role
+
+# Base directories
+ephemery_base_dir: "{{ ansible_env.HOME }}/ephemery"
+ephemery_data_dir: "{{ ephemery_base_dir }}/data"
+ephemery_logs_dir: "{{ ephemery_base_dir }}/logs"
+ephemery_scripts_dir: "{{ ephemery_base_dir }}/scripts"
+backup_dir: "{{ ephemery_base_dir }}/backups"
+
+# JWT configuration
+jwt_secret_dir: "{{ ephemery_base_dir }}"
+jwt_secret_path: "{{ jwt_secret_dir }}/jwt.hex"
+create_jwt_symlinks: true
+backup_jwt: true
+
+# Monitoring configuration
+enable_monitoring: true
+monitoring_data_dir: "{{ ephemery_data_dir }}/monitoring"
+
+# Network configuration
+network: "ephemery"
+network_id: 38356
+
+# Docker configuration
+container_restart_policy: "unless-stopped"
+container_network: "ephemery_network"
+create_network: true 

@@ -1,0 +1,38 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'validator_{{ validator_client_name }}'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:{{ validator_metrics_port | default(8009) }}']
+        labels:
+          instance: '{{ inventory_hostname }}'
+          validator_client: '{{ validator_client_name }}'
+
+  # Beacon node metrics (for reference)
+  - job_name: 'beacon_{{ cl_client_name }}'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:{{ cl_metrics_port | default(8008) }}']
+        labels:
+          instance: '{{ inventory_hostname }}'
+          client: '{{ cl_client_name }}'
+
+  # Execution client metrics (for reference)
+  - job_name: 'execution_{{ el_client_name }}'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:{{ el_metrics_port | default(6060) }}']
+        labels:
+          instance: '{{ inventory_hostname }}'
+          client: '{{ el_client_name }}'
+
+  # Node exporter for system metrics
+  - job_name: 'node_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9100']
+        labels:
+          instance: '{{ inventory_hostname }}' 

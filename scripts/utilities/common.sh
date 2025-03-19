@@ -36,6 +36,9 @@ fi
 
 # Script directory (for sourcing other files)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 # Include other utility libraries if they exist
 [[ -f "${SCRIPT_DIR}/logging.sh" ]] && source "${SCRIPT_DIR}/logging.sh"

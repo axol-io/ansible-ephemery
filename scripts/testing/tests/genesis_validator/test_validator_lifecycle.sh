@@ -8,36 +8,125 @@ set -e
 
 # Define base directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../../" &> /dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 
-# Source test utilities first
-source "${PROJECT_ROOT}/scripts/core/test_utils.sh"
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+source "${PROJECT_ROOT}/scripts/lib/test_config.sh"
+source "${PROJECT_ROOT}/scripts/lib/test_mock.sh"
 
-# Source core utilities
-source "${PROJECT_ROOT}/scripts/core/path_config.sh"
-source "${PROJECT_ROOT}/scripts/core/error_handling.sh"
-source "${PROJECT_ROOT}/scripts/core/common.sh"
+# Source test utilities and core utilities with error handling if not found
+source "${PROJECT_ROOT}/scripts/core/test_utils.sh" 2>/dev/null || echo "Warning: test_utils.sh not found"
+source "${PROJECT_ROOT}/scripts/core/path_config.sh" 2>/dev/null || echo "Warning: path_config.sh not found"
+source "${PROJECT_ROOT}/scripts/core/error_handling.sh" 2>/dev/null || echo "Warning: error_handling.sh not found"
+source "${PROJECT_ROOT}/scripts/core/common.sh" 2>/dev/null || echo "Warning: core/common.sh not found"
 
-# Setup error handling
-setup_error_handling
+# Parse command line arguments
+MOCK_MODE=false
+VERBOSE=false
 
-# Test configuration
-REPORT_FILE="${PROJECT_ROOT}/scripts/testing/reports/validator_lifecycle_$(date +%Y%m%d-%H%M%S).log"
-MAX_WAIT_TIME=1800  # 30 minutes maximum wait for attestations
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mock)
+      MOCK_MODE=true
+      shift
+      ;;
+    --verbose)
+      VERBOSE=true
+      export MOCK_VERBOSE=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--mock] [--verbose]"
+      exit 1
+      ;;
+  esac
+done
+
+# Initialize test environment
+export TEST_MOCK_MODE="${MOCK_MODE}"
+export TEST_VERBOSE="${VERBOSE}"
+
+# Load configuration
+load_config
+
+# Initialize test environment
+init_test_env() {
+  # Create test report directory if it doesn't exist
+  TEST_REPORT_DIR="${PROJECT_ROOT}/scripts/testing/reports"
+  mkdir -p "${TEST_REPORT_DIR}"
+  
+  # Set up mock environment if enabled
+  if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+    # Ensure test_mock.sh is sourced
+    if ! type mock_init &>/dev/null; then
+      source "${PROJECT_ROOT}/scripts/lib/test_mock.sh"
+      mock_init
+      override_commands
+    fi
+    
+    # Register default mock behavior for common tools
+    mock_register "systemctl" "success"
+    mock_register "curl" "success"
+    mock_register "ansible-playbook" "success"
+    mock_register "geth" "success"
+    mock_register "lighthouse" "success"
+    
+    # Use shorter test duration in mock mode
+    MOCK_TEST_DURATION=60  # 1 minute for mock testing
+  fi
+  
+  # Create a temporary directory for test artifacts
+  TEST_TMP_DIR=$(mktemp -d -t "ephemery_test_XXXXXX")
+  export TEST_TMP_DIR
+  
+  # Set the fixture directory
+  TEST_FIXTURE_DIR="${PROJECT_ROOT}/scripts/testing/fixtures"
+  export TEST_FIXTURE_DIR
+  
+  echo "Test environment initialized"
+  echo "- Project root: ${PROJECT_ROOT}"
+  echo "- Report directory: ${TEST_REPORT_DIR}"
+  echo "- Temporary directory: ${TEST_TMP_DIR}"
+  echo "- Mock mode: ${TEST_MOCK_MODE:-false}"
+  echo "- Fixture directory: ${TEST_FIXTURE_DIR}"
+}
+
+# Initialize test environment
+init_test_env
+
+# Setup error handling if function exists
+if type setup_error_handling &>/dev/null; then
+  setup_error_handling
+fi
+
+# Test configuration - adjust based on mock mode
+LIFECYCLE_TEST_DIR="${TEST_FIXTURE_DIR}/genesis_validator_test"
+RESULTS_FILE="${TEST_REPORT_DIR}/validator_lifecycle_test_$(date +%Y%m%d-%H%M%S).log"
+TEST_VALIDATOR_KEYS="${LIFECYCLE_TEST_DIR}/validator_keys"
+
+if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+  TEST_DURATION=${MOCK_TEST_DURATION:-60}      # 1 minute for mock testing
+  ATTESTATION_WAIT=${MOCK_ATTESTATION_WAIT:-5} # 5 seconds in mock mode
+else
+  TEST_DURATION=1800                           # 30 minutes for the full test
+  ATTESTATION_WAIT=300                         # 5 minutes attestation wait time
+fi
 
 # Create report file
-create_report_file "${REPORT_FILE}" "Genesis Validator Lifecycle Test"
+create_report_file "${RESULTS_FILE}" "Genesis Validator Lifecycle Test"
 
 # Function to check prerequisites
 check_prerequisites() {
   local required_tools="curl jq grep systemctl date bc timeout"
   
   if ! check_tools "${required_tools}"; then
-    report "Missing required tools. Cannot proceed with test." "${REPORT_FILE}"
+    report "Missing required tools. Cannot proceed with test." "${RESULTS_FILE}"
     return 1
   fi
   
-  report "All required tools are available." "${REPORT_FILE}"
+  report "All required tools are available." "${RESULTS_FILE}"
   return 0
 }
 
@@ -74,22 +163,22 @@ check_validator_keys() {
   local keys_path=$(get_validator_keys_path)
   
   echo -e "${BLUE}Checking for validator keys in ${keys_path}...${NC}"
-  report "Checking for validator keys in ${keys_path}..." "${REPORT_FILE}"
+  report "Checking for validator keys in ${keys_path}..." "${RESULTS_FILE}"
   
   if [ -d "${keys_path}" ] && [ "$(ls -A "${keys_path}" 2>/dev/null)" ]; then
     local key_count=$(find "${keys_path}" -name "*.json" | wc -l)
     echo -e "${GREEN}✓ Found ${key_count} validator keys${NC}"
-    report "✓ Found ${key_count} validator keys" "${REPORT_FILE}"
+    report "✓ Found ${key_count} validator keys" "${RESULTS_FILE}"
     
     # List first few keys for reference
     local sample_keys=$(find "${keys_path}" -name "*.json" | head -3)
-    report "Sample keys:" "${REPORT_FILE}"
-    report "${sample_keys}" "${REPORT_FILE}"
+    report "Sample keys:" "${RESULTS_FILE}"
+    report "${sample_keys}" "${RESULTS_FILE}"
     
     return 0
   else
     echo -e "${RED}✗ No validator keys found in ${keys_path}${NC}"
-    report "✗ No validator keys found in ${keys_path}" "${REPORT_FILE}"
+    report "✗ No validator keys found in ${keys_path}" "${RESULTS_FILE}"
     return 1
   fi
 }
@@ -100,18 +189,18 @@ check_validator_registration() {
   local validator_count=0
   
   echo -e "${BLUE}Checking validator registration...${NC}"
-  report "Checking validator registration..." "${REPORT_FILE}"
+  report "Checking validator registration..." "${RESULTS_FILE}"
   
   # Different APIs for different clients
   validator_count=$(count_active_validators)
   
   if [ "${validator_count}" -gt 0 ]; then
     echo -e "${GREEN}✓ Found ${validator_count} registered validators${NC}"
-    report "✓ Found ${validator_count} registered validators" "${REPORT_FILE}"
+    report "✓ Found ${validator_count} registered validators" "${RESULTS_FILE}"
     return 0
   else
     echo -e "${RED}✗ No registered validators found${NC}"
-    report "✗ No registered validators found" "${REPORT_FILE}"
+    report "✗ No registered validators found" "${RESULTS_FILE}"
     return 1
   fi
 }
@@ -123,7 +212,7 @@ check_validator_balance() {
   local validator_index="0"  # Use first validator as sample
   
   echo -e "${BLUE}Checking validator balance...${NC}"
-  report "Checking validator balance..." "${REPORT_FILE}"
+  report "Checking validator balance..." "${RESULTS_FILE}"
   
   # Get validator index from state
   case "${consensus_client}" in
@@ -155,11 +244,11 @@ check_validator_balance() {
   
   if [ "${validator_balance}" -gt 0 ]; then
     echo -e "${GREEN}✓ Validator has a balance of ${balance_eth} ETH${NC}"
-    report "✓ Validator has a balance of ${balance_eth} ETH" "${REPORT_FILE}"
+    report "✓ Validator has a balance of ${balance_eth} ETH" "${RESULTS_FILE}"
     return 0
   else
     echo -e "${YELLOW}! Validator has zero balance${NC}"
-    report "! Validator has zero balance" "${REPORT_FILE}"
+    report "! Validator has zero balance" "${RESULTS_FILE}"
     return 1
   fi
 }
@@ -170,7 +259,7 @@ check_validator_attestations() {
   local attestations_found=false
   
   echo -e "${BLUE}Checking validator attestations...${NC}"
-  report "Checking validator attestations..." "${REPORT_FILE}"
+  report "Checking validator attestations..." "${RESULTS_FILE}"
   
   # Different methods for different clients
   case "${consensus_client}" in
@@ -183,7 +272,7 @@ check_validator_attestations() {
         if [ "${attestation_count}" -gt 0 ]; then
           attestations_found=true
           echo -e "${GREEN}✓ Found ${attestation_count} published attestations${NC}"
-          report "✓ Found ${attestation_count} published attestations" "${REPORT_FILE}"
+          report "✓ Found ${attestation_count} published attestations" "${RESULTS_FILE}"
         fi
       fi
       ;;
@@ -194,7 +283,7 @@ check_validator_attestations() {
     return 0
   else
     echo -e "${YELLOW}! No attestations found yet${NC}"
-    report "! No attestations found yet" "${REPORT_FILE}"
+    report "! No attestations found yet" "${RESULTS_FILE}"
     return 1
   fi
 }
@@ -206,15 +295,15 @@ monitor_attestations() {
   local waited=0
   
   echo -e "${BLUE}Monitoring for attestations (max wait: ${max_wait}s)...${NC}"
-  report "Monitoring for attestations (max wait: ${max_wait}s)..." "${REPORT_FILE}"
+  report "Monitoring for attestations (max wait: ${max_wait}s)..." "${RESULTS_FILE}"
   
   while [ ${waited} -lt ${max_wait} ]; do
     echo -e "${YELLOW}Checking for attestations after ${waited}s...${NC}"
-    report "Checking for attestations after ${waited}s..." "${REPORT_FILE}"
+    report "Checking for attestations after ${waited}s..." "${RESULTS_FILE}"
     
     if check_validator_attestations; then
       echo -e "${GREEN}✓ Attestations detected after ${waited}s${NC}"
-      report "✓ Attestations detected after ${waited}s" "${REPORT_FILE}"
+      report "✓ Attestations detected after ${waited}s" "${RESULTS_FILE}"
       return 0
     fi
     
@@ -224,7 +313,7 @@ monitor_attestations() {
   done
   
   echo -e "${RED}✗ No attestations detected within ${max_wait}s${NC}"
-  report "✗ No attestations detected within ${max_wait}s" "${REPORT_FILE}"
+  report "✗ No attestations detected within ${max_wait}s" "${RESULTS_FILE}"
   return 1
 }
 
@@ -233,7 +322,7 @@ check_validator_performance() {
   local consensus_client=$(get_consensus_client)
   
   echo -e "${BLUE}Checking validator performance...${NC}"
-  report "Checking validator performance..." "${REPORT_FILE}"
+  report "Checking validator performance..." "${RESULTS_FILE}"
   
   # Different methods for different clients
   case "${consensus_client}" in
@@ -251,9 +340,9 @@ check_validator_performance() {
           local success_rate=$(echo "scale=2; (${attestations_total} * 100) / ${total}" | bc)
           
           echo -e "${GREEN}✓ Validator performance: ${success_rate}% successful attestations${NC}"
-          report "✓ Validator performance: ${success_rate}% successful attestations" "${REPORT_FILE}"
-          report "  Total attestations: ${attestations_total}" "${REPORT_FILE}"
-          report "  Missed attestations: ${missed_attestations}" "${REPORT_FILE}"
+          report "✓ Validator performance: ${success_rate}% successful attestations" "${RESULTS_FILE}"
+          report "  Total attestations: ${attestations_total}" "${RESULTS_FILE}"
+          report "  Missed attestations: ${missed_attestations}" "${RESULTS_FILE}"
           
           if [ $(echo "${success_rate} > 90" | bc) -eq 1 ]; then
             return 0
@@ -267,62 +356,62 @@ check_validator_performance() {
   esac
   
   echo -e "${YELLOW}! Insufficient data to evaluate validator performance${NC}"
-  report "! Insufficient data to evaluate validator performance" "${REPORT_FILE}"
+  report "! Insufficient data to evaluate validator performance" "${RESULTS_FILE}"
   return 1
 }
 
 # Function to validate genesis validator setup
 validate_genesis_setup() {
   echo -e "${BLUE}Validating genesis validator setup...${NC}"
-  report "Validating genesis validator setup..." "${REPORT_FILE}"
+  report "Validating genesis validator setup..." "${RESULTS_FILE}"
   
   # Check client services
   local execution_client=$(get_execution_client)
   local consensus_client=$(get_consensus_client)
   
   echo -e "${BLUE}Checking client services...${NC}"
-  report "Checking client services:" "${REPORT_FILE}"
+  report "Checking client services:" "${RESULTS_FILE}"
   
   if ! is_service_running "${execution_client}"; then
     echo -e "${RED}✗ Execution client service (${execution_client}) is not running${NC}"
-    report "✗ Execution client service (${execution_client}) is not running" "${REPORT_FILE}"
+    report "✗ Execution client service (${execution_client}) is not running" "${RESULTS_FILE}"
     return 1
   fi
   
   if ! is_service_running "${consensus_client}"; then
     echo -e "${RED}✗ Consensus client service (${consensus_client}) is not running${NC}"
-    report "✗ Consensus client service (${consensus_client}) is not running" "${REPORT_FILE}"
+    report "✗ Consensus client service (${consensus_client}) is not running" "${RESULTS_FILE}"
     return 1
   fi
   
   # Handle validator service (which may be separate or combined)
   if ! is_service_running "${consensus_client}-validator" && ! grep -q "validator" <<< "${consensus_client}"; then
     echo -e "${RED}✗ Validator service is not running${NC}"
-    report "✗ Validator service is not running" "${REPORT_FILE}"
+    report "✗ Validator service is not running" "${RESULTS_FILE}"
     return 1
   fi
   
   echo -e "${GREEN}✓ All required services are running${NC}"
-  report "✓ All required services are running" "${REPORT_FILE}"
+  report "✓ All required services are running" "${RESULTS_FILE}"
   
   # Check sync status
   echo -e "${BLUE}Checking sync status...${NC}"
-  report "Checking sync status:" "${REPORT_FILE}"
+  report "Checking sync status:" "${RESULTS_FILE}"
   
   if ! is_execution_synced; then
     echo -e "${RED}✗ Execution client is not synced${NC}"
-    report "✗ Execution client is not synced" "${REPORT_FILE}"
+    report "✗ Execution client is not synced" "${RESULTS_FILE}"
     return 1
   fi
   
   if ! is_consensus_synced; then
     echo -e "${RED}✗ Consensus client is not synced${NC}"
-    report "✗ Consensus client is not synced" "${REPORT_FILE}"
+    report "✗ Consensus client is not synced" "${RESULTS_FILE}"
     return 1
   fi
   
   echo -e "${GREEN}✓ Clients are in sync${NC}"
-  report "✓ Clients are in sync" "${REPORT_FILE}"
+  report "✓ Clients are in sync" "${RESULTS_FILE}"
   
   return 0
 }
@@ -330,26 +419,26 @@ validate_genesis_setup() {
 # Function to run the validator lifecycle test
 run_validator_lifecycle_test() {
   echo -e "${BLUE}Starting genesis validator lifecycle test...${NC}"
-  report "Starting genesis validator lifecycle test..." "${REPORT_FILE}"
+  report "Starting genesis validator lifecycle test..." "${RESULTS_FILE}"
   
   # Validate setup
   if ! validate_genesis_setup; then
     echo -e "${RED}✗ Validator setup validation failed. Cannot proceed with test.${NC}"
-    report "✗ Validator setup validation failed. Cannot proceed with test." "${REPORT_FILE}"
+    report "✗ Validator setup validation failed. Cannot proceed with test." "${RESULTS_FILE}"
     return 1
   fi
   
   # Check for validator keys
   if ! check_validator_keys; then
     echo -e "${RED}✗ Validator keys check failed. Cannot proceed with test.${NC}"
-    report "✗ Validator keys check failed. Cannot proceed with test." "${REPORT_FILE}"
+    report "✗ Validator keys check failed. Cannot proceed with test." "${RESULTS_FILE}"
     return 1
   fi
   
   # Check validator registration
   if ! check_validator_registration; then
     echo -e "${RED}✗ Validator registration check failed. Cannot proceed with test.${NC}"
-    report "✗ Validator registration check failed. Cannot proceed with test." "${REPORT_FILE}"
+    report "✗ Validator registration check failed. Cannot proceed with test." "${RESULTS_FILE}"
     return 1
   fi
   
@@ -357,18 +446,18 @@ run_validator_lifecycle_test() {
   check_validator_balance
   
   # Monitor for attestations
-  if ! monitor_attestations ${MAX_WAIT_TIME}; then
+  if ! monitor_attestations ${TEST_DURATION}; then
     echo -e "${RED}✗ Failed to detect attestations within timeout period.${NC}"
-    report "✗ Failed to detect attestations within timeout period." "${REPORT_FILE}"
+    report "✗ Failed to detect attestations within timeout period." "${RESULTS_FILE}"
     return 1
   fi
   
   # Check validator performance (after some attestations)
-  sleep 300  # Wait a bit to collect more attestations
+  sleep ${ATTESTATION_WAIT}  # Wait a bit to collect more attestations
   check_validator_performance
   
   echo -e "${GREEN}✓ Genesis validator lifecycle test completed successfully${NC}"
-  report "✓ Genesis validator lifecycle test completed successfully" "${REPORT_FILE}"
+  report "✓ Genesis validator lifecycle test completed successfully" "${RESULTS_FILE}"
   return 0
 }
 
@@ -382,11 +471,23 @@ main() {
   # Run the test
   if run_validator_lifecycle_test; then
     echo -e "${GREEN}✓ Validator lifecycle test passed${NC}"
-    report_result "passed" "Validator lifecycle test" "${REPORT_FILE}"
+    report_result "passed" "Validator lifecycle test" "${RESULTS_FILE}"
+    
+    # Cleanup mock environment if used
+    if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+      restore_commands
+    fi
+    
     return 0
   else
     echo -e "${RED}✗ Validator lifecycle test failed${NC}"
-    report_result "failed" "Validator lifecycle test" "${REPORT_FILE}"
+    report_result "failed" "Validator lifecycle test" "${RESULTS_FILE}"
+    
+    # Cleanup mock environment if used
+    if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
+      restore_commands
+    fi
+    
     return 1
   fi
 }

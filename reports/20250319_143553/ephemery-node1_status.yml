@@ -1,0 +1,51 @@
+---
+# Ephemery Node Status Report
+# Generated: 2025-03-19 14:35:53
+# Hostname: ephemery-node1
+
+node_info:
+  hostname: ephemery-node1
+  ip_address: 192.168.68.100
+  os_family: Darwin
+  os_distribution: MacOSX
+  os_version: 15.3.2
+  ansible_user: root
+  uptime: 14:35  up 3 days,  1:38, 1 user, load averages: 2.23 2.44 3.00
+  system_load: 2.23 2.44 3.00
+
+system_status:
+  disk_space: 
+    raw: /dev/disk3s1s1   460Gi    10Gi   124Gi     8%    412k  1.3G    0%   /
+            usage_percentage: 8
+    status: OK    
+  memory_usage:
+    raw: 7538M used, 2150M total
+                            usage_percentage: 351
+    status: WARNING        
+client_versions:
+    execution_client:
+    name: geth
+    version:     
+    consensus_client:
+    name: lighthouse
+    version:   
+service_status:
+    
+    
+  
+endpoint_status:
+  execution_client_endpoint:
+    status: ERROR    response: N/A
+sync_status:
+  execution_client:
+    syncing: unknown
+peer_status:
+  execution_client:
+    peer_count: unknown
+log_errors:
+    execution_client:
+    error_count: 0
+    recent_errors: []    
+    consensus_client:
+    error_count: 0
+    recent_errors: []   

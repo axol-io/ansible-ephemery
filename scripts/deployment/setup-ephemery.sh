@@ -1,18 +1,17 @@
 #!/bin/bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 # Ephemery Testnet Node Setup Script
 # This script automates the setup of an Ephemery testnet node with Electra/Pectra support
 
-# Color codes for better readability
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-echo -e "${GREEN}=======================================${NC}"
-echo -e "${GREEN}Ephemery Testnet Node Setup Script${NC}"
-echo -e "${GREEN}=======================================${NC}"
-echo ""
+# Print the banner
+print_banner "Ephemery Testnet Node Setup Script"
 
 # Check if running as root
 if [[ ${EUID} -ne 0 ]]; then

@@ -6,6 +6,9 @@
 #
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 VALIDATOR_SCRIPTS_DIR="${SCRIPT_DIR}/validator"
 
 # Source the standardized paths configuration if available

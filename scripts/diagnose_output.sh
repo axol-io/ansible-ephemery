@@ -1,4 +1,11 @@
 #!/bin/bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 
 # diagnose_output.sh
@@ -6,10 +13,6 @@
 # Usage: ./scripts/diagnose_output.sh
 
 # Colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 

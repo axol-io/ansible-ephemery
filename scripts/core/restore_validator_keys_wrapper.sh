@@ -1,4 +1,11 @@
 #!/bin/bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 # Validator Key Restore Wrapper Script
 # This is a simple wrapper to run the validator key restore playbook
@@ -13,11 +20,6 @@ FORCE="no"
 EXTRA_ARGS=""
 
 # Colors for better readability
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
 
 # Display banner
 function show_banner() {

@@ -16,7 +16,10 @@ source "${SCRIPT_DIR}/error_handling.sh"
 
 # Define project root if not set by path_config
 if [ -z "${PROJECT_ROOT+x}" ]; then
-  PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+  PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 fi
 
 # Parse arguments

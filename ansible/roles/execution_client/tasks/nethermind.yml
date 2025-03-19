@@ -1,0 +1,86 @@
+---
+# Nethermind-specific tasks for the execution_client role
+
+- name: Add Nethermind repository key
+  apt_key:
+    url: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x379CE192D401AB61"
+    state: present
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Add Nethermind repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://nethermind.io/packages-repo {{ ansible_distribution_release }} main"
+    state: present
+    update_cache: yes
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install Nethermind
+  package:
+    name: nethermind
+    state: present
+  become: true
+  register: nethermind_install
+
+- name: Get Nethermind version
+  command: nethermind --version
+  register: nethermind_version_output
+  changed_when: false
+
+- name: Display Nethermind version
+  debug:
+    msg: "Installed Nethermind version: {{ nethermind_version_output.stdout | default('unknown') }}"
+
+- name: Create Nethermind data directory
+  file:
+    path: "{{ nethermind_data_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Nethermind log directory
+  file:
+    path: "{{ el_log_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Nethermind configuration
+  template:
+    src: nethermind_config.json.j2
+    dest: "{{ config_dir }}/nethermind_config.json"
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0644'
+  become: true
+  notify: restart nethermind
+
+- name: Create Nethermind systemd service
+  template:
+    src: nethermind.service.j2
+    dest: /etc/systemd/system/nethermind.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: nethermind_service
+  notify: restart nethermind
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when: nethermind_service.changed
+
+- name: Enable and start Nethermind service
+  systemd:
+    name: nethermind
+    enabled: yes
+    state: started
+  become: true
+  when: el_service_enabled | bool 

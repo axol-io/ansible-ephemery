@@ -25,7 +25,10 @@ set -e
 # Configuration
 # -----------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 # shellcheck disable=SC1091
 source "${PROJECT_ROOT}/scripts/utils/common_functions.sh"
 

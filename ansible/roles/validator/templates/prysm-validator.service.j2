@@ -1,0 +1,33 @@
+[Unit]
+Description=Prysm Ethereum Validator Client
+After=network.target
+Wants=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+ExecStart=/usr/local/bin/validator \
+  --datadir={{ prysm_validator_data_dir }} \
+  --wallet-dir={{ prysm_validator_data_dir }}/wallet \
+  --wallet-password-file={{ validator_secrets_dir }}/password.txt \
+  --beacon-rpc-provider={{ validator_beacon_nodes[0] | replace('http://', '') }} \
+  --monitoring-host=0.0.0.0 \
+  --monitoring-port={{ validator_metrics_port | default(8009) }} \
+  --verbosity={{ prysm_validator_verbosity | default('info') }} \
+  --accept-terms-of-use \
+  {% if validator_graffiti is defined and validator_graffiti %}
+  --graffiti="{{ validator_graffiti }}" \
+  {% endif %}
+  {% if validator_fee_recipient is defined and validator_fee_recipient %}
+  --suggested-fee-recipient={{ validator_fee_recipient }} \
+  {% endif %}
+  {% if validator_additional_args is defined and validator_additional_args %}
+  {{ validator_additional_args }}
+  {% endif %}
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 

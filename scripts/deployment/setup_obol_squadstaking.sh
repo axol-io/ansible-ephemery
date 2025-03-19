@@ -1,4 +1,11 @@
 #!/bin/bash
+# Get the absolute path to the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Version: 1.0.0
 #
 # Obol SquadStaking Integration Setup Script
@@ -11,21 +18,11 @@
 #   --threshold N          Consensus threshold (default: 3)
 #   --reset                Reset existing installation
 #   --yes                  Skip confirmation prompts
-#   --verbose              Enable verbose output
 #   --help                 Show this help message
 
 set -e
 
-# Define color codes for output
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
-# Default values
+# Default settings
 BASE_DIR="/opt/ephemery"
 OBOL_DATA_DIR="${BASE_DIR}/data/obol"
 OBOL_CONFIG_DIR="${BASE_DIR}/config/obol"
@@ -55,7 +52,7 @@ usage() {
     echo "  --verbose              Enable verbose output"
     echo "  --help                 Show this help message"
     exit 1
-fi
+}
 
 # Function to log messages
 log_message() {
@@ -85,7 +82,7 @@ log_message() {
             echo -e "[${timestamp}] [$level] $message"
             ;;
     esac
-fi
+}
 
 # Shortened aliases for log functions
 log_info() { log_message "INFO" "$1"; }
@@ -168,7 +165,7 @@ check_docker() {
     }
 
     log_debug "Docker is installed and running"
-fi
+}
 
 # Function to check if Docker Compose is installed
 check_docker_compose() {
@@ -179,7 +176,7 @@ check_docker_compose() {
     fi
 
     log_debug "Docker Compose is installed"
-fi
+}
 
 # Function to create necessary directories
 create_directories() {
@@ -193,7 +190,7 @@ create_directories() {
     mkdir -p "${OBOL_DATA_DIR}/lighthouse"
 
     log_debug "Directories created"
-fi
+}
 
 # Function to reset existing installation
 reset_installation() {
@@ -229,7 +226,7 @@ reset_installation() {
     fi
 
     log_success "Reset completed"
-fi
+}
 
 # Function to generate ENR private key
 generate_enr_private_key() {
@@ -243,7 +240,7 @@ generate_enr_private_key() {
     chmod 600 "${OBOL_CONFIG_DIR}/enr_private_key"
 
     log_debug "ENR private key generated and saved"
-fi
+}
 
 # Function to create Charon configuration
 create_charon_config() {
@@ -277,7 +274,7 @@ builder-api: false
 EOF
 
     log_debug "Charon configuration created"
-fi
+}
 
 # Function to create cluster definition
 create_cluster_definition() {
@@ -316,11 +313,11 @@ create_cluster_definition() {
       "metrics_address": "0.0.0.0:3620"
     }
   }
-fi
+}
 EOF
 
     log_debug "Cluster definition created"
-fi
+}
 
 # Function to create Docker Compose file
 create_docker_compose() {
@@ -376,7 +373,7 @@ networks:
 EOF
 
     log_debug "Docker Compose file created"
-fi
+}
 
 # Function to create Prometheus configuration
 create_prometheus_config() {
@@ -411,7 +408,7 @@ EOF
     fi
 
     log_debug "Prometheus configuration created"
-fi
+}
 
 # Function to create systemd service
 create_systemd_service() {
@@ -447,7 +444,7 @@ EOF
     fi
 
     log_debug "Systemd service created"
-fi
+}
 
 # Function to start the services
 start_services() {
@@ -464,7 +461,7 @@ start_services() {
     docker-compose up -d
 
     log_success "Obol SquadStaking services started"
-fi
+}
 
 # Function to check service status
 check_service_status() {
@@ -496,7 +493,7 @@ check_service_status() {
     echo -e "Charon Metrics: ${CYAN}http://localhost:3620/metrics${NC}"
     echo -e "Validator Metrics: ${CYAN}http://localhost:5064/metrics${NC}"
     echo -e "${BLUE}=========================================${NC}"
-fi
+}
 
 # Main execution flow
 main() {
@@ -530,7 +527,7 @@ main() {
     check_service_status
 
     log_success "Obol SquadStaking setup completed successfully"
-fi
+}
 
 # Run main function
 main

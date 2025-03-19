@@ -1,0 +1,78 @@
+---
+# Prysm-specific tasks for the consensus_client role
+
+- name: Download Prysm installation script
+  get_url:
+    url: https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.sh
+    dest: /tmp/prysm.sh
+    mode: '0755'
+  become: true
+
+- name: Install Prysm beacon chain
+  command: /tmp/prysm.sh beacon-chain
+  args:
+    creates: /usr/local/bin/beacon-chain
+  become: true
+  register: prysm_install
+
+- name: Get Prysm version
+  command: /usr/local/bin/beacon-chain --version
+  register: prysm_version_output
+  changed_when: false
+
+- name: Display Prysm version
+  debug:
+    msg: "Installed Prysm version: {{ prysm_version_output.stdout.split(' ')[1] | default('unknown') }}"
+
+- name: Create Prysm data directory
+  file:
+    path: "{{ prysm_data_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Prysm log directory
+  file:
+    path: "{{ cl_log_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Accept Prysm terms of use
+  file:
+    path: "{{ common_user_home }}/.eth2validators/prysm_agreement"
+    state: touch
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0644'
+  become: true
+  when: prysm_accept_terms_of_use | bool
+
+- name: Create Prysm systemd service
+  template:
+    src: prysm.service.j2
+    dest: /etc/systemd/system/prysm.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: prysm_service
+  notify: restart prysm
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when: prysm_service.changed
+
+- name: Enable and start Prysm service
+  systemd:
+    name: prysm
+    enabled: yes
+    state: started
+  become: true
+  when: cl_service_enabled | bool 

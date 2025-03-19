@@ -1,0 +1,40 @@
+[Unit]
+Description=Nimbus Ethereum Consensus Client
+After=network.target
+Wants=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+ExecStart=/usr/local/bin/nimbus_beacon_node \
+  --network={{ cl_network }} \
+  --data-dir={{ nimbus_data_dir }} \
+  --web3-url={{ el_endpoint }} \
+  --jwt-secret={{ jwt_secret_path }} \
+  --tcp-port={{ cl_p2p_port | default(9000) }} \
+  --rpc \
+  --rpc-port={{ cl_api_port | default(5052) }} \
+  --metrics \
+  --metrics-port={{ cl_metrics_port | default(8008) }} \
+  --log-level={{ nimbus_log_level | default('INFO') }} \
+  --validators-dir={{ validator_keys_dir | default(nimbus_data_dir + '/validators') }} \
+  --secrets-dir={{ validator_secrets_dir | default(nimbus_data_dir + '/secrets') }} \
+  {% if cl_max_peers is defined and cl_max_peers %}
+  --max-peers={{ cl_max_peers }} \
+  {% endif %} \
+  {% if cl_checkpoint_sync_url is defined and cl_checkpoint_sync_url %}
+  --trusted-node-url={{ cl_checkpoint_sync_url }} \
+  {% endif %} \
+  {% if cl_graffiti is defined and cl_graffiti %}
+  --graffiti="{{ cl_graffiti }}" \
+  {% endif %} \
+  {% if cl_additional_args is defined and cl_additional_args %}
+  {{ cl_additional_args }}
+  {% endif %}
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 

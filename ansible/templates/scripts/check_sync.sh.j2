@@ -1,0 +1,182 @@
+#!/bin/bash
+# Ephemery node sync status check and auto-recovery script
+# This script checks the sync status of both execution and consensus clients
+# and attempts recovery actions if needed
+
+# Load configuration
+EPHEMERY_DIR="{{ ephemery_dir }}"
+LOGS_DIR="{{ ephemery_logs_dir }}"
+CL_PORT="{{ cl_client_port }}"
+CL_CLIENT="{{ cl_client_name }}"
+EL_CLIENT="{{ el }}"
+PEER_THRESHOLD="{{ peer_alert_threshold }}"
+MAX_RECOVERY_ATTEMPTS="{{ max_recovery_attempts }}"
+RECOVERY_WAIT="{{ recovery_wait_time }}"
+AUTO_RECOVERY="{{ auto_recovery_enabled | lower }}"
+
+# Telegram notification settings
+{% if telegram_bot_token is defined and telegram_chat_id is defined %}
+TELEGRAM_BOT_TOKEN="{{ telegram_bot_token }}"
+TELEGRAM_CHAT_ID="{{ telegram_chat_id }}"
+NOTIFICATIONS_ENABLED="true"
+{% else %}
+NOTIFICATIONS_ENABLED="false"
+{% endif %}
+
+# Create log directory if it doesn't exist
+mkdir -p "$LOGS_DIR"
+LOG_FILE="$LOGS_DIR/sync_status.log"
+RECOVERY_LOG="$LOGS_DIR/recovery.log"
+RECOVERY_COUNT_FILE="$LOGS_DIR/recovery_count"
+
+# Initialize recovery count if it doesn't exist
+if [ ! -f "$RECOVERY_COUNT_FILE" ]; then
+  echo "0" > "$RECOVERY_COUNT_FILE"
+fi
+
+# Function to send notifications
+send_notification() {
+  local message="$1"
+  if [ "$NOTIFICATIONS_ENABLED" = "true" ]; then
+    curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage?chat_id=$TELEGRAM_CHAT_ID&text=$message" > /dev/null
+  fi
+  echo "$(date +"%Y-%m-%d %H:%M:%S") - $message" >> "$LOG_FILE"
+}
+
+# Check consensus client sync status
+check_cl_sync() {
+  CL_SYNC_STATUS=$(curl -s http://localhost:$CL_PORT/eth/v1/node/syncing 2>/dev/null)
+  CL_PEER_COUNT=$(curl -s http://localhost:$CL_PORT/eth/v1/node/peer_count 2>/dev/null)
+
+  # Log the sync status
+  TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+  echo "$TIMESTAMP - CL Sync: $CL_SYNC_STATUS - CL Peers: $CL_PEER_COUNT" >> "$LOG_FILE"
+
+  # Check for potential issues
+  if [ -z "$CL_SYNC_STATUS" ] || [ -z "$CL_PEER_COUNT" ]; then
+    echo "CL client not responding" >> "$LOG_FILE"
+    return 1
+  fi
+
+  # Extract peer count
+  CONNECTED_PEERS=$(echo "$CL_PEER_COUNT" | grep -o '"connected":"[0-9]*"' | grep -o '[0-9]*')
+
+  # Check if peer count is below threshold
+  if [ -z "$CONNECTED_PEERS" ] || [ "$CONNECTED_PEERS" -lt "$PEER_THRESHOLD" ]; then
+    echo "CL peer count too low: $CONNECTED_PEERS (threshold: $PEER_THRESHOLD)" >> "$LOG_FILE"
+    return 2
+  fi
+
+  # Success
+  return 0
+}
+
+# Check execution client sync status (for Geth)
+check_el_sync() {
+  if [ "$EL_CLIENT" = "geth" ]; then
+    EL_SYNC_STATUS=$(curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' http://localhost:8545 2>/dev/null)
+
+    # Log the sync status
+    TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+    echo "$TIMESTAMP - EL Sync: $EL_SYNC_STATUS" >> "$LOG_FILE"
+
+    # Check for potential issues
+    if [ -z "$EL_SYNC_STATUS" ]; then
+      echo "EL client not responding" >> "$LOG_FILE"
+      return 1
+    fi
+
+    # Check if client is syncing
+    if echo "$EL_SYNC_STATUS" | grep -q '"result":false'; then
+      # Not syncing could mean fully synced or not connected
+      # Check peer count to differentiate
+      EL_PEER_COUNT=$(curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"net_peerCount","params":[],"id":1}' http://localhost:8545 2>/dev/null)
+      PEER_COUNT_HEX=$(echo "$EL_PEER_COUNT" | grep -o '"result":"0x[0-9a-f]*"' | grep -o '0x[0-9a-f]*')
+
+      if [ -n "$PEER_COUNT_HEX" ]; then
+        PEER_COUNT_DEC=$(printf "%d" $PEER_COUNT_HEX)
+        if [ "$PEER_COUNT_DEC" -lt "$PEER_THRESHOLD" ]; then
+          echo "EL peer count too low: $PEER_COUNT_DEC (threshold: $PEER_THRESHOLD)" >> "$LOG_FILE"
+          return 2
+        fi
+      else
+        echo "Cannot determine EL peer count" >> "$LOG_FILE"
+        return 3
+      fi
+    fi
+  fi
+
+  # Success
+  return 0
+}
+
+# Attempt recovery actions
+perform_recovery() {
+  # Check current recovery count
+  RECOVERY_COUNT=$(cat "$RECOVERY_COUNT_FILE")
+
+  # Check if we've exceeded the maximum recovery attempts
+  if [ "$RECOVERY_COUNT" -ge "$MAX_RECOVERY_ATTEMPTS" ]; then
+    send_notification "⚠️ Ephemery node: Maximum recovery attempts reached. Manual intervention required."
+    echo "Maximum recovery attempts reached. Manual intervention required." >> "$RECOVERY_LOG"
+    return 1
+  fi
+
+  # Increment recovery counter
+  echo $((RECOVERY_COUNT + 1)) > "$RECOVERY_COUNT_FILE"
+
+  # Log recovery attempt
+  echo "$(date +"%Y-%m-%d %H:%M:%S") - Beginning recovery attempt $((RECOVERY_COUNT + 1))/$MAX_RECOVERY_ATTEMPTS" >> "$RECOVERY_LOG"
+  send_notification "🔄 Ephemery node: Starting recovery attempt $((RECOVERY_COUNT + 1))/$MAX_RECOVERY_ATTEMPTS"
+
+  # Restart Docker containers
+  echo "Restarting Docker containers..." >> "$RECOVERY_LOG"
+  docker restart {{ cl_client_name }}-container {{ el }}-container >> "$RECOVERY_LOG" 2>&1
+
+  # Check if JWT token exists and is valid
+  if [ ! -s "{{ jwt_secret_path }}" ]; then
+    echo "Regenerating JWT token..." >> "$RECOVERY_LOG"
+    echo "0x$(openssl rand -hex 32)" > "{{ jwt_secret_path }}"
+    chmod 600 "{{ jwt_secret_path }}"
+    # Copy the token to both clients if needed
+    docker restart {{ cl_client_name }}-container {{ el }}-container >> "$RECOVERY_LOG" 2>&1
+  fi
+
+  # Wait for recovery
+  echo "Waiting $RECOVERY_WAIT seconds for services to recover..." >> "$RECOVERY_LOG"
+  sleep "$RECOVERY_WAIT"
+
+  # Check if recovery was successful
+  if check_cl_sync && check_el_sync; then
+    echo "$(date +"%Y-%m-%d %H:%M:%S") - Recovery successful" >> "$RECOVERY_LOG"
+    send_notification "✅ Ephemery node: Recovery successful"
+    echo "0" > "$RECOVERY_COUNT_FILE"  # Reset recovery counter
+    return 0
+  else
+    echo "$(date +"%Y-%m-%d %H:%M:%S") - Recovery attempt failed" >> "$RECOVERY_LOG"
+    send_notification "❌ Ephemery node: Recovery attempt failed. Will try again later."
+    return 1
+  fi
+}
+
+# Main function
+main() {
+  CL_STATUS=$(check_cl_sync; echo $?)
+  EL_STATUS=$(check_el_sync; echo $?)
+
+  # If any checks failed and auto-recovery is enabled
+  if [ "$CL_STATUS" -ne 0 ] || [ "$EL_STATUS" -ne 0 ]; then
+    if [ "$AUTO_RECOVERY" = "true" ]; then
+      echo "$(date +"%Y-%m-%d %H:%M:%S") - Issues detected, attempting recovery" >> "$LOG_FILE"
+      perform_recovery
+    else
+      send_notification "⚠️ Ephemery node: Issues detected but auto-recovery is disabled"
+    fi
+  else
+    # All is well, reset recovery counter
+    echo "0" > "$RECOVERY_COUNT_FILE"
+  fi
+}
+
+# Run main function
+main

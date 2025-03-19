@@ -1,0 +1,27 @@
+---
+# Default variables for consensus client role
+
+# Client selection (default is lighthouse)
+cl_client_name: "lighthouse"
+cl_client_image: "sigp/lighthouse:latest"
+cl_client_port: 5052
+cl_p2p_port: 9000
+cl_metrics_port: 8008
+
+# Performance tuning
+cl_max_peers: 70
+
+# Data directories
+cl_data_dir: "{{ ephemery_data_dir }}/{{ cl_client_name }}"
+
+# Container configuration
+cl_container_name: "{{ network }}-{{ cl_client_name }}"
+cl_container_network: "{{ container_network }}"
+cl_restart_policy: "{{ container_restart_policy }}"
+
+# Execution engine connection
+cl_execution_endpoint: "http://{{ el_container_name }}:{{ el_engine_port }}"
+
+# Client-specific options
+# These are empty by default and should be overridden by client-specific tasks
+cl_extra_options: "" 

@@ -1,0 +1,68 @@
+---
+# Validator key management tasks
+
+- name: Check for existing validator keys
+  find:
+    paths: "{{ validator_keys_dir }}"
+    patterns: "*.json"
+  register: existing_validator_keys
+
+- name: Display existing validator keys
+  debug:
+    msg: "Found {{ existing_validator_keys.files | length }} existing validator keys"
+
+- name: Check if keys need to be imported
+  set_fact:
+    need_key_import: "{{ existing_validator_keys.files | length == 0 and validator_import_keys | default(false) | bool }}"
+
+- name: Ensure validator keystore directory exists
+  file:
+    path: "{{ validator_keys_dir }}/keystore"
+    state: directory
+    mode: '0700'
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+  become: true
+  when: need_key_import
+
+- name: Copy validator keys if provided
+  copy:
+    src: "{{ validator_keys_source_dir }}/"
+    dest: "{{ validator_keys_dir }}"
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0600'
+  become: true
+  when: 
+    - need_key_import
+    - validator_keys_source_dir is defined
+
+- name: Generate validator password file
+  template:
+    src: password.txt.j2
+    dest: "{{ validator_secrets_dir }}/password.txt"
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0600'
+  become: true
+  when: validator_password is defined
+
+- name: Process keys for Lighthouse
+  include_tasks: keys_lighthouse.yml
+  when: validator_client_name == "lighthouse" and need_key_import
+
+- name: Process keys for Prysm
+  include_tasks: keys_prysm.yml
+  when: validator_client_name == "prysm" and need_key_import
+
+- name: Process keys for Teku
+  include_tasks: keys_teku.yml
+  when: validator_client_name == "teku" and need_key_import
+
+- name: Process keys for Nimbus
+  include_tasks: keys_nimbus.yml
+  when: validator_client_name == "nimbus" and need_key_import
+
+- name: Process keys for Lodestar
+  include_tasks: keys_lodestar.yml
+  when: validator_client_name == "lodestar" and need_key_import 

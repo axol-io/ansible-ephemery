@@ -27,6 +27,10 @@ set -euo pipefail
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 # Load common utilities
 source "${SCRIPT_DIR}/../utilities/common.sh"

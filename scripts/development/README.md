@@ -1,15 +1,17 @@
 # Development Scripts
 
-Scripts for development environment setup and testing
+Scripts and templates for Ephemery development.
 
-## Scripts
+## Available Scripts
 
-- `dev-env-manager.sh`: !/bin/bash
-- `repo-standards.sh`: !/bin/bash
-- `standardize_molecule_extensions.sh`: !/bin/bash
-- `standardize_repository.sh`: !/bin/bash
-- `test-collection-loading.sh`: !/usr/bin/env bash
+*(Scripts will be listed automatically as they are added)*
 
 ## Usage
 
-Please refer to the individual script comments or the main project documentation for usage information.
+See individual script files for detailed usage instructions.
+
+## Templates
+
+The `templates/` directory contains standardized templates for creating new scripts:
+
+- `script_template.sh` - Basic script template with common functionality

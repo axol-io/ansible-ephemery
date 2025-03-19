@@ -1,0 +1,31 @@
+---
+# Test fixture for deploy_ephemery.yaml
+# This is a minimal implementation for testing purposes
+
+- name: Deploy Ephemery Test Environment
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Mock deployment task
+      debug:
+        msg: "This is a mock deployment task for testing"
+        
+    - name: Set mock deployment facts
+      set_fact:
+        ephemery_deployed: true
+        ephemery_test_mode: true
+        deployment_timestamp: "{{ ansible_date_time.iso8601 }}"
+      
+    - name: Create mock deployment files
+      file:
+        path: "/tmp/ephemery_test_{{ item }}"
+        state: touch
+        mode: '0644'
+      loop:
+        - "validator.json"
+        - "node_config.json"
+        - "deployment.log"
+      
+    - name: Sleep to simulate deployment
+      command: sleep 1
+      changed_when: false 

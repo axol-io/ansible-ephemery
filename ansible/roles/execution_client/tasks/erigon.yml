@@ -1,0 +1,109 @@
+---
+# Erigon-specific tasks for the execution_client role
+
+- name: Download Erigon binary
+  get_url:
+    url: "https://github.com/ledgerwatch/erigon/releases/latest/download/erigon_{{ ansible_system | lower }}_{{ ansible_architecture }}.tar.gz"
+    dest: "/tmp/erigon.tar.gz"
+    mode: '0644'
+  become: true
+  register: erigon_download
+
+- name: Create temporary directory for Erigon extraction
+  file:
+    path: "/tmp/erigon"
+    state: directory
+    mode: '0755'
+  become: true
+  when: erigon_download.changed
+
+- name: Extract Erigon binary
+  unarchive:
+    src: "/tmp/erigon.tar.gz"
+    dest: "/tmp/erigon"
+    remote_src: yes
+  become: true
+  when: erigon_download.changed
+
+- name: Install Erigon binary
+  copy:
+    src: "/tmp/erigon/erigon"
+    dest: "/usr/local/bin/erigon"
+    owner: root
+    group: root
+    mode: '0755'
+    remote_src: yes
+  become: true
+  when: erigon_download.changed
+  register: erigon_install
+
+- name: Get Erigon version
+  command: erigon --version
+  register: erigon_version_output
+  changed_when: false
+
+- name: Display Erigon version
+  debug:
+    msg: "Installed Erigon version: {{ erigon_version_output.stdout }}"
+
+- name: Create Erigon data directory
+  file:
+    path: "{{ erigon_data_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Erigon log directory
+  file:
+    path: "{{ el_log_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Erigon configuration directory
+  file:
+    path: "{{ config_dir }}/erigon"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Erigon configuration
+  template:
+    src: erigon_config.j2
+    dest: "{{ config_dir }}/erigon_config.toml"
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0644'
+  become: true
+  notify: restart erigon
+
+- name: Create Erigon systemd service
+  template:
+    src: erigon.service.j2
+    dest: /etc/systemd/system/erigon.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: erigon_service
+  notify: restart erigon
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when: erigon_service.changed
+
+- name: Enable and start Erigon service
+  systemd:
+    name: erigon
+    enabled: yes
+    state: started
+  become: true
+  when: el_service_enabled | bool 
