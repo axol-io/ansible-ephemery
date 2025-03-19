@@ -91,7 +91,7 @@ This role performs the following tasks:
         el_client: geth
         el_data_dir: /data/ethereum/execution
         ethereum_network: goerli
-        
+
 # Advanced usage with Nethermind
 - name: Deploy execution client with custom settings
   hosts: ethereum_nodes
@@ -183,4 +183,4 @@ To update client versions, either:
 ## Related Documentation
 
 - [Ethereum Execution Clients](https://ethereum.org/en/developers/docs/nodes-and-clients/#execution-clients)
-- [Client Migration Guide](../CLIENT_MIGRATION_GUIDE.md) 
+- [Client Migration Guide](../CLIENT_MIGRATION_GUIDE.md)

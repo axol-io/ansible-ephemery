@@ -1,45 +1,46 @@
 ---
-# Main tasks for execution client role
+# Main tasks file for the execution_client role
 
-- name: Include client-specific configuration
-  ansible.builtin.include_tasks: "{{ el_client_name }}.yaml"
-  when: el_client_name is defined
+- name: Set up execution client directories
+  include_tasks: directories.yml
+  tags:
+    - execution
+    - directories
 
-- name: Create execution client data directory
-  ansible.builtin.file:
-    path: "{{ el_data_dir }}"
-    state: directory
-    mode: "0755"
-    owner: "{{ ansible_user | default('root') }}"
-    group: "{{ ansible_user | default('root') }}"
+- name: Install execution client
+  block:
+    - name: Include client-specific tasks - Geth
+      include_tasks: geth.yml
+      when: el_client_name == "geth"
+      tags:
+        - execution
+        - geth
 
-- name: Setup docker network if needed
-  community.docker.docker_network:
-    name: "{{ el_container_network }}"
-    state: present
-  when: create_network | default(true) | bool
+    - name: Include client-specific tasks - Nethermind
+      include_tasks: nethermind.yml
+      when: el_client_name == "nethermind"
+      tags:
+        - execution
+        - nethermind
 
-- name: Pull execution client docker image
-  community.docker.docker_image:
-    name: "{{ el_client_image }}"
-    source: pull
-    force_source: "{{ force_image_update | default(false) | bool }}"
+    - name: Include client-specific tasks - Besu
+      include_tasks: besu.yml
+      when: el_client_name == "besu"
+      tags:
+        - execution
+        - besu
 
-- name: Setup execution client container
-  community.docker.docker_container:
-    name: "{{ el_container_name }}"
-    image: "{{ el_client_image }}"
-    restart_policy: "{{ el_restart_policy }}"
-    network_mode: "{{ el_container_network }}"
-    volumes:
-      - "{{ el_data_dir }}:/data"
-      - "{{ jwt_secret_path }}:/jwtsecret"
-    ports:
-      - "{{ el_client_port }}:{{ el_client_port }}"
-      - "{{ el_engine_port }}:{{ el_engine_port }}"
-      - "{{ el_p2p_port }}:{{ el_p2p_port }}/tcp"
-      - "{{ el_p2p_port }}:{{ el_p2p_port }}/udp"
-      - "{{ el_metrics_port }}:{{ el_metrics_port }}"
-    command: "{{ el_container_command }}"
-    env: "{{ el_container_env | default({}) }}"
-    state: started 
+    - name: Include client-specific tasks - Erigon
+      include_tasks: erigon.yml
+      when: el_client_name == "erigon"
+      tags:
+        - execution
+        - erigon
+  tags:
+    - execution
+
+- name: Set up execution client service
+  include_tasks: service.yml
+  tags:
+    - execution
+    - services

@@ -18,8 +18,8 @@ source "${SCRIPT_DIR}/error_handling.sh"
 if [ -z "${PROJECT_ROOT+x}" ]; then
   PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Source the common library
-source "${PROJECT_ROOT}/scripts/lib/common.sh"
+  # Source the common library
+  source "${PROJECT_ROOT}/scripts/lib/common.sh"
 fi
 
 # Parse arguments

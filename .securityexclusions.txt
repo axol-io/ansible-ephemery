@@ -46,8 +46,8 @@ keystore
 jwt.hex
 validator_key
 telegram_bot_token: auth_token
-telegram_bot_token: 
+telegram_bot_token:
 key: pre-commit
 password: ephemery
 api_key: "${CSM_API_KEY}"
-withdrawal_credentials: "0x..." 
+withdrawal_credentials: "0x..."

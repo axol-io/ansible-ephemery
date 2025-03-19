@@ -29,12 +29,12 @@ jobs:
 
       - name: Lint shell scripts
         run: ./scripts/testing/lint_shell_scripts.sh --check
-      
+
       - name: Lint Ansible files
         run: ansible-lint
         if: always()
         continue-on-error: true
-      
+
       - name: Lint YAML files
         run: yamllint .
         if: always()
@@ -118,17 +118,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install semver
-          
+
       - name: Bump version
         id: bump_version
         run: |
@@ -138,16 +138,16 @@ jobs:
           else
             CURRENT_VERSION="0.1.0"
           fi
-          
+
           # Bump patch version
           NEW_VERSION=$(python -c "import semver; print(semver.VersionInfo.parse('${CURRENT_VERSION}').bump_patch())")
-          
+
           # Save new version
           echo "${NEW_VERSION}" > VERSION
-          
+
           echo "New version: ${NEW_VERSION}"
           echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
-          
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -157,4 +157,4 @@ jobs:
           prerelease: false
           generate_release_notes: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

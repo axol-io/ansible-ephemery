@@ -58,7 +58,7 @@ fi
 # Test functions
 test_example() {
   echo "Running example test..."
-  
+
   # Check prerequisites
   if ! is_tool_available "example_tool"; then
     if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
@@ -68,13 +68,13 @@ test_example() {
       return 0
     fi
   fi
-  
+
   # Run test
   local result=0
-  
+
   # Add your test logic here
   # ...
-  
+
   if [[ ${result} -eq 0 ]]; then
     echo "PASS: Example test passed"
     return 0
@@ -121,4 +121,4 @@ if [[ ${TESTS_FAILED} -gt 0 ]]; then
   exit 1
 else
   exit 0
-fi 
+fi

@@ -144,3 +144,22 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 ## Security
 
 For security issues, please see [SECURITY.md](./SECURITY.md).
+
+## Recent Fixes
+
+The following inconsistencies were recently fixed:
+
+1. **Standardized YAML file extensions**:
+   - All YAML files outside the molecule/ directory now use `.yaml` extension
+   - All YAML files inside the molecule/ directory use `.yml` extension
+   - This standardization makes the codebase more consistent and easier to maintain
+
+2. **Eliminated duplicate scripts**:
+   - Removed duplicates between `scripts/utils/` and `scripts/utilities/`
+   - Created symlinks in `scripts/utils/` pointing to the actual scripts in `scripts/utilities/` for backward compatibility
+   - Added clear documentation in `scripts/utils/README.md` explaining the reorganization
+
+3. **Reorganized utility directories**:
+   - Following the plan in `scripts/REORGANIZATION.md`
+   - Maintained only essential low-level scripts in `scripts/utils/`
+   - Moved most utility scripts to their appropriate functional directories

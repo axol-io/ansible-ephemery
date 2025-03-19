@@ -17,7 +17,7 @@ source "${PROJECT_ROOT}/scripts/lib/common.sh"
 # Source core utilities
 source "${PROJECT_ROOT}/scripts/core/path_config.sh"
 source "${PROJECT_ROOT}/scripts/core/error_handling.sh"
-source "${PROJECT_ROOT}/scripts/core/common.sh"
+source "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh"
 
 # Setup error handling
 setup_error_handling
@@ -111,7 +111,7 @@ test_reset_detection() {
   cp "${RETENTION_SCRIPT}" "${temp_retention_script}"
 
   # Create a custom get_genesis_time function for the test
-  cat > "${TEST_DIR}/get_genesis_time.sh" << EOF
+  cat >"${TEST_DIR}/get_genesis_time.sh" <<EOF
 #!/bin/bash
 get_genesis_time() {
   cat "${GENESIS_TIME_FILE}"
@@ -119,9 +119,9 @@ get_genesis_time() {
 EOF
 
   # Source the custom function in the test
-  echo "source \"${TEST_DIR}/get_genesis_time.sh\"" > "${temp_retention_script}.tmp"
-  echo "GENESIS_TIME_FILE=\"${GENESIS_TIME_FILE}\"" >> "${temp_retention_script}.tmp"
-  cat "${temp_retention_script}" >> "${temp_retention_script}.tmp"
+  echo "source \"${TEST_DIR}/get_genesis_time.sh\"" >"${temp_retention_script}.tmp"
+  echo "GENESIS_TIME_FILE=\"${GENESIS_TIME_FILE}\"" >>"${temp_retention_script}.tmp"
+  cat "${temp_retention_script}" >>"${temp_retention_script}.tmp"
   mv "${temp_retention_script}.tmp" "${temp_retention_script}"
   chmod +x "${temp_retention_script}"
 

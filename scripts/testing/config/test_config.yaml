@@ -1,0 +1,100 @@
+# Ephemery Test Configuration
+# This file defines the test environment capabilities and configuration
+
+# Environment settings
+ENVIRONMENT_TYPE: development
+MOCK_ENABLED: true
+VERBOSE: true
+
+# Tool availability
+TOOL_PATH_GETH: /usr/local/bin/geth
+TOOL_PATH_LIGHTHOUSE: /usr/local/bin/lighthouse
+TOOL_PATH_TC: /usr/sbin/tc
+TOOL_PATH_IPTABLES: /usr/sbin/iptables
+
+# Service availability
+SERVICE_STATUS_GETH: available
+SERVICE_STATUS_LIGHTHOUSE: available
+SERVICE_STATUS_NGINX: unavailable
+
+# Playbook settings
+PLAYBOOKS_PATH: ansible/playbooks
+PLAYBOOKS_FIXTURES_PATH: scripts/testing/fixtures
+
+# Report settings
+REPORT_FORMAT: text
+REPORT_PATH: scripts/testing/reports
+
+# Test settings
+SKIP_UNSUPPORTED_TESTS: false
+CLEAN_AFTER_TESTS: true
+
+# Environment capabilities
+environment:
+  # Available system tools (true/false)
+  tools:
+    docker: true
+    tc: false
+    ip: false
+    iptables: false
+    systemctl: false
+    curl: true
+    jq: true
+
+  # Available services
+  services:
+    geth: false
+    lighthouse: false
+    teku: false
+    prysm: false
+    nimbus: false
+
+  # Network resources
+  network:
+    has_internet: true
+    can_modify_network: false
+
+  # Test environment type (production, staging, development, ci)
+  type: "development"
+
+# Test execution settings
+execution:
+  # Enable mock mode for unavailable tools/services
+  mock_mode: true
+
+  # Mock verbosity level
+  mock_verbose: true
+
+  # Skip tests that require unavailable resources even in mock mode
+  skip_unsupported: false
+
+  # Report directory for test results
+  report_dir: "scripts/testing/reports"
+
+  # Default test timeouts (seconds)
+  timeouts:
+    default: 60
+    network: 120
+    service: 180
+
+# Playbook configurations
+playbooks:
+  # Use test fixtures instead of production playbooks
+  use_test_fixtures: true
+
+  # Path to test fixture playbooks relative to project root
+  fixtures_path: "scripts/testing/fixtures"
+
+  # Default ansible inventory for tests
+  inventory: "scripts/testing/fixtures/test_inventory.yml"
+
+# Test data configurations
+data:
+  # Path to test data fixtures relative to project root
+  fixtures_path: "scripts/testing/fixtures"
+
+  # Default test validator count
+  validator_count: 10
+
+  # Clean test data after tests
+  clean_after_tests: true

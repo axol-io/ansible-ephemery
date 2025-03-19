@@ -1,0 +1,38 @@
+---
+# Handlers for the common role
+
+- name: Restart docker service
+  service:
+    name: docker
+    state: restarted
+  become: true
+
+- name: Restart ssh service
+  service:
+    name: sshd
+    state: restarted
+  become: true
+
+- name: Restart fail2ban service
+  service:
+    name: fail2ban
+    state: restarted
+  become: true
+
+- name: Restart auditd service
+  service:
+    name: auditd
+    state: restarted
+  become: true
+
+- name: Restart rkhunter service
+  service:
+    name: rkhunter
+    state: restarted
+  become: true
+
+- name: Restart clamav service
+  service:
+    name: clamav-daemon
+    state: restarted
+  become: true

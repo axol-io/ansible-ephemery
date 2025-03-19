@@ -1,0 +1,159 @@
+---
+# Update Ephemery Node Playbook
+# This playbook handles updates for all Ephemery nodes
+
+- name: Update Ephemery nodes
+  hosts: all
+  become: true
+  gather_facts: true
+  vars_files:
+    - ../config/vars/main.yml
+
+  pre_tasks:
+    - name: Check Ansible version
+      assert:
+        that: "ansible_version.full is version_compare('2.9', '>=')"
+        msg: "Ansible 2.9 or higher is required"
+
+    - name: Record start time
+      set_fact:
+        update_start_time: "{{ ansible_date_time.iso8601 }}"
+
+    - name: Create update status file
+      file:
+        path: "/var/log/ephemery/update_{{ update_start_time | regex_replace('[^0-9]', '') }}.log"
+        state: touch
+        mode: '0644'
+      register: update_log_file
+
+    - name: Begin update status logging
+      lineinfile:
+        path: "{{ update_log_file.path }}"
+        line: "Ephemery update started at {{ update_start_time }}"
+
+  tasks:
+    - name: Check for running services
+      service_facts:
+      register: service_status
+
+    - name: Stop Ethereum services
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - "{{ validator_service_name | default('validator') }}"
+        - "{{ cl_service_name | default('consensus') }}"
+        - "{{ el_service_name | default('execution') }}"
+      when: "item in service_status.ansible_facts.services and service_status.ansible_facts.services[item].state == 'running'"
+      ignore_errors: true
+
+    - name: Wait for services to stop completely
+      pause:
+        seconds: 10
+
+    - name: Update package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Update OS packages
+      package:
+        name: "*"
+        state: latest
+      register: package_update
+
+    - name: Record OS update status
+      lineinfile:
+        path: "{{ update_log_file.path }}"
+        line: "OS packages updated: {{ package_update.changed }}"
+
+    - name: Update Execution Client
+      block:
+        - name: Run Execution Client update
+          include_role:
+            name: execution_client
+          vars:
+            el_client_name: "{{ el_client }}"
+          tags:
+            - execution
+
+        - name: Record Execution Client update
+          lineinfile:
+            path: "{{ update_log_file.path }}"
+            line: "Execution client ({{ el_client }}) updated at {{ ansible_date_time.iso8601 }}"
+      when: update_execution_client | default(true) | bool
+
+    - name: Update Consensus Client
+      block:
+        - name: Run Consensus Client update
+          include_role:
+            name: consensus_client
+          vars:
+            cl_client_name: "{{ cl_client }}"
+          tags:
+            - consensus
+
+        - name: Record Consensus Client update
+          lineinfile:
+            path: "{{ update_log_file.path }}"
+            line: "Consensus client ({{ cl_client }}) updated at {{ ansible_date_time.iso8601 }}"
+      when: update_consensus_client | default(true) | bool
+
+    - name: Update Validator Client
+      block:
+        - name: Run Validator Client update
+          include_role:
+            name: validator
+          tags:
+            - validator
+
+        - name: Record Validator Client update
+          lineinfile:
+            path: "{{ update_log_file.path }}"
+            line: "Validator client updated at {{ ansible_date_time.iso8601 }}"
+      when: update_validator_client | default(true) | bool and is_validator | default(false) | bool
+
+    - name: Restart services
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - "{{ el_service_name | default('execution') }}"
+        - "{{ cl_service_name | default('consensus') }}"
+        - "{{ validator_service_name | default('validator') }}"
+      when: "item in service_status.ansible_facts.services"
+      ignore_errors: true
+
+    - name: Wait for services to be fully operational
+      pause:
+        seconds: 20
+
+    - name: Check service status after update
+      command: "systemctl status {{ item }}"
+      register: service_check
+      changed_when: false
+      failed_when: false
+      loop:
+        - "{{ el_service_name | default('execution') }}"
+        - "{{ cl_service_name | default('consensus') }}"
+        - "{{ validator_service_name | default('validator') }}"
+      when: "item in service_status.ansible_facts.services"
+
+    - name: Record service status
+      lineinfile:
+        path: "{{ update_log_file.path }}"
+        line: "{{ item.item }} service status: {{ 'RUNNING' if 'active (running)' in item.stdout else 'NOT RUNNING' }}"
+      loop: "{{ service_check.results }}"
+      when: item is defined and item.stdout is defined
+
+  post_tasks:
+    - name: Record update completion time
+      lineinfile:
+        path: "{{ update_log_file.path }}"
+        line: "Ephemery update completed at {{ ansible_date_time.iso8601 }}"
+
+    - name: Display update summary
+      debug:
+        msg: "Update completed successfully. Log available at {{ update_log_file.path }}"

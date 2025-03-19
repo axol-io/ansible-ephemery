@@ -44,9 +44,9 @@ inventory.yaml
 /files/passwords/
 
 # JWT secrets and other sensitive files
+!.secretsignore
 *.hex
 *.secret
-*secret*
 *password*
 *credential*
 *token*

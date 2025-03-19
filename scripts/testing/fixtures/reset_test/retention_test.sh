@@ -215,16 +215,16 @@ download_genesis_release() {
 # Usage: reset_testnet "v1.2.3"
 reset_testnet() {
   echo "$(date) - Resetting testnet to release: $1"
-  
+
   if [ "$TEST_MODE" = true ]; then
     echo "Test mode: Would reset testnet to release $1"
     # In test mode, just update the mock genesis file
-    echo '{"genesis_time": "'$(date +%s)'", "release": "'$1'"}' > "${CONFIG_DIR}/genesis.json"
-    echo "ITERATION_RELEASE=$1" > "${CONFIG_DIR}/retention.vars"
-    echo "GENESIS_RESET_INTERVAL=86400" >> "${CONFIG_DIR}/retention.vars"
+    echo '{"genesis_time": "'$(date +%s)'", "release": "'$1'"}' >"${CONFIG_DIR}/genesis.json"
+    echo "ITERATION_RELEASE=$1" >"${CONFIG_DIR}/retention.vars"
+    echo "GENESIS_RESET_INTERVAL=86400" >>"${CONFIG_DIR}/retention.vars"
     return
   fi
-  
+
   # Orchestrate the reset process in proper sequence
   stop_clients
   clear_datadirs
@@ -246,7 +246,7 @@ check_testnet() {
     # In test mode, get genesis time from the mock genesis file
     genesis_time=$(get_genesis_time)
     echo "Test mode: Using genesis time from file: ${genesis_time}"
-    
+
     # In test mode, check if the genesis time file has changed
     if [ -f "${GENESIS_TIME_FILE}" ]; then
       file_genesis_time=$(cat "${GENESIS_TIME_FILE}")
@@ -256,7 +256,7 @@ check_testnet() {
         return
       fi
     fi
-    
+
     # In test mode, if the genesis time is more than 1 day old, consider it a reset
     if [ $((current_time - genesis_time)) -gt 86400 ]; then
       echo "Reset detected: Genesis time is more than 1 day old"
@@ -359,7 +359,7 @@ main() {
     echo "Running in test mode, skipping actual client operations"
     # Create a mock genesis file if it doesn't exist
     if ! [ -f "${CONFIG_DIR}/genesis.json" ]; then
-      echo '{"genesis_time": "'$(date +%s)'"}' > "${CONFIG_DIR}/genesis.json"
+      echo '{"genesis_time": "'$(date +%s)'"}' >"${CONFIG_DIR}/genesis.json"
     fi
   fi
 

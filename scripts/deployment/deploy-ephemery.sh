@@ -314,131 +314,82 @@ configure_deployment() {
   echo -e "- Web dashboard: $(if [[ "${ENABLE_DASHBOARD}" == true ]]; then echo "Enabled"; else echo "Disabled"; fi)"
 }
 
-# Generate inventory file
-generate_inventory() {
-  if [[ "${CUSTOM_CONFIG}" == false ]]; then
-    echo -e "${BLUE}Generating inventory file...${NC}"
-
-    # Use new naming convention with name parameter
-    GEN_CMD="${PROJECT_ROOT}/scripts/utils/generate_inventory.sh --type ${DEPLOYMENT_TYPE}"
-
-    # Add name parameter based on deployment type and host if applicable
-    if [[ "${DEPLOYMENT_TYPE}" == "remote" ]]; then
-      GEN_CMD="${GEN_CMD} --name ${REMOTE_HOST}-ephemery"
-    else
-      GEN_CMD="${GEN_CMD} --name local-ephemery"
+# Generate a default inventory file based on input parameters
+generate_default_inventory() {
+  log_info "Generating default inventory file..."
+  
+  # Set default values
+  : "${DEPLOYMENT_TYPE:=local}"
+  : "${REMOTE_USER:=ubuntu}"
+  : "${REMOTE_PORT:=22}"
+  
+  local output_file="${PROJECT_ROOT}/ansible/inventory/ephemery-${DEPLOYMENT_TYPE}-$(date +%Y%m%d%H%M%S).yaml"
+  local hostname="localhost"
+  
+  # If deployment type is remote, ensure we have a host
+  if [[ "${DEPLOYMENT_TYPE}" == "remote" ]]; then
+    if [[ -z "${REMOTE_HOST}" ]]; then
+      log_error "Remote host is required for remote deployment"
+      return 1
     fi
-
-    # Add remote-specific options
-    if [[ "${DEPLOYMENT_TYPE}" == "remote" ]]; then
-      GEN_CMD="${GEN_CMD} --remote-host ${REMOTE_HOST} --remote-user ${REMOTE_USER} --remote-port ${REMOTE_PORT}"
-    fi
-
-    # Add feature flags
-    if [[ "${ENABLE_VALIDATOR}" == true ]]; then
-      GEN_CMD="${GEN_CMD} --enable-validator"
-
-      # Prompt for additional validator configuration if not in skip prompts mode
-      if [[ "${SKIP_PROMPTS}" == false ]]; then
-        echo -e "${BLUE}Configuring validator settings:${NC}"
-
-        # Validator client selection
-        echo -e "Select validator client (default: same as consensus client):"
-        echo -e "1) Same as consensus client"
-        echo -e "2) Lighthouse"
-        echo -e "3) Prysm"
-        echo -e "4) Teku"
-        echo -e "5) Nimbus"
-        read -p "Enter your choice (1-5): " validator_client_choice
-
-        case ${validator_client_choice} in
-          2) GEN_CMD="${GEN_CMD} --validator-client lighthouse" ;;
-          3) GEN_CMD="${GEN_CMD} --validator-client prysm" ;;
-          4) GEN_CMD="${GEN_CMD} --validator-client teku" ;;
-          5) GEN_CMD="${GEN_CMD} --validator-client nimbus" ;;
-          *) echo -e "${GREEN}Using consensus client for validation${NC}" ;;
-        esac
-
-        # Validator graffiti
-        read -p "Enter validator graffiti (default: Ephemery): " validator_graffiti
-        if [[ ! -z "${validator_graffiti}" ]]; then
-          GEN_CMD="${GEN_CMD} --validator-graffiti \"${validator_graffiti}\""
-        fi
-
-        # Fee recipient
-        read -p "Enter fee recipient address (default: 0x0000000000000000000000000000000000000000): " fee_recipient
-        if [[ ! -z "${fee_recipient}" ]]; then
-          GEN_CMD="${GEN_CMD} --fee-recipient \"${fee_recipient}\""
-        fi
-
-        # MEV-Boost
-        read -p "Enable MEV-Boost? (y/n, default: n): " enable_mev
-        if [[ "${enable_mev}" == "y" || "${enable_mev}" == "Y" ]]; then
-          GEN_CMD="${GEN_CMD} --enable-mev-boost"
-
-          # MEV-Boost relays
-          echo -e "${YELLOW}Enter MEV-Boost relays (one per line, empty line to finish):${NC}"
-          while true; do
-            read -p "Relay URL (or empty to finish): " relay_url
-            if [[ -z "${relay_url}" ]]; then
-              break
-            fi
-            GEN_CMD="${GEN_CMD} --mev-relay \"${relay_url}\""
-          done
-        fi
-      fi
-    fi
-
-    if [[ "${ENABLE_MONITORING}" == true ]]; then
-      GEN_CMD="${GEN_CMD} --enable-monitoring"
-    fi
-
-    if [[ "${ENABLE_DASHBOARD}" == true ]]; then
-      GEN_CMD="${GEN_CMD} --enable-dashboard"
-    fi
-
-    # Execute the inventory generation command and capture the output path
-    INVENTORY_FILE=$(eval "${GEN_CMD}" | grep "Inventory file generated:" | cut -d: -f2- | xargs)
-
-    echo -e "${GREEN}✓ Generated inventory file: ${INVENTORY_FILE}${NC}"
-
-    # Validate the inventory
-    echo -e "${BLUE}Validating inventory...${NC}"
-    "${PROJECT_ROOT}/scripts/utils/validate_inventory.sh" "${INVENTORY_FILE}"
-    echo -e "${GREEN}✓ Inventory validation passed${NC}"
-  else
-    echo -e "${BLUE}Using custom inventory file: ${INVENTORY_FILE}${NC}"
-
-    # Validate the custom inventory
-    echo -e "${BLUE}Validating inventory...${NC}"
-    "${PROJECT_ROOT}/scripts/utils/validate_inventory.sh" "${INVENTORY_FILE}"
-    echo -e "${GREEN}✓ Inventory validation passed${NC}"
+    hostname="${REMOTE_HOST}"
   fi
+  
+  log_info "Creating inventory for ${DEPLOYMENT_TYPE} deployment ${hostname}..."
+  
+  # Use the consolidated inventory_manager.sh script instead of the deprecated generate_inventory.sh
+  GEN_CMD="${PROJECT_ROOT}/scripts/core/inventory_manager.sh generate --type ${DEPLOYMENT_TYPE}"
+  
+  # Add options based on input parameters
+  if [[ "${DEPLOYMENT_TYPE}" == "remote" ]]; then
+    GEN_CMD="${GEN_CMD} --host ${REMOTE_HOST} --user ${REMOTE_USER} --port ${REMOTE_PORT}"
+  fi
+  
+  # Add validator option if enabled
+  if [[ "${ENABLE_VALIDATOR}" == "true" ]]; then
+    GEN_CMD="${GEN_CMD} --validator"
+  fi
+  
+  # Add monitoring option if enabled
+  if [[ "${ENABLE_MONITORING}" == "true" ]]; then
+    GEN_CMD="${GEN_CMD} --monitoring"
+  fi
+  
+  # Add dashboard option if enabled
+  if [[ "${ENABLE_DASHBOARD}" == "true" ]]; then
+    GEN_CMD="${GEN_CMD} --dashboard"
+  fi
+  
+  # Add output file
+  GEN_CMD="${GEN_CMD} --output ${output_file}"
+  
+  # Execute the command
+  log_debug "Executing: ${GEN_CMD}"
+  eval "${GEN_CMD}"
+  
+  if [[ ! -f "${output_file}" ]]; then
+    log_error "Failed to generate inventory file"
+    return 1
+  fi
+  
+  log_success "Inventory file generated successfully: ${output_file}"
+  INVENTORY_FILE="${output_file}"
+  return 0
 }
 
-# Function to extract inventory host, user, port
-extract_inventory_info() {
-  INV_HOST=""
-  INV_USER=""
-  INV_PORT=""
-
-  # Check inventory format and extract current values
-  if grep -q "ansible_host:" "${INVENTORY_FILE}"; then
-    # New format
-    INV_HOST=$(grep "ansible_host:" "${INVENTORY_FILE}" | head -1 | awk '{print $2}')
-    INV_USER=$(grep "ansible_user:" "${INVENTORY_FILE}" | head -1 | awk '{print $2}')
-    INV_PORT=$(grep "ansible_port:" "${INVENTORY_FILE}" | head -1 | awk '{print $2}')
-  elif grep -q "host:" "${INVENTORY_FILE}"; then
-    # Old format
-    INV_HOST=$(grep -A 3 "hosts:" "${INVENTORY_FILE}" | grep "host:" | awk '{print $3}')
-    INV_USER=$(grep -A 3 "hosts:" "${INVENTORY_FILE}" | grep "user:" | awk '{print $3}')
-    INV_PORT=$(grep -A 3 "hosts:" "${INVENTORY_FILE}" | grep "port:" | awk '{print $3}')
+# Validate the inventory file
+validate_inventory() {
+  log_info "Validating inventory file: ${INVENTORY_FILE}"
+  
+  if [[ ! -f "${INVENTORY_FILE}" ]]; then
+    log_error "Inventory file not found: ${INVENTORY_FILE}"
+    return 1
   fi
-
-  # Use inventory values if available, or defaults
-  REMOTE_HOST=${INV_HOST:-${REMOTE_HOST}}
-  REMOTE_USER=${INV_USER:-${REMOTE_USER}}
-  REMOTE_PORT=${INV_PORT:-${REMOTE_PORT}}
+  
+  # Use the consolidated inventory_manager.sh script instead of validate_inventory.sh
+  "${PROJECT_ROOT}/scripts/core/inventory_manager.sh" validate --file "${INVENTORY_FILE}"
+  
+  return $?
 }
 
 # Run deployment
@@ -1018,7 +969,18 @@ main() {
     "${PROJECT_ROOT}/scripts/utils/validate_inventory.sh" "${INVENTORY_FILE}"
     echo -e "${GREEN}✓ Inventory validation passed${NC}"
   else
-    generate_inventory
+    generate_default_inventory || {
+      log_error "Failed to generate default inventory"
+      exit 1
+    }
+  fi
+
+  # Final inventory validation before actual deployment
+  log_info "Performing final inventory validation..."
+  "${PROJECT_ROOT}/scripts/core/inventory_manager.sh" validate --file "${INVENTORY_FILE}"
+  if [[ $? -ne 0 ]]; then
+    log_error "Final inventory validation failed. Aborting deployment."
+    exit 1
   fi
 
   # Run deployment

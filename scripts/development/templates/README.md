@@ -123,21 +123,21 @@ print_banner "Log Cleanup Utility"
 # Main function
 main() {
     log_info "Starting cleanup_logs.sh"
-    
+
     # Check dependencies
     if ! check_dependencies "find"; then
         log_error "Missing required dependencies"
         exit 1
     fi
-    
+
     # Check for valid DAYS value
     if ! [[ "$DAYS" =~ ^[0-9]+$ ]]; then
         log_error "DAYS must be a positive integer"
         exit 1
     fi
-    
+
     log_info "Cleaning up log files older than $DAYS days"
-    
+
     # Clean up logs
     local count=0
     while IFS= read -r log_file; do
@@ -147,7 +147,7 @@ main() {
         rm -f "$log_file"
         ((count++))
     done < <(find "${EPHEMERY_LOGS_DIR}" -name "*.log" -type f -mtime +"$DAYS")
-    
+
     log_success "Removed $count log files successfully!"
 }
 

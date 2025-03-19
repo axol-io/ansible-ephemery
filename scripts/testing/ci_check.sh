@@ -54,4 +54,4 @@ if [ $FAILURES -gt 0 ]; then
 else
   echo -e "${GREEN}CI check passed successfully.${NC}"
   exit 0
-fi 
+fi

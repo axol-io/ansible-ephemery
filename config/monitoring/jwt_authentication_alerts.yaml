@@ -71,4 +71,4 @@ groups:
     annotations:
       summary: "High JWT Authentication Latency"
       description: "JWT authentication is taking longer than expected, which may indicate performance issues."
-      remediation: "Check system resources and execution client performance." 
+      remediation: "Check system resources and execution client performance."

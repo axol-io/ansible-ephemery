@@ -206,4 +206,4 @@ The Sync API is used by validators to stay in sync with the consensus client. It
 
 ### JWT Authentication
 
-JSON Web Tokens (JWT) are used for secure authentication between the execution and consensus clients. A shared JWT secret is generated during setup and used by both clients. 
+JSON Web Tokens (JWT) are used for secure authentication between the execution and consensus clients. A shared JWT secret is generated during setup and used by both clients.

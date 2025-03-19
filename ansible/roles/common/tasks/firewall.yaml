@@ -1,0 +1,68 @@
+---
+# Firewall tasks for common role
+
+- name: Install firewall packages
+  package:
+    name: ufw
+    state: present
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Allow SSH connections
+  ufw:
+    rule: allow
+    port: 22
+    proto: tcp
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Allow established connections
+  ufw:
+    rule: allow
+    direction: in
+    port: "{{ item }}"
+    proto: tcp
+  with_items: "{{ firewall_allowed_tcp_ports }}"
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Allow execution client P2P port
+  ufw:
+    rule: allow
+    port: "{{ el_p2p_port | default(30303) }}"
+    proto: tcp
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Allow execution client P2P UDP port
+  ufw:
+    rule: allow
+    port: "{{ el_p2p_port | default(30303) }}"
+    proto: udp
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Allow consensus client P2P port
+  ufw:
+    rule: allow
+    port: "{{ cl_p2p_port | default(9000) }}"
+    proto: tcp
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Allow consensus client P2P UDP port
+  ufw:
+    rule: allow
+    port: "{{ cl_p2p_port | default(9000) }}"
+    proto: udp
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Enable firewall and deny by default
+  ufw:
+    state: enabled
+    policy: deny
+    direction: incoming
+  become: true
+  when: ansible_distribution == "Ubuntu"
+  register: ufw_status

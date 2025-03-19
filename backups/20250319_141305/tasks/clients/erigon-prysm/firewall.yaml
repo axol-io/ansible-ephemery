@@ -1,5 +1,0 @@
----
-# Firewall rules for Erigon (execution client) and Prysm
-# (consensus client) combination
-- name: Set firewall ports for erigon-prysm
-  ansible.builtin.set_fact:

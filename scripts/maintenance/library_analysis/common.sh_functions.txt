@@ -1,0 +1,5 @@
+is_command_available
+check_dependencies
+confirm_action
+get_script_name
+get_absolute_path

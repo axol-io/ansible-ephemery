@@ -6,22 +6,22 @@
   hosts: all
   become: true
   gather_facts: true
-  
+
   vars:
     # Default client selections - can be overridden with -e parameters
     el_client_name: "geth"
     cl_client_name: "lighthouse"
-    
+
     # Default data directory
     data_dir: "/opt/ephemery"
-    
+
     # Default network ID
     network_id: "13337"
     chain_id: "13337"
-    
+
     # Enable metrics by default
     enable_metrics: true
-    
+
   pre_tasks:
     - name: Include OS-specific variables
       include_vars: "{{ item }}"
@@ -30,17 +30,17 @@
         - "{{ ansible_os_family | lower }}.yml"
         - "defaults.yml"
       tags: always
-      
+
     - name: Display client selections
       debug:
-        msg: 
+        msg:
           - "Deploying Ephemery node with:"
           - "Execution Client: {{ el_client_name }}"
           - "Consensus Client: {{ cl_client_name }}"
           - "Data Directory: {{ data_dir }}"
           - "Network ID: {{ network_id }}"
       tags: always
-      
+
     - name: Validate client selections
       assert:
         that:
@@ -49,20 +49,20 @@
         fail_msg: "Invalid client selection. Supported execution clients: geth, nethermind, besu, erigon. Supported consensus clients: lighthouse, prysm, teku, nimbus, lodestar."
         success_msg: "Client selections are valid"
       tags: always
-      
+
   roles:
     - role: common
-      tags: 
+      tags:
         - common
-        
+
     - role: execution_client
-      tags: 
+      tags:
         - execution
-        
+
     - role: consensus_client
-      tags: 
+      tags:
         - consensus
-        
+
   post_tasks:
     - name: Wait for execution client RPC to be available
       uri:
@@ -76,15 +76,15 @@
       retries: 10
       delay: 5
       failed_when: false
-      tags: 
+      tags:
         - verify
-        
+
     - name: Display execution client status
       debug:
         msg: "Execution client {{ el_client_name }} is {{ 'running' if el_rpc_check.status == 200 else 'not responding' }}"
-      tags: 
+      tags:
         - verify
-        
+
     - name: Wait for consensus client API to be available
       uri:
         url: "http://localhost:5052/eth/v1/node/version"
@@ -95,15 +95,15 @@
       retries: 10
       delay: 5
       failed_when: false
-      tags: 
+      tags:
         - verify
-        
+
     - name: Display consensus client status
       debug:
         msg: "Consensus client {{ cl_client_name }} is {{ 'running' if cl_api_check.status == 200 else 'not responding' }}"
-      tags: 
+      tags:
         - verify
-        
+
     - name: Display deployed Ephemery node information
       debug:
         msg:
@@ -117,4 +117,4 @@
           - "Network ID: {{ network_id }}"
       tags:
         - verify
-        - summary 
+        - summary

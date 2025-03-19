@@ -13,6 +13,7 @@ This document outlines security best practices for working with this Ansible rep
    - Hostnames of internal systems
 
 2. **Use Ansible Vault for secrets**:
+
    ```bash
    # Encrypt sensitive data
    ansible-vault encrypt_string --vault-id my_project@prompt 'secret_value' --name 'secret_key'
@@ -51,7 +52,7 @@ For continuous integration, consider adding:
 If you discover a security vulnerability in this repository, please report it by:
 
 1. **Do not** create a public GitHub issue
-2. Email the repository owner directly with details
+2. Email the repository owner directly with details mailto:drew@axol.io
 3. Provide sufficient information to reproduce and understand the issue
 
 ## Updates and Dependencies

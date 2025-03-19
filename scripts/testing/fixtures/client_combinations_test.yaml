@@ -25,4 +25,4 @@
         consensus_client: "{{ item[1] }}"
       loop: "{{ execution_clients | product(consensus_clients) | list }}"
       loop_control:
-        label: "{{ item[0] }} + {{ item[1] }}" 
+        label: "{{ item[0] }} + {{ item[1] }}"

@@ -31,25 +31,25 @@ VERBOSE=false
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -h|--help)
-            echo "Usage: $(basename "$0") [options]"
-            echo ""
-            echo "Options:"
-            echo "  -h, --help     Display this help message"
-            echo "  -v, --verbose  Enable verbose output"
-            exit 0
-            ;;
-        -v|--verbose)
-            VERBOSE=true
-            shift
-            ;;
-        *)
-            log_error "Unknown option: $1"
-            echo "Use -h or --help for usage information"
-            exit 1
-            ;;
-    esac
+  case "$1" in
+    -h | --help)
+      echo "Usage: $(basename "$0") [options]"
+      echo ""
+      echo "Options:"
+      echo "  -h, --help     Display this help message"
+      echo "  -v, --verbose  Enable verbose output"
+      exit 0
+      ;;
+    -v | --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    *)
+      log_error "Unknown option: $1"
+      echo "Use -h or --help for usage information"
+      exit 1
+      ;;
+  esac
 done
 
 # Print banner
@@ -59,7 +59,7 @@ print_banner "Hello Ephemery"
 log_info "This is a simple example script that demonstrates the common library."
 
 if [[ "$VERBOSE" == "true" ]]; then
-    log_debug "This debug message will only appear with --verbose flag."
+  log_debug "This debug message will only appear with --verbose flag."
 fi
 
 # Check if some commands are available
@@ -70,35 +70,35 @@ missing_commands=()
 log_info "Checking for available commands..."
 
 for cmd in "${commands[@]}"; do
-    if is_command_available "$cmd"; then
-        available_commands+=("$cmd")
-        log_info "- $cmd: Available"
-    else
-        missing_commands+=("$cmd")
-        log_warn "- $cmd: Not available"
-    fi
+  if is_command_available "$cmd"; then
+    available_commands+=("$cmd")
+    log_info "- $cmd: Available"
+  else
+    missing_commands+=("$cmd")
+    log_warn "- $cmd: Not available"
+  fi
 done
 
 # Ask for confirmation
 if confirm_action "Would you like to see more information?"; then
-    log_info "Showing more information..."
-    log_info "Current script: $(get_script_name)"
-    log_info "Script directory: ${SCRIPT_DIR}"
-    log_info "Available commands: ${available_commands[*]}"
-    
-    if [[ ${#missing_commands[@]} -gt 0 ]]; then
-        log_warn "Missing commands: ${missing_commands[*]}"
-    fi
-    
-    if is_ephemery_environment; then
-        log_success "This is running in an Ephemery environment."
-    else
-        log_warn "This is not running in an Ephemery environment."
-    fi
+  log_info "Showing more information..."
+  log_info "Current script: $(get_script_name)"
+  log_info "Script directory: ${SCRIPT_DIR}"
+  log_info "Available commands: ${available_commands[*]}"
+
+  if [[ ${#missing_commands[@]} -gt 0 ]]; then
+    log_warn "Missing commands: ${missing_commands[*]}"
+  fi
+
+  if is_ephemery_environment; then
+    log_success "This is running in an Ephemery environment."
+  else
+    log_warn "This is not running in an Ephemery environment."
+  fi
 else
-    log_info "Skipping additional information."
+  log_info "Skipping additional information."
 fi
 
 # Successful completion
 log_success "Script completed successfully!"
-exit 0 
+exit 0

@@ -1,5 +1,0 @@
----
-# Firewall rules for Nethermind (execution client) and Lodestar
-# (consensus client) combination
-- name: Set firewall ports for nethermind-lodestar
-  ansible.builtin.set_fact:

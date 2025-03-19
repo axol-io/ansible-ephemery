@@ -162,4 +162,4 @@ If you cannot resolve the issue using this guide, you can:
 
 1. Check the [GitHub issues](https://github.com/yourusername/ephemery/issues) for similar problems
 2. Join the [Ephemery Discord](https://discord.gg/example) for community support
-3. Review the detailed logs and include them when seeking help 
+3. Review the detailed logs and include them when seeking help

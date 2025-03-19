@@ -48,19 +48,19 @@ For detailed usage instructions, refer to the main [README.md](../../README.md) 
 
 ## Contents
 
-- **complete_script_organization.sh**: 
-- **deploy-ephemery.sh**: 
-- **deploy_enhanced_key_restore.sh**: 
-- **deploy_ephemery_retention.sh**: 
-- **deploy_key_performance_metrics.sh**: 
-- **fix_mainnet_deployment.sh**: 
-- **install-collections.sh**: 
-- **multi_node_orchestration.sh**: 
+- **complete_script_organization.sh**:
+- **deploy-ephemery.sh**:
+- **deploy_enhanced_key_restore.sh**:
+- **deploy_ephemery_retention.sh**:
+- **deploy_key_performance_metrics.sh**:
+- **fix_mainnet_deployment.sh**:
+- **install-collections.sh**:
+- **multi_node_orchestration.sh**:
 - **reorganize_scripts.sh**: Identifies and migrates scripts to the new directory structure
 - **script_audit.sh**: Audits scripts for common patterns and duplication
-- **setup-dev-env.sh**: 
-- **setup-ephemery.sh**: 
-- **setup_dashboard.sh**: 
-- **setup_ephemery_cron.sh**: 
-- **setup_lido_csm.sh**: 
-- **setup_obol_squadstaking.sh**: 
+- **setup-dev-env.sh**:
+- **setup-ephemery.sh**:
+- **setup_dashboard.sh**:
+- **setup_ephemery_cron.sh**:
+- **setup_lido_csm.sh**:
+- **setup_obol_squadstaking.sh**:
