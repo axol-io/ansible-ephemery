@@ -2,7 +2,7 @@
 # Directory setup tasks for common role
 
 - name: Determine common directories
-  set_fact:
+  ansible.builtin.set_fact:
     common_directories:
       - "{{ data_dir }}"
       - "{{ log_dir }}"
@@ -16,7 +16,7 @@
       - "{{ data_dir }}/monitoring"
 
 - name: Create common directories
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     owner: "{{ common_user }}"
@@ -26,7 +26,7 @@
   become: true
 
 - name: Set secure permissions for sensitive directories
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     owner: "{{ common_user }}"
@@ -38,9 +38,10 @@
   become: true
 
 - name: Create symlinks for legacy directory paths
+  when: jwt_create_symlinks | bool
   block:
     - name: Set legacy directory paths
-      set_fact:
+      ansible.builtin.set_fact:
         legacy_directories:
           - path: "/var/lib/ethereum"
             target: "{{ data_dir }}"
@@ -48,7 +49,7 @@
             target: "{{ config_dir }}"
 
     - name: Ensure parent directories exist for symlinks
-      file:
+      ansible.builtin.file:
         path: "{{ item.path | dirname }}"
         state: directory
         owner: "{{ common_user }}"
@@ -58,7 +59,7 @@
       become: true
 
     - name: Create symlinks for legacy directories
-      file:
+      ansible.builtin.file:
         src: "{{ item.target }}"
         dest: "{{ item.path }}"
         state: link
@@ -67,4 +68,3 @@
         force: true
       with_items: "{{ legacy_directories }}"
       become: true
-  when: jwt_create_symlinks | bool
