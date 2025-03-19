@@ -1,0 +1,28 @@
+{
+  "icc": false,
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "5"
+  },
+  "userns-remap": "default",
+  "live-restore": true,
+  "userland-proxy": false,
+  "no-new-privileges": true,
+  "storage-driver": "overlay2",
+  "storage-opts": ["overlay2.override_kernel_check=true"],
+  "default-runtime": "runc",
+  "seccomp-profile": "/etc/docker/seccomp.json",
+  "default-ulimits": {
+    "nofile": {
+      "Name": "nofile",
+      "Hard": 1000000,
+      "Soft": 1000000
+    },
+    "nproc": {
+      "Name": "nproc",
+      "Hard": 65535,
+      "Soft": 65535
+    }
+  }
+} 

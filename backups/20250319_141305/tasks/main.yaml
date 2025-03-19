@@ -1,0 +1,62 @@
+---
+# Main tasks file for Ephemery node deployment and management
+# Include tasks from individual task files
+
+- name: Include variable definitions
+  ansible.builtin.include_vars:
+    dir: "{{ playbook_dir }}/../vars"
+    extensions: ['yaml', 'yml']
+  tags: always
+
+- name: Set container names
+  ansible.builtin.set_fact:
+    el_container: "{{ network }}-{{ el }}"
+    cl_container: "{{ network }}-{{ cl }}"
+  tags: always
+
+# Basic system setup
+- name: Include system setup tasks
+  ansible.builtin.include_tasks: setup-env.yaml
+  tags: setup
+
+# Security tasks
+- name: Include security tasks
+  ansible.builtin.include_tasks: security.yaml
+  tags: security
+
+# Firewall configuration
+- name: Include firewall configuration
+  ansible.builtin.include_tasks: firewall.yaml
+  tags: firewall
+
+# JWT Secret management
+- name: Include JWT secret management
+  ansible.builtin.include_tasks: jwt-management.yaml
+  vars:
+    jwt_secret_path: "{{ jwt_secret_path | default(ephemery_base_dir + '/jwt.hex') }}"
+    backup_jwt: "{{ backup_jwt | default(true) }}"
+    create_jwt_symlink: "{{ create_jwt_symlink | default(true) }}"
+  tags: jwt
+
+# Container setup tasks
+- name: Include Ephemery container setup
+  ansible.builtin.include_tasks: ephemery.yaml
+  tags: ephemery
+
+# Include client-specific tasks
+- name: Include client-specific tasks
+  ansible.builtin.include_tasks: "clients/{{ el }}-{{ cl }}/converge.yaml"
+  when: el is defined and cl is defined
+  tags: clients
+
+# Monitoring setup
+- name: Include monitoring setup
+  ansible.builtin.include_tasks: monitoring.yaml
+  when: setup_monitoring | default(true) | bool
+  tags: monitoring
+
+# Verification tasks
+- name: Include verification tasks
+  ansible.builtin.include_tasks: ensure_genesis_sync.yaml
+  when: verify_sync | default(true) | bool
+  tags: verify

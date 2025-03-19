@@ -1,0 +1,120 @@
+---
+# Nimbus-specific tasks for the consensus_client role
+
+- name: Install dependencies for Nimbus
+  package:
+    name:
+      - build-essential
+      - git
+      - libpcre3-dev
+    state: present
+  become: true
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+- name: Download Nimbus binary release
+  get_url:
+    url: "https://github.com/status-im/nimbus-eth2/releases/download/{{ nimbus_version | default('latest') }}/nimbus-eth2_{{ nimbus_version | default('latest') }}_{{ ansible_system | lower }}_{{ ansible_architecture }}.tar.gz"
+    dest: /tmp/nimbus.tar.gz
+  become: true
+  register: nimbus_download
+  failed_when: false
+
+- name: Create Nimbus installation directory
+  file:
+    path: /opt/nimbus
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Extract Nimbus
+  unarchive:
+    src: /tmp/nimbus.tar.gz
+    dest: /opt/nimbus
+    remote_src: yes
+    extra_opts: "--strip-components=1"
+  become: true
+  when: nimbus_download is success and nimbus_download.changed
+  register: nimbus_extracted
+
+- name: Install Nimbus from source if binary download failed
+  block:
+    - name: Clone Nimbus repository
+      git:
+        repo: https://github.com/status-im/nimbus-eth2.git
+        dest: /opt/nimbus
+        version: "{{ nimbus_version | default('stable') }}"
+      become: true
+      become_user: "{{ common_user }}"
+      when: nimbus_download is failed
+
+    - name: Build Nimbus from source
+      command: make -j{{ ansible_processor_vcpus }} nimbus_beacon_node
+      args:
+        chdir: /opt/nimbus
+      become: true
+      become_user: "{{ common_user }}"
+      when: nimbus_download is failed
+      register: nimbus_built
+  when: nimbus_download is failed
+
+- name: Create symbolic link to Nimbus binary
+  file:
+    src: "/opt/nimbus/build/nimbus_beacon_node"
+    dest: "/usr/local/bin/nimbus_beacon_node"
+    state: link
+  become: true
+
+- name: Get Nimbus version
+  command: nimbus_beacon_node --version
+  register: nimbus_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display Nimbus version
+  debug:
+    msg: "Installed Nimbus version: {{ nimbus_version_output.stdout | default('unknown') }}"
+
+- name: Create Nimbus data directory
+  file:
+    path: "{{ nimbus_data_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Nimbus log directory
+  file:
+    path: "{{ cl_log_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Nimbus systemd service
+  template:
+    src: nimbus.service.j2
+    dest: /etc/systemd/system/nimbus.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: nimbus_service
+  notify: restart nimbus
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when: nimbus_service.changed
+
+- name: Enable and start Nimbus service
+  systemd:
+    name: nimbus
+    enabled: yes
+    state: started
+  become: true
+  when: cl_service_enabled | bool 

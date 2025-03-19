@@ -1,0 +1,144 @@
+---
+# Besu-specific tasks for the execution_client role
+
+- name: Check for Java installation
+  command: java -version
+  register: java_version
+  changed_when: false
+  failed_when: false
+
+- name: Install Java if not present
+  package:
+    name: openjdk-17-jre-headless
+    state: present
+  become: true
+  when: java_version.rc != 0
+
+- name: Create Besu download directory
+  file:
+    path: "/tmp/besu-install"
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Determine Besu version to install
+  block:
+    - name: Get latest Besu release info from GitHub
+      uri:
+        url: "https://api.github.com/repos/hyperledger/besu/releases/latest"
+        return_content: yes
+      register: besu_latest_release
+      when: besu_version == "latest"
+
+    - name: Set Besu version from latest release
+      set_fact:
+        besu_actual_version: "{{ besu_latest_release.json.tag_name | regex_replace('^v', '') }}"
+      when: besu_version == "latest"
+
+    - name: Use specified Besu version
+      set_fact:
+        besu_actual_version: "{{ besu_version }}"
+      when: besu_version != "latest"
+
+- name: Download Besu release
+  get_url:
+    url: "https://github.com/hyperledger/besu/releases/download/{{ 'v' + besu_actual_version }}/besu-{{ besu_actual_version }}.tar.gz"
+    dest: "/tmp/besu-install/besu-{{ besu_actual_version }}.tar.gz"
+    mode: '0644'
+  become: true
+  register: besu_download
+
+- name: Create Besu installation directory
+  file:
+    path: "/opt/besu"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Extract Besu archive
+  unarchive:
+    src: "/tmp/besu-install/besu-{{ besu_actual_version }}.tar.gz"
+    dest: "/opt"
+    remote_src: yes
+    creates: "/opt/besu-{{ besu_actual_version }}"
+  become: true
+  when: besu_download.changed
+
+- name: Create Besu symlink
+  file:
+    src: "/opt/besu-{{ besu_actual_version }}"
+    dest: "/opt/besu"
+    state: link
+    force: yes
+  become: true
+
+- name: Create symbolic link to Besu binary
+  file:
+    src: "/opt/besu/bin/besu"
+    dest: "/usr/local/bin/besu"
+    state: link
+  become: true
+
+- name: Create Besu data directory
+  file:
+    path: "{{ besu_data_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Besu log directory
+  file:
+    path: "{{ el_log_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Besu configuration
+  template:
+    src: besu_config.j2
+    dest: "{{ config_dir }}/besu_config.toml"
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0644'
+  become: true
+  notify: restart besu
+
+- name: Create Besu systemd service
+  template:
+    src: besu.service.j2
+    dest: /etc/systemd/system/besu.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: besu_service
+  notify: restart besu
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when: besu_service.changed
+
+- name: Enable and start Besu service
+  systemd:
+    name: besu
+    enabled: yes
+    state: started
+  become: true
+  when: el_service_enabled | bool
+
+- name: Get Besu version
+  command: besu --version
+  register: besu_version_output
+  changed_when: false
+
+- name: Display Besu version
+  debug:
+    msg: "Installed Besu version: {{ besu_version_output.stdout | regex_search('besu/v(\\d+\\.\\d+\\.\\d+)', '\\1') }}" 

@@ -1,0 +1,39 @@
+[Unit]
+Description=Erigon Execution Client
+After=network.target
+Wants=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+Restart=always
+RestartSec=5
+ExecStart=/usr/local/bin/erigon \
+    --datadir {{ erigon_data_dir }} \
+    --chain {{ ethereum_network | default('goerli') }} \
+    --http \
+    --http.addr 0.0.0.0 \
+    --http.port {{ el_http_port | default('8545') }} \
+    --http.corsdomain * \
+    --http.api eth,net,web3,engine \
+    --ws \
+    --ws.addr 0.0.0.0 \
+    --ws.port {{ el_ws_port | default('8546') }} \
+    --ws.origins * \
+    --ws.api eth,net,web3,engine \
+    --port {{ el_p2p_port | default('30303') }} \
+    --metrics \
+    --metrics.addr 0.0.0.0 \
+    --metrics.port {{ el_metrics_port | default('6060') }} \
+    --authrpc.addr 0.0.0.0 \
+    --authrpc.port {{ el_authrpc_port | default('8551') }} \
+    --authrpc.jwtsecret {{ jwt_secret_path }} \
+    --log.json \
+{% if prune_options is defined %}
+    {{ prune_options }} \
+{% endif %}
+    --log.file.path {{ el_log_dir }}/erigon.log
+
+[Install]
+WantedBy=default.target 

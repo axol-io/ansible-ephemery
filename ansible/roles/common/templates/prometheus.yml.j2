@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+        labels:
+          instance: '{{ inventory_hostname }}'
+
+  - job_name: 'execution_client'
+    static_configs:
+      - targets: ['localhost:{{ el_metrics_port | default(6060) }}']
+        labels:
+          instance: '{{ inventory_hostname }}'
+          client: '{{ el_client_name }}'
+
+  - job_name: 'consensus_client'
+    static_configs:
+      - targets: ['localhost:{{ cl_metrics_port | default(8008) }}']
+        labels:
+          instance: '{{ inventory_hostname }}'
+          client: '{{ cl_client_name }}'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          instance: '{{ inventory_hostname }}' 

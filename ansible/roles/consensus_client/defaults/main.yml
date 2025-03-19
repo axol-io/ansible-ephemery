@@ -1,0 +1,68 @@
+---
+# Default variables for the consensus_client role
+
+# Client selection
+cl_client_name: "lighthouse"  # Options: lighthouse, prysm, teku, nimbus, lodestar
+
+# Client versions (latest by default)
+lighthouse_version: "latest"
+prysm_version: "latest"
+teku_version: "latest"
+nimbus_version: "latest"
+lodestar_version: "latest"
+
+# Data directories
+cl_data_dir: "{{ data_dir }}/consensus"
+lighthouse_data_dir: "{{ cl_data_dir }}/lighthouse"
+prysm_data_dir: "{{ cl_data_dir }}/prysm"
+teku_data_dir: "{{ cl_data_dir }}/teku"
+nimbus_data_dir: "{{ cl_data_dir }}/nimbus"
+lodestar_data_dir: "{{ cl_data_dir }}/lodestar"
+
+# Logging
+cl_log_dir: "{{ log_dir }}/consensus"
+cl_log_level: "info"
+
+# Network Configuration
+cl_p2p_port: 9000
+cl_http_port: 5052
+cl_metrics_port: 8008
+
+# Service configuration
+cl_service_enabled: true
+cl_service_restart: "on-failure"
+cl_service_restart_sec: 10
+
+# JWT Authentication
+cl_jwt_path: "{{ jwt_secret_path }}"
+
+# Execution client endpoint
+el_endpoint: "http://localhost:{{ el_http_port }}"
+el_auth_endpoint: "http://localhost:8551"
+
+# Common consensus client flags
+cl_http_enabled: true
+cl_metrics_enabled: "{{ enable_metrics }}"
+
+# Lighthouse specific
+lighthouse_debug_level: "info"
+lighthouse_slasher_enabled: false
+lighthouse_max_peers: 100
+
+# Prysm specific
+prysm_accept_terms_of_use: true
+prysm_verbosity: "info"
+prysm_p2p_max_peers: 100
+
+# Teku specific
+teku_log_level: "INFO"
+teku_validators_enabled: false
+teku_rest_api_enabled: true
+
+# Nimbus specific
+nimbus_log_level: "INFO"
+nimbus_max_peers: 100
+
+# Lodestar specific
+lodestar_log_level: "info"
+lodestar_max_peers: 100 

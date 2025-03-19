@@ -1,0 +1,19 @@
+[Unit]
+Description=Prometheus Node Exporter
+After=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+ExecStart=/usr/bin/prometheus-node-exporter \
+  --web.listen-address=:9100 \
+  --collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($|/) \
+  --collector.systemd \
+  --collector.processes
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 

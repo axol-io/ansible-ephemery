@@ -1,0 +1,283 @@
+---
+# Monitoring Setup Playbook for Ephemery
+# Sets up Prometheus, Grafana, and Node Exporter for Ethereum node monitoring
+
+- name: Set up monitoring for Ephemery nodes
+  hosts: all
+  become: true
+  gather_facts: true
+  vars_files:
+    - ../config/vars/main.yml
+  vars:
+    prometheus_version: "2.42.0"
+    grafana_version: "9.5.1"
+    node_exporter_version: "1.5.0"
+    monitoring_base_dir: "/opt/ephemery/monitoring"
+    prometheus_data_dir: "{{ monitoring_base_dir }}/prometheus/data"
+    prometheus_config_dir: "{{ monitoring_base_dir }}/prometheus/config"
+    grafana_data_dir: "{{ monitoring_base_dir }}/grafana/data"
+    grafana_config_dir: "{{ monitoring_base_dir }}/grafana/config"
+    grafana_dashboard_dir: "{{ monitoring_base_dir }}/grafana/dashboards"
+    prometheus_port: 9090
+    grafana_port: 3000
+    node_exporter_port: 9100
+
+  tasks:
+    - name: Install required packages
+      package:
+        name:
+          - curl
+          - wget
+          - jq
+          - tar
+          - unzip
+          - python3-pip
+        state: present
+
+    - name: Create monitoring user group
+      group:
+        name: monitoring
+        state: present
+
+    - name: Create monitoring user
+      user:
+        name: monitoring
+        group: monitoring
+        shell: /bin/false
+        system: true
+        create_home: false
+        home: /nonexistent
+
+    - name: Create monitoring directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: monitoring
+        group: monitoring
+        mode: '0755'
+      loop:
+        - "{{ monitoring_base_dir }}"
+        - "{{ prometheus_data_dir }}"
+        - "{{ prometheus_config_dir }}"
+        - "{{ grafana_data_dir }}"
+        - "{{ grafana_config_dir }}"
+        - "{{ grafana_dashboard_dir }}"
+
+    # Node Exporter Setup
+    - name: Download Node Exporter
+      get_url:
+        url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+        dest: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+        mode: '0644'
+      register: node_exporter_download
+
+    - name: Extract Node Exporter
+      unarchive:
+        src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+        dest: "/tmp"
+        remote_src: true
+      when: node_exporter_download.changed
+
+    - name: Install Node Exporter binary
+      copy:
+        src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+        dest: "/usr/local/bin/node_exporter"
+        owner: monitoring
+        group: monitoring
+        mode: '0755'
+        remote_src: true
+      when: node_exporter_download.changed
+      register: node_exporter_install
+
+    - name: Create Node Exporter service file
+      template:
+        src: ../templates/monitoring/node_exporter.service.j2
+        dest: /etc/systemd/system/node_exporter.service
+        owner: root
+        group: root
+        mode: '0644'
+      register: node_exporter_service
+
+    # Prometheus Setup
+    - name: Download Prometheus
+      get_url:
+        url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+        dest: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+        mode: '0644'
+      register: prometheus_download
+
+    - name: Extract Prometheus
+      unarchive:
+        src: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+        dest: "/tmp"
+        remote_src: true
+      when: prometheus_download.changed
+
+    - name: Install Prometheus binaries
+      copy:
+        src: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        owner: monitoring
+        group: monitoring
+        mode: '0755'
+        remote_src: true
+      loop:
+        - prometheus
+        - promtool
+      when: prometheus_download.changed
+      register: prometheus_install
+
+    - name: Create Prometheus configuration
+      template:
+        src: ../templates/monitoring/prometheus.yml.j2
+        dest: "{{ prometheus_config_dir }}/prometheus.yml"
+        owner: monitoring
+        group: monitoring
+        mode: '0644'
+      notify: restart prometheus
+
+    - name: Create Prometheus service file
+      template:
+        src: ../templates/monitoring/prometheus.service.j2
+        dest: /etc/systemd/system/prometheus.service
+        owner: root
+        group: root
+        mode: '0644'
+      register: prometheus_service
+
+    # Grafana Setup
+    - name: Add Grafana APT key
+      apt_key:
+        url: https://packages.grafana.com/gpg.key
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Add Grafana repository
+      apt_repository:
+        repo: "deb https://packages.grafana.com/oss/deb stable main"
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Install Grafana
+      package:
+        name: grafana
+        state: present
+      register: grafana_install
+
+    - name: Create Grafana configuration
+      template:
+        src: ../templates/monitoring/grafana.ini.j2
+        dest: "{{ grafana_config_dir }}/grafana.ini"
+        owner: grafana
+        group: grafana
+        mode: '0644'
+      notify: restart grafana
+
+    - name: Create Grafana service file
+      template:
+        src: ../templates/monitoring/grafana.service.j2
+        dest: /etc/systemd/system/grafana.service
+        owner: root
+        group: root
+        mode: '0644'
+      register: grafana_service
+
+    - name: Create Grafana dashboards directory
+      file:
+        path: "{{ grafana_dashboard_dir }}"
+        state: directory
+        owner: grafana
+        group: grafana
+        mode: '0755'
+
+    - name: Copy Ethereum dashboards to Grafana
+      copy:
+        src: "../templates/monitoring/dashboards/{{ item }}"
+        dest: "{{ grafana_dashboard_dir }}/{{ item }}"
+        owner: grafana
+        group: grafana
+        mode: '0644'
+      loop:
+        - ethereum_node_dashboard.json
+        - consensus_client_dashboard.json
+        - execution_client_dashboard.json
+        - validator_dashboard.json
+        - system_overview_dashboard.json
+      notify: restart grafana
+
+    # Start services
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: true
+      when: node_exporter_service.changed or prometheus_service.changed or grafana_service.changed
+
+    - name: Enable and start Node Exporter
+      systemd:
+        name: node_exporter
+        enabled: true
+        state: started
+        
+    - name: Enable and start Prometheus
+      systemd:
+        name: prometheus
+        enabled: true
+        state: started
+
+    - name: Enable and start Grafana
+      systemd:
+        name: grafana-server
+        enabled: true
+        state: started
+
+    - name: Wait for Grafana to be ready
+      wait_for:
+        port: "{{ grafana_port }}"
+        timeout: 60
+
+    - name: Configure Grafana datasources
+      uri:
+        url: "http://localhost:{{ grafana_port }}/api/datasources"
+        method: POST
+        user: admin
+        password: "{{ grafana_admin_password | default('admin') }}"
+        body_format: json
+        body: |
+          {
+            "name": "Prometheus",
+            "type": "prometheus",
+            "url": "http://localhost:{{ prometheus_port }}",
+            "access": "proxy",
+            "isDefault": true
+          }
+        status_code: 200,409
+        force_basic_auth: true
+      register: grafana_datasource
+
+    - name: Verify monitoring setup
+      uri:
+        url: "http://localhost:{{ prometheus_port }}/api/v1/targets"
+        method: GET
+        status_code: 200
+      register: prometheus_targets
+      ignore_errors: true
+
+    - name: Display monitoring setup status
+      debug:
+        msg: "Monitoring setup completed. Access Grafana at http://{{ ansible_host }}:{{ grafana_port }}"
+
+  handlers:
+    - name: restart node_exporter
+      systemd:
+        name: node_exporter
+        state: restarted
+
+    - name: restart prometheus
+      systemd:
+        name: prometheus
+        state: restarted
+
+    - name: restart grafana
+      systemd:
+        name: grafana-server
+        state: restarted 

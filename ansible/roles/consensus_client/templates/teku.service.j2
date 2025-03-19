@@ -1,0 +1,30 @@
+[Unit]
+Description=Teku Ethereum Consensus Client
+After=network.target
+Wants=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+ExecStart=/usr/local/bin/teku \
+  --network={{ cl_network }} \
+  --data-path={{ teku_data_dir }} \
+  --config-file=/etc/teku/config.yaml \
+  --ee-endpoint={{ el_engine_api_url }} \
+  --ee-jwt-secret-file={{ jwt_secret_path }} \
+  --metrics-enabled=true \
+  --metrics-port={{ cl_metrics_port | default(8008) }} \
+  --log-destination=CONSOLE \
+  {% if cl_checkpoint_sync_url is defined and cl_checkpoint_sync_url %}
+  --checkpoint-sync-url={{ cl_checkpoint_sync_url }} \
+  {% endif %}
+  {% if cl_additional_args is defined and cl_additional_args %}
+  {{ cl_additional_args }}
+  {% endif %}
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 

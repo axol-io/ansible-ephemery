@@ -1,0 +1,42 @@
+---
+# Lighthouse-specific configuration tasks
+
+- name: Set lighthouse-specific variables
+  ansible.builtin.set_fact:
+    cl_client_image: "{{ lighthouse_image | default('sigp/lighthouse:latest') }}"
+    lighthouse_beacon_dir: "{{ cl_data_dir }}/beacon"
+
+- name: Ensure lighthouse beacon directory exists
+  ansible.builtin.file:
+    path: "{{ lighthouse_beacon_dir }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user | default('root') }}"
+    group: "{{ ansible_user | default('root') }}"
+
+- name: Create heap profiles directory for memory analysis
+  ansible.builtin.file:
+    path: "{{ cl_data_dir }}/heap_profiles"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user | default('root') }}"
+    group: "{{ ansible_user | default('root') }}"
+
+- name: Set lighthouse container command
+  ansible.builtin.set_fact:
+    cl_container_command: >-
+      lighthouse
+      beacon_node
+      --datadir=/data
+      --http
+      --http-address=0.0.0.0
+      --http-port={{ cl_client_port }}
+      --execution-endpoint={{ cl_execution_endpoint }}
+      --execution-jwt=/jwtsecret
+      --port={{ cl_p2p_port }}
+      --metrics
+      --metrics-address=0.0.0.0
+      --metrics-port={{ cl_metrics_port }}
+      --max-peers={{ cl_max_peers }}
+      --network={{ network }}
+      {{ cl_extra_options }} 

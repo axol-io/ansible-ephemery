@@ -1,0 +1,116 @@
+---
+# JWT secret management tasks
+# These tasks ensure proper JWT format, permissions, backups, and symlinks
+
+- name: Ensure JWT directory exists
+  file:
+    path: "{{ jwt_secret_path | dirname }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Check if JWT secret file already exists
+  stat:
+    path: "{{ jwt_secret_path }}"
+  register: jwt_file_stat
+
+- name: Backup existing JWT secret file if requested
+  copy:
+    src: "{{ jwt_secret_path }}"
+    dest: "{{ jwt_secret_path }}.bak.{{ ansible_date_time.date }}-{{ ansible_date_time.time }}"
+    remote_src: true
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0600'
+  when: 
+    - jwt_file_stat.stat.exists
+    - jwt_backup_existing | bool
+
+- name: Generate secure random JWT secret if not exists
+  block:
+    - name: Generate JWT secret
+      shell: |
+        openssl rand -hex 32
+      register: jwt_secret
+      changed_when: false
+      
+    - name: Write JWT secret to file
+      copy:
+        content: "{{ jwt_secret.stdout }}"
+        dest: "{{ jwt_secret_path }}"
+        owner: "{{ common_user }}"
+        group: "{{ common_group }}"
+        mode: '0600'
+  when: not jwt_file_stat.stat.exists
+
+- name: Validate existing JWT secret format
+  block:
+    - name: Read JWT secret
+      slurp:
+        src: "{{ jwt_secret_path }}"
+      register: jwt_content
+      
+    - name: Decode JWT content
+      set_fact:
+        decoded_jwt: "{{ jwt_content.content | b64decode | regex_replace('\n', '') | regex_replace('0x', '') }}"
+        
+    - name: Validate JWT format (64-character hex without 0x prefix)
+      assert:
+        that:
+          - decoded_jwt | length == 64
+          - decoded_jwt is match('^[0-9a-fA-F]+$')
+        fail_msg: "JWT secret is not in the correct format (64-character hex without 0x prefix)"
+        success_msg: "JWT secret is in the correct format"
+      
+    - name: Fix JWT format if needed
+      copy:
+        content: "{{ decoded_jwt }}"
+        dest: "{{ jwt_secret_path }}"
+        owner: "{{ common_user }}"
+        group: "{{ common_group }}"
+        mode: '0600'
+      when: 
+        - decoded_jwt | length != 64
+        - not decoded_jwt is match('^[0-9a-fA-F]+$')
+        - decoded_jwt | regex_replace('0x', '') | length == 64
+  when: jwt_file_stat.stat.exists
+
+- name: Ensure JWT permissions are correct
+  file:
+    path: "{{ jwt_secret_path }}"
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0600'
+    
+# Create symlinks for client compatibility
+- name: Setup JWT symlinks for client compatibility
+  block:
+    - name: Set legacy JWT paths
+      set_fact:
+        legacy_jwt_paths:
+          - "/etc/ethereum/jwt.hex"
+          - "/var/lib/ethereum/jwt.hex"
+          - "{{ data_dir }}/execution/jwt.hex"
+          - "{{ data_dir }}/consensus/jwt.hex"
+          
+    - name: Ensure parent directories exist for symlinks
+      file:
+        path: "{{ item | dirname }}"
+        state: directory
+        owner: "{{ common_user }}"
+        group: "{{ common_group }}"
+        mode: '0755'
+      with_items: "{{ legacy_jwt_paths }}"
+      
+    - name: Create symlinks to JWT secret
+      file:
+        src: "{{ jwt_secret_path }}"
+        dest: "{{ item }}"
+        state: link
+        owner: "{{ common_user }}"
+        group: "{{ common_group }}"
+        force: true
+      with_items: "{{ legacy_jwt_paths }}"
+  when: jwt_create_symlinks | bool 

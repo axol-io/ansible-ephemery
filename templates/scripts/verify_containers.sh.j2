@@ -1,0 +1,180 @@
+#!/bin/bash
+#
+# Container verification script for ephemery nodes
+# This script checks that containers are properly configured
+# with the correct entrypoints, commands, and volume mounts
+#
+
+set -e
+
+NETWORK="{{ network | default('ephemery') }}"
+EL="{{ el | default('geth') }}"
+CL="{{ cl | default('lighthouse') }}"
+EL_CONTAINER="${NETWORK}-${EL}"
+CL_CONTAINER="${NETWORK}-${CL}"
+JWT_PATH="{{ jwt_secret_path }}"
+DATA_DIR="{{ ephemery_dir }}/data"
+CONFIG_DIR="{{ ephemery_dir }}/config/ephemery_network"
+
+LOG_FILE="{{ ephemery_dir }}/logs/container_verify.log"
+CURRENT_DATE=$(date '+%Y-%m-%d %H:%M:%S')
+
+# Create logs directory if it doesn't exist
+mkdir -p "{{ ephemery_dir }}/logs"
+
+# Header for the log file
+echo "===== Container Verification: $CURRENT_DATE =====" > "$LOG_FILE"
+
+# Function to log messages
+log_message() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+# Function to check if a container is running
+check_container_running() {
+  local container_name="$1"
+  
+  if ! docker ps | grep -q "$container_name"; then
+    log_message "ERROR: Container $container_name is not running!"
+    return 1
+  else
+    log_message "INFO: Container $container_name is running."
+    return 0
+  fi
+}
+
+# Function to check Lighthouse container configuration
+check_lighthouse_config() {
+  log_message "Checking Lighthouse container configuration..."
+  
+  # Check entrypoint
+  local entrypoint=$(docker inspect --format='{% raw %}{{.Config.Entrypoint}}{% endraw %}' "$CL_CONTAINER")
+  
+  if [[ -z "$entrypoint" || "$entrypoint" == "<no value>" || "$entrypoint" == "[]" ]]; then
+    log_message "WARNING: Lighthouse container has no entrypoint set!"
+    log_message "This may cause issues. The entrypoint should be /wrapper/wrapper.sh"
+    
+    # Check if the first command is also not correct
+    local cmd=$(docker inspect --format='{% raw %}{{.Config.Cmd}}{% endraw %}' "$CL_CONTAINER" | sed 's/\[//g' | sed 's/\]//g' | cut -d' ' -f1)
+    
+    if [[ "$cmd" == "--datadir=/data" ]]; then
+      log_message "ERROR: Lighthouse container command starts with --datadir=/data but no entrypoint!"
+      log_message "This is incorrect. The container needs to be recreated with proper entrypoint."
+      return 1
+    fi
+  else
+    log_message "INFO: Lighthouse entrypoint is set to $entrypoint"
+  fi
+  
+  # Check JWT path in command
+  local cmd=$(docker inspect --format='{% raw %}{{.Config.Cmd}}{% endraw %}' "$CL_CONTAINER")
+  
+  if ! echo "$cmd" | grep -q "execution-jwt /jwt.hex"; then
+    if echo "$cmd" | grep -q "execution-jwt=/jwt.hex"; then
+      log_message "WARNING: Lighthouse container has wrong JWT format (--execution-jwt=/jwt.hex)"
+      log_message "Should be --execution-jwt /jwt.hex (with space)"
+      return 1
+    fi
+  else
+    log_message "INFO: Lighthouse JWT parameter format is correct"
+  fi
+  
+  # Check volumes
+  local volumes=$(docker inspect --format='{% raw %}{{range .Mounts}}{{.Source}}:{{.Destination}} {{end}}{% endraw %}' "$CL_CONTAINER")
+  
+  if ! echo "$volumes" | grep -q "$JWT_PATH:/jwt.hex"; then
+    log_message "ERROR: JWT volume mount missing or incorrect in Lighthouse container"
+    log_message "Current mounts: $volumes"
+    log_message "Expected JWT mount: $JWT_PATH:/jwt.hex"
+    return 1
+  else
+    log_message "INFO: JWT volume mount is correct"
+  fi
+  
+  log_message "Lighthouse container configuration check completed."
+  return 0
+}
+
+# Function to check Geth container configuration
+check_geth_config() {
+  log_message "Checking Geth container configuration..."
+  
+  # Check JWT parameter in command
+  local cmd=$(docker inspect --format='{% raw %}{{.Config.Cmd}}{% endraw %}' "$EL_CONTAINER")
+  
+  if ! echo "$cmd" | grep -q "authrpc.jwtsecret=/jwt.hex"; then
+    log_message "WARNING: Geth container may have wrong JWT parameter"
+    log_message "Command: $cmd"
+    return 1
+  else
+    log_message "INFO: Geth JWT parameter format is correct"
+  fi
+  
+  # Check volumes
+  local volumes=$(docker inspect --format='{% raw %}{{range .Mounts}}{{.Source}}:{{.Destination}} {{end}}{% endraw %}' "$EL_CONTAINER")
+  
+  if ! echo "$volumes" | grep -q "$JWT_PATH:/jwt.hex"; then
+    log_message "ERROR: JWT volume mount missing or incorrect in Geth container"
+    log_message "Current mounts: $volumes"
+    log_message "Expected JWT mount: $JWT_PATH:/jwt.hex"
+    return 1
+  else
+    log_message "INFO: JWT volume mount is correct"
+  fi
+  
+  log_message "Geth container configuration check completed."
+  return 0
+}
+
+# Main execution
+log_message "Starting container verification..."
+
+# Check if containers are running
+if ! check_container_running "$EL_CONTAINER"; then
+  log_message "ERROR: Execution client container not running. Verification failed."
+  exit 1
+fi
+
+if ! check_container_running "$CL_CONTAINER"; then
+  log_message "ERROR: Consensus client container not running. Verification failed."
+  exit 1
+fi
+
+# Check client-specific configurations
+if [[ "$CL" == "lighthouse" ]]; then
+  if ! check_lighthouse_config; then
+    log_message "Lighthouse configuration check failed!"
+    exit 1
+  fi
+fi
+
+if [[ "$EL" == "geth" ]]; then
+  if ! check_geth_config; then
+    log_message "Geth configuration check failed!"
+    exit 1
+  fi
+fi
+
+# Check JWT file
+if [ ! -f "$JWT_PATH" ]; then
+  log_message "ERROR: JWT file not found at $JWT_PATH"
+  exit 1
+fi
+
+# Validate JWT file format
+JWT_CONTENT=$(cat "$JWT_PATH")
+# Remove any "0x" prefix and whitespace
+CLEAN_JWT=$(echo "$JWT_CONTENT" | sed 's/^0x//g' | tr -d '[:space:]')
+
+# Validate the format is exactly 64 hex characters
+if ! echo "$CLEAN_JWT" | grep -qE '^[0-9a-f]{64}$'; then
+  log_message "ERROR: Invalid JWT format in $JWT_PATH"
+  log_message "JWT should be exactly 64 hex characters without 0x prefix"
+  exit 1
+else
+  log_message "INFO: JWT file format is valid"
+fi
+
+log_message "Container verification completed successfully!"
+echo "All checks passed. See $LOG_FILE for details."
+exit 0 

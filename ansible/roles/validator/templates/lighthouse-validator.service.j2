@@ -1,0 +1,31 @@
+[Unit]
+Description=Lighthouse Ethereum Validator Client
+After=network.target
+Wants=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+ExecStart=/usr/bin/lighthouse validator \
+  --network={{ cl_network }} \
+  --datadir={{ lighthouse_validator_data_dir }} \
+  --beacon-nodes={{ validator_beacon_nodes | join(',') }} \
+  --metrics \
+  --metrics-port={{ validator_metrics_port | default(8009) }} \
+  --metrics-address=0.0.0.0 \
+  {% if validator_graffiti is defined and validator_graffiti %}
+  --graffiti="{{ validator_graffiti }}" \
+  {% endif %}
+  {% if validator_fee_recipient is defined and validator_fee_recipient %}
+  --suggested-fee-recipient={{ validator_fee_recipient }} \
+  {% endif %}
+  {% if validator_additional_args is defined and validator_additional_args %}
+  {{ validator_additional_args }}
+  {% endif %}
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 

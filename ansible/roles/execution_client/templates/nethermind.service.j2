@@ -1,0 +1,50 @@
+[Unit]
+Description=Ethereum Nethermind Execution Client
+After=network.target
+Wants=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+Restart={{ el_service_restart }}
+RestartSec={{ el_service_restart_sec }}
+ExecStart=/usr/bin/nethermind \
+  --datadir {{ nethermind_data_dir }} \
+  --config ephemery \
+  --Network.ChainId {{ el_chain_id }} \
+  --Network.NetworkId {{ el_network_id }} \
+  --JsonRpc.Enabled {{ el_http_enabled | lower }} \
+  --JsonRpc.Host 0.0.0.0 \
+  --JsonRpc.Port {{ el_http_port }} \
+  --JsonRpc.EnabledModules {{ el_http_api }} \
+  --JsonRpc.JwtSecretFile {{ el_jwt_path }} \
+  --JsonRpc.EngineHost localhost \
+  --JsonRpc.EnginePort 8551 \
+{% if el_ws_enabled | bool %}
+  --WebSocketsEnabled true \
+  --WebSocketsPort {{ el_ws_port }} \
+{% endif %}
+{% if el_metrics_enabled | bool %}
+  --Metrics.Enabled true \
+  --Metrics.NodeName {{ el_client_name }}_{{ inventory_hostname }} \
+  --Metrics.Port {{ el_metrics_port }} \
+{% endif %}
+  --Init.PruneMemoryBudgetMb {{ nethermind_prune_memory_cache }} \
+  --Init.WebSocketsEnabled true \
+  --HealthChecks.Enabled true \
+  --Sync.SnapSync true \
+  --Sync.AncientBodiesBarrier {{ el_chain_id }} \
+  --Sync.AncientReceiptsBarrier {{ el_chain_id }} \
+  --log {{ nethermind_log_level }}
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nethermind
+
+# Set resource limits
+LimitNOFILE=1000000
+LimitNPROC=65535
+
+[Install]
+WantedBy=multi-user.target 

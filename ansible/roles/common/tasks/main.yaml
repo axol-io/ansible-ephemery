@@ -1,0 +1,18 @@
+---
+# Common tasks for all Ephemery nodes
+
+- name: Setup basic system requirements
+  ansible.builtin.include_tasks: system_setup.yaml
+
+- name: Configure directories
+  ansible.builtin.include_tasks: directory_setup.yaml
+
+- name: Configure JWT secret
+  ansible.builtin.include_tasks: jwt_management.yaml
+
+- name: Setup base Docker configuration
+  ansible.builtin.include_tasks: docker_setup.yaml
+
+- name: Configure monitoring directories
+  ansible.builtin.include_tasks: monitoring_setup.yaml
+  when: enable_monitoring | default(true) | bool 

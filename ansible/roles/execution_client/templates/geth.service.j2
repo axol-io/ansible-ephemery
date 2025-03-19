@@ -1,0 +1,51 @@
+[Unit]
+Description=Ethereum Geth Execution Client
+After=network.target
+Wants=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+Restart={{ el_service_restart }}
+RestartSec={{ el_service_restart_sec }}
+ExecStart=/usr/bin/geth \
+  --datadir {{ geth_data_dir }} \
+  --networkid {{ el_network_id }} \
+  --authrpc.addr localhost \
+  --authrpc.port 8551 \
+  --authrpc.vhosts * \
+  --authrpc.jwtsecret {{ el_jwt_path }} \
+{% if el_http_enabled | bool %}
+  --http \
+  --http.addr 0.0.0.0 \
+  --http.port {{ el_http_port }} \
+  --http.corsdomain {{ geth_http_corsdomain }} \
+  --http.api {{ el_http_api }} \
+{% endif %}
+{% if el_ws_enabled | bool %}
+  --ws \
+  --ws.addr 0.0.0.0 \
+  --ws.port {{ el_ws_port }} \
+  --ws.api {{ el_http_api }} \
+{% endif %}
+{% if el_metrics_enabled | bool %}
+  --metrics \
+  --metrics.addr 0.0.0.0 \
+  --metrics.port {{ el_metrics_port }} \
+{% endif %}
+  --syncmode {{ el_syncmode }} \
+  --nat {{ geth_nat }} \
+  --cache {{ geth_cache }} \
+  --verbosity {{ el_log_level | int | default(3) }}
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=geth
+
+# Set resource limits
+LimitNOFILE=1000000
+LimitNPROC=65535
+
+[Install]
+WantedBy=multi-user.target 

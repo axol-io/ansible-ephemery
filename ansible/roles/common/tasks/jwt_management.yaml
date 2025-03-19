@@ -1,0 +1,96 @@
+---
+# Standardized JWT management tasks
+# This task file handles all aspects of JWT secret management for Ethereum clients
+
+- name: Ensure JWT directory exists
+  ansible.builtin.file:
+    path: "{{ jwt_secret_dir }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user | default('root') }}"
+    group: "{{ ansible_user | default('root') }}"
+
+- name: Check if JWT file exists
+  ansible.builtin.stat:
+    path: "{{ jwt_secret_path }}"
+  register: jwt_file_stat
+
+- name: Generate JWT secret if needed
+  ansible.builtin.shell: |
+    openssl rand -hex 32 > {{ jwt_secret_path }}
+    chmod 600 {{ jwt_secret_path }}
+  when: not jwt_file_stat.stat.exists
+  register: jwt_generated
+  changed_when: jwt_generated.rc == 0
+
+- name: Validate and fix JWT secret format
+  ansible.builtin.shell: |
+    JWT_CONTENT=$(cat {{ jwt_secret_path }})
+    # Remove any "0x" prefix and whitespace
+    CLEAN_JWT=$(echo "$JWT_CONTENT" | sed 's/^0x//g' | tr -d '[:space:]')
+    # Validate the format is exactly 64 hex characters
+    if ! echo "$CLEAN_JWT" | grep -qE '^[0-9a-f]{64}$'; then
+      echo "Invalid JWT format, regenerating..."
+      openssl rand -hex 32 > {{ jwt_secret_path }}
+    else
+      # Ensure consistent format (no 0x, no whitespace)
+      echo "$CLEAN_JWT" > {{ jwt_secret_path }}
+    fi
+  register: jwt_validate
+  changed_when: "'regenerating' in jwt_validate.stdout"
+
+- name: Ensure proper permissions on JWT file
+  ansible.builtin.file:
+    path: "{{ jwt_secret_path }}"
+    mode: "0600"
+    owner: "{{ ansible_user | default('root') }}"
+    group: "{{ ansible_user | default('root') }}"
+
+- name: Check for legacy JWT locations
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - "/root/jwtsecret"
+    - "{{ ephemery_base_dir }}/jwtsecret"
+    - "{{ ephemery_base_dir }}/jwt"
+  register: legacy_jwt_paths
+
+- name: Migrate legacy JWT if needed
+  ansible.builtin.shell: |
+    cp {{ item.item }} {{ jwt_secret_path }}
+    chmod 600 {{ jwt_secret_path }}
+  when: 
+    - item.stat.exists
+    - not jwt_file_stat.stat.exists or jwt_generated is not defined
+  loop: "{{ legacy_jwt_paths.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Create symlinks for standard JWT paths
+  ansible.builtin.file:
+    src: "{{ jwt_secret_path }}"
+    dest: "{{ item }}"
+    state: link
+    force: true
+  loop:
+    - "{{ ephemery_base_dir }}/jwt.hex"
+    - "{{ ephemery_data_dir }}/jwt.hex"
+  when: create_jwt_symlinks | default(true) | bool
+
+- name: Backup the JWT file
+  block:
+    - name: Create backup directory for JWT
+      ansible.builtin.file:
+        path: "{{ backup_dir }}/jwt"
+        state: directory
+        mode: "0755"
+    
+    - name: Backup JWT file
+      ansible.builtin.copy:
+        src: "{{ jwt_secret_path }}"
+        dest: "{{ backup_dir }}/jwt/jwt.hex.{{ ansible_date_time.iso8601_basic_short }}"
+        remote_src: true
+        mode: "0600"
+  when: 
+    - jwt_file_stat.stat.exists
+    - backup_jwt | default(false) | bool 

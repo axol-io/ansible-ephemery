@@ -1,0 +1,45 @@
+---
+# Main tasks for execution client role
+
+- name: Include client-specific configuration
+  ansible.builtin.include_tasks: "{{ el_client_name }}.yaml"
+  when: el_client_name is defined
+
+- name: Create execution client data directory
+  ansible.builtin.file:
+    path: "{{ el_data_dir }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user | default('root') }}"
+    group: "{{ ansible_user | default('root') }}"
+
+- name: Setup docker network if needed
+  community.docker.docker_network:
+    name: "{{ el_container_network }}"
+    state: present
+  when: create_network | default(true) | bool
+
+- name: Pull execution client docker image
+  community.docker.docker_image:
+    name: "{{ el_client_image }}"
+    source: pull
+    force_source: "{{ force_image_update | default(false) | bool }}"
+
+- name: Setup execution client container
+  community.docker.docker_container:
+    name: "{{ el_container_name }}"
+    image: "{{ el_client_image }}"
+    restart_policy: "{{ el_restart_policy }}"
+    network_mode: "{{ el_container_network }}"
+    volumes:
+      - "{{ el_data_dir }}:/data"
+      - "{{ jwt_secret_path }}:/jwtsecret"
+    ports:
+      - "{{ el_client_port }}:{{ el_client_port }}"
+      - "{{ el_engine_port }}:{{ el_engine_port }}"
+      - "{{ el_p2p_port }}:{{ el_p2p_port }}/tcp"
+      - "{{ el_p2p_port }}:{{ el_p2p_port }}/udp"
+      - "{{ el_metrics_port }}:{{ el_metrics_port }}"
+    command: "{{ el_container_command }}"
+    env: "{{ el_container_env | default({}) }}"
+    state: started 

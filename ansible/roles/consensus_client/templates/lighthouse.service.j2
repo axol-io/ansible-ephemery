@@ -1,0 +1,43 @@
+[Unit]
+Description=Ethereum Lighthouse Consensus Client
+After=network.target
+Wants=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+Restart={{ cl_service_restart }}
+RestartSec={{ cl_service_restart_sec }}
+ExecStart=/usr/bin/lighthouse bn \
+  --datadir {{ lighthouse_data_dir }} \
+  --execution-endpoint {{ el_auth_endpoint }} \
+  --execution-jwt {{ cl_jwt_path }} \
+{% if cl_http_enabled | bool %}
+  --http \
+  --http-address 0.0.0.0 \
+  --http-port {{ cl_http_port }} \
+{% endif %}
+{% if cl_metrics_enabled | bool %}
+  --metrics \
+  --metrics-address 0.0.0.0 \
+  --metrics-port {{ cl_metrics_port }} \
+{% endif %}
+  --port {{ cl_p2p_port }} \
+{% if lighthouse_slasher_enabled | bool %}
+  --slasher \
+{% endif %}
+  --max-peers {{ lighthouse_max_peers }} \
+  --debug-level {{ lighthouse_debug_level }} \
+  --network ephemery
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lighthouse
+
+# Set resource limits
+LimitNOFILE=1000000
+LimitNPROC=65535
+
+[Install]
+WantedBy=multi-user.target 

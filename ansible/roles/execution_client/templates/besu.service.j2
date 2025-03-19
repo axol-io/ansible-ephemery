@@ -1,0 +1,33 @@
+[Unit]
+Description=Hyperledger Besu Ethereum Client
+After=network.target
+Wants=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+ExecStart=/usr/local/bin/besu \
+    --config-file={{ config_dir }}/besu_config.toml \
+    --data-path={{ besu_data_dir }} \
+    --genesis-file={{ config_dir }}/{{ besu_network }}.json \
+    --logging={{ besu_log_level }} \
+    --engine-jwt-secret={{ el_jwt_path }} \
+    --engine-rpc-enabled=true \
+    --host-allowlist="*" \
+    --p2p-enabled=true \
+    --metrics-enabled={{ el_metrics_enabled | lower }} \
+    {% if el_metrics_enabled %}--metrics-port={{ el_metrics_port }}{% endif %} \
+    --data-storage-format={{ besu_data_storage_format }}
+
+Restart={{ el_service_restart }}
+RestartSec={{ el_service_restart_sec }}
+LimitNOFILE=1000000
+WorkingDirectory={{ besu_data_dir }}
+
+# Make sure stderr/stdout are captured in journal
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target 

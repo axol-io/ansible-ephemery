@@ -1,0 +1,100 @@
+---
+# Lodestar-specific tasks for the consensus_client role
+
+- name: Install Node.js and npm
+  package:
+    name:
+      - nodejs
+      - npm
+    state: present
+  become: true
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+- name: Check for Node.js version
+  command: node --version
+  register: node_version
+  changed_when: false
+
+- name: Display Node.js version
+  debug:
+    msg: "Node.js version: {{ node_version.stdout }}"
+
+- name: Install n (Node.js version manager)
+  npm:
+    name: n
+    global: yes
+  become: true
+
+- name: Install Node.js LTS
+  command: n lts
+  become: true
+  changed_when: true
+
+- name: Create Lodestar installation directory
+  file:
+    path: /opt/lodestar
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Install Lodestar via npm
+  npm:
+    name: "@chainsafe/lodestar"
+    global: yes
+  become: true
+  register: lodestar_install
+
+- name: Get Lodestar version
+  command: lodestar --version
+  register: lodestar_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display Lodestar version
+  debug:
+    msg: "Installed Lodestar version: {{ lodestar_version_output.stdout | default('unknown') }}"
+
+- name: Create Lodestar data directory
+  file:
+    path: "{{ lodestar_data_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Lodestar log directory
+  file:
+    path: "{{ cl_log_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Lodestar systemd service
+  template:
+    src: lodestar.service.j2
+    dest: /etc/systemd/system/lodestar.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: lodestar_service
+  notify: restart lodestar
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when: lodestar_service.changed
+
+- name: Enable and start Lodestar service
+  systemd:
+    name: lodestar
+    enabled: yes
+    state: started
+  become: true
+  when: cl_service_enabled | bool 

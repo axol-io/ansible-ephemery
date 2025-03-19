@@ -1,0 +1,29 @@
+---
+# Default variables for execution client role
+
+# Client selection (default is geth)
+el_client_name: "geth"
+el_client_image: "ethereum/client-go:latest"
+el_client_port: 8545
+el_p2p_port: 30303
+el_metrics_port: 6060
+el_engine_port: 8551
+
+# RPC API configuration
+el_rpc_apis: "eth,net,web3,engine,admin,debug"
+
+# Performance tuning
+el_cache_size: 4096
+el_max_peers: 50
+
+# Data directories
+el_data_dir: "{{ ephemery_data_dir }}/{{ el_client_name }}"
+
+# Container configuration
+el_container_name: "{{ network }}-{{ el_client_name }}"
+el_container_network: "{{ container_network }}"
+el_restart_policy: "{{ container_restart_policy }}"
+
+# Client-specific options
+# These are empty by default and should be overridden by client-specific tasks
+el_extra_options: ""

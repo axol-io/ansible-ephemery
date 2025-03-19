@@ -1,0 +1,202 @@
+---
+# Security configuration tasks for common role
+
+##############################################################################
+# SSH HARDENING
+##############################################################################
+
+- name: Check if SSH is installed
+  package:
+    name: openssh-server
+    state: present
+  register: ssh_present
+  become: true
+
+- name: Secure SSH configuration
+  block:
+    - name: Backup original sshd_config
+      copy:
+        src: /etc/ssh/sshd_config
+        dest: /etc/ssh/sshd_config.bak
+        remote_src: yes
+        force: no
+      become: true
+
+    - name: Configure secure SSH settings
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      with_items:
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+        - { regexp: '^#?PermitEmptyPasswords', line: 'PermitEmptyPasswords no' }
+        - { regexp: '^#?X11Forwarding', line: 'X11Forwarding no' }
+        - { regexp: '^#?MaxAuthTries', line: 'MaxAuthTries 5' }
+        - { regexp: '^#?ClientAliveInterval', line: 'ClientAliveInterval 300' }
+        - { regexp: '^#?ClientAliveCountMax', line: 'ClientAliveCountMax 2' }
+      become: true
+      notify: Restart ssh service
+  when: ssh_present is success
+  tags:
+    - ssh
+    - security
+
+##############################################################################
+# FAIL2BAN CONFIGURATION
+##############################################################################
+
+- name: Install fail2ban
+  package:
+    name: fail2ban
+    state: present
+  become: true
+  tags:
+    - fail2ban
+    - security
+
+- name: Configure fail2ban
+  template:
+    src: fail2ban/jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    mode: '0644'
+  become: true
+  notify: Restart fail2ban service
+  tags:
+    - fail2ban
+    - security
+
+##############################################################################
+# SYSTEM HARDENING
+##############################################################################
+
+- name: Configure secure kernel parameters
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  with_items:
+    - { name: 'net.ipv4.tcp_syncookies', value: '1' }
+    - { name: 'net.ipv4.conf.all.accept_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.default.accept_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.all.secure_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.default.secure_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.all.accept_source_route', value: '0' }
+    - { name: 'net.ipv4.conf.default.accept_source_route', value: '0' }
+    - { name: 'net.ipv4.conf.all.log_martians', value: '1' }
+    - { name: 'net.ipv4.conf.default.log_martians', value: '1' }
+    - { name: 'net.ipv4.icmp_echo_ignore_broadcasts', value: '1' }
+    - { name: 'net.ipv4.icmp_ignore_bogus_error_responses', value: '1' }
+    - { name: 'kernel.randomize_va_space', value: '2' }
+  become: true
+  tags:
+    - sysctl
+    - security
+
+- name: Set secure file permissions for system files
+  file:
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    state: file
+  with_items:
+    - { path: '/etc/passwd', mode: '0644' }
+    - { path: '/etc/shadow', mode: '0600' }
+    - { path: '/etc/gshadow', mode: '0600' }
+    - { path: '/etc/group', mode: '0644' }
+  become: true
+  tags:
+    - file_permissions
+    - security
+
+##############################################################################
+# DOCKER SECURITY
+##############################################################################
+
+- name: Create Docker secure directory
+  file:
+    path: /etc/docker
+    state: directory
+    mode: '0750'
+  become: true
+  when: docker_install | bool
+  tags:
+    - docker
+    - security
+
+- name: Create Docker security configuration
+  template:
+    src: docker/daemon-security.json.j2
+    dest: /etc/docker/daemon.json
+    mode: '0640'
+  become: true
+  when: docker_install | bool
+  register: docker_security_config
+  tags:
+    - docker
+    - security
+
+- name: Restart Docker service if security configuration changed
+  service:
+    name: docker
+    state: restarted
+  become: true
+  when: 
+    - docker_install | bool
+    - docker_security_config is changed
+  tags:
+    - docker
+    - security
+
+##############################################################################
+# LOGGING CONFIGURATION
+##############################################################################
+
+- name: Configure secure audit rules
+  template:
+    src: audit/rules.j2
+    dest: /etc/audit/rules.d/ephemery-security.rules
+    mode: '0640'
+  become: true
+  tags:
+    - audit
+    - security
+
+- name: Enable and start auditd service
+  service:
+    name: auditd
+    state: started
+    enabled: yes
+  become: true
+  tags:
+    - audit
+    - security
+    
+##############################################################################
+# MALWARE DETECTION
+##############################################################################
+
+- name: Install malware detection tools
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - rkhunter
+    - clamav
+    - clamav-daemon
+  become: true
+  tags:
+    - malware
+    - security
+    
+- name: Configure malware detection
+  template:
+    src: rkhunter/rkhunter.conf.j2
+    dest: /etc/rkhunter.conf
+    mode: '0640'
+  become: true
+  tags:
+    - malware
+    - security 

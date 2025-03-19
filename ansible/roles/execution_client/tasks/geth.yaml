@@ -1,0 +1,45 @@
+---
+# Geth-specific configuration tasks
+
+- name: Set geth-specific variables
+  ansible.builtin.set_fact:
+    el_client_image: "{{ geth_image | default('ethereum/client-go:stable') }}"
+    geth_network_dir: "{{ el_data_dir }}/geth"
+
+- name: Ensure geth network directory exists
+  ansible.builtin.file:
+    path: "{{ geth_network_dir }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user | default('root') }}"
+    group: "{{ ansible_user | default('root') }}"
+
+- name: Set geth container command
+  ansible.builtin.set_fact:
+    el_container_command: >-
+      --datadir=/data
+      --http
+      --http.addr=0.0.0.0
+      --http.port={{ el_client_port }}
+      --http.api={{ el_rpc_apis }}
+      --http.corsdomain=*
+      --http.vhosts=*
+      --ws
+      --ws.addr=0.0.0.0
+      --ws.port={{ el_client_port }}
+      --ws.api={{ el_rpc_apis }}
+      --ws.origins=*
+      --authrpc.port={{ el_engine_port }}
+      --authrpc.addr=0.0.0.0
+      --authrpc.vhosts=*
+      --authrpc.jwtsecret=/jwtsecret
+      --port={{ el_p2p_port }}
+      --metrics
+      --metrics.addr=0.0.0.0
+      --metrics.port={{ el_metrics_port }}
+      --syncmode=full
+      --gcmode=archive
+      --networkid={{ network_id }}
+      --cache={{ el_cache_size }}
+      --maxpeers={{ el_max_peers }}
+      {{ el_extra_options }} 

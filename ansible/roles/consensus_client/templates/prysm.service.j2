@@ -1,0 +1,45 @@
+[Unit]
+Description=Ethereum Prysm Consensus Client
+After=network.target
+Wants=network.target
+
+[Service]
+User={{ common_user }}
+Group={{ common_group }}
+Type=simple
+Restart={{ cl_service_restart }}
+RestartSec={{ cl_service_restart_sec }}
+Environment="ACCEPT_TERMS=1"
+ExecStart=/usr/local/bin/beacon-chain \
+  --datadir {{ prysm_data_dir }} \
+  --execution-endpoint {{ el_auth_endpoint }} \
+  --jwt-secret {{ cl_jwt_path }} \
+{% if cl_http_enabled | bool %}
+  --rpc-host 0.0.0.0 \
+  --rpc-port {{ cl_http_port }} \
+  --grpc-gateway-host 0.0.0.0 \
+  --grpc-gateway-port {{ cl_http_port }} \
+  --monitoring-host 0.0.0.0 \
+{% endif %}
+{% if cl_metrics_enabled | bool %}
+  --monitoring-port {{ cl_metrics_port }} \
+  --enable-peer-explorer \
+{% endif %}
+  --p2p-tcp-port {{ cl_p2p_port }} \
+  --p2p-udp-port {{ cl_p2p_port }} \
+  --p2p-max-peers {{ prysm_p2p_max_peers }} \
+  --chain-id={{ chain_id }} \
+  --verbosity {{ prysm_verbosity }} \
+  --accept-terms-of-use \
+  --ephemery
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=prysm
+
+# Set resource limits
+LimitNOFILE=1000000
+LimitNPROC=65535
+
+[Install]
+WantedBy=multi-user.target 
