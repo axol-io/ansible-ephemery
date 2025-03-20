@@ -1,0 +1,60 @@
+---
+# Monitoring tasks for common role
+
+- name: Create monitoring directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  with_items:
+    - "{{ data_dir }}/monitoring"
+    - "{{ data_dir }}/monitoring/prometheus"
+    - "{{ data_dir }}/monitoring/grafana"
+    - "{{ data_dir }}/monitoring/dashboards"
+  become: true
+
+- name: Install monitoring packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - prometheus
+    - prometheus-node-exporter
+    - grafana
+  become: true
+  when: ansible_distribution == "Ubuntu"
+  ignore_errors: true
+
+- name: Create Prometheus configuration
+  template:
+    src: prometheus.yml.j2
+    dest: "{{ data_dir }}/monitoring/prometheus/prometheus.yml"
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0644'
+  become: true
+  when: enable_monitoring | bool
+
+- name: Create Node Exporter systemd service
+  template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: node_exporter_service
+  when: enable_monitoring | bool
+
+- name: Start Node Exporter service
+  systemd:
+    name: node_exporter
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  become: true
+  when:
+    - enable_monitoring | bool
+    - node_exporter_service.changed | default(false)

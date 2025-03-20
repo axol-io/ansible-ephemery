@@ -46,4 +46,4 @@ Most setup scripts support these common options:
 4. Follow security best practices
 5. Test setup in development first
 
-For detailed usage instructions, refer to the main [README.md](../../README.md) or run each script with the `--help` flag. 
+For detailed usage instructions, refer to the main [README.md](../../README.md) or run each script with the `--help` flag.

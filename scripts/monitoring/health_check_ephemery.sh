@@ -5,7 +5,7 @@
 # Version: 1.1.0
 
 # Get the absolute path to the script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Source the common library
@@ -44,18 +44,18 @@ CUSTOM_BASE_DIR=""
 
 # Function to display usage information
 show_usage() {
-    log_info "Ephemery Node Health Check Script"
-    echo ""
-    echo "Usage: $0 [options]"
-    echo ""
-    echo "Options:"
-    echo "  -b, --basic           Run basic health checks (default)"
-    echo "  -f, --full            Run comprehensive health checks"
-    echo "  -p, --performance     Run performance checks"
-    echo "  -n, --network         Run network checks"
-    echo "  --base-dir PATH       Specify a custom base directory (default: ${EPHEMERY_BASE_DIR})"
-    echo "  -h, --help            Show this help message"
-    echo ""
+  log_info "Ephemery Node Health Check Script"
+  echo ""
+  echo "Usage: $0 [options]"
+  echo ""
+  echo "Options:"
+  echo "  -b, --basic           Run basic health checks (default)"
+  echo "  -f, --full            Run comprehensive health checks"
+  echo "  -p, --performance     Run performance checks"
+  echo "  -n, --network         Run network checks"
+  echo "  --base-dir PATH       Specify a custom base directory (default: ${EPHEMERY_BASE_DIR})"
+  echo "  -h, --help            Show this help message"
+  echo ""
 }
 
 # Parse command line arguments
@@ -63,19 +63,19 @@ CHECK_TYPE="basic"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -b|--basic)
+    -b | --basic)
       CHECK_TYPE="basic"
       shift
       ;;
-    -f|--full)
+    -f | --full)
       CHECK_TYPE="full"
       shift
       ;;
-    -p|--performance)
+    -p | --performance)
       CHECK_TYPE="performance"
       shift
       ;;
-    -n|--network)
+    -n | --network)
       CHECK_TYPE="network"
       shift
       ;;
@@ -83,7 +83,7 @@ while [[ $# -gt 0 ]]; do
       EPHEMERY_BASE_DIR="$2"
       shift 2
       ;;
-    -h|--help)
+    -h | --help)
       show_usage
       exit 0
       ;;
@@ -106,7 +106,7 @@ echo ""
 # Basic container status check
 check_container_status() {
   local container_name=$1
-  
+
   if type log_info &>/dev/null; then
     log_info "Checking ${container_name} status..."
   else
@@ -144,7 +144,7 @@ check_container_status() {
 # Check container resource usage
 check_container_resources() {
   local container_name=$1
-  
+
   if type log_info &>/dev/null; then
     log_info "Checking ${container_name} resource usage..."
   else
@@ -223,14 +223,14 @@ check_disk_space() {
 
   # Use standardized path if available
   local data_dir="${EPHEMERY_DATA_DIR:-${EPHEMERY_BASE_DIR}/data}"
-  
+
   # Get disk usage for Ephemery data directory
   if type run_with_error_handling &>/dev/null; then
     local disk_usage=$(run_with_error_handling "Get disk usage" du -sh "${data_dir}" 2>/dev/null || echo "N/A")
   else
     local disk_usage=$(du -sh "${data_dir}" 2>/dev/null || echo "N/A")
   fi
-  
+
   echo -e "Ephemery data directory size: ${disk_usage}"
 
   # Check available disk space
@@ -241,7 +241,7 @@ check_disk_space() {
     local available_space=$(df -h "${data_dir}" | awk 'NR==2 {print $4}')
     local use_percentage=$(df -h "${data_dir}" | awk 'NR==2 {print $5}')
   fi
-  
+
   echo -e "Available disk space: ${available_space}"
   echo -e "Disk usage: ${use_percentage}"
 
@@ -273,7 +273,7 @@ check_geth_sync_status() {
 
   local geth_endpoint="http://localhost:8545"
   local curl_cmd="curl -s -X POST -H \"Content-Type: application/json\" --data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_syncing\",\"params\":[],\"id\":1}'"
-  
+
   if type run_with_error_handling &>/dev/null; then
     local geth_result=$(run_with_error_handling "Check Geth sync status" curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' "${geth_endpoint}" 2>/dev/null)
   else
@@ -294,7 +294,7 @@ check_geth_sync_status() {
       else
         local latest_block=$(curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' "${geth_endpoint}")
       fi
-      
+
       local block_hex=$(echo "${latest_block}" | grep -o '"result":"0x[0-9a-f]*"' | cut -d'"' -f4)
       if [ ! -z "${block_hex}" ]; then
         local block_dec=$((16#${block_hex:2}))
@@ -315,7 +315,7 @@ check_geth_sync_status() {
         local current_dec=$((16#${current_block:2}))
         local highest_dec=$((16#${highest_block:2}))
         local remaining=$((highest_dec - current_dec))
-        local percent_complete=$(( (current_dec * 100) / highest_dec ))
+        local percent_complete=$(((current_dec * 100) / highest_dec))
 
         echo -e "Current Block: ${current_dec}"
         echo -e "Highest Block: ${highest_dec}"
@@ -341,7 +341,7 @@ check_lighthouse_sync_status() {
   fi
 
   local lighthouse_endpoint="http://localhost:5052/eth/v1/node/syncing"
-  
+
   if type run_with_error_handling &>/dev/null; then
     local lighthouse_result=$(run_with_error_handling "Check Lighthouse sync status" curl -s -X GET "${lighthouse_endpoint}" -H "Content-Type: application/json" 2>/dev/null)
   else
@@ -350,21 +350,21 @@ check_lighthouse_sync_status() {
 
   if [ $? -eq 0 ]; then
     local is_syncing=$(echo "${lighthouse_result}" | grep -o '"is_syncing":[a-z]*' | cut -d':' -f2)
-    
+
     if [[ "${is_syncing}" == "false" ]]; then
       if type log_success &>/dev/null; then
         log_success "Lighthouse is fully synced"
       else
         log_success "Lighthouse is fully synced"
       fi
-      
+
       # Get current head slot
       if type run_with_error_handling &>/dev/null; then
         local head_info=$(run_with_error_handling "Get lighthouse head" curl -s -X GET "http://localhost:5052/eth/v1/beacon/headers/head" -H "Content-Type: application/json" 2>/dev/null)
       else
         local head_info=$(curl -s -X GET "http://localhost:5052/eth/v1/beacon/headers/head" -H "Content-Type: application/json" 2>/dev/null)
       fi
-      
+
       local slot=$(echo "${head_info}" | grep -o '"slot":"[0-9]*"' | cut -d'"' -f4)
       if [ ! -z "${slot}" ]; then
         echo -e "Current Head Slot: ${slot}"
@@ -375,17 +375,17 @@ check_lighthouse_sync_status() {
       else
         log_warn "Lighthouse is syncing"
       fi
-      
+
       # Extract sync information if available
       local head_slot=$(echo "${lighthouse_result}" | grep -o '"head_slot":"[0-9]*"' | cut -d'"' -f4)
       local sync_distance=$(echo "${lighthouse_result}" | grep -o '"sync_distance":"[0-9]*"' | cut -d'"' -f4)
-      
+
       if [ ! -z "${head_slot}" ] && [ ! -z "${sync_distance}" ]; then
         echo -e "Current Head Slot: ${head_slot}"
         echo -e "Sync Distance: ${sync_distance} slots"
-        
+
         # Calculate estimated time remaining (rough estimate)
-        local remaining_time=$((sync_distance / 225))  # ~225 slots per hour (12s per slot)
+        local remaining_time=$((sync_distance / 225)) # ~225 slots per hour (12s per slot)
         if [ ${remaining_time} -gt 24 ]; then
           echo -e "Estimated time remaining: ~$((remaining_time / 24)) days, $((remaining_time % 24)) hours"
         else
@@ -427,10 +427,10 @@ check_validators() {
     fi
     return 1
   fi
-  
+
   # Use standardized path if available
   local validator_keys_dir="${EPHEMERY_VALIDATOR_KEYS_DIR:-${EPHEMERY_BASE_DIR}/data/validator-keys}"
-  
+
   if type run_with_error_handling &>/dev/null; then
     local validator_count=$(run_with_error_handling "Count validators" docker exec "${EPHEMERY_VALIDATOR_CONTAINER}" ls -1 /validatordata/validators/*/voting-keystore.json 2>/dev/null | wc -l)
   else
@@ -450,7 +450,7 @@ check_validators() {
     else
       local validator_status=$(curl -s -X GET http://localhost:5052/eth/v1/beacon/states/head/validators 2>/dev/null)
     fi
-    
+
     if [ $? -eq 0 ] && [ ! -z "${validator_status}" ]; then
       local active_count=$(echo "${validator_status}" | grep -o '"status":"active_ongoing"' | wc -l)
       local pending_count=$(echo "${validator_status}" | grep -o '"status":"pending"' | wc -l)
@@ -493,7 +493,7 @@ check_network_connectivity() {
   else
     local peer_count=$(curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"net_peerCount","params":[],"id":1}' http://localhost:8545)
   fi
-  
+
   local peer_hex=$(echo "${peer_count}" | grep -o '"result":"0x[0-9a-f]*"' | cut -d'"' -f4)
 
   if [ ! -z "${peer_hex}" ]; then
@@ -527,7 +527,7 @@ check_network_connectivity() {
   else
     local lighthouse_peer_count=$(curl -s -X GET http://localhost:5052/eth/v1/node/peers_count -H "Content-Type: application/json" 2>/dev/null)
   fi
-  
+
   local connected=$(echo "${lighthouse_peer_count}" | grep -o '"connected":[0-9]*' | cut -d':' -f2)
 
   if [ ! -z "${connected}" ]; then
@@ -587,7 +587,7 @@ run_performance_checks() {
     log_info "Checking disk I/O performance..."
   fi
 
-  if which iostat > /dev/null 2>&1; then
+  if which iostat >/dev/null 2>&1; then
     if type run_with_error_handling &>/dev/null; then
       run_with_error_handling "Get I/O statistics" iostat -x | grep -v loop | grep -v ram
     else
@@ -604,7 +604,7 @@ run_performance_checks() {
 
     # Use standardized path if available
     local temp_file="${EPHEMERY_DATA_DIR:-${EPHEMERY_BASE_DIR}/data}/test_io.tmp"
-    
+
     # Simple disk performance check
     echo -e "Writing 100MB test file..."
     if type run_with_error_handling &>/dev/null; then

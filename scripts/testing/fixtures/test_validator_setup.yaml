@@ -17,35 +17,35 @@
         state: directory
         mode: '0755'
       loop: "{{ range(1, validator_count + 1) | list }}"
-      
+
     - name: Create validator keystores
       file:
         path: "/tmp/ephemery_test/validator_{{ item }}/keystore.json"
         state: touch
         mode: '0600'
       loop: "{{ range(1, validator_count + 1) | list }}"
-      
+
     - name: Create mock validator password files
       copy:
         dest: "/tmp/ephemery_test/validator_{{ item }}/password.txt"
         content: "mock_password_{{ item }}"
         mode: '0600'
       loop: "{{ range(1, validator_count + 1) | list }}"
-      
+
     - name: Create JWT secret file
       copy:
         dest: "/tmp/ephemery_test/jwt.hex"
         content: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
         mode: '0600'
-        
+
     - name: Set up mock services
       debug:
         msg: "Setting up {{ client_combination }} services"
-        
+
     - name: Simulate service activation
       command: "sleep 1"
       changed_when: false
-      
+
     - name: Create mock logs
       file:
         path: "/tmp/ephemery_test/logs/{{ item }}.log"
@@ -55,14 +55,14 @@
         - "geth"
         - "lighthouse"
         - "validator"
-        
+
     - name: Set facts about the deployment
       set_fact:
         validators_created: "{{ validator_count }}"
         client_setup: "{{ client_combination }}"
         jwt_file: "/tmp/ephemery_test/jwt.hex"
         network: "{{ network_name }}"
-        
+
     - name: Deployment complete
       debug:
-        msg: "Mock validator setup complete" 
+        msg: "Mock validator setup complete"

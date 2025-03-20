@@ -1,5 +1,0 @@
----
-# Firewall rules for Erigon (execution client) and Lodestar
-# (consensus client) combination
-- name: Set firewall ports for erigon-lodestar
-  ansible.builtin.set_fact:

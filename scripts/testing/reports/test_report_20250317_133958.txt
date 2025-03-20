@@ -1,6 +1,0 @@
-[0;34m======================================[0m
-[0;34m    Ephemery Test Suite Runner        [0m
-[0;34m======================================[0m
-Date: Mon Mar 17 13:39:58 CET 2025
-Report file: /Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/reports/test_report_20250317_133958.txt
-

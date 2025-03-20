@@ -149,4 +149,4 @@ When contributing to this repository:
 5. **Review changes** - Run `git diff` before committing to check for sensitive information
 6. **Use pull requests** - Allow others to review your code for security issues
 
-By following these guidelines, we can maintain a secure and reliable Ephemery deployment environment. 
+By following these guidelines, we can maintain a secure and reliable Ephemery deployment environment.

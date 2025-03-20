@@ -6,7 +6,7 @@ dependency:
 driver:
   name: docker
 # Scenario names are now just the client combinations
-# The .config/molecule/config.yml file handles finding them in molecule/clients directory
+# The .dev/molecule/config.yml file handles finding them in molecule/clients directory
 scenarios:
   - name: geth-lighthouse
   - name: geth-prysm

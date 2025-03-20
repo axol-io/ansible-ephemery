@@ -32,25 +32,25 @@ VERBOSE=false
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -h|--help)
-            echo "Usage: $(basename "$0") [options]"
-            echo ""
-            echo "Options:"
-            echo "  -h, --help     Display this help message"
-            echo "  -v, --verbose  Enable verbose output"
-            exit 0
-            ;;
-        -v|--verbose)
-            VERBOSE=true
-            shift
-            ;;
-        *)
-            log_error "Unknown option: $1"
-            echo "Use -h or --help for usage information"
-            exit 1
-            ;;
-    esac
+  case "$1" in
+    -h | --help)
+      echo "Usage: $(basename "$0") [options]"
+      echo ""
+      echo "Options:"
+      echo "  -h, --help     Display this help message"
+      echo "  -v, --verbose  Enable verbose output"
+      exit 0
+      ;;
+    -v | --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    *)
+      log_error "Unknown option: $1"
+      echo "Use -h or --help for usage information"
+      exit 1
+      ;;
+  esac
 done
 
 # Print banner
@@ -58,17 +58,17 @@ print_banner "SCRIPT_TITLE"
 
 # Main function
 main() {
-    log_info "Starting SCRIPT_NAME"
-    
-    # Check dependencies
-    if ! check_dependencies "DEPENDENCY1" "DEPENDENCY2"; then
-        log_error "Missing required dependencies"
-        exit 1
-    fi
-    
-    # YOUR SCRIPT LOGIC HERE
-    
-    log_success "SCRIPT_NAME completed successfully!"
+  log_info "Starting SCRIPT_NAME"
+
+  # Check dependencies
+  if ! check_dependencies "DEPENDENCY1" "DEPENDENCY2"; then
+    log_error "Missing required dependencies"
+    exit 1
+  fi
+
+  # YOUR SCRIPT LOGIC HERE
+
+  log_success "SCRIPT_NAME completed successfully!"
 }
 
 # Run the main function

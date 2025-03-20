@@ -1,0 +1,1 @@
+utilities/verify-collections.sh

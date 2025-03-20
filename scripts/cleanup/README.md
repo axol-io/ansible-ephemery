@@ -90,4 +90,4 @@ This will:
    git commit -m "Repository cleanup and optimization"
    ```
 
-6. Create a pull request for review 
+6. Create a pull request for review

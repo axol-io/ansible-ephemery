@@ -6,7 +6,6 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # Source the common library
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
-
 # Ephemery Path Configuration Script
 # This script provides standardized path management for all Ephemery scripts
 # Version: 1.0.0

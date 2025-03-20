@@ -1,0 +1,63 @@
+---
+# Validator monitoring tasks
+
+- name: Ensure Prometheus is installed
+  package:
+    name: prometheus
+    state: present
+  become: true
+  when: validator_monitoring_enabled | bool and ansible_distribution == "Ubuntu"
+  register: prometheus_installed
+
+- name: Create validator Prometheus configuration
+  template:
+    src: prometheus-validator.yml.j2
+    dest: /etc/prometheus/prometheus-validator.yml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: validator_monitoring_enabled | bool
+  register: prometheus_config
+
+- name: Create validator Grafana dashboard
+  template:
+    src: validator-dashboard.json.j2
+    dest: /etc/grafana/provisioning/dashboards/validator-dashboard.json
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: validator_monitoring_enabled | bool and ansible_distribution == "Ubuntu"
+  register: grafana_dashboard
+  ignore_errors: true
+
+- name: Set up Grafana dashboard source for validators
+  template:
+    src: validator-datasource.yml.j2
+    dest: /etc/grafana/provisioning/datasources/validator-datasource.yml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: validator_monitoring_enabled | bool and ansible_distribution == "Ubuntu"
+  register: grafana_datasource
+  ignore_errors: true
+
+- name: Restart Prometheus if configuration changed
+  systemd:
+    name: prometheus
+    state: restarted
+  become: true
+  when: validator_monitoring_enabled | bool and prometheus_config.changed and ansible_distribution == "Ubuntu"
+
+- name: Restart Grafana if dashboard or datasource changed
+  systemd:
+    name: grafana-server
+    state: restarted
+  become: true
+  when: >
+    validator_monitoring_enabled | bool and
+    (grafana_dashboard.changed or grafana_datasource.changed) and
+    ansible_distribution == "Ubuntu"
+  ignore_errors: true

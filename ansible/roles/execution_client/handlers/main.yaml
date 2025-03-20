@@ -1,0 +1,30 @@
+---
+# Handlers for the execution_client role
+
+- name: restart geth
+  systemd:
+    name: geth
+    state: restarted
+  become: true
+  when: el_client_name == "geth"
+
+- name: restart nethermind
+  systemd:
+    name: nethermind
+    state: restarted
+  become: true
+  when: el_client_name == "nethermind"
+
+- name: restart besu
+  systemd:
+    name: besu
+    state: restarted
+  become: true
+  when: el_client_name == "besu"
+
+- name: restart erigon
+  systemd:
+    name: erigon
+    state: restarted
+  become: true
+  when: el_client_name == "erigon"

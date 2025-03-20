@@ -1,0 +1,32 @@
+---
+# Validator role handlers
+
+- name: restart lighthouse-validator
+  systemd:
+    name: lighthouse-validator
+    state: restarted
+  become: true
+
+- name: restart prysm-validator
+  systemd:
+    name: prysm-validator
+    state: restarted
+  become: true
+
+- name: restart teku-validator
+  systemd:
+    name: teku-validator
+    state: restarted
+  become: true
+
+- name: restart nimbus-validator
+  systemd:
+    name: nimbus-validator
+    state: restarted
+  become: true
+
+- name: restart lodestar-validator
+  systemd:
+    name: lodestar-validator
+    state: restarted
+  become: true

@@ -40,9 +40,9 @@ For detailed usage instructions, refer to the main [README.md](../../README.md) 
 
 ## Contents
 
-- **backup_restore_validators.sh**: 
-- **integration_test.sh**: 
-- **manage_validator_keys.sh**: 
-- **monitor_validator.sh**: 
-- **setup_ephemery_validator.sh**: 
-- **test_validator_config.sh**: 
+- **backup_restore_validators.sh**:
+- **integration_test.sh**:
+- **manage_validator_keys.sh**:
+- **monitor_validator.sh**:
+- **setup_ephemery_validator.sh**:
+- **test_validator_config.sh**:

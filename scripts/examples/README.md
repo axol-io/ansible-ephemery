@@ -20,4 +20,4 @@ These example scripts demonstrate best practices and common patterns for:
 - Troubleshooting
 - Common operations
 
-Use these as a reference when creating your own scripts or understanding the Ephemery workflow. 
+Use these as a reference when creating your own scripts or understanding the Ephemery workflow.

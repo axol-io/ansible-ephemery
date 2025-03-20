@@ -182,4 +182,4 @@ To automatically check your shell scripts before each commit, run:
 ./scripts/utilities/setup_pre_commit.sh
 ```
 
-This will install a git pre-commit hook that runs shellharden on staged shell scripts. 
+This will install a git pre-commit hook that runs shellharden on staged shell scripts.

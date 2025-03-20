@@ -1,6 +1,0 @@
----
-# Tasks for setting up the execution client
-- name: Include specific execution client tasks
-  ansible.builtin.include_tasks: "../../tasks/clients/{{ client_type }}-{{ consensus_client | default('lighthouse') }}/execution.yaml"
-  vars:
-    consensus_client: "{{ clients.consensus | default('lighthouse') }}"

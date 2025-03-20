@@ -1,5 +1,0 @@
----
-# Firewall rules for Reth (execution client) and Teku
-# (consensus client) combination
-- name: Set firewall ports for reth-teku
-  ansible.builtin.set_fact:

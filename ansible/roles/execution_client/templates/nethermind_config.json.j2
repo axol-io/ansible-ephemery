@@ -29,7 +29,7 @@
     "WebSocketsPort": {{ el_ws_port }},
     "EnabledModules": [{% for module in el_http_api.split(',') %}"{{ module }}"{% if not loop.last %}, {% endif %}{% endfor %}],
     "JwtSecretFile": "{{ el_jwt_path }}",
-    "EngineHost": "localhost", 
+    "EngineHost": "localhost",
     "EnginePort": 8551
   },
   "Metrics": {
@@ -62,4 +62,4 @@
     "Secret": "secret",
     "Contact": ""
   }
-} 
+}

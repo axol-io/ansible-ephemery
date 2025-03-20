@@ -1,96 +1,116 @@
 ---
-# Standardized JWT management tasks
-# This task file handles all aspects of JWT secret management for Ethereum clients
+# JWT secret management tasks
+# These tasks ensure proper JWT format, permissions, backups, and symlinks
 
 - name: Ensure JWT directory exists
-  ansible.builtin.file:
-    path: "{{ jwt_secret_dir }}"
+  file:
+    path: "{{ jwt_secret_path | dirname }}"
     state: directory
-    mode: "0755"
-    owner: "{{ ansible_user | default('root') }}"
-    group: "{{ ansible_user | default('root') }}"
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
 
-- name: Check if JWT file exists
-  ansible.builtin.stat:
+- name: Check if JWT secret file already exists
+  stat:
     path: "{{ jwt_secret_path }}"
   register: jwt_file_stat
 
-- name: Generate JWT secret if needed
-  ansible.builtin.shell: |
-    openssl rand -hex 32 > {{ jwt_secret_path }}
-    chmod 600 {{ jwt_secret_path }}
-  when: not jwt_file_stat.stat.exists
-  register: jwt_generated
-  changed_when: jwt_generated.rc == 0
-
-- name: Validate and fix JWT secret format
-  ansible.builtin.shell: |
-    JWT_CONTENT=$(cat {{ jwt_secret_path }})
-    # Remove any "0x" prefix and whitespace
-    CLEAN_JWT=$(echo "$JWT_CONTENT" | sed 's/^0x//g' | tr -d '[:space:]')
-    # Validate the format is exactly 64 hex characters
-    if ! echo "$CLEAN_JWT" | grep -qE '^[0-9a-f]{64}$'; then
-      echo "Invalid JWT format, regenerating..."
-      openssl rand -hex 32 > {{ jwt_secret_path }}
-    else
-      # Ensure consistent format (no 0x, no whitespace)
-      echo "$CLEAN_JWT" > {{ jwt_secret_path }}
-    fi
-  register: jwt_validate
-  changed_when: "'regenerating' in jwt_validate.stdout"
-
-- name: Ensure proper permissions on JWT file
-  ansible.builtin.file:
-    path: "{{ jwt_secret_path }}"
-    mode: "0600"
-    owner: "{{ ansible_user | default('root') }}"
-    group: "{{ ansible_user | default('root') }}"
-
-- name: Check for legacy JWT locations
-  ansible.builtin.stat:
-    path: "{{ item }}"
-  loop:
-    - "/root/jwtsecret"
-    - "{{ ephemery_base_dir }}/jwtsecret"
-    - "{{ ephemery_base_dir }}/jwt"
-  register: legacy_jwt_paths
-
-- name: Migrate legacy JWT if needed
-  ansible.builtin.shell: |
-    cp {{ item.item }} {{ jwt_secret_path }}
-    chmod 600 {{ jwt_secret_path }}
-  when: 
-    - item.stat.exists
-    - not jwt_file_stat.stat.exists or jwt_generated is not defined
-  loop: "{{ legacy_jwt_paths.results }}"
-  loop_control:
-    label: "{{ item.item }}"
-
-- name: Create symlinks for standard JWT paths
-  ansible.builtin.file:
+- name: Backup existing JWT secret file if requested
+  copy:
     src: "{{ jwt_secret_path }}"
-    dest: "{{ item }}"
-    state: link
-    force: true
-  loop:
-    - "{{ ephemery_base_dir }}/jwt.hex"
-    - "{{ ephemery_data_dir }}/jwt.hex"
-  when: create_jwt_symlinks | default(true) | bool
-
-- name: Backup the JWT file
-  block:
-    - name: Create backup directory for JWT
-      ansible.builtin.file:
-        path: "{{ backup_dir }}/jwt"
-        state: directory
-        mode: "0755"
-    
-    - name: Backup JWT file
-      ansible.builtin.copy:
-        src: "{{ jwt_secret_path }}"
-        dest: "{{ backup_dir }}/jwt/jwt.hex.{{ ansible_date_time.iso8601_basic_short }}"
-        remote_src: true
-        mode: "0600"
-  when: 
+    dest: "{{ jwt_secret_path }}.bak.{{ ansible_date_time.date }}-{{ ansible_date_time.time }}"
+    remote_src: true
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0600'
+  when:
     - jwt_file_stat.stat.exists
-    - backup_jwt | default(false) | bool 
+    - jwt_backup_existing | bool
+
+- name: Generate secure random JWT secret if not exists
+  block:
+    - name: Generate JWT secret
+      shell: |
+        openssl rand -hex 32
+      register: jwt_secret
+      changed_when: false
+
+    - name: Write JWT secret to file
+      copy:
+        content: "{{ jwt_secret.stdout }}"
+        dest: "{{ jwt_secret_path }}"
+        owner: "{{ common_user }}"
+        group: "{{ common_group }}"
+        mode: '0600'
+  when: not jwt_file_stat.stat.exists
+
+- name: Validate existing JWT secret format
+  block:
+    - name: Read JWT secret
+      slurp:
+        src: "{{ jwt_secret_path }}"
+      register: jwt_content
+
+    - name: Decode JWT content
+      set_fact:
+        decoded_jwt: "{{ jwt_content.content | b64decode | regex_replace('\n', '') | regex_replace('0x', '') }}"
+
+    - name: Validate JWT format (64-character hex without 0x prefix)
+      assert:
+        that:
+          - decoded_jwt | length == 64
+          - decoded_jwt is match('^[0-9a-fA-F]+$')
+        fail_msg: "JWT secret is not in the correct format (64-character hex without 0x prefix)"
+        success_msg: "JWT secret is in the correct format"
+
+    - name: Fix JWT format if needed
+      copy:
+        content: "{{ decoded_jwt }}"
+        dest: "{{ jwt_secret_path }}"
+        owner: "{{ common_user }}"
+        group: "{{ common_group }}"
+        mode: '0600'
+      when:
+        - decoded_jwt | length != 64
+        - not decoded_jwt is match('^[0-9a-fA-F]+$')
+        - decoded_jwt | regex_replace('0x', '') | length == 64
+  when: jwt_file_stat.stat.exists
+
+- name: Ensure JWT permissions are correct
+  file:
+    path: "{{ jwt_secret_path }}"
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0600'
+
+# Create symlinks for client compatibility
+- name: Setup JWT symlinks for client compatibility
+  block:
+    - name: Set legacy JWT paths
+      set_fact:
+        legacy_jwt_paths:
+          - "/etc/ethereum/jwt.hex"
+          - "/var/lib/ethereum/jwt.hex"
+          - "{{ data_dir }}/execution/jwt.hex"
+          - "{{ data_dir }}/consensus/jwt.hex"
+
+    - name: Ensure parent directories exist for symlinks
+      file:
+        path: "{{ item | dirname }}"
+        state: directory
+        owner: "{{ common_user }}"
+        group: "{{ common_group }}"
+        mode: '0755'
+      with_items: "{{ legacy_jwt_paths }}"
+
+    - name: Create symlinks to JWT secret
+      file:
+        src: "{{ jwt_secret_path }}"
+        dest: "{{ item }}"
+        state: link
+        owner: "{{ common_user }}"
+        group: "{{ common_group }}"
+        force: true
+      with_items: "{{ legacy_jwt_paths }}"
+  when: jwt_create_symlinks | bool

@@ -1,5 +1,0 @@
----
-# Firewall rules for Erigon (execution client) and Lighthouse
-# (consensus client) combination
-- name: Set firewall ports for erigon-lighthouse
-  ansible.builtin.set_fact:

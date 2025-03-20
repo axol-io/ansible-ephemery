@@ -5,7 +5,7 @@
 # Version: 1.1.0
 
 # Source core utilities
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # Source the common library
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
@@ -174,7 +174,7 @@ if type check_docker &>/dev/null; then
     fi
   }
 else
-  if ! command -v docker &> /dev/null; then
+  if ! command -v docker &>/dev/null; then
     echo -e "${RED}Error: Docker not found. Please install Docker first.${NC}"
     exit 1
   fi
@@ -312,16 +312,16 @@ else
     IS_SYNCING=$(echo "${SYNC_STATUS}" | grep -o '"is_syncing":true' || true)
 
     if [ ! -z "${IS_SYNCING}" ]; then
-        echo -e "${YELLOW}Beacon node is still syncing. Validator duties will be inactive until sync completes.${NC}"
-        echo -e "${YELLOW}You can proceed with validator setup, but validators won't be active immediately.${NC}"
-        read -p "Continue with validator setup? (y/n) " -n 1 -r
-        echo
-        if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
-            echo -e "${RED}Setup aborted by user.${NC}"
-            exit 0
-        fi
+      echo -e "${YELLOW}Beacon node is still syncing. Validator duties will be inactive until sync completes.${NC}"
+      echo -e "${YELLOW}You can proceed with validator setup, but validators won't be active immediately.${NC}"
+      read -p "Continue with validator setup? (y/n) " -n 1 -r
+      echo
+      if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
+        echo -e "${RED}Setup aborted by user.${NC}"
+        exit 0
+      fi
     else
-        echo -e "${GREEN}Beacon node appears to be synced. Proceeding with validator setup.${NC}"
+      echo -e "${GREEN}Beacon node appears to be synced. Proceeding with validator setup.${NC}"
     fi
   fi
 fi
@@ -422,8 +422,8 @@ fi
 # Check that we have keystore files
 KEYSTORE_COUNT=$(find "${EPHEMERY_VALIDATOR_KEYS_DIR}"/validator_keys -name "keystore-*.json" | wc -l)
 if [ "${KEYSTORE_COUNT}" -eq 0 ]; then
-    echo -e "${RED}Error: No validator keystore files found in ${EPHEMERY_VALIDATOR_KEYS_DIR}/validator_keys${NC}"
-    exit 1
+  echo -e "${RED}Error: No validator keystore files found in ${EPHEMERY_VALIDATOR_KEYS_DIR}/validator_keys${NC}"
+  exit 1
 fi
 echo -e "${GREEN}Found ${KEYSTORE_COUNT} validator keystores${NC}"
 
@@ -433,39 +433,39 @@ VALID_COUNT=0
 INVALID_COUNT=0
 
 for keystore in ${EPHEMERY_VALIDATOR_KEYS_DIR}/validator_keys/keystore-*.json; do
-    # Check if file is valid JSON and has required fields
-    if jq . "${keystore}" &>/dev/null && jq -e '.pubkey' "${keystore}" &>/dev/null; then
-        VALID_COUNT=$((VALID_COUNT + 1))
-    else
-        INVALID_COUNT=$((INVALID_COUNT + 1))
-        echo -e "${RED}Invalid keystore file: $(basename "${keystore}")${NC}"
-    fi
+  # Check if file is valid JSON and has required fields
+  if jq . "${keystore}" &>/dev/null && jq -e '.pubkey' "${keystore}" &>/dev/null; then
+    VALID_COUNT=$((VALID_COUNT + 1))
+  else
+    INVALID_COUNT=$((INVALID_COUNT + 1))
+    echo -e "${RED}Invalid keystore file: $(basename "${keystore}")${NC}"
+  fi
 done
 
 echo -e "${BLUE}Validation summary:${NC}"
 echo -e "${GREEN}Valid keystores: ${VALID_COUNT}${NC}"
 if [ ${INVALID_COUNT} -gt 0 ]; then
-    echo -e "${RED}Invalid keystores: ${INVALID_COUNT}${NC}"
-    echo -e "${YELLOW}Warning: Some keystore files are invalid and will be skipped.${NC}"
-    read -p "Continue with setup? (y/n) " -n 1 -r
-    echo
-    if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
-        echo -e "${RED}Setup aborted by user.${NC}"
-        exit 0
-    fi
+  echo -e "${RED}Invalid keystores: ${INVALID_COUNT}${NC}"
+  echo -e "${YELLOW}Warning: Some keystore files are invalid and will be skipped.${NC}"
+  read -p "Continue with setup? (y/n) " -n 1 -r
+  echo
+  if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
+    echo -e "${RED}Setup aborted by user.${NC}"
+    exit 0
+  fi
 else
-    echo -e "${GREEN}Invalid keystores: ${INVALID_COUNT}${NC}"
+  echo -e "${GREEN}Invalid keystores: ${INVALID_COUNT}${NC}"
 fi
 
 # Verify validator count if specified
 if [ "${VALIDATOR_COUNT}" -gt 0 ] && [ ${VALID_COUNT} -ne "${VALIDATOR_COUNT}" ]; then
-    echo -e "${RED}Warning: Expected ${VALIDATOR_COUNT} validators but found ${VALID_COUNT} valid keystores.${NC}"
-    read -p "Continue with setup? (y/n) " -n 1 -r
-    echo
-    if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
-        echo -e "${RED}Setup aborted by user.${NC}"
-        exit 0
-    fi
+  echo -e "${RED}Warning: Expected ${VALIDATOR_COUNT} validators but found ${VALID_COUNT} valid keystores.${NC}"
+  read -p "Continue with setup? (y/n) " -n 1 -r
+  echo
+  if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
+    echo -e "${RED}Setup aborted by user.${NC}"
+    exit 0
+  fi
 fi
 
 # Count valid and invalid keystores
@@ -498,8 +498,8 @@ else
     read -p "Continue anyway? (y/n) " -n 1 -r
     echo
     if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
-        echo -e "${RED}Setup aborted by user.${NC}"
-        exit 0
+      echo -e "${RED}Setup aborted by user.${NC}"
+      exit 0
     fi
   else
     echo -e "${GREEN}Invalid keystores: ${INVALID_COUNT}${NC}"
@@ -539,7 +539,7 @@ if [ -f "${SCRIPT_DIR}/validator_key_management/password_manager.sh" ]; then
   if type run_with_error_handling &>/dev/null; then
     # Use password manager to handle passwords
     run_with_error_handling "Configure secure passwords" "${SCRIPT_DIR}/validator_key_management/password_manager.sh"
-    
+
     # Verify password file was created
     if [ ! -f "${EPHEMERY_VALIDATOR_PASSWORDS_DIR}/validators.txt" ] && [ "$(find "${EPHEMERY_VALIDATOR_PASSWORDS_DIR}" -name "*.txt" | wc -l)" -eq 0 ]; then
       log_error "Failed to create validator password files."
@@ -548,7 +548,7 @@ if [ -f "${SCRIPT_DIR}/validator_key_management/password_manager.sh" ]; then
   else
     # Use password manager to handle passwords
     "${SCRIPT_DIR}/validator_key_management/password_manager.sh"
-    
+
     # Verify password file was created
     if [ ! -f "${EPHEMERY_VALIDATOR_PASSWORDS_DIR}/validators.txt" ] && [ "$(find "${EPHEMERY_VALIDATOR_PASSWORDS_DIR}" -name "*.txt" | wc -l)" -eq 0 ]; then
       echo -e "${RED}Error: Failed to create validator password files.${NC}"
@@ -577,7 +577,7 @@ else
           echo -e "${GREEN}Created validator password file${NC}"
         fi
       else
-        echo "ephemery" > "${VALIDATOR_PASSWORD_DIR}/validators.txt"
+        echo "ephemery" >"${VALIDATOR_PASSWORD_DIR}/validators.txt"
         chmod 600 "${VALIDATOR_PASSWORD_DIR}/validators.txt"
         echo -e "${GREEN}Created validator password file${NC}"
       fi
@@ -590,7 +590,7 @@ else
     fi
   else
     if [ ! -f "${VALIDATOR_PASSWORD_DIR}/validators.txt" ]; then
-      echo "ephemery" > "${VALIDATOR_PASSWORD_DIR}/validators.txt"
+      echo "ephemery" >"${VALIDATOR_PASSWORD_DIR}/validators.txt"
       chmod 600 "${VALIDATOR_PASSWORD_DIR}/validators.txt"
       echo -e "${GREEN}Created validator password file${NC}"
     else

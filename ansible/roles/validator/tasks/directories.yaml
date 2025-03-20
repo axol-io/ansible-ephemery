@@ -1,0 +1,53 @@
+---
+# Validator role directory setup tasks
+
+- name: Create validator base directory
+  file:
+    path: "{{ validator_data_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create validator client-specific data directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  loop:
+    - "{{ lighthouse_validator_data_dir }}"
+    - "{{ prysm_validator_data_dir }}"
+    - "{{ teku_validator_data_dir }}"
+    - "{{ nimbus_validator_data_dir }}"
+    - "{{ lodestar_validator_data_dir }}"
+  become: true
+
+- name: Create validator keys directory
+  file:
+    path: "{{ validator_keys_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0700'  # More restrictive mode for keys
+  become: true
+
+- name: Create validator secrets directory
+  file:
+    path: "{{ validator_secrets_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0700'  # More restrictive mode for secrets
+  become: true
+
+- name: Create validator log directory
+  file:
+    path: "{{ validator_log_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true

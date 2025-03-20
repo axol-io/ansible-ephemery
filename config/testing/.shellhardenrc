@@ -42,4 +42,4 @@ check_common_issues=true
 # 1 = warnings
 # 2 = errors
 exit_code_warning=1
-exit_code_error=2 
+exit_code_error=2

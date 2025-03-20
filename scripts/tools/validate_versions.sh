@@ -1,4 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Version: 1.0.0
+#
+# Script Name: validate_versions.sh
+# Description: Validates version requirements across the codebase
+# Author: Ephemery Team
+# Created: 2025-03-19
+# Last Modified: 2025-03-19
+#
+# Usage: ./validate_versions.sh [--fix] [--verbose]
+
+set -euo pipefail
+
 # Get the absolute path to the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
@@ -6,70 +18,63 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # Source the common library
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
-# Version: 1.0.0
+# Default options
+FIX_MODE=false
+VERBOSE_MODE=false
 
-# Shell Script Version Validator
-# This script checks that shell scripts have a consistent version pattern
-# and helps enforce standardized versioning across the codebase
-
-# Exit on any error
-set -e
-
-# Define color codes
-NC='\033[0m' # No Color
-
-# Version pattern to look for
-VERSION_PATTERN="# Version: [0-9]+\.[0-9]+\.[0-9]+"
-
-# Files to check - either from arguments or defaulting to all shell scripts
-if [ $# -gt 0 ]; then
-  FILES_TO_CHECK=("$@")
-else
-  # Find all shell scripts in the project
-  mapfile -t FILES_TO_CHECK < <(find . -type f -name "*.sh" -not -path "*/\.*" -not -path "*/collections/*")
-fi
-
-echo -e "${YELLOW}Checking version strings in shell scripts...${NC}"
-
-# Initialize counters
-SCRIPTS_CHECKED=0
-SCRIPTS_MISSING_VERSION=0
-SCRIPTS_WITH_VERSION=0
-
-# Process each file
-for file in "${FILES_TO_CHECK[@]}"; do
-  SCRIPTS_CHECKED=$((SCRIPTS_CHECKED + 1))
-
-  # Check if file exists and is readable
-  if [ ! -r "${file}" ]; then
-    echo -e "${RED}Error: Cannot read file ${file}${NC}"
-    continue
-  fi
-
-  # Look for version string in first 20 lines
-  if head -n 20 "${file}" | grep -q -E "${VERSION_PATTERN}"; then
-    VERSION=$(head -n 20 "${file}" | grep -E "${VERSION_PATTERN}" | sed -E 's/.*Version: ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-    echo -e "${GREEN}✓ ${file}${NC} - Version: ${VERSION}"
-    SCRIPTS_WITH_VERSION=$((SCRIPTS_WITH_VERSION + 1))
-  else
-    echo -e "${RED}✗ ${file}${NC} - No version string found (expected pattern: '# Version: X.Y.Z')"
-    SCRIPTS_MISSING_VERSION=$((SCRIPTS_MISSING_VERSION + 1))
-  fi
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --fix)
+      FIX_MODE=true
+      shift
+      ;;
+    --verbose)
+      VERBOSE_MODE=true
+      shift
+      ;;
+    --help)
+      echo "Usage: $0 [--fix] [--verbose]"
+      echo "Options:"
+      echo "  --fix        Auto-fix issues when possible"
+      echo "  --verbose    Show detailed output"
+      echo "  --help       Show this help message"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Use --help for usage information"
+      exit 1
+      ;;
+  esac
 done
 
-# Print summary
-echo
-echo -e "${YELLOW}Summary:${NC}"
-echo "Scripts checked: ${SCRIPTS_CHECKED}"
-echo "Scripts with version: ${SCRIPTS_WITH_VERSION}"
-echo "Scripts missing version: ${SCRIPTS_MISSING_VERSION}"
+echo "Running version validation..."
 
-# Determine exit code
-if [ ${SCRIPTS_MISSING_VERSION} -gt 0 ]; then
-  echo -e "${RED}Error: ${SCRIPTS_MISSING_VERSION} script(s) are missing proper version strings${NC}"
-  echo "Please add a version string in the format '# Version: X.Y.Z' to each script header"
-  exit 1
+# Run the core validation script if it exists
+CORE_VALIDATOR="${PROJECT_ROOT}/scripts/core/validate_dependencies.sh"
+if [[ -f "${CORE_VALIDATOR}" ]]; then
+  echo "Using core validator script"
+  ARGS=""
+  [[ "${FIX_MODE}" == "true" ]] && ARGS="${ARGS} --fix"
+  [[ "${VERBOSE_MODE}" == "true" ]] && ARGS="${ARGS} --verbose"
+
+  bash "${CORE_VALIDATOR}" "${ARGS}"
+  exit $?
 else
-  echo -e "${GREEN}All scripts have proper version strings!${NC}"
-  exit 0
+  echo "Core validator not found, using simple validation"
+  SIMPLE_VALIDATOR="${PROJECT_ROOT}/scripts/core/simple_validate_dependencies.sh"
+
+  if [[ -f "${SIMPLE_VALIDATOR}" ]]; then
+    ARGS=""
+    [[ "${FIX_MODE}" == "true" ]] && ARGS="${ARGS} --fix"
+    [[ "${VERBOSE_MODE}" == "true" ]] && ARGS="${ARGS} --verbose"
+
+    bash "${SIMPLE_VALIDATOR}" "${ARGS}"
+    exit $?
+  else
+    echo "Error: No validation scripts found."
+    echo "Please ensure scripts/core/validate_dependencies.sh or scripts/core/simple_validate_dependencies.sh exists."
+    exit 1
+  fi
 fi

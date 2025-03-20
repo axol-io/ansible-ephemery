@@ -91,20 +91,20 @@ for file in ${python_files}; do
   if [ -f "${file}" ]; then
     echo "Checking ${file}"
     file_issues=0
-    
+
     while IFS= read -r line; do
       # Skip empty lines and comments
       if [[ -z "${line}" || "${line}" =~ ^# ]]; then
         continue
       fi
-      
+
       # Check if package has exact version pin (==)
       if [[ "${line}" =~ ^[a-zA-Z0-9_-]+ ]] && ! [[ "${line}" =~ ==|~= ]]; then
         file_issues=$((file_issues + 1))
         python_issues=$((python_issues + 1))
         package_name=$(echo "${line}" | grep -oE "^[a-zA-Z0-9_-]+")
         echo "  - Package '${package_name}' does not have proper version pinning"
-        
+
         if [ "${FIX_MODE}" = true ]; then
           # Try to fix by replacing >= with ==
           if [[ "${line}" =~ ">=" ]]; then
@@ -118,8 +118,8 @@ for file in ${python_files}; do
           fi
         fi
       fi
-    done < "${file}"
-    
+    done <"${file}"
+
     if [ ${file_issues} -gt 0 ]; then
       failing_files=$((failing_files + 1))
       echo "  Found ${file_issues} issues in ${file}"
@@ -136,20 +136,20 @@ for file in ${ansible_files}; do
   if [ -f "${file}" ]; then
     echo "Checking ${file}"
     file_issues=0
-    
+
     while IFS= read -r line; do
       # Check if it's a collection line with version
       if [[ "${line}" =~ "version:" ]]; then
         # Extract version constraint
         version_constraint=$(echo "${line}" | grep -oE '".*"' | tr -d '"')
-        
+
         # Check if version constraint is exact (==) or bounded (>=x.y.z,<a.b.c)
         if ! [[ "${version_constraint}" =~ ^== || "${version_constraint}" =~ ^">=".+",<".+ ]]; then
           file_issues=$((file_issues + 1))
           ansible_issues=$((ansible_issues + 1))
           collection_name=$(grep -B 1 "${line}" "${file}" | grep "name:" | grep -oE '[^[:space:]]+$')
           echo "  - Collection '${collection_name}' does not have proper version pinning"
-          
+
           if [ "${FIX_MODE}" = true ]; then
             # Try to fix by replacing >= with == for core collections
             if [[ "${version_constraint}" =~ ^">=" ]]; then
@@ -167,8 +167,8 @@ for file in ${ansible_files}; do
           fi
         fi
       fi
-    done < "${file}"
-    
+    done <"${file}"
+
     if [ ${file_issues} -gt 0 ]; then
       failing_files=$((failing_files + 1))
       echo "  Found ${file_issues} issues in ${file}"
@@ -182,16 +182,16 @@ done
 # Generate report if requested
 if [ "${REPORT_MODE}" = true ]; then
   echo "Generating report..."
-  
+
   # Create report directory if it doesn't exist
   mkdir -p "$(dirname "${REPORT_FILE}")" 2>/dev/null
   if [ $? -ne 0 ]; then
     echo "Warning: Could not create directory for report file. Using /tmp/dependency_validation_report.md"
     REPORT_FILE="/tmp/dependency_validation_report.md"
   fi
-  
+
   # Generate report header
-  cat > "${REPORT_FILE}" 2>/dev/null << EOF
+  cat >"${REPORT_FILE}" 2>/dev/null <<EOF
 # Dependency Validation Report
 
 Generated on: $(date)
@@ -248,4 +248,4 @@ else
   echo ""
   echo "All dependency files follow the standardized version pinning format."
   exit 0
-fi 
+fi

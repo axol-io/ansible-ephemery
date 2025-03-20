@@ -52,4 +52,4 @@
 
 - name: Report compatibility success for {{ execution_client }} + {{ consensus_client }}
   debug:
-    msg: "Client combination {{ execution_client }} + {{ consensus_client }} deployed successfully" 
+    msg: "Client combination {{ execution_client }} + {{ consensus_client }} deployed successfully"

@@ -33,7 +33,7 @@ log_message() {
 # Function to check if a container is running
 check_container_running() {
   local container_name="$1"
-  
+
   if ! docker ps | grep -q "$container_name"; then
     log_message "ERROR: Container $container_name is not running!"
     return 1
@@ -46,17 +46,17 @@ check_container_running() {
 # Function to check Lighthouse container configuration
 check_lighthouse_config() {
   log_message "Checking Lighthouse container configuration..."
-  
+
   # Check entrypoint
-  local entrypoint=$(docker inspect --format='{{.Config.Entrypoint}}' "$CL_CONTAINER")
-  
+  local entrypoint=$(docker inspect --format='{% raw %}{{.Config.Entrypoint}}{% endraw %}' "$CL_CONTAINER")
+
   if [[ -z "$entrypoint" || "$entrypoint" == "<no value>" || "$entrypoint" == "[]" ]]; then
     log_message "WARNING: Lighthouse container has no entrypoint set!"
     log_message "This may cause issues. The entrypoint should be /wrapper/wrapper.sh"
-    
+
     # Check if the first command is also not correct
-    local cmd=$(docker inspect --format='{{.Config.Cmd}}' "$CL_CONTAINER" | sed 's/\[//g' | sed 's/\]//g' | cut -d' ' -f1)
-    
+    local cmd=$(docker inspect --format='{% raw %}{{.Config.Cmd}}{% endraw %}' "$CL_CONTAINER" | sed 's/\[//g' | sed 's/\]//g' | cut -d' ' -f1)
+
     if [[ "$cmd" == "--datadir=/data" ]]; then
       log_message "ERROR: Lighthouse container command starts with --datadir=/data but no entrypoint!"
       log_message "This is incorrect. The container needs to be recreated with proper entrypoint."
@@ -65,10 +65,10 @@ check_lighthouse_config() {
   else
     log_message "INFO: Lighthouse entrypoint is set to $entrypoint"
   fi
-  
+
   # Check JWT path in command
-  local cmd=$(docker inspect --format='{{.Config.Cmd}}' "$CL_CONTAINER")
-  
+  local cmd=$(docker inspect --format='{% raw %}{{.Config.Cmd}}{% endraw %}' "$CL_CONTAINER")
+
   if ! echo "$cmd" | grep -q "execution-jwt /jwt.hex"; then
     if echo "$cmd" | grep -q "execution-jwt=/jwt.hex"; then
       log_message "WARNING: Lighthouse container has wrong JWT format (--execution-jwt=/jwt.hex)"
@@ -78,10 +78,10 @@ check_lighthouse_config() {
   else
     log_message "INFO: Lighthouse JWT parameter format is correct"
   fi
-  
+
   # Check volumes
-  local volumes=$(docker inspect --format='{{range .Mounts}}{{.Source}}:{{.Destination}} {{end}}' "$CL_CONTAINER")
-  
+  local volumes=$(docker inspect --format='{% raw %}{{range .Mounts}}{{.Source}}:{{.Destination}} {{end}}{% endraw %}' "$CL_CONTAINER")
+
   if ! echo "$volumes" | grep -q "$JWT_PATH:/jwt.hex"; then
     log_message "ERROR: JWT volume mount missing or incorrect in Lighthouse container"
     log_message "Current mounts: $volumes"
@@ -90,7 +90,7 @@ check_lighthouse_config() {
   else
     log_message "INFO: JWT volume mount is correct"
   fi
-  
+
   log_message "Lighthouse container configuration check completed."
   return 0
 }
@@ -98,10 +98,10 @@ check_lighthouse_config() {
 # Function to check Geth container configuration
 check_geth_config() {
   log_message "Checking Geth container configuration..."
-  
+
   # Check JWT parameter in command
-  local cmd=$(docker inspect --format='{{.Config.Cmd}}' "$EL_CONTAINER")
-  
+  local cmd=$(docker inspect --format='{% raw %}{{.Config.Cmd}}{% endraw %}' "$EL_CONTAINER")
+
   if ! echo "$cmd" | grep -q "authrpc.jwtsecret=/jwt.hex"; then
     log_message "WARNING: Geth container may have wrong JWT parameter"
     log_message "Command: $cmd"
@@ -109,10 +109,10 @@ check_geth_config() {
   else
     log_message "INFO: Geth JWT parameter format is correct"
   fi
-  
+
   # Check volumes
-  local volumes=$(docker inspect --format='{{range .Mounts}}{{.Source}}:{{.Destination}} {{end}}' "$EL_CONTAINER")
-  
+  local volumes=$(docker inspect --format='{% raw %}{{range .Mounts}}{{.Source}}:{{.Destination}} {{end}}{% endraw %}' "$EL_CONTAINER")
+
   if ! echo "$volumes" | grep -q "$JWT_PATH:/jwt.hex"; then
     log_message "ERROR: JWT volume mount missing or incorrect in Geth container"
     log_message "Current mounts: $volumes"
@@ -121,7 +121,7 @@ check_geth_config() {
   else
     log_message "INFO: JWT volume mount is correct"
   fi
-  
+
   log_message "Geth container configuration check completed."
   return 0
 }
@@ -177,4 +177,4 @@ fi
 
 log_message "Container verification completed successfully!"
 echo "All checks passed. See $LOG_FILE for details."
-exit 0 
+exit 0

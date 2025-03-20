@@ -109,4 +109,4 @@ If you cannot resolve the issue using this guide, you can:
 
 1. Check the [community forum](https://example.com/forum)
 2. Open an issue in the [GitHub repository](https://github.com/yourusername/yourrepository/issues/new)
-3. Contact support at support@example.com 
+3. Contact support at support@example.com

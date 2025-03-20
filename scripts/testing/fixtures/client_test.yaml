@@ -1,0 +1,122 @@
+---
+# Fixture Ansible playbook for client testing
+# This playbook is used to test client interactions in mock mode
+
+- name: Test Ethereum Client Setup
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    client_name: "geth"
+    client_version: "1.11.0"
+    client_data_dir: "/tmp/ephemery/geth"
+    client_network: "ephemery"
+    client_port: 8545
+    jwt_secret_file: "/tmp/ephemery/jwt.hex"
+    test_mode: true
+
+  tasks:
+    - name: Create data directory
+      file:
+        path: "{{ client_data_dir }}"
+        state: directory
+        mode: '0755'
+      register: create_dir_result
+
+    - name: Generate JWT secret
+      shell: "openssl rand -hex 32 > {{ jwt_secret_file }}"
+      args:
+        creates: "{{ jwt_secret_file }}"
+      register: jwt_result
+
+    - name: Set correct permissions on JWT file
+      file:
+        path: "{{ jwt_secret_file }}"
+        mode: '0644'
+      when: jwt_result.changed
+
+    - name: Check if client is already running
+      shell: "docker ps | grep {{ client_name }}"
+      register: docker_ps
+      ignore_errors: true
+      changed_when: false
+
+    - name: Start execution client
+      shell: >
+        docker run -d
+        --name {{ client_name }}
+        --network {{ client_network }}
+        -p {{ client_port }}:{{ client_port }}
+        -v {{ client_data_dir }}:/data
+        -v {{ jwt_secret_file }}:/jwt.hex
+        ethereum/client-go:{{ client_version }}
+        --{{ client_network }}
+        --http
+        --http.addr=0.0.0.0
+        --http.port={{ client_port }}
+        --http.api=eth,net,web3,engine
+        --datadir=/data
+        --authrpc.addr=0.0.0.0
+        --authrpc.port=8551
+        --authrpc.vhosts=*
+        --authrpc.jwtsecret=/jwt.hex
+      when: docker_ps.rc != 0 and not test_mode
+      register: client_start
+
+    - name: Mock client startup (test mode)
+      debug:
+        msg: "Mock: Starting {{ client_name }} execution client on port {{ client_port }}"
+      when: test_mode
+      register: mock_client_start
+
+    - name: Wait for client to be ready
+      uri:
+        url: "http://localhost:{{ client_port }}"
+        method: POST
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          method: "net_version"
+          params: []
+          id: 1
+        status_code: 200
+      register: client_ready
+      until: client_ready.status == 200
+      retries: 10
+      delay: 5
+      when: (client_start is defined and client_start.changed) and not test_mode
+
+    - name: Mock client ready check (test mode)
+      debug:
+        msg: "Mock: {{ client_name }} is ready"
+      when: test_mode
+
+    - name: Verify client is responding correctly
+      uri:
+        url: "http://localhost:{{ client_port }}"
+        method: POST
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          method: "eth_syncing"
+          params: []
+          id: 1
+        status_code: 200
+      register: sync_status
+      when: not test_mode
+
+    - name: Mock sync status check (test mode)
+      set_fact:
+        mock_sync_response:
+          json:
+            result: false
+      when: test_mode
+      register: sync_status
+
+    - name: Display sync status
+      debug:
+        var: sync_status.json.result
+
+    - name: Test completed successfully
+      debug:
+        msg: "Client test completed successfully"

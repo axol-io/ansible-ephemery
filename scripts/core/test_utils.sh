@@ -25,19 +25,19 @@ export NC=${NC:-'\033[0m'} # No Color
 check_tools() {
   local required_tools=($1)
   local missing_tools=()
-  
+
   for tool in "${required_tools[@]}"; do
-    if ! command -v "${tool}" &> /dev/null; then
+    if ! command -v "${tool}" &>/dev/null; then
       missing_tools+=("${tool}")
     fi
   done
-  
+
   if [ ${#missing_tools[@]} -gt 0 ]; then
     echo -e "${RED}Error: Missing required tools: ${missing_tools[*]}${NC}"
     echo "Please install these tools before running this test."
     return 1
   fi
-  
+
   return 0
 }
 
@@ -46,10 +46,10 @@ check_tools() {
 create_report_file() {
   local report_file=$1
   local test_name=$2
-  
+
   # Create directories if they don't exist
   mkdir -p "$(dirname "${report_file}")"
-  
+
   {
     echo "${test_name} Report"
     echo "$(printf '=%.0s' $(seq 1 ${#test_name}))===="
@@ -57,8 +57,8 @@ create_report_file() {
     echo "Environment: $(hostname)"
     echo "--------------------------------------------------------"
     echo ""
-  } > "${report_file}"
-  
+  } >"${report_file}"
+
   echo "${report_file}"
 }
 
@@ -67,8 +67,8 @@ create_report_file() {
 report() {
   local message=$1
   local report_file=$2
-  
-  echo "${message}" >> "${report_file}"
+
+  echo "${message}" >>"${report_file}"
 }
 
 # Function to append a test result to a report file
@@ -77,11 +77,11 @@ report_result() {
   local result=$1
   local description=$2
   local report_file=$3
-  
+
   if [[ "${result}" == "passed" ]]; then
-    echo "✓ PASSED: ${description}" >> "${report_file}"
+    echo "✓ PASSED: ${description}" >>"${report_file}"
   else
-    echo "✗ FAILED: ${description}" >> "${report_file}"
+    echo "✗ FAILED: ${description}" >>"${report_file}"
   fi
 }
 
@@ -96,7 +96,7 @@ get_execution_client() {
       return 0
     fi
   fi
-  
+
   # Try to detect from running services
   for client in geth besu nethermind erigon; do
     if systemctl is-active --quiet "${client}.service" 2>/dev/null; then
@@ -104,7 +104,7 @@ get_execution_client() {
       return 0
     fi
   done
-  
+
   # Default to geth if we can't detect
   echo "geth"
   return 0
@@ -121,7 +121,7 @@ get_consensus_client() {
       return 0
     fi
   fi
-  
+
   # Try to detect from running services
   for client in lighthouse prysm teku nimbus lodestar; do
     if systemctl is-active --quiet "${client}.service" 2>/dev/null; then
@@ -129,7 +129,7 @@ get_consensus_client() {
       return 0
     fi
   done
-  
+
   # Default to lighthouse if we can't detect
   echo "lighthouse"
   return 0
@@ -139,7 +139,7 @@ get_consensus_client() {
 # Usage: is_service_running "service_name"
 is_service_running() {
   local service_name=$1
-  
+
   if systemctl is-active --quiet "${service_name}.service"; then
     return 0
   else
@@ -152,23 +152,23 @@ is_service_running() {
 wait_for() {
   local condition_func=$1
   local timeout=$2
-  local check_interval=${3:-5}  # Default to 5 seconds
+  local check_interval=${3:-5} # Default to 5 seconds
   local description=${4:-"condition"}
   local waited=0
-  
+
   echo -e "${BLUE}Waiting for ${description} (timeout: ${timeout}s)...${NC}"
-  
+
   while [ ${waited} -lt ${timeout} ]; do
     if ${condition_func}; then
       echo -e "${GREEN}✓ ${description} met after ${waited}s${NC}"
       return 0
     fi
-    
+
     sleep ${check_interval}
     waited=$((waited + check_interval))
     echo -e "${YELLOW}Still waiting for ${description}... (${waited}/${timeout}s)${NC}"
   done
-  
+
   echo -e "${RED}✗ Timeout waiting for ${description} after ${timeout}s${NC}"
   return 1
 }
@@ -178,7 +178,7 @@ wait_for() {
 is_execution_synced() {
   local execution_client=$(get_execution_client)
   local response
-  
+
   # Check sync status based on client
   case "${execution_client}" in
     geth)
@@ -206,7 +206,7 @@ is_execution_synced() {
       fi
       ;;
   esac
-  
+
   return 1
 }
 
@@ -215,7 +215,7 @@ is_execution_synced() {
 is_consensus_synced() {
   local consensus_client=$(get_consensus_client)
   local response
-  
+
   # Check sync status based on client
   case "${consensus_client}" in
     lighthouse)
@@ -249,7 +249,7 @@ is_consensus_synced() {
       fi
       ;;
   esac
-  
+
   return 1
 }
 
@@ -259,7 +259,7 @@ get_current_epoch() {
   local consensus_client=$(get_consensus_client)
   local response
   local slot
-  
+
   # Get epoch based on client
   case "${consensus_client}" in
     lighthouse)
@@ -288,7 +288,7 @@ get_current_epoch() {
       return 0
       ;;
   esac
-  
+
   # Calculate epoch from slot (slot / 32)
   if [[ -n "${slot}" && "${slot}" != "null" ]]; then
     echo $((slot / 32))
@@ -302,7 +302,7 @@ get_current_epoch() {
 count_active_validators() {
   local consensus_client=$(get_consensus_client)
   local count=0
-  
+
   # Get validator count based on client
   case "${consensus_client}" in
     lighthouse)
@@ -329,7 +329,7 @@ count_active_validators() {
       fi
       ;;
   esac
-  
+
   # Return count or 0 if not found
   if [[ -n "${count}" && "${count}" != "null" ]]; then
     echo "${count}"
@@ -342,13 +342,13 @@ count_active_validators() {
 # Usage: restart_service "service_name"
 restart_service() {
   local service_name=$1
-  
+
   echo -e "${BLUE}Restarting ${service_name} service...${NC}"
-  
+
   if systemctl is-active --quiet "${service_name}.service"; then
     sudo systemctl restart "${service_name}.service"
     sleep 2
-    
+
     if systemctl is-active --quiet "${service_name}.service"; then
       echo -e "${GREEN}✓ Service ${service_name} restarted successfully${NC}"
       return 0
@@ -360,7 +360,7 @@ restart_service() {
     echo -e "${YELLOW}! Service ${service_name} is not running, trying to start it${NC}"
     sudo systemctl start "${service_name}.service"
     sleep 2
-    
+
     if systemctl is-active --quiet "${service_name}.service"; then
       echo -e "${GREEN}✓ Service ${service_name} started successfully${NC}"
       return 0
@@ -376,9 +376,9 @@ restart_service() {
 get_cpu_usage() {
   local process_name=$1
   local pid
-  
+
   pid=$(pgrep -f "${process_name}" | head -1)
-  
+
   if [[ -n "${pid}" ]]; then
     ps -p "${pid}" -o %cpu | tail -1 | xargs
   else
@@ -391,9 +391,9 @@ get_cpu_usage() {
 get_memory_usage() {
   local process_name=$1
   local pid
-  
+
   pid=$(pgrep -f "${process_name}" | head -1)
-  
+
   if [[ -n "${pid}" ]]; then
     ps -p "${pid}" -o rss | tail -1 | xargs | awk '{print $1/1024}'
   else
@@ -406,8 +406,8 @@ get_memory_usage() {
 is_port_open() {
   local host=$1
   local port=$2
-  
-  (echo > /dev/tcp/${host}/${port}) &>/dev/null
+
+  (echo >/dev/tcp/${host}/${port}) &>/dev/null
   return $?
 }
 
@@ -427,27 +427,27 @@ benchmark_client() {
   local samples=$((duration / sample_interval))
   local cpu_total=0
   local mem_total=0
-  
+
   echo -e "${BLUE}Benchmarking ${client_name} for ${duration} seconds...${NC}"
-  
-  for ((i=1; i<=samples; i++)); do
+
+  for ((i = 1; i <= samples; i++)); do
     local cpu=$(get_cpu_usage "${client_name}")
     local mem=$(get_memory_usage "${client_name}")
-    
+
     cpu_total=$(echo "${cpu_total} + ${cpu}" | bc)
     mem_total=$(echo "${mem_total} + ${mem}" | bc)
-    
+
     echo -e "${YELLOW}Sample ${i}/${samples}: CPU ${cpu}%, Memory ${mem}MB${NC}"
     sleep ${sample_interval}
   done
-  
+
   local cpu_avg=$(echo "scale=2; ${cpu_total} / ${samples}" | bc)
   local mem_avg=$(echo "scale=2; ${mem_total} / ${samples}" | bc)
-  
+
   echo -e "${GREEN}Benchmark results for ${client_name}:${NC}"
   echo -e "${GREEN}Average CPU: ${cpu_avg}%${NC}"
   echo -e "${GREEN}Average Memory: ${mem_avg}MB${NC}"
-  
+
   # Return results as a comma-separated string
   echo "${cpu_avg},${mem_avg}"
 }
@@ -470,4 +470,4 @@ export -f get_cpu_usage
 export -f get_memory_usage
 export -f is_port_open
 export -f random_string
-export -f benchmark_client 
+export -f benchmark_client

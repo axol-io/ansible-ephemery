@@ -30,7 +30,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # Source the common library
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
 # shellcheck disable=SC1091
-source "${PROJECT_ROOT}/scripts/utils/common_functions.sh"
+source "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh"
 
 # Default configuration
 TEST_SUITE="all"

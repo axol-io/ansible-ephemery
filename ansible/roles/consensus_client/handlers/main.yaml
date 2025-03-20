@@ -1,0 +1,37 @@
+---
+# Handlers for the consensus_client role
+
+- name: restart lighthouse
+  systemd:
+    name: lighthouse
+    state: restarted
+  become: true
+  when: cl_client_name == "lighthouse"
+
+- name: restart prysm
+  systemd:
+    name: prysm
+    state: restarted
+  become: true
+  when: cl_client_name == "prysm"
+
+- name: restart teku
+  systemd:
+    name: teku
+    state: restarted
+  become: true
+  when: cl_client_name == "teku"
+
+- name: restart nimbus
+  systemd:
+    name: nimbus
+    state: restarted
+  become: true
+  when: cl_client_name == "nimbus"
+
+- name: restart lodestar
+  systemd:
+    name: lodestar
+    state: restarted
+  become: true
+  when: cl_client_name == "lodestar"

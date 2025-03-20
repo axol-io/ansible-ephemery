@@ -58,7 +58,7 @@ fi
 # Test functions
 test_geth_version() {
   echo "Testing geth version check..."
-  
+
   if ! is_tool_available "geth"; then
     if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
       mock_register "geth" "success"
@@ -67,27 +67,27 @@ test_geth_version() {
       return 0
     fi
   fi
-  
+
   # Run version check
   local version_output
   version_output=$(geth version 2>/dev/null)
-  
+
   # Extract version from output
   local version
   version=$(echo "$version_output" | grep -i "Version:" | awk '{print $2}')
-  
+
   if [[ -z "${version}" ]]; then
     echo "FAIL: Could not determine geth version"
     return 1
   fi
-  
+
   echo "PASS: geth version is ${version}"
   return 0
 }
 
 test_lighthouse_version() {
   echo "Testing lighthouse version check..."
-  
+
   if ! is_tool_available "lighthouse"; then
     if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
       mock_register "lighthouse" "success"
@@ -96,20 +96,20 @@ test_lighthouse_version() {
       return 0
     fi
   fi
-  
+
   # Run version check
   local version_output
   version_output=$(lighthouse --version 2>/dev/null)
-  
+
   # Extract version from output
   local version
   version=$(echo "$version_output" | head -1 | awk '{print $2}')
-  
+
   if [[ -z "${version}" ]]; then
     echo "FAIL: Could not determine lighthouse version"
     return 1
   fi
-  
+
   echo "PASS: lighthouse version is ${version}"
   return 0
 }
@@ -159,4 +159,4 @@ if [[ ${TESTS_FAILED} -gt 0 ]]; then
   exit 1
 else
   exit 0
-fi 
+fi

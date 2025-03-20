@@ -1,29 +1,65 @@
 ---
-# Default variables for execution client role
+# Default variables for the execution_client role
 
-# Client selection (default is geth)
-el_client_name: "geth"
-el_client_image: "ethereum/client-go:latest"
-el_client_port: 8545
-el_p2p_port: 30303
-el_metrics_port: 6060
-el_engine_port: 8551
+# Client selection
+el_client_name: "geth"  # Options: geth, nethermind, besu, erigon
 
-# RPC API configuration
-el_rpc_apis: "eth,net,web3,engine,admin,debug"
-
-# Performance tuning
-el_cache_size: 4096
-el_max_peers: 50
+# Client versions (latest by default)
+geth_version: "latest"
+nethermind_version: "latest"
+besu_version: "latest"
+erigon_version: "latest"
 
 # Data directories
-el_data_dir: "{{ ephemery_data_dir }}/{{ el_client_name }}"
+el_data_dir: "{{ data_dir }}/execution"
+geth_data_dir: "{{ el_data_dir }}/geth"
+nethermind_data_dir: "{{ el_data_dir }}/nethermind"
+besu_data_dir: "{{ el_data_dir }}/besu"
+erigon_data_dir: "{{ el_data_dir }}/erigon"
 
-# Container configuration
-el_container_name: "{{ network }}-{{ el_client_name }}"
-el_container_network: "{{ container_network }}"
-el_restart_policy: "{{ container_restart_policy }}"
+# Logging
+el_log_dir: "{{ log_dir }}/execution"
+el_log_level: "info"
 
-# Client-specific options
-# These are empty by default and should be overridden by client-specific tasks
-el_extra_options: ""
+# Network Configuration
+el_network_id: "{{ network_id }}"
+el_chain_id: "{{ chain_id }}"
+el_p2p_port: 30303
+el_http_port: 8545
+el_ws_port: 8546
+el_metrics_port: 6060
+
+# Service configuration
+el_service_enabled: true
+el_service_restart: "on-failure"
+el_service_restart_sec: 10
+
+# JWT Authentication
+el_jwt_path: "{{ jwt_secret_path }}"
+
+# Common execution client flags
+el_http_enabled: true
+el_ws_enabled: true
+el_metrics_enabled: "{{ enable_metrics }}"
+el_http_api: "eth,net,web3,txpool,engine"
+el_syncmode: "snap"
+
+# Geth specific
+geth_cache: 4096
+geth_http_corsdomain: "*"
+geth_nat: "any"
+
+# Nethermind specific
+nethermind_log_level: "info"
+nethermind_prune_memory_cache: 1024
+nethermind_json_rpc_url: "http://localhost:{{ el_http_port }}"
+
+# Besu specific
+besu_log_level: "INFO"
+besu_network: "ephemery"
+besu_data_storage_format: "BONSAI"
+
+# Erigon specific
+erigon_log_level: "info"
+erigon_torrent: true
+erigon_private_api_addr: "localhost:9090"

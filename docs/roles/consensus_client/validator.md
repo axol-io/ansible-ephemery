@@ -116,7 +116,7 @@ The validator role supports various validator client implementations based on th
         validator_client: lighthouse
         validator_graffiti: "ephemery-validator"
         validator_fee_recipient: "0x1234567890123456789012345678901234567890"
-        
+
 # Advanced validator setup with MEV-Boost
 - name: Deploy validator node with MEV-Boost
   hosts: validator_nodes
@@ -254,4 +254,4 @@ For comprehensive monitoring, integrate with the monitoring setup playbook.
 
 - [Ethereum Staking Documentation](https://ethereum.org/en/staking/)
 - [Client Migration Guide](../CLIENT_MIGRATION_GUIDE.md)
-- [MEV-Boost Documentation](https://boost.flashbots.net/) 
+- [MEV-Boost Documentation](https://boost.flashbots.net/)

@@ -5,7 +5,7 @@
 # Version: 1.1.0
 
 # Get the absolute path to the script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Source the common library
@@ -58,10 +58,10 @@ CUSTOM_BASE_DIR=""
 run_diagnostics() {
   log_info "=== Ephemery Node Troubleshooting ==="
   log_info "Starting comprehensive diagnostics..."
-  
+
   # Check if Docker is running
   log_info "Step 1: Checking Docker service status"
-  if command -v systemctl &> /dev/null; then
+  if command -v systemctl &>/dev/null; then
     if systemctl is-active --quiet docker; then
       log_success "✓ Docker service is running"
     else
@@ -69,12 +69,12 @@ run_diagnostics() {
       return 1
     fi
   else
-    if docker info &> /dev/null; then
+    if docker info &>/dev/null; then
       log_success "✓ Docker service is running"
     else
       log_error "✗ Docker service is not running"
       log_warn "Attempting to start Docker service..."
-      if command -v systemctl &> /dev/null; then
+      if command -v systemctl &>/dev/null; then
         systemctl start docker
         systemctl is-active --quiet docker && log_success "✓ Docker service started successfully" || log_error "✗ Failed to start Docker service"
       else
@@ -223,7 +223,7 @@ run_diagnostics() {
       else
         log_error "✗ Token format may be incorrect"
         log_info "Regenerating JWT token..."
-        echo "0x$(openssl rand -hex 32)" > "${EPHEMERY_JWT_SECRET}"
+        echo "0x$(openssl rand -hex 32)" >"${EPHEMERY_JWT_SECRET}"
         chmod 600 "${EPHEMERY_JWT_SECRET}"
         log_success "New JWT token generated"
         TOKEN=$(cat "${EPHEMERY_JWT_SECRET}")
@@ -233,7 +233,7 @@ run_diagnostics() {
       log_error "✗ JWT token file does not exist"
       log_info "Creating JWT token..."
       mkdir -p "${EPHEMERY_CONFIG_DIR}"
-      echo "0x$(openssl rand -hex 32)" > "${EPHEMERY_JWT_SECRET}"
+      echo "0x$(openssl rand -hex 32)" >"${EPHEMERY_JWT_SECRET}"
       chmod 600 "${EPHEMERY_JWT_SECRET}"
       log_success "JWT token created"
     fi
