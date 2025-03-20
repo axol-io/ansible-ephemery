@@ -16,7 +16,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Source the common library
-source "${PROJECT_ROOT}/scripts/lib/common.sh"
+source "${SCRIPT_DIR}/../lib/common.sh"
 
 # Define colors for output
 RED='\033[0;31m'
