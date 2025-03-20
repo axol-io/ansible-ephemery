@@ -15,6 +15,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
 # Define colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -27,7 +30,7 @@ FAILURES=0
 
 # Run shellharden linting in check mode
 echo -e "${BLUE}Running shellharden linting...${NC}"
-if ! "${SCRIPT_DIR}/lint_shell_scripts.sh" --check; then
+if ! "${PROJECT_ROOT}/scripts/testing/lint_shell_scripts.sh" --check; then
   echo -e "${RED}Shell script linting failed.${NC}"
   FAILURES=$((FAILURES + 1))
 else
@@ -38,7 +41,7 @@ echo
 
 # Run tests in mock mode
 echo -e "${BLUE}Running tests in mock mode...${NC}"
-if ! "${SCRIPT_DIR}/run_tests.sh" --mock; then
+if ! "${PROJECT_ROOT}/scripts/testing/run_tests.sh" --mock; then
   echo -e "${RED}Tests failed.${NC}"
   FAILURES=$((FAILURES + 1))
 else
