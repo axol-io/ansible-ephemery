@@ -17,8 +17,48 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Source the common library
-source "${SCRIPT_DIR}/../lib/common.sh"
-source "${SCRIPT_DIR}/../lib/test_config.sh"
+# Try multiple potential locations for common libraries
+COMMON_SH=""
+if [[ -f "${SCRIPT_DIR}/../lib/common.sh" ]]; then
+  COMMON_SH="${SCRIPT_DIR}/../lib/common.sh"
+elif [[ -f "${PROJECT_ROOT}/scripts/lib/common.sh" ]]; then
+  COMMON_SH="${PROJECT_ROOT}/scripts/lib/common.sh"
+elif [[ -f "/home/runner/work/ansible-ephemery/ansible-ephemery/scripts/lib/common.sh" ]]; then
+  COMMON_SH="/home/runner/work/ansible-ephemery/ansible-ephemery/scripts/lib/common.sh"
+fi
+
+if [[ -n "$COMMON_SH" ]]; then
+  source "$COMMON_SH"
+else
+  echo "Error: Could not find common.sh library in any of the expected locations."
+  echo "Searched in:"
+  echo " - ${SCRIPT_DIR}/../lib/common.sh"
+  echo " - ${PROJECT_ROOT}/scripts/lib/common.sh"
+  echo " - /home/runner/work/ansible-ephemery/ansible-ephemery/scripts/lib/common.sh"
+  # List the contents of directories to help debug
+  echo "Contents of ${SCRIPT_DIR}/..:"
+  ls -la "${SCRIPT_DIR}/.."
+  echo "Contents of ${PROJECT_ROOT}/scripts:"
+  ls -la "${PROJECT_ROOT}/scripts"
+  exit 1
+fi
+
+# Source test configuration
+TEST_CONFIG_SH=""
+if [[ -f "${SCRIPT_DIR}/../lib/test_config.sh" ]]; then
+  TEST_CONFIG_SH="${SCRIPT_DIR}/../lib/test_config.sh"
+elif [[ -f "${PROJECT_ROOT}/scripts/lib/test_config.sh" ]]; then
+  TEST_CONFIG_SH="${PROJECT_ROOT}/scripts/lib/test_config.sh"
+elif [[ -f "/home/runner/work/ansible-ephemery/ansible-ephemery/scripts/lib/test_config.sh" ]]; then
+  TEST_CONFIG_SH="/home/runner/work/ansible-ephemery/ansible-ephemery/scripts/lib/test_config.sh"
+fi
+
+if [[ -n "$TEST_CONFIG_SH" ]]; then
+  source "$TEST_CONFIG_SH"
+else
+  echo "Error: Could not find test_config.sh in any of the expected locations."
+  exit 1
+fi
 
 # Define colors for output
 RED='\033[0;31m'
