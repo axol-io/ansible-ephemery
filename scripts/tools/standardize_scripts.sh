@@ -25,7 +25,47 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Source the common library
-source "${PROJECT_ROOT}/scripts/lib/common.sh"
+source "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh"
+
+# Define additional functions needed if they're not in common_consolidated.sh
+print_banner() {
+  local message="$1"
+  local separator
+  separator=$(printf '=%.0s' $(seq 1 ${#message}))
+  echo ""
+  echo "$separator"
+  echo "$message"
+  echo "$separator"
+  echo ""
+}
+
+confirm_action() {
+  local message="$1"
+  local response=""
+  read -rp "$message (y/n): " response
+  if [[ "$response" =~ ^[Yy] ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Define logging functions if they aren't available
+log_info() {
+  echo "[INFO] $*"
+}
+
+log_warn() {
+  echo "[WARNING] $*" >&2
+}
+
+log_error() {
+  echo "[ERROR] $*" >&2
+}
+
+log_success() {
+  echo "[SUCCESS] $*"
+}
 
 # Default configuration
 DIRECTORY_TO_PROCESS=""
@@ -83,19 +123,20 @@ print_banner "Ephemery Script Standardization"
 # Calculate relative path to project root
 calculate_relative_path() {
   local script_path="$1"
-  local depth=$(echo "$script_path" | tr -cd '/' | wc -c)
+  local depth
+  depth=$(echo "$script_path" | tr -cd '/' | wc -c)
   local relative_path=""
 
   # For each directory level, add one "../"
   # Start from 3 because we need to go up from scripts/category/script.sh to the project root
   local i=3
-  while [ $i -le $depth ]; do
+  while [ "$i" -le "$depth" ]; do
     relative_path="${relative_path}../"
     i=$((i + 1))
   done
 
   # If no path was calculated, default to ".."
-  if [ -z "$relative_path" ]; then
+  if [[ -z "$relative_path" ]]; then
     relative_path=".."
   fi
 
@@ -150,10 +191,12 @@ EOF
 
       # Fix the PROJECT_ROOT definition if it exists but is incorrect
       if grep -q "PROJECT_ROOT=" "$script_path"; then
-        local relative_path=$(calculate_relative_path "$script_path")
+        local relative_path
+        relative_path=$(calculate_relative_path "$script_path")
 
         if [[ "$DRY_RUN" == "false" ]]; then
-          sed -i.tmp -e 's|PROJECT_ROOT=.*|PROJECT_ROOT="$(cd "${SCRIPT_DIR}/'"$relative_path"'" \&\& pwd)"|' "$script_path"
+          # Use proper quoting to avoid subshell pipeline issues
+          sed -i.tmp -e "s|PROJECT_ROOT=.*|PROJECT_ROOT=\"\$(cd \"\${SCRIPT_DIR}/${relative_path}\" \&\& pwd)\"|" "$script_path"
           rm -f "${script_path}.tmp"
         fi
         modified=true
@@ -164,7 +207,8 @@ EOF
           # If PROJECT_ROOT is already defined
           if grep -q "PROJECT_ROOT=" "$script_path"; then
             # Add source line after PROJECT_ROOT line
-            local project_root_line=$(grep -n "PROJECT_ROOT=" "$script_path" | head -n 1 | cut -d: -f1)
+            local project_root_line
+            project_root_line=$(grep -n "PROJECT_ROOT=" "$script_path" | head -n 1 | cut -d: -f1)
             cat >"${script_path}.temp" <<EOF
 $(head -n "$project_root_line" "$script_path")
 

@@ -120,4 +120,4 @@ The following metrics are collected and displayed:
 - [Obol Network Documentation](https://docs.obol.tech/)
 - [Charon Documentation](https://github.com/ObolNetwork/charon)
 - [Distributed Validator Specification](https://github.com/ethereum/distributed-validator-specs)
-- [Ephemery Documentation](https://github.com/eth-clients/ephemery) 
+- [Ephemery Documentation](https://github.com/eth-clients/ephemery)

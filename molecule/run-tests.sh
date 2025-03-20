@@ -9,16 +9,15 @@ MOLECULE_DRIVER=${MOLECULE_DRIVER:-docker}
 
 # Configure Docker host if using Docker driver
 if [ "${MOLECULE_DRIVER}" = "docker" ]; then
-  # Try to detect the Docker socket path or use the provided one
-  DEFAULT_DOCKER_SOCK="/var/run/docker.sock" # Default Linux path
+  # For macOS, use the Docker Desktop socket TODO: Make this configurable
+  DOCKER_HOST_SOCK="/Users/droo/Library/Containers/com.docker.docker/Data/docker-cli.sock"
 
-  # Check for Mac-specific Docker socket
-  if [ -S "/Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker-cli.sock" ]; then
-    DEFAULT_DOCKER_SOCK="/Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker-cli.sock"
+  # Verify the socket exists
+  if [ ! -S "${DOCKER_HOST_SOCK}" ]; then
+    echo "Error: Docker socket not found at ${DOCKER_HOST_SOCK}"
+    exit 1
   fi
 
-  # Allow override via environment variable
-  DOCKER_HOST_SOCK=${DOCKER_HOST_SOCK:-${DEFAULT_DOCKER_SOCK}}
   export DOCKER_HOST="unix://${DOCKER_HOST_SOCK}"
   echo "Using Docker driver with host: ${DOCKER_HOST}"
 else

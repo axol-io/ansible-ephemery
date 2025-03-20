@@ -317,15 +317,15 @@ configure_deployment() {
 # Generate a default inventory file based on input parameters
 generate_default_inventory() {
   log_info "Generating default inventory file..."
-  
+
   # Set default values
   : "${DEPLOYMENT_TYPE:=local}"
   : "${REMOTE_USER:=ubuntu}"
   : "${REMOTE_PORT:=22}"
-  
+
   local output_file="${PROJECT_ROOT}/ansible/inventory/ephemery-${DEPLOYMENT_TYPE}-$(date +%Y%m%d%H%M%S).yaml"
   local hostname="localhost"
-  
+
   # If deployment type is remote, ensure we have a host
   if [[ "${DEPLOYMENT_TYPE}" == "remote" ]]; then
     if [[ -z "${REMOTE_HOST}" ]]; then
@@ -334,44 +334,44 @@ generate_default_inventory() {
     fi
     hostname="${REMOTE_HOST}"
   fi
-  
+
   log_info "Creating inventory for ${DEPLOYMENT_TYPE} deployment ${hostname}..."
-  
+
   # Use the consolidated inventory_manager.sh script instead of the deprecated generate_inventory.sh
   GEN_CMD="${PROJECT_ROOT}/scripts/core/inventory_manager.sh generate --type ${DEPLOYMENT_TYPE}"
-  
+
   # Add options based on input parameters
   if [[ "${DEPLOYMENT_TYPE}" == "remote" ]]; then
     GEN_CMD="${GEN_CMD} --host ${REMOTE_HOST} --user ${REMOTE_USER} --port ${REMOTE_PORT}"
   fi
-  
+
   # Add validator option if enabled
   if [[ "${ENABLE_VALIDATOR}" == "true" ]]; then
     GEN_CMD="${GEN_CMD} --validator"
   fi
-  
+
   # Add monitoring option if enabled
   if [[ "${ENABLE_MONITORING}" == "true" ]]; then
     GEN_CMD="${GEN_CMD} --monitoring"
   fi
-  
+
   # Add dashboard option if enabled
   if [[ "${ENABLE_DASHBOARD}" == "true" ]]; then
     GEN_CMD="${GEN_CMD} --dashboard"
   fi
-  
+
   # Add output file
   GEN_CMD="${GEN_CMD} --output ${output_file}"
-  
+
   # Execute the command
   log_debug "Executing: ${GEN_CMD}"
   eval "${GEN_CMD}"
-  
+
   if [[ ! -f "${output_file}" ]]; then
     log_error "Failed to generate inventory file"
     return 1
   fi
-  
+
   log_success "Inventory file generated successfully: ${output_file}"
   INVENTORY_FILE="${output_file}"
   return 0
@@ -380,15 +380,15 @@ generate_default_inventory() {
 # Validate the inventory file
 validate_inventory() {
   log_info "Validating inventory file: ${INVENTORY_FILE}"
-  
+
   if [[ ! -f "${INVENTORY_FILE}" ]]; then
     log_error "Inventory file not found: ${INVENTORY_FILE}"
     return 1
   fi
-  
+
   # Use the consolidated inventory_manager.sh script instead of validate_inventory.sh
   "${PROJECT_ROOT}/scripts/core/inventory_manager.sh" validate --file "${INVENTORY_FILE}"
-  
+
   return $?
 }
 

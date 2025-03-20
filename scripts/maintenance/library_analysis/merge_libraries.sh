@@ -20,17 +20,17 @@ CONSOLIDATED_LIB="${PROJECT_ROOT}/scripts/lib/common_unified.sh"
 
 # Function to print colored messages
 print_status() {
-    local color=$1
-    local message=$2
-    echo -e "${color}${message}${NC}"
+  local color=$1
+  local message=$2
+  echo -e "${color}${message}${NC}"
 }
 
 # Copy the base library first
 print_status "$GREEN" "Creating unified library from common_consolidated.sh..."
 
 if [[ ! -f "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh" ]]; then
-    print_status "$RED" "Base library file not found. Aborting."
-    exit 1
+  print_status "$RED" "Base library file not found. Aborting."
+  exit 1
 fi
 
 # Create a backup first

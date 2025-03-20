@@ -166,10 +166,10 @@ copy_dashboard_files() {
 
   # Get the script's directory
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+  PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-# Source the common library
-source "${PROJECT_ROOT}/scripts/lib/common.sh"
+  # Source the common library
+  source "${PROJECT_ROOT}/scripts/lib/common.sh"
   REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
   if [[ "${TARGET_HOST}" == "localhost" ]]; then

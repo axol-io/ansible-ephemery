@@ -17,15 +17,15 @@ find . -name "*.sh" -type f | while read -r script; do
     # Create a temporary file
     temp_file=$(mktemp)
     # Get the first line (shebang)
-    head -n 1 "$script" > "$temp_file"
+    head -n 1 "$script" >"$temp_file"
     # Add the version string
-    echo "# Version: 1.0.0" >> "$temp_file"
+    echo "# Version: 1.0.0" >>"$temp_file"
     # Add the rest of the file
-    tail -n +2 "$script" >> "$temp_file"
+    tail -n +2 "$script" >>"$temp_file"
     # Replace the original file
     mv "$temp_file" "$script"
     chmod +x "$script"
   fi
 done
 
-echo "Version strings added to all shell scripts" 
+echo "Version strings added to all shell scripts"

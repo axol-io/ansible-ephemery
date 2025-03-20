@@ -15,14 +15,14 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Import common functions
 if [[ -f "${PROJECT_ROOT}/scripts/lib/common_basic.sh" ]]; then
-    source "${PROJECT_ROOT}/scripts/lib/common_basic.sh"
+  source "${PROJECT_ROOT}/scripts/lib/common_basic.sh"
 elif [[ -f "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh" ]]; then
-    source "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh"
+  source "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh"
 elif [[ -f "${PROJECT_ROOT}/scripts/lib/common.sh" ]]; then
-    source "${PROJECT_ROOT}/scripts/lib/common.sh"
+  source "${PROJECT_ROOT}/scripts/lib/common.sh"
 else
-    echo "Error: Required common library not found"
-    exit 1
+  echo "Error: Required common library not found"
+  exit 1
 fi
 
 # Define constants

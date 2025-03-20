@@ -51,13 +51,13 @@ done
 # Function to check for unencrypted values
 check_unencrypted_secrets() {
   local found_secrets=0
-  
+
   echo -e "${YELLOW}Checking for unencrypted secrets in YAML files...${NC}"
-  
+
   for pattern in "${PATTERNS[@]}"; do
     # Find matches excluding commented lines (lines that start with #)
     matches=$(grep -r "$pattern" $EXCLUDE_ARGS --include="*.yaml" --include="*.yml" . | grep -v '^\s*#' || true)
-    
+
     if [ -n "$matches" ]; then
       echo -e "${RED}Found potential unencrypted secrets:${NC}"
       echo "$matches"
@@ -65,7 +65,7 @@ check_unencrypted_secrets() {
       found_secrets=1
     fi
   done
-  
+
   if [ $found_secrets -eq 0 ]; then
     echo -e "${GREEN}No unencrypted secrets found.${NC}"
     return 0
@@ -78,4 +78,4 @@ check_unencrypted_secrets() {
 }
 
 # Main execution
-check_unencrypted_secrets 
+check_unencrypted_secrets

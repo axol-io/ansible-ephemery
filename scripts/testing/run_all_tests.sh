@@ -188,7 +188,7 @@ fi
 TOTAL=${#TEST_SCRIPTS[@]}
 
 # Handle case with no tests to run
-if [ ${TOTAL} -eq 0 ]; then
+if [ "${TOTAL}" -eq 0 ]; then
   log "${YELLOW}No tests to run${NC}"
   exit 1
 fi

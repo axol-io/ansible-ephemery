@@ -48,7 +48,7 @@ fi
 echo
 
 # Report overall status
-if [ $FAILURES -gt 0 ]; then
+if [ "${FAILURES}" -gt 0 ]; then
   echo -e "${RED}CI check failed with $FAILURES failures.${NC}"
   exit 1
 else

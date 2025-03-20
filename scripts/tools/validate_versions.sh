@@ -59,7 +59,7 @@ if [[ -f "${CORE_VALIDATOR}" ]]; then
   [[ "${FIX_MODE}" == "true" ]] && ARGS="${ARGS} --fix"
   [[ "${VERBOSE_MODE}" == "true" ]] && ARGS="${ARGS} --verbose"
 
-  bash "${CORE_VALIDATOR}" ${ARGS}
+  bash "${CORE_VALIDATOR}" "${ARGS}"
   exit $?
 else
   echo "Core validator not found, using simple validation"
@@ -70,7 +70,7 @@ else
     [[ "${FIX_MODE}" == "true" ]] && ARGS="${ARGS} --fix"
     [[ "${VERBOSE_MODE}" == "true" ]] && ARGS="${ARGS} --verbose"
 
-    bash "${SIMPLE_VALIDATOR}" ${ARGS}
+    bash "${SIMPLE_VALIDATOR}" "${ARGS}"
     exit $?
   else
     echo "Error: No validation scripts found."

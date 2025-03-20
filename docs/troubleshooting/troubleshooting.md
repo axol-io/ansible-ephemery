@@ -44,7 +44,7 @@ This document provides solutions for common issues encountered when using the Ep
    # For Debian/Ubuntu
    sudo apt-get update
    sudo apt-get install -y docker.io docker-compose openssl curl jq
-   
+
    # For CentOS/RHEL
    sudo yum install -y docker docker-compose openssl curl jq
    ```
@@ -324,4 +324,4 @@ If you're still experiencing issues:
    # Create a support bundle
    ./scripts/utilities/create_support_bundle.sh
    ```
-4. Open a new issue with detailed information about your environment and the problem. 
+4. Open a new issue with detailed information about your environment and the problem.

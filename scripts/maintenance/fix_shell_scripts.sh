@@ -23,18 +23,18 @@ declare -a files_to_fix=(
 for file in "${files_to_fix[@]}"; do
   if [ -f "$file" ]; then
     echo "Fixing $file"
-    
+
     # Create a backup of the original file
     cp "$file" "${file}.bak"
-    
+
     # Fix "fi" that should be "}" to close a function or code block
     # This is a common error in shell scripts when people mistakenly use "fi" instead of "}"
     # First identify if these are function definitions that are being incorrectly closed
-    
+
     # Look for patterns like "function name {" followed by a "fi" instead of "}"
     # or "name() {" followed by a "fi" instead of "}"
     sed -i.tmp 's/^\s*fi\s*$/}/' "$file"
-    
+
     # Check if the file matches a shebang pattern
     if grep -q '^#!.*sh' "$file"; then
       echo "Verified file has proper shell script header"
@@ -43,7 +43,7 @@ for file in "${files_to_fix[@]}"; do
       sed -i.tmp '1s/^/#!/bin/bash\n/' "$file"
       echo "Added missing shebang"
     fi
-    
+
     # Clean up temporary files
     rm -f "${file}.tmp"
   else
@@ -51,4 +51,4 @@ for file in "${files_to_fix[@]}"; do
   fi
 done
 
-echo "Shell script syntax fixing complete!" 
+echo "Shell script syntax fixing complete!"

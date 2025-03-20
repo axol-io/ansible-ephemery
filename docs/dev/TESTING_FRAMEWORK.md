@@ -142,10 +142,10 @@ Unit tests can be written in two formats:
 
    ```bash
    #!/bin/bash
-   
+
    # Set up
    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-   
+
    # Tests
    test_some_functionality() {
      # Test code here
@@ -157,11 +157,11 @@ Unit tests can be written in two formats:
        return 1
      fi
    }
-   
+
    # Run tests
    failures=0
    test_some_functionality || ((failures++))
-   
+
    # Return non-zero exit code if any test failed
    exit $failures
    ```
@@ -172,7 +172,7 @@ Unit tests can be written in two formats:
 
    ```bash
    #!/usr/bin/env bats
-   
+
    @test "Description of test" {
      result=$(some_command)
      [ "$result" = "expected output" ]
@@ -199,7 +199,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../.." &> /dev/null && pwd)"
 test_script_interaction() {
   script_a_output=$(bash "${PROJECT_ROOT}/path/to/script_a.sh")
   script_b_result=$(echo "$script_a_output" | bash "${PROJECT_ROOT}/path/to/script_b.sh")
-  
+
   if [ "$script_b_result" = "expected result" ]; then
     echo "✅ PASS: Script interaction works correctly"
     return 0
@@ -360,4 +360,4 @@ The testing framework is designed to evolve with the project. Planned improvemen
 
 ---
 
-This documentation will be maintained alongside the testing framework code. For questions or suggestions, please open an issue on the project repository. 
+This documentation will be maintained alongside the testing framework code. For questions or suggestions, please open an issue on the project repository.

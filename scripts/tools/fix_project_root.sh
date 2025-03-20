@@ -117,29 +117,29 @@ EOF
 get_scripts_to_process() {
   # List of scripts that need PROJECT_ROOT definition
   cat <<EOF
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/demo_validator_monitoring.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/ephemery_output.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/local/run-ephemery-local.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/maintenance/enhanced_checkpoint_sync.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/manage-validator.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/organize_scripts.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/remote/run-ephemery-remote.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/setup/setup_ephemery.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/start-validator-dashboard.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/update_script_readmes.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/utilities/common.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/utilities/enhanced_key_restore.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/utilities/ephemery_key_restore_wrapper.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/utilities/key_performance_metrics.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/utilities/validate_configuration.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/validator/backup_restore_validators.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/validator/dashboard/validator-dashboard.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/validator/integration_test.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/validator/manage_validator_keys.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/validator/monitor_validator.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/validator/setup_ephemery_validator.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/validator/test_validator_config.sh
-/Users/droo/Documents/CODE/ansible-ephemery/scripts/validator/validator_key_management/password_manager.sh
+~/ansible-ephemery/scripts/demo_validator_monitoring.sh
+~/ansible-ephemery/scripts/ephemery_output.sh
+~/ansible-ephemery/scripts/local/run-ephemery-local.sh
+~/ansible-ephemery/scripts/maintenance/enhanced_checkpoint_sync.sh
+~/ansible-ephemery/scripts/manage-validator.sh
+~/ansible-ephemery/scripts/organize_scripts.sh
+~/ansible-ephemery/scripts/remote/run-ephemery-remote.sh
+~/ansible-ephemery/scripts/setup/setup_ephemery.sh
+~/ansible-ephemery/scripts/start-validator-dashboard.sh
+~/ansible-ephemery/scripts/update_script_readmes.sh
+~/ansible-ephemery/scripts/utilities/common.sh
+~/ansible-ephemery/scripts/utilities/enhanced_key_restore.sh
+~/ansible-ephemery/scripts/utilities/ephemery_key_restore_wrapper.sh
+~/ansible-ephemery/scripts/utilities/key_performance_metrics.sh
+~/ansible-ephemery/scripts/utilities/validate_configuration.sh
+~/ansible-ephemery/scripts/validator/backup_restore_validators.sh
+~/ansible-ephemery/scripts/validator/dashboard/validator-dashboard.sh
+~/ansible-ephemery/scripts/validator/integration_test.sh
+~/ansible-ephemery/scripts/validator/manage_validator_keys.sh
+~/ansible-ephemery/scripts/validator/monitor_validator.sh
+~/ansible-ephemery/scripts/validator/setup_ephemery_validator.sh
+~/ansible-ephemery/scripts/validator/test_validator_config.sh
+~/ansible-ephemery/scripts/validator/validator_key_management/password_manager.sh
 EOF
 }
 

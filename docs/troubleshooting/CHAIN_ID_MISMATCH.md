@@ -69,7 +69,7 @@ For a more permanent solution, create a configuration file:
    [Eth]
    NetworkId = 39438144
    SyncMode = "snap"
-   
+
    [Node]
    DataDir = "/ethdata"
    HTTPHost = "0.0.0.0"
@@ -80,7 +80,7 @@ For a more permanent solution, create a configuration file:
    AuthPort = 8551
    AuthVirtualHosts = ["*"]
    JWTSecret = "/config/jwt-secret"
-   
+
    [Node.P2P]
    MaxPeers = 50
    NoDiscovery = false
@@ -149,4 +149,4 @@ The `test_jwt_auth.sh` script includes chain ID verification. Run it to automati
 ## See Also
 
 - [JWT Authentication Troubleshooting Guide](../FEATURES/JWT_AUTHENTICATION_TROUBLESHOOTING.md)
-- [Ephemery Network Setup Guide](../DEPLOYMENT/EPHEMERY_SETUP.md) 
+- [Ephemery Network Setup Guide](../DEPLOYMENT/EPHEMERY_SETUP.md)

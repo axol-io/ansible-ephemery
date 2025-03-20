@@ -121,7 +121,7 @@ For a comprehensive fix that addresses JWT authentication and related issues:
    [Eth]
    NetworkId = 39438144
    SyncMode = "snap"
-   
+
    [Node]
    DataDir = "/data/geth-data"
    HTTPHost = "0.0.0.0"
@@ -132,7 +132,7 @@ For a comprehensive fix that addresses JWT authentication and related issues:
    AuthPort = 8551
    AuthVirtualHosts = ["*"]
    JWTSecret = "/config/jwtsecret"
-   
+
    [Node.P2P]
    MaxPeers = 50
    NoDiscovery = false
@@ -144,10 +144,10 @@ For a comprehensive fix that addresses JWT authentication and related issues:
    ```bash
    # Start Geth
    ssh root@your-server 'docker run -d --name ephemery-geth --network ephemery-network -v /root/.ephemeryd/config:/config -v /data/ephemery:/data -p 8545:8545 -p 8546:8546 -p 8551:8551 -p 30303:30303 -p 30303:30303/udp pk910/ephemery-geth:latest --datadir /data/geth-data --networkid=39438144 --http --http.addr=0.0.0.0 --http.api=eth,net,web3 --authrpc.addr=0.0.0.0 --authrpc.vhosts=* --authrpc.jwtsecret=/config/jwtsecret'
-   
+
    # Wait for Geth to initialize
    ssh root@your-server 'sleep 15'
-   
+
    # Start Lighthouse
    ssh root@your-server 'docker run -d --name ephemery-lighthouse --network ephemery-network -v /root/.ephemeryd/config:/config -v /data/ephemery:/data -p 5052:5052 -p 8008:8008 -p 9000:9000 -p 9000:9000/udp pk910/ephemery-lighthouse:latest lighthouse beacon --testnet-dir=/data/testnet --datadir=/data/lighthouse-data --execution-jwt=/config/jwtsecret --execution-endpoint=http://ephemery-geth:8551 --http --http-address=0.0.0.0 --http-port=5052 --metrics --metrics-address=0.0.0.0 --metrics-port=8008 --target-peers=100'
    ```
@@ -172,4 +172,4 @@ To prevent JWT authentication issues in future deployments:
 - [Ethereum Engine API Authentication](https://github.com/ethereum/execution-apis/blob/main/src/engine/authentication.md)
 - [Lighthouse Documentation](https://lighthouse-book.sigmaprime.io/)
 - [Geth Documentation](https://geth.ethereum.org/docs/)
-- [Ephemery Setup Guide](./EPHEMERY_SETUP.md) 
+- [Ephemery Setup Guide](./EPHEMERY_SETUP.md)

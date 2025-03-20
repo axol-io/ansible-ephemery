@@ -179,4 +179,4 @@ scripts/
 
 - [Obol Network Documentation](https://docs.obol.tech/)
 - [SSV Network Documentation](https://docs.ssv.network/)
-- [Ethereum Foundation DVT Specification](https://github.com/ethereum/distributed-validator-specs) 
+- [Ethereum Foundation DVT Specification](https://github.com/ethereum/distributed-validator-specs)

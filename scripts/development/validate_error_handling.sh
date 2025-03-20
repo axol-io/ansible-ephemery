@@ -15,7 +15,7 @@ source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 # Source core utilities if available
 if [ -f "${PROJECT_ROOT}/scripts/core/common.sh" ]; then
-source "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh"
+  source "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh"
 fi
 
 # Define colors

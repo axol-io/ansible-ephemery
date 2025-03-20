@@ -148,7 +148,7 @@ The Obol Network integration will focus on implementing the Distributed Validato
 ```
 - Container: ephemery-dvt-obol-charon
 - Network: Custom network for inter-validator communication
-- Configuration: 
+- Configuration:
   - ENR-based discovery
   - P2P communication configuration
   - Validator client connection settings
@@ -325,4 +325,4 @@ The DVT Support initiative has dependencies on the following:
 |------|------|------|-----------|
 | ____________ | Project Director | __________ | ____________ |
 | ____________ | Technical Lead | __________ | ____________ |
-| ____________ | Security Lead | __________ | ____________ | 
+| ____________ | Security Lead | __________ | ____________ |

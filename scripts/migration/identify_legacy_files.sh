@@ -18,7 +18,7 @@ echo -e "${BLUE}Starting legacy file identification process...${NC}"
 echo -e "${BLUE}Results will be saved to ${REPORT_FILE}${NC}"
 
 # Initialize report file
-cat > "${REPORT_FILE}" << EOF
+cat >"${REPORT_FILE}" <<EOF
 # Legacy Files Report
 
 This report identifies files that may be redundant after the consolidation process.
@@ -33,12 +33,12 @@ EOF
 echo -e "${YELLOW}Identifying legacy client configurations...${NC}"
 
 find "${ROOT_DIR}" -path "${ROOT_DIR}/config/*" -type f -name "*.yaml" -o -name "*.yml" -o -name "*.json" -o -name "*.toml" | grep -v "ansible/roles" | while read -r config_file; do
-    relative_path="${config_file#$ROOT_DIR/}"
-    echo "- \`${relative_path}\` - Potential legacy configuration" >> "${REPORT_FILE}"
+  relative_path="${config_file#$ROOT_DIR/}"
+  echo "- \`${relative_path}\` - Potential legacy configuration" >>"${REPORT_FILE}"
 done
 
 # Add section for legacy playbooks
-cat >> "${REPORT_FILE}" << EOF
+cat >>"${REPORT_FILE}" <<EOF
 
 ## Legacy Playbooks
 
@@ -50,12 +50,12 @@ EOF
 echo -e "${YELLOW}Identifying legacy playbooks...${NC}"
 
 find "${ROOT_DIR}" -name "*.yaml" -o -name "*.yml" | grep -v "ansible/roles" | grep -v "${ROOT_DIR}/playbooks/" | grep -i "play\|task" | while read -r playbook_file; do
-    relative_path="${playbook_file#$ROOT_DIR/}"
-    echo "- \`${relative_path}\` - Potential legacy playbook" >> "${REPORT_FILE}"
+  relative_path="${playbook_file#$ROOT_DIR/}"
+  echo "- \`${relative_path}\` - Potential legacy playbook" >>"${REPORT_FILE}"
 done
 
 # Add section for obsolete scripts
-cat >> "${REPORT_FILE}" << EOF
+cat >>"${REPORT_FILE}" <<EOF
 
 ## Obsolete Scripts
 
@@ -67,12 +67,12 @@ EOF
 echo -e "${YELLOW}Identifying potentially obsolete scripts...${NC}"
 
 find "${ROOT_DIR}/scripts" -name "*.sh" -o -name "*.py" | grep -v "identify_legacy_files.sh" | while read -r script_file; do
-    relative_path="${script_file#$ROOT_DIR/}"
-    echo "- \`${relative_path}\` - Review whether still needed" >> "${REPORT_FILE}"
+  relative_path="${script_file#$ROOT_DIR/}"
+  echo "- \`${relative_path}\` - Review whether still needed" >>"${REPORT_FILE}"
 done
 
 # Add section for other files
-cat >> "${REPORT_FILE}" << EOF
+cat >>"${REPORT_FILE}" <<EOF
 
 ## Other Potential Files for Removal
 
@@ -84,12 +84,12 @@ EOF
 echo -e "${YELLOW}Identifying other potentially redundant files...${NC}"
 
 find "${ROOT_DIR}" -name "*.bak" -o -name "*.old" -o -name "*_legacy*" | while read -r other_file; do
-    relative_path="${other_file#$ROOT_DIR/}"
-    echo "- \`${relative_path}\` - Potential for removal" >> "${REPORT_FILE}"
+  relative_path="${other_file#$ROOT_DIR/}"
+  echo "- \`${relative_path}\` - Potential for removal" >>"${REPORT_FILE}"
 done
 
 # Add recommendations section
-cat >> "${REPORT_FILE}" << EOF
+cat >>"${REPORT_FILE}" <<EOF
 
 ## Recommendations
 
@@ -108,4 +108,4 @@ echo -e "${GREEN}Report saved to: ${REPORT_FILE}${NC}"
 echo -e "${YELLOW}Please review the report carefully before removing any files.${NC}"
 
 # Mark as executable
-chmod +x "${BASH_SOURCE[0]}" 
+chmod +x "${BASH_SOURCE[0]}"

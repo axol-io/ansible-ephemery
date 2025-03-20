@@ -118,4 +118,4 @@ When adding new dependencies:
 
 ## Conclusion
 
-Following this dependency management plan will help maintain a stable, reproducible environment across all stages of development and deployment. 
+Following this dependency management plan will help maintain a stable, reproducible environment across all stages of development and deployment.

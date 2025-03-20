@@ -73,4 +73,4 @@ Example usage:
 
 ## Need Help?
 
-If you encounter issues with the migration process, refer to the example scripts in the `scripts/examples` directory or the Ephemery documentation. 
+If you encounter issues with the migration process, refer to the example scripts in the `scripts/examples` directory or the Ephemery documentation.

@@ -125,7 +125,7 @@ If you encounter JWT authentication issues:
    ```bash
    # Check JWT token in Geth
    docker exec ephemery-geth cat /config/jwt-secret
-   
+
    # Check JWT token in Lighthouse
    docker exec ephemery-lighthouse cat /config/jwt-secret
    ```
@@ -134,7 +134,7 @@ If you encounter JWT authentication issues:
    ```bash
    # Check Geth logs
    docker logs ephemery-geth | grep -E "jwt|auth"
-   
+
    # Check Lighthouse logs
    docker logs ephemery-lighthouse | grep -E "jwt|auth"
    ```
@@ -167,4 +167,4 @@ If you encounter JWT authentication issues:
 
 - [JWT Authentication Troubleshooting Guide](../FEATURES/JWT_AUTHENTICATION_TROUBLESHOOTING.md)
 - [Chain ID Mismatch Troubleshooting](../TROUBLESHOOTING/CHAIN_ID_MISMATCH.md)
-- [Ephemery Node Deployment Guide](./EPHEMERY_SETUP.md) 
+- [Ephemery Node Deployment Guide](./EPHEMERY_SETUP.md)
