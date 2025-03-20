@@ -12,9 +12,6 @@ generated-inventory-*.yaml
 !ansible/host_vars/example-inventory.ini
 !ansible/host_vars/example-hostname.yaml
 
-# Ansible files
-.DS_Store
-
 # Optional files
 ansible/files/validator_keys/*
 ansible/files/passwords/*
@@ -33,6 +30,12 @@ collections/
 .venv/
 # Ansible inventory files (except examples)
 inventory.yaml
+.ansible/
+
+# Development configuration
+.dev/*
+!.dev/molecule/
+!.dev/prettierrc.json
 
 /inventories/*-inventory.yaml
 !/inventories/*-inventory.yaml.example
@@ -118,8 +121,7 @@ $RECYCLE.BIN/
 *~
 
 # Ansible related
-*.retry
-ansible.cfg
+*.retry 
 .vault_pass
 vault.key
 vault_pass.txt
