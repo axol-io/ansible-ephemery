@@ -163,3 +163,8 @@ The following inconsistencies were recently fixed:
    - Following the plan in `scripts/REORGANIZATION.md`
    - Maintained only essential low-level scripts in `scripts/utils/`
    - Moved most utility scripts to their appropriate functional directories
+
+4. **Consolidated configuration directories**:
+   - Moved development tool configurations from `.config/` to `.dev/`
+   - Maintained `config/` as the main application configuration directory
+   - This change better reflects the purpose of each directory and follows common conventions

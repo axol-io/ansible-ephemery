@@ -18,7 +18,7 @@ declare -A root_files=(
 # Config file locations - ensure these are available in Docker images
 BASE_CONFIG_DIR="config"
 ANSIBLE_CONFIG_DIR="${BASE_CONFIG_DIR}/ansible"
-MOLECULE_CONFIG_DIR=".config/molecule"
+MOLECULE_CONFIG_DIR=".dev/molecule"
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,8 +30,8 @@ source "${PROJECT_ROOT}/scripts/lib/common.sh"
 # Function to create directories
 create_dirs() {
   echo "Creating standardized config directories..."
-  mkdir -p "$PROJECT_ROOT/$ANSIBLE_CONFIG_DIR"
-  mkdir -p "$PROJECT_ROOT/$MOLECULE_CONFIG_DIR"
+  mkdir -p "${PROJECT_ROOT}/${ANSIBLE_CONFIG_DIR}"
+  mkdir -p "${PROJECT_ROOT}/${MOLECULE_CONFIG_DIR}"
 }
 
 # Function to standardize Ansible config files
@@ -39,8 +39,8 @@ standardize_ansible_config() {
   echo "Standardizing Ansible configuration files..."
 
   # Create standard .ansible-lint if it doesn't exist
-  if [[ ! -f "$PROJECT_ROOT/$ANSIBLE_CONFIG_DIR/.ansible-lint" ]]; then
-    cat > "$PROJECT_ROOT/$ANSIBLE_CONFIG_DIR/.ansible-lint" << 'EOF'
+  if [[ ! -f "${PROJECT_ROOT}/${ANSIBLE_CONFIG_DIR}/.ansible-lint" ]]; then
+    cat >"${PROJECT_ROOT}/${ANSIBLE_CONFIG_DIR}/.ansible-lint" <<'EOF'
 ---
 exclude_paths:
   - collections/
@@ -82,8 +82,8 @@ EOF
   fi
 
   # Create standard .yamllint if it doesn't exist
-  if [[ ! -f "$PROJECT_ROOT/$ANSIBLE_CONFIG_DIR/.yamllint" ]]; then
-    cat > "$PROJECT_ROOT/$ANSIBLE_CONFIG_DIR/.yamllint" << 'EOF'
+  if [[ ! -f "${PROJECT_ROOT}/${ANSIBLE_CONFIG_DIR}/.yamllint" ]]; then
+    cat >"${PROJECT_ROOT}/${ANSIBLE_CONFIG_DIR}/.yamllint" <<'EOF'
 ---
 extends: default
 
@@ -118,10 +118,10 @@ EOF
 # Function to standardize Molecule config
 standardize_molecule_config() {
   echo "Standardizing Molecule configuration..."
-  
+
   # Create standard molecule config.yaml if it doesn't exist
-  if [[ ! -f "$PROJECT_ROOT/$MOLECULE_CONFIG_DIR/config.yaml" ]]; then
-    cat > "$PROJECT_ROOT/$MOLECULE_CONFIG_DIR/config.yaml" << 'EOF'
+  if [[ ! -f "${PROJECT_ROOT}/${MOLECULE_CONFIG_DIR}/config.yaml" ]]; then
+    cat >"${PROJECT_ROOT}/${MOLECULE_CONFIG_DIR}/config.yaml" <<'EOF'
 ---
 dependency:
   name: galaxy
@@ -152,22 +152,22 @@ create_symlinks() {
   echo "Creating symlinks for root configuration files..."
 
   for source in "${!root_files[@]}"; do
-    target="${root_files[$source]}"
-    
-    if [[ -f "$PROJECT_ROOT/$source" ]]; then
+    target="${root_files[${source}]}"
+
+    if [[ -f "${PROJECT_ROOT}/${source}" ]]; then
       # Check if target exists and is not a symlink
-      if [[ -f "$PROJECT_ROOT/$target" && ! -L "$PROJECT_ROOT/$target" ]]; then
-        echo "Warning: $target already exists as a regular file. Backing it up before replacing."
-        mv "$PROJECT_ROOT/$target" "$PROJECT_ROOT/$target.bak"
+      if [[ -f "${PROJECT_ROOT}/${target}" && ! -L "${PROJECT_ROOT}/${target}" ]]; then
+        echo "Warning: ${target} already exists as a regular file. Backing it up before replacing."
+        mv "${PROJECT_ROOT}/${target}" "${PROJECT_ROOT}/${target}.bak"
       fi
-      
+
       # Create symlink if it doesn't exist or if it points to wrong location
-      if [[ ! -L "$PROJECT_ROOT/$target" || $(readlink "$PROJECT_ROOT/$target") != "$PROJECT_ROOT/$source" ]]; then
-        echo "Creating symlink from $source to $target"
-        ln -sf "$PROJECT_ROOT/$source" "$PROJECT_ROOT/$target"
+      if [[ ! -L "${PROJECT_ROOT}/${target}" || $(readlink "${PROJECT_ROOT}/${target}") != "${PROJECT_ROOT}/${source}" ]]; then
+        echo "Creating symlink from ${source} to ${target}"
+        ln -sf "${PROJECT_ROOT}/${source}" "${PROJECT_ROOT}/${target}"
       fi
     else
-      echo "Warning: Source file $source does not exist. Skipping."
+      echo "Warning: Source file ${source} does not exist. Skipping."
     fi
   done
 }
@@ -177,20 +177,20 @@ copy_configs() {
   echo "Copying configuration files instead of symlinking..."
 
   for source in "${!root_files[@]}"; do
-    target="${root_files[$source]}"
-    
-    if [[ -f "$PROJECT_ROOT/$source" ]]; then
-      echo "Copying $source to $target"
-      cp "$PROJECT_ROOT/$source" "$PROJECT_ROOT/$target"
+    target="${root_files[${source}]}"
+
+    if [[ -f "${PROJECT_ROOT}/${source}" ]]; then
+      echo "Copying ${source} to ${target}"
+      cp "${PROJECT_ROOT}/${source}" "${PROJECT_ROOT}/${target}"
     else
-      echo "Warning: Source file $source does not exist. Skipping."
+      echo "Warning: Source file ${source} does not exist. Skipping."
     fi
   done
 }
 
 # Display help message
 show_help() {
-  cat << EOF
+  cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
 Standardizes configuration files and creates symlinks for Ansible and Molecule.
@@ -227,13 +227,13 @@ main() {
   create_dirs
   standardize_ansible_config
   standardize_molecule_config
-  
-  if [[ "$copy_files" = true ]]; then
+
+  if [[ "${copy_files}" = true ]]; then
     copy_configs
   else
     create_symlinks
   fi
-  
+
   echo "Configuration standardization complete!"
 }
 
