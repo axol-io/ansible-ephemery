@@ -64,6 +64,36 @@ jobs:
       - name: Install shellharden
         run: cargo install shellharden
 
+      - name: Ensure script library symlinks
+        run: |
+          # Create necessary directories if they don't exist
+          mkdir -p scripts/testing/lib
+          
+          # Copy common libraries to testing/lib if not already there
+          if [ ! -f scripts/testing/lib/common.sh ]; then
+            cp scripts/lib/common.sh scripts/testing/lib/common.sh
+          fi
+          
+          if [ ! -f scripts/testing/lib/common_consolidated.sh ]; then
+            cp scripts/lib/common_consolidated.sh scripts/testing/lib/common_consolidated.sh
+          fi
+          
+          if [ ! -f scripts/testing/lib/test_config.sh ]; then
+            cp scripts/lib/test_config.sh scripts/testing/lib/test_config.sh
+          fi
+          
+          # Create symlinks for other common files if needed
+          for file in scripts/lib/*.sh; do
+            basename=$(basename "$file")
+            if [ ! -f "scripts/testing/lib/$basename" ]; then
+              cp "$file" "scripts/testing/lib/$basename"
+            fi
+          done
+          
+          # List the directory contents for debugging
+          echo "Contents of scripts/testing/lib:"
+          ls -la scripts/testing/lib
+
       - name: Run tests in mock mode
         run: ./scripts/testing/ci_check.sh
 

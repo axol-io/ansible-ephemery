@@ -15,10 +15,31 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
+# Ensure lib directory exists
+mkdir -p "${SCRIPT_DIR}/lib"
+
+# Check if common libraries exist in testing/lib, if not copy them
+if [[ ! -f "${SCRIPT_DIR}/lib/common.sh" && -f "${PROJECT_ROOT}/scripts/lib/common.sh" ]]; then
+  echo "Copying common.sh from main lib directory to testing/lib"
+  cp "${PROJECT_ROOT}/scripts/lib/common.sh" "${SCRIPT_DIR}/lib/"
+fi
+
+if [[ ! -f "${SCRIPT_DIR}/lib/common_consolidated.sh" && -f "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh" ]]; then
+  echo "Copying common_consolidated.sh from main lib directory to testing/lib"
+  cp "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh" "${SCRIPT_DIR}/lib/"
+fi
+
+if [[ ! -f "${SCRIPT_DIR}/lib/test_config.sh" && -f "${PROJECT_ROOT}/scripts/lib/test_config.sh" ]]; then
+  echo "Copying test_config.sh from main lib directory to testing/lib"
+  cp "${PROJECT_ROOT}/scripts/lib/test_config.sh" "${SCRIPT_DIR}/lib/"
+fi
+
 # Source the common library
 # Try multiple potential locations for common.sh
 COMMON_SH=""
-if [[ -f "${SCRIPT_DIR}/../lib/common.sh" ]]; then
+if [[ -f "${SCRIPT_DIR}/lib/common.sh" ]]; then
+  COMMON_SH="${SCRIPT_DIR}/lib/common.sh"
+elif [[ -f "${SCRIPT_DIR}/../lib/common.sh" ]]; then
   COMMON_SH="${SCRIPT_DIR}/../lib/common.sh"
 elif [[ -f "${PROJECT_ROOT}/scripts/lib/common.sh" ]]; then
   COMMON_SH="${PROJECT_ROOT}/scripts/lib/common.sh"
@@ -31,6 +52,7 @@ if [[ -n "$COMMON_SH" ]]; then
 else
   echo "Error: Could not find common.sh library in any of the expected locations."
   echo "Searched in:"
+  echo " - ${SCRIPT_DIR}/lib/common.sh"
   echo " - ${SCRIPT_DIR}/../lib/common.sh"
   echo " - ${PROJECT_ROOT}/scripts/lib/common.sh"
   echo " - /home/runner/work/ansible-ephemery/ansible-ephemery/scripts/lib/common.sh"
