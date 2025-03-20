@@ -2,9 +2,9 @@ name: Security Checks
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   # Allow manual triggering
   workflow_dispatch:
 

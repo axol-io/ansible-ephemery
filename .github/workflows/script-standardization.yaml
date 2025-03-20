@@ -2,11 +2,11 @@ name: Script Standardization Check
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
     paths:
       - 'scripts/**/*.sh'
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
     paths:
       - 'scripts/**/*.sh'
   workflow_dispatch:
