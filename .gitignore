@@ -14,8 +14,6 @@ generated-inventory-*.yaml
 
 # Ansible files
 .DS_Store
-.ansible/
-ansible.cfg
 
 # Optional files
 ansible/files/validator_keys/*
