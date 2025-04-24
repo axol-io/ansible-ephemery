@@ -82,7 +82,7 @@ common/
 │   └── main.yml         # Default variable values
 ├── tasks/
 │   ├── main.yml         # Main task entry point
-│   ├── directories.yml  # Directory setup tasks  
+│   ├── directories.yml  # Directory setup tasks
 │   ├── firewall.yml     # Firewall configuration
 │   ├── jwt.yml          # JWT management
 │   ├── system_tuning.yml # System optimization

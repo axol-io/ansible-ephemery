@@ -237,18 +237,18 @@ function print_info() {
 # Check required commands
 function check_required_commands() {
   local missing_commands=0
-  
+
   for cmd in "$@"; do
     if ! command_exists "$cmd"; then
       print_error "Required command not found: $cmd"
-      missing_commands=$((missing_commands+1))
+      missing_commands=$((missing_commands + 1))
     fi
   done
-  
+
   if [ $missing_commands -gt 0 ]; then
     return 1
   fi
-  
+
   return 0
 }
 
@@ -256,7 +256,7 @@ function check_required_commands() {
 function backup_file() {
   local file="$1"
   local backup="${file}.$(date +%Y%m%d%H%M%S).bak"
-  
+
   if [[ -f "$file" ]]; then
     cp "$file" "$backup"
     print_info "Created backup: $backup"
@@ -301,19 +301,19 @@ function wait_for_port() {
   local timeout="${2:-30}"
   local sleep_time="${3:-1}"
   local elapsed=0
-  
+
   print_info "Waiting for port $port to be available..."
-  
+
   while ! is_port_in_use "$port"; do
     if [ "$elapsed" -ge "$timeout" ]; then
       print_error "Timeout reached waiting for port $port"
       return 1
     fi
-    
+
     sleep "$sleep_time"
     elapsed=$((elapsed + sleep_time))
   done
-  
+
   print_success "Port $port is now available"
   return 0
 }
@@ -334,29 +334,29 @@ function get_ansible_path() {
 # Check if JWT secret file exists and has correct permissions
 function check_jwt_secret() {
   local jwt_path="${1:-/etc/ethereum/jwt.hex}"
-  
+
   if [[ ! -f "$jwt_path" ]]; then
     print_error "JWT secret file not found: $jwt_path"
     return 1
   fi
-  
+
   local perms
   perms=$(stat -c "%a" "$jwt_path" 2>/dev/null || stat -f "%Lp" "$jwt_path" 2>/dev/null)
-  
+
   if [[ "$perms" != "600" ]]; then
     print_warning "JWT secret file has incorrect permissions: $perms (should be 600)"
     return 2
   fi
-  
+
   print_success "JWT secret file exists with correct permissions"
   return 0
 }
 
 # Check client sync status
 function check_client_sync_status() {
-  local client_type="$1"  # 'execution' or 'consensus'
-  local endpoint="$2"     # RPC endpoint
-  
+  local client_type="$1" # 'execution' or 'consensus'
+  local endpoint="$2"    # RPC endpoint
+
   case "$client_type" in
     execution)
       # Call appropriate RPC method for execution client sync status
@@ -371,6 +371,6 @@ function check_client_sync_status() {
       return 1
       ;;
   esac
-  
+
   return 0
-} 
+}

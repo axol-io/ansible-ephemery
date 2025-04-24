@@ -98,4 +98,4 @@ init_test_env
 # Cleanup mock environment if used
 if [[ "${TEST_MOCK_MODE}" == "true" ]]; then
   restore_commands
-fi 
+fi

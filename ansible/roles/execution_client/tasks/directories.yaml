@@ -1,0 +1,44 @@
+---
+# Directory setup tasks for execution_client role
+
+- name: Determine execution client directories
+  set_fact:
+    execution_directories:
+      - "{{ el_data_dir }}"
+      - "{{ el_log_dir }}"
+      - "{{ geth_data_dir }}"
+      - "{{ nethermind_data_dir }}"
+      - "{{ besu_data_dir }}"
+      - "{{ erigon_data_dir }}"
+      - "{{ config_dir }}/execution"
+
+- name: Create execution client directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  with_items: "{{ execution_directories }}"
+  become: true
+
+- name: Create client-specific directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  with_items:
+    - "{{ el_data_dir }}/{{ el_client_name }}"
+  become: true
+
+- name: Create symlink for client data directory
+  file:
+    src: "{{ el_data_dir }}/{{ el_client_name }}"
+    dest: "{{ el_data_dir }}/current"
+    state: link
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    force: true
+  become: true

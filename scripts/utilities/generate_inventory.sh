@@ -183,7 +183,7 @@ fi
 if [ "${USE_RELATIVE_PATHS}" = true ]; then
   # Extract output directory
   OUTPUT_DIR=$(dirname "${OUTPUT_FILE}")
-  
+
   # Make paths relative to the output directory
   REL_DATA_DIR="./data"
   REL_LOGS_DIR="./logs"

@@ -280,7 +280,7 @@ Tests the complete lifecycle of genesis validators. These tests verify that vali
 Test scripts should return the following exit codes:
 
 - `0`: Test passed
-- `1`: Test failed 
+- `1`: Test failed
 - `77`: Test skipped (special code for tests that can't run in current environment)
 
 ## Integration with CI/CD
@@ -325,6 +325,6 @@ If tests are failing, check the detailed logs in the `reports` directory. Common
 ## Contents
 
 - **run_all_tests.sh**: Runs all tests for the Ephemery project
-- **run_tests.sh**: 
+- **run_tests.sh**:
 - **test_utils.sh**: Common utilities for shell script testing
-- **version_check_test.sh**: 
+- **version_check_test.sh**:

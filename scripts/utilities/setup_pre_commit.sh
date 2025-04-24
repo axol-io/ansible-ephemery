@@ -27,12 +27,12 @@ NC='\033[0m' # No Color
 # Function to create pre-commit hook
 create_pre_commit_hook() {
   echo -e "${BLUE}Creating pre-commit hook...${NC}"
-  
+
   # Create hooks directory if it doesn't exist
   mkdir -p "${GIT_HOOKS_DIR}"
-  
+
   # Create pre-commit hook
-  cat > "${PRE_COMMIT_HOOK}" << 'EOF'
+  cat >"${PRE_COMMIT_HOOK}" <<'EOF'
 #!/usr/bin/env bash
 # Pre-commit hook for Ephemery
 
@@ -56,7 +56,7 @@ STAGED_SHELL_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E 
 
 if [[ -n "${STAGED_SHELL_FILES}" ]]; then
   echo -e "${BLUE}Checking shell scripts...${NC}"
-  
+
   # Check if shellharden is installed
   if ! command -v shellharden &> /dev/null; then
     echo -e "${YELLOW}shellharden is not installed. Installing...${NC}"
@@ -66,7 +66,7 @@ if [[ -n "${STAGED_SHELL_FILES}" ]]; then
       exit 1
     }
   fi
-  
+
   # Run linting on staged shell files
   echo "${STAGED_SHELL_FILES}" | while read -r file; do
     echo -e "Checking ${file}..."
@@ -76,7 +76,7 @@ if [[ -n "${STAGED_SHELL_FILES}" ]]; then
       exit 1
     }
   done
-  
+
   echo -e "${GREEN}All shell scripts passed linting.${NC}"
 fi
 
@@ -85,10 +85,10 @@ fi
 echo -e "${GREEN}Pre-commit checks passed.${NC}"
 exit 0
 EOF
-  
+
   # Make hook executable
   chmod +x "${PRE_COMMIT_HOOK}"
-  
+
   echo -e "${GREEN}Pre-commit hook created at ${PRE_COMMIT_HOOK}${NC}"
 }
 
@@ -112,19 +112,19 @@ check_existing_hook() {
 # Main function
 main() {
   echo -e "${BLUE}Setting up pre-commit hook for shell script linting${NC}"
-  
+
   # Check if we're in a git repository
-  if ! git rev-parse --is-inside-work-tree &> /dev/null; then
+  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     echo -e "${RED}Error: Not in a git repository.${NC}"
     exit 1
   fi
-  
+
   # Check if hook already exists
   check_existing_hook
-  
+
   echo -e "${GREEN}Pre-commit hook setup complete.${NC}"
   echo -e "The hook will automatically check shell scripts before each commit."
 }
 
 # Run main function
-main 
+main

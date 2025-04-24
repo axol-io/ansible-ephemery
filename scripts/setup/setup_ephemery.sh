@@ -5,7 +5,7 @@
 # Version: 1.2.0
 
 # Source core utilities
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # Source the common library
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
@@ -170,59 +170,59 @@ echo -e "${BLUE}Creating JWT secret...${NC}"
 JWT_PATH=${EPHEMERY_JWT_SECRET:-"${EPHEMERY_BASE_DIR}/jwt.hex"}
 if [ ! -f "${JWT_PATH}" ]; then
   if type run_with_error_handling &>/dev/null; then
-    run_with_error_handling "Generate JWT secret" openssl rand -hex 32 > "${JWT_PATH}"
+    run_with_error_handling "Generate JWT secret" openssl rand -hex 32 >"${JWT_PATH}"
     run_with_error_handling "Set JWT permissions" chmod 600 "${JWT_PATH}"
   else
-    openssl rand -hex 32 > "${JWT_PATH}"
+    openssl rand -hex 32 >"${JWT_PATH}"
     chmod 600 "${JWT_PATH}"
   fi
 fi
 
 # Checkpoint sync setup
 if [ "${USE_CHECKPOINT_SYNC}" = true ]; then
-    echo -e "${BLUE}Setting up checkpoint sync...${NC}"
+  echo -e "${BLUE}Setting up checkpoint sync...${NC}"
 
-    # If no custom URL specified, test default URLs and find best one
+  # If no custom URL specified, test default URLs and find best one
+  if [ -z "${CHECKPOINT_URL}" ]; then
+    echo -e "${YELLOW}Testing checkpoint sync URLs for availability...${NC}"
+    for url in "${EPHEMERY_CHECKPOINT_URLS[@]}"; do
+      echo -e "Testing ${url}..."
+      if curl --connect-timeout 5 --max-time 10 -s "${url}" >/dev/null; then
+        echo -e "${GREEN}✓ URL is accessible${NC}"
+        CHECKPOINT_URL="${url}"
+        break
+      else
+        echo -e "${RED}✗ URL is not accessible${NC}"
+      fi
+    done
+
     if [ -z "${CHECKPOINT_URL}" ]; then
-        echo -e "${YELLOW}Testing checkpoint sync URLs for availability...${NC}"
-        for url in "${EPHEMERY_CHECKPOINT_URLS[@]}"; do
-            echo -e "Testing ${url}..."
-            if curl --connect-timeout 5 --max-time 10 -s "${url}" > /dev/null; then
-                echo -e "${GREEN}✓ URL is accessible${NC}"
-                CHECKPOINT_URL="${url}"
-                break
-            else
-                echo -e "${RED}✗ URL is not accessible${NC}"
-            fi
-        done
-
-        if [ -z "${CHECKPOINT_URL}" ]; then
-            echo -e "${RED}No accessible checkpoint sync URL found. Falling back to genesis sync.${NC}"
-            USE_CHECKPOINT_SYNC=false
-        else
-            echo -e "${GREEN}Using checkpoint sync URL: ${CHECKPOINT_URL}${NC}"
-        fi
+      echo -e "${RED}No accessible checkpoint sync URL found. Falling back to genesis sync.${NC}"
+      USE_CHECKPOINT_SYNC=false
     else
-        echo -e "${BLUE}Using provided checkpoint sync URL: ${CHECKPOINT_URL}${NC}"
-        # Verify the provided URL is accessible
-        if ! curl --connect-timeout 5 --max-time 10 -s "${CHECKPOINT_URL}" > /dev/null; then
-            echo -e "${RED}Warning: Provided checkpoint URL doesn't seem to be accessible.${NC}"
-            echo -e "${YELLOW}Will continue with this URL, but sync may fail.${NC}"
-        fi
+      echo -e "${GREEN}Using checkpoint sync URL: ${CHECKPOINT_URL}${NC}"
     fi
+  else
+    echo -e "${BLUE}Using provided checkpoint sync URL: ${CHECKPOINT_URL}${NC}"
+    # Verify the provided URL is accessible
+    if ! curl --connect-timeout 5 --max-time 10 -s "${CHECKPOINT_URL}" >/dev/null; then
+      echo -e "${RED}Warning: Provided checkpoint URL doesn't seem to be accessible.${NC}"
+      echo -e "${YELLOW}Will continue with this URL, but sync may fail.${NC}"
+    fi
+  fi
 fi
 
 # Reset database if requested
 if [ "${RESET_DATABASE}" = true ]; then
-    echo -e "${YELLOW}Resetting database as requested...${NC}"
-    if type run_with_error_handling &>/dev/null; then
-      run_with_error_handling "Remove Geth data" rm -rf "${EPHEMERY_GETH_DATA_DIR:-${EPHEMERY_BASE_DIR}/data/geth}/*"
-      run_with_error_handling "Remove Lighthouse data" rm -rf "${EPHEMERY_LIGHTHOUSE_DATA_DIR:-${EPHEMERY_BASE_DIR}/data/lighthouse}/*"
-    else
-      rm -rf "${EPHEMERY_BASE_DIR}"/data/geth/*
-      rm -rf "${EPHEMERY_BASE_DIR}"/data/lighthouse/*
-    fi
-    echo -e "${GREEN}Database reset complete${NC}"
+  echo -e "${YELLOW}Resetting database as requested...${NC}"
+  if type run_with_error_handling &>/dev/null; then
+    run_with_error_handling "Remove Geth data" rm -rf "${EPHEMERY_GETH_DATA_DIR:-${EPHEMERY_BASE_DIR}/data/geth}/*"
+    run_with_error_handling "Remove Lighthouse data" rm -rf "${EPHEMERY_LIGHTHOUSE_DATA_DIR:-${EPHEMERY_BASE_DIR}/data/lighthouse}/*"
+  else
+    rm -rf "${EPHEMERY_BASE_DIR}"/data/geth/*
+    rm -rf "${EPHEMERY_BASE_DIR}"/data/lighthouse/*
+  fi
+  echo -e "${GREEN}Database reset complete${NC}"
 fi
 
 # Stop and remove any existing containers
@@ -272,10 +272,10 @@ LIGHTHOUSE_CMD="lighthouse beacon --datadir /ethdata --testnet-dir=/ephemery_con
 
 # Add checkpoint sync if enabled
 if [ "${USE_CHECKPOINT_SYNC}" = true ] && [ ! -z "${CHECKPOINT_URL}" ]; then
-    LIGHTHOUSE_CMD="${LIGHTHOUSE_CMD} --checkpoint-sync-url=${CHECKPOINT_URL}"
+  LIGHTHOUSE_CMD="${LIGHTHOUSE_CMD} --checkpoint-sync-url=${CHECKPOINT_URL}"
 else
-    # Add genesis sync optimizations if not using checkpoint sync
-    LIGHTHOUSE_CMD="${LIGHTHOUSE_CMD} --allow-insecure-genesis-sync --genesis-backfill --disable-backfill-rate-limiting"
+  # Add genesis sync optimizations if not using checkpoint sync
+  LIGHTHOUSE_CMD="${LIGHTHOUSE_CMD} --allow-insecure-genesis-sync --genesis-backfill --disable-backfill-rate-limiting"
 fi
 
 # Start Lighthouse (Consensus Layer)
@@ -300,7 +300,7 @@ fi
 
 # Save checkpoint URL for future reference
 if [ "${USE_CHECKPOINT_SYNC}" = true ] && [ ! -z "${CHECKPOINT_URL}" ]; then
-    echo "${CHECKPOINT_URL}" > "${EPHEMERY_BASE_DIR}"/checkpoint_url.txt
+  echo "${CHECKPOINT_URL}" >"${EPHEMERY_BASE_DIR}"/checkpoint_url.txt
 fi
 
 # Generate configuration file for persistence if available
@@ -312,15 +312,15 @@ fi
 echo -e "${GREEN}Ephemery node setup complete!${NC}"
 echo ""
 if [ "${USE_CHECKPOINT_SYNC}" = true ] && [ ! -z "${CHECKPOINT_URL}" ]; then
-    echo -e "${GREEN}Checkpoint sync enabled with URL: ${CHECKPOINT_URL}${NC}"
-    echo -e "${YELLOW}Initial sync should be significantly faster than genesis sync.${NC}"
+  echo -e "${GREEN}Checkpoint sync enabled with URL: ${CHECKPOINT_URL}${NC}"
+  echo -e "${YELLOW}Initial sync should be significantly faster than genesis sync.${NC}"
 else
-    if [ "${USE_CHECKPOINT_SYNC}" = true ]; then
-        echo -e "${RED}Checkpoint sync was enabled but no working URL was found.${NC}"
-        echo -e "${YELLOW}Falling back to genesis sync which will take longer.${NC}"
-    else
-        echo -e "${YELLOW}Running with genesis sync. This may take several hours.${NC}"
-    fi
+  if [ "${USE_CHECKPOINT_SYNC}" = true ]; then
+    echo -e "${RED}Checkpoint sync was enabled but no working URL was found.${NC}"
+    echo -e "${YELLOW}Falling back to genesis sync which will take longer.${NC}"
+  else
+    echo -e "${YELLOW}Running with genesis sync. This may take several hours.${NC}"
+  fi
 fi
 echo ""
 echo -e "${BLUE}Verification:${NC}"
@@ -330,11 +330,11 @@ echo "- Lighthouse API: curl -X GET http://localhost:5052/eth/v1/node/syncing -H
 # Function to check required tools with version validation
 check_dependencies() {
   local missing_deps=false
-  
+
   log_info "Checking dependencies..."
-  
+
   # Check Docker with version validation
-  if ! command -v docker &> /dev/null; then
+  if ! command -v docker &>/dev/null; then
     log_error "Docker is not installed. Please install Docker v${VERSIONS[DOCKER]} or later."
     missing_deps=true
   else
@@ -346,9 +346,9 @@ check_dependencies() {
       log_success "Docker version ${docker_version} is installed (✓)"
     fi
   fi
-  
+
   # Check Docker Compose with version validation
-  if ! command -v docker-compose &> /dev/null; then
+  if ! command -v docker-compose &>/dev/null; then
     log_error "Docker Compose is not installed. Please install Docker Compose v${VERSIONS[DOCKER_COMPOSE]} or later."
     missing_deps=true
   else
@@ -360,7 +360,7 @@ check_dependencies() {
       log_success "Docker Compose version ${compose_version} is installed (✓)"
     fi
   fi
-  
+
   if [ "${missing_deps}" = true ]; then
     log_fatal "Missing required dependencies. Please install them and try again."
     exit 1

@@ -107,7 +107,7 @@ This role performs the following tasks:
         cl_client: lighthouse
         cl_data_dir: /data/ethereum/consensus
         ethereum_network: goerli
-        
+
 # Advanced usage with Teku
 - name: Deploy consensus client with custom settings
   hosts: ethereum_nodes
@@ -217,4 +217,4 @@ To update client versions, either:
 ## Related Documentation
 
 - [Ethereum Consensus Clients](https://ethereum.org/en/developers/docs/nodes-and-clients/#consensus-clients)
-- [Client Migration Guide](../CLIENT_MIGRATION_GUIDE.md) 
+- [Client Migration Guide](../CLIENT_MIGRATION_GUIDE.md)

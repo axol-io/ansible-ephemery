@@ -187,4 +187,4 @@ Additional dashboard templates are available for specific monitoring needs:
 
 ## Conclusion
 
-Proper validator monitoring is essential for maintaining optimal performance and ensuring maximum returns. The Ephemery validator monitoring system provides comprehensive tools to track all aspects of validator performance, alert on issues, and provide actionable insights for performance optimization. 
+Proper validator monitoring is essential for maintaining optimal performance and ensuring maximum returns. The Ephemery validator monitoring system provides comprehensive tools to track all aspects of validator performance, alert on issues, and provide actionable insights for performance optimization.

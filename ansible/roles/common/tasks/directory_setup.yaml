@@ -25,6 +25,6 @@
   loop:
     - "{{ ephemery_data_dir }}/{{ el_client_name }}"
     - "{{ ephemery_data_dir }}/{{ cl_client_name }}"
-  when: 
+  when:
     - el_client_name is defined
-    - cl_client_name is defined 
+    - cl_client_name is defined

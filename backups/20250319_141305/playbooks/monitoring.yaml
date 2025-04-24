@@ -1,8 +1,0 @@
----
-# Playbook for setting up monitoring
-- name: Configure monitoring
-  hosts: all
-  become: true
-  tasks:
-    - name: Include monitoring tasks
-      ansible.builtin.include_tasks: "../tasks/monitoring.yaml"

@@ -184,4 +184,4 @@ Expected output:
 
 ## Feedback
 
-If you encountered any issues with this tutorial, please [open an issue](https://github.com/yourusername/ephemery/issues/new) with a description of the problem. 
+If you encountered any issues with this tutorial, please [open an issue](https://github.com/yourusername/ephemery/issues/new) with a description of the problem.

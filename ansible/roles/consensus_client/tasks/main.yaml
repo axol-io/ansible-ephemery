@@ -1,44 +1,53 @@
 ---
-# Main tasks for consensus client role
+# Main tasks file for the consensus_client role
 
-- name: Include client-specific configuration
-  ansible.builtin.include_tasks: "{{ cl_client_name }}.yaml"
-  when: cl_client_name is defined
+- name: Set up consensus client directories
+  include_tasks: directories.yml
+  tags:
+    - consensus
+    - directories
 
-- name: Create consensus client data directory
-  ansible.builtin.file:
-    path: "{{ cl_data_dir }}"
-    state: directory
-    mode: "0755"
-    owner: "{{ ansible_user | default('root') }}"
-    group: "{{ ansible_user | default('root') }}"
+- name: Install consensus client
+  block:
+    - name: Include client-specific tasks - Lighthouse
+      include_tasks: lighthouse.yml
+      when: cl_client_name == "lighthouse"
+      tags:
+        - consensus
+        - lighthouse
 
-- name: Setup docker network if needed
-  community.docker.docker_network:
-    name: "{{ cl_container_network }}"
-    state: present
-  when: create_network | default(true) | bool
+    - name: Include client-specific tasks - Prysm
+      include_tasks: prysm.yml
+      when: cl_client_name == "prysm"
+      tags:
+        - consensus
+        - prysm
 
-- name: Pull consensus client docker image
-  community.docker.docker_image:
-    name: "{{ cl_client_image }}"
-    source: pull
-    force_source: "{{ force_image_update | default(false) | bool }}"
+    - name: Include client-specific tasks - Teku
+      include_tasks: teku.yml
+      when: cl_client_name == "teku"
+      tags:
+        - consensus
+        - teku
 
-- name: Setup consensus client container
-  community.docker.docker_container:
-    name: "{{ cl_container_name }}"
-    image: "{{ cl_client_image }}"
-    restart_policy: "{{ cl_restart_policy }}"
-    network_mode: "{{ cl_container_network }}"
-    volumes:
-      - "{{ cl_data_dir }}:/data"
-      - "{{ jwt_secret_path }}:/jwtsecret"
-    ports:
-      - "{{ cl_client_port }}:{{ cl_client_port }}"
-      - "{{ cl_p2p_port }}:{{ cl_p2p_port }}/tcp"
-      - "{{ cl_p2p_port }}:{{ cl_p2p_port }}/udp"
-      - "{{ cl_metrics_port }}:{{ cl_metrics_port }}"
-    command: "{{ cl_container_command }}"
-    env: "{{ cl_container_env | default({}) }}"
-    state: started 
+    - name: Include client-specific tasks - Nimbus
+      include_tasks: nimbus.yml
+      when: cl_client_name == "nimbus"
+      tags:
+        - consensus
+        - nimbus
+
+    - name: Include client-specific tasks - Lodestar
+      include_tasks: lodestar.yml
+      when: cl_client_name == "lodestar"
+      tags:
+        - consensus
+        - lodestar
+  tags:
+    - consensus
+
+- name: Set up consensus client service
+  include_tasks: service.yml
+  tags:
+    - consensus
+    - services

@@ -14,5 +14,5 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
 get_genesis_time() {
-  cat "/Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/fixtures/reset_test/genesis_time.txt"
+  cat "${PROJECT_ROOT}/scripts/testing/fixtures/reset_test/genesis_time.txt"
 }

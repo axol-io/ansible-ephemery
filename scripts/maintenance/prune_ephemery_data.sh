@@ -5,7 +5,7 @@
 # Version: 1.2.0
 
 # Get the absolute path to the script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Source the common library
@@ -93,7 +93,7 @@ check_dependencies() {
   local missing_deps=false
 
   # Check Docker with version validation
-  if ! command -v docker &> /dev/null; then
+  if ! command -v docker &>/dev/null; then
     log_error "Docker is not installed. Please install Docker v${VERSIONS[DOCKER]} or later."
     missing_deps=true
   else
@@ -123,33 +123,33 @@ PRUNE_CONSENSUS=true
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -s|--safe)
+    -s | --safe)
       PRUNE_TYPE="safe"
       shift
       ;;
-    -a|--aggressive)
+    -a | --aggressive)
       PRUNE_TYPE="aggressive"
       shift
       ;;
-    -f|--full)
+    -f | --full)
       PRUNE_TYPE="full"
       shift
       ;;
-    -e|--execution-only)
+    -e | --execution-only)
       PRUNE_EXECUTION=true
       PRUNE_CONSENSUS=false
       shift
       ;;
-    -c|--consensus-only)
+    -c | --consensus-only)
       PRUNE_EXECUTION=false
       PRUNE_CONSENSUS=true
       shift
       ;;
-    -d|--dry-run)
+    -d | --dry-run)
       DRY_RUN=true
       shift
       ;;
-    -y|--yes)
+    -y | --yes)
       CONFIRM=true
       shift
       ;;
@@ -157,7 +157,7 @@ while [[ $# -gt 0 ]]; do
       EPHEMERY_BASE_DIR="$2"
       shift 2
       ;;
-    -h|--help)
+    -h | --help)
       show_help
       exit 0
       ;;

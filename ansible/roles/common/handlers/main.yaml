@@ -1,0 +1,38 @@
+---
+# Handlers for the common role
+
+- name: Restart docker service
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+  become: true
+
+- name: Restart ssh service
+  ansible.builtin.service:
+    name: sshd
+    state: restarted
+  become: true
+
+- name: Restart fail2ban service
+  ansible.builtin.service:
+    name: fail2ban
+    state: restarted
+  become: true
+
+- name: Restart auditd service
+  ansible.builtin.service:
+    name: auditd
+    state: restarted
+  become: true
+
+- name: Restart rkhunter service
+  ansible.builtin.service:
+    name: rkhunter
+    state: restarted
+  become: true
+
+- name: Restart clamav service
+  ansible.builtin.service:
+    name: clamav-daemon
+    state: restarted
+  become: true

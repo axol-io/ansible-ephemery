@@ -1,0 +1,1 @@
+maintenance/check-unencrypted-secrets.sh

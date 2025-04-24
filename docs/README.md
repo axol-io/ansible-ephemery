@@ -68,4 +68,4 @@ When adding or updating documentation:
 2. Place documents in the appropriate directory
 3. Update the index files
 4. Include practical examples where applicable
-5. Keep client-specific information in dedicated sections 
+5. Keep client-specific information in dedicated sections

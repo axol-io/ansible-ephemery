@@ -1,5 +1,0 @@
----
-# Firewall rules for Nethermind (execution client) and Lighthouse
-# (consensus client) combination
-- name: Set firewall ports for nethermind-lighthouse
-  ansible.builtin.set_fact:

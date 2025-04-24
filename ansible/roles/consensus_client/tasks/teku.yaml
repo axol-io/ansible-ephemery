@@ -1,0 +1,104 @@
+---
+# Teku-specific tasks for the consensus_client role
+
+- name: Download Teku release
+  get_url:
+    url: "https://artifacts.consensys.net/public/teku/raw/names/teku.tar.gz/versions/{{ teku_version | default('latest') }}/teku-{{ teku_version | default('latest') }}.tar.gz"
+    dest: /tmp/teku.tar.gz
+  become: true
+  register: teku_download
+
+- name: Create Teku installation directory
+  file:
+    path: /opt/teku
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Extract Teku
+  unarchive:
+    src: /tmp/teku.tar.gz
+    dest: /opt/teku
+    remote_src: yes
+    extra_opts: "--strip-components=1"
+  become: true
+  when: teku_download.changed
+
+- name: Create symbolic link to Teku binary
+  file:
+    src: /opt/teku/bin/teku
+    dest: /usr/local/bin/teku
+    state: link
+  become: true
+
+- name: Get Teku version
+  command: teku --version
+  register: teku_version_output
+  changed_when: false
+
+- name: Display Teku version
+  debug:
+    msg: "Installed Teku version: {{ teku_version_output.stdout.split(' ')[1] | default('unknown') }}"
+
+- name: Create Teku data directory
+  file:
+    path: "{{ teku_data_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Teku log directory
+  file:
+    path: "{{ cl_log_dir }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Teku configuration directory
+  file:
+    path: "/etc/teku"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create Teku configuration file
+  template:
+    src: teku.yaml.j2
+    dest: /etc/teku/config.yaml
+    owner: "{{ common_user }}"
+    group: "{{ common_group }}"
+    mode: '0644'
+  become: true
+
+- name: Create Teku systemd service
+  template:
+    src: teku.service.j2
+    dest: /etc/systemd/system/teku.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: teku_service
+  notify: restart teku
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when: teku_service.changed
+
+- name: Enable and start Teku service
+  systemd:
+    name: teku
+    enabled: yes
+    state: started
+  become: true
+  when: cl_service_enabled | bool

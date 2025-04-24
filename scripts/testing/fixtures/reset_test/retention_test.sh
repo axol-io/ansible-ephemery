@@ -1,15 +1,6 @@
-source "/Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/fixtures/reset_test/get_genesis_time.sh"
+#!/usr/bin/env bash
 # Get the absolute path to the script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-
-# Source the common library
-source "${PROJECT_ROOT}/scripts/lib/common.sh"
-
-GENESIS_TIME_FILE="/Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/fixtures/reset_test/genesis_time.txt"
-#!/bin/bash
 # Version: 1.0.0
-#
 # Ephemery Retention Script
 # =========================
 #
@@ -22,6 +13,14 @@ GENESIS_TIME_FILE="/Users/droo/Documents/CODE/ansible-ephemery/scripts/testing/f
 # Run this script via crontab every 5 minutes to stay in sync with the network.
 # Example cron: */5 * * * * /root/ephemery/scripts/ephemery_retention.sh > /root/ephemery/logs/retention.log 2>&1
 #
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Source the common library
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+
+GENESIS_TIME_FILE="${PROJECT_ROOT}/scripts/testing/fixtures/reset_test/genesis_time.txt"
 
 # Exit immediately if a command exits with a non-zero status
 set -e
@@ -191,7 +190,7 @@ download_genesis_release() {
   # Ensure config directory exists
   mkdir -p "${CONFIG_DIR}"
   # Clear existing config files
-  rm -rf "${CONFIG_DIR}"/*
+  rm -rf "${CONFIG_DIR:?}/"*
 
   # Download and extract the release tarball
   echo "Downloading from: https://github.com/${GENESIS_REPO}/releases/download/${release}/testnet-all.tar.gz"
@@ -215,16 +214,16 @@ download_genesis_release() {
 # Usage: reset_testnet "v1.2.3"
 reset_testnet() {
   echo "$(date) - Resetting testnet to release: $1"
-  
+
   if [ "$TEST_MODE" = true ]; then
     echo "Test mode: Would reset testnet to release $1"
     # In test mode, just update the mock genesis file
-    echo '{"genesis_time": "'$(date +%s)'", "release": "'$1'"}' > "${CONFIG_DIR}/genesis.json"
-    echo "ITERATION_RELEASE=$1" > "${CONFIG_DIR}/retention.vars"
-    echo "GENESIS_RESET_INTERVAL=86400" >> "${CONFIG_DIR}/retention.vars"
+    echo "{\"genesis_time\": \"$(date +%s)\", \"release\": \"$1\"}" >"${CONFIG_DIR}/genesis.json"
+    echo "ITERATION_RELEASE=$1" >"${CONFIG_DIR}/retention.vars"
+    echo "GENESIS_RESET_INTERVAL=86400" >>"${CONFIG_DIR}/retention.vars"
     return
   fi
-  
+
   # Orchestrate the reset process in proper sequence
   stop_clients
   clear_datadirs
@@ -246,7 +245,7 @@ check_testnet() {
     # In test mode, get genesis time from the mock genesis file
     genesis_time=$(get_genesis_time)
     echo "Test mode: Using genesis time from file: ${genesis_time}"
-    
+
     # In test mode, check if the genesis time file has changed
     if [ -f "${GENESIS_TIME_FILE}" ]; then
       file_genesis_time=$(cat "${GENESIS_TIME_FILE}")
@@ -256,7 +255,7 @@ check_testnet() {
         return
       fi
     fi
-    
+
     # In test mode, if the genesis time is more than 1 day old, consider it a reset
     if [ $((current_time - genesis_time)) -gt 86400 ]; then
       echo "Reset detected: Genesis time is more than 1 day old"
@@ -285,12 +284,12 @@ check_testnet() {
       if ! [[ ${genesis_time} =~ ^[0-9]+$ ]]; then
         # If still can't get genesis time, force a reset
         echo "$(date) - Still could not get genesis time after restart, forcing reset..."
-        reset_testnet $(get_github_release ${GENESIS_REPO})
+        reset_testnet "$(get_github_release ${GENESIS_REPO})"
       fi
     else
       # No genesis file, need initial setup
       echo "$(date) - No genesis file found, performing initial setup..."
-      reset_testnet $(get_github_release ${GENESIS_REPO})
+      reset_testnet "$(get_github_release ${GENESIS_REPO})"
     fi
     return
   fi
@@ -359,7 +358,7 @@ main() {
     echo "Running in test mode, skipping actual client operations"
     # Create a mock genesis file if it doesn't exist
     if ! [ -f "${CONFIG_DIR}/genesis.json" ]; then
-      echo '{"genesis_time": "'$(date +%s)'"}' > "${CONFIG_DIR}/genesis.json"
+      echo "{\"genesis_time\": \"$(date +%s)\"}" >"${CONFIG_DIR}/genesis.json"
     fi
   fi
 
@@ -370,7 +369,7 @@ main() {
     if [ "$TEST_MODE" = true ]; then
       echo "Test mode: Would download genesis files and initialize clients"
     else
-      reset_testnet $(get_github_release ${GENESIS_REPO})
+      reset_testnet "$(get_github_release ${GENESIS_REPO})"
     fi
   else
     # Genesis file exists, check if reset needed

@@ -5,7 +5,7 @@
 # Version: 1.2.0
 
 # Source core utilities
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # Source the common library
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
@@ -89,7 +89,7 @@ check_dependencies() {
   local missing_deps=false
 
   # Check Docker with version validation
-  if ! command -v docker &> /dev/null; then
+  if ! command -v docker &>/dev/null; then
     log_error "Docker is not installed. Please install Docker v${VERSIONS[DOCKER]} or later."
     missing_deps=true
   else
@@ -104,7 +104,7 @@ check_dependencies() {
 
   # Check OpenSSL if encryption is enabled
   if [ "${ENCRYPT_BACKUP}" = true ]; then
-    if ! command -v openssl &> /dev/null; then
+    if ! command -v openssl &>/dev/null; then
       log_error "OpenSSL is not installed but required for encryption. Please install OpenSSL v${VERSIONS[OPENSSL]} or later."
       missing_deps=true
     else
@@ -145,15 +145,15 @@ fi
 # Process remaining arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -d|--dir)
+    -d | --dir)
       BACKUP_DIR="$2"
       shift 2
       ;;
-    -f|--file)
+    -f | --file)
       BACKUP_FILE="$2"
       shift 2
       ;;
-    -e|--encrypt)
+    -e | --encrypt)
       ENCRYPT_BACKUP=true
       shift
       ;;
@@ -165,7 +165,7 @@ while [[ $# -gt 0 ]]; do
       EPHEMERY_BASE_DIR="$2"
       shift 2
       ;;
-    -h|--help)
+    -h | --help)
       show_help
       exit 0
       ;;
@@ -223,7 +223,7 @@ export_slashing_protection() {
     docker cp "${EPHEMERY_VALIDATOR_CONTAINER}":/tmp/slashing_protection.json "${protection_file}"
   else
     # Container not running, try to use lighthouse CLI directly if it's available
-    if command -v lighthouse &> /dev/null; then
+    if command -v lighthouse &>/dev/null; then
       lighthouse \
         account validator slashing-protection export \
         --datadir="${EPHEMERY_BASE_DIR}"/data/lighthouse-validator \
@@ -290,7 +290,7 @@ create_backup() {
   # Encrypt if requested
   if [ "${ENCRYPT_BACKUP}" = true ]; then
     echo -e "${BLUE}Encrypting backup...${NC}"
-    if ! command -v openssl &> /dev/null; then
+    if ! command -v openssl &>/dev/null; then
       echo -e "${RED}Error: openssl command not found. Cannot encrypt backup.${NC}"
     else
       echo -e "${YELLOW}Enter password for encryption:${NC}"
@@ -376,7 +376,7 @@ restore_from_backup() {
   if [ -d "${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators" ]; then
     echo -e "${BLUE}Backing up existing validator data...${NC}"
     mv "${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators" \
-       "${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators.old.${TIMESTAMP}"
+      "${EPHEMERY_BASE_DIR}/data/lighthouse-validator/validators.old.${TIMESTAMP}"
   fi
 
   # Restore validator keystores
@@ -416,7 +416,7 @@ restore_from_backup() {
           --input-path=/tmp/slashing_protection.json
       else
         # Try to use lighthouse CLI directly if it's available
-        if command -v lighthouse &> /dev/null; then
+        if command -v lighthouse &>/dev/null; then
           lighthouse \
             account validator slashing-protection import \
             --datadir="${EPHEMERY_BASE_DIR}"/data/lighthouse-validator \

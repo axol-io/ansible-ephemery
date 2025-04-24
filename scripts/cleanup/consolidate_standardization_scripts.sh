@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # This script consolidates standardization-related scripts
-# 
+#
 
 set -e
 
@@ -12,12 +12,12 @@ echo "====================================================="
 
 # Define scripts to consolidate
 SCRIPT_FILES=(
-    "scripts/standardize_scripts.sh"
-    "scripts/organize_scripts.sh"
-    "scripts/reorganize_scripts.sh"
-    "scripts/update_script_readmes.sh"
-    "scripts/script_backups/standardize_repository.sh"
-    "scripts/script_backups/repo-standards.sh"
+  "scripts/standardize_scripts.sh"
+  "scripts/organize_scripts.sh"
+  "scripts/reorganize_scripts.sh"
+  "scripts/update_script_readmes.sh"
+  "scripts/script_backups/standardize_repository.sh"
+  "scripts/script_backups/repo-standards.sh"
 )
 
 # Define the target consolidated script
@@ -31,22 +31,22 @@ echo "Created backup directory: $BACKUP_DIR"
 # Verify script files
 EXISTING_SCRIPTS=()
 for script in "${SCRIPT_FILES[@]}"; do
-    if [ -f "$script" ]; then
-        EXISTING_SCRIPTS+=("$script")
-        cp "$script" "$BACKUP_DIR/$(basename "$script")"
-        echo "Backed up $script"
-    else
-        echo "Warning: Script $script not found, skipping"
-    fi
+  if [ -f "$script" ]; then
+    EXISTING_SCRIPTS+=("$script")
+    cp "$script" "$BACKUP_DIR/$(basename "$script")"
+    echo "Backed up $script"
+  else
+    echo "Warning: Script $script not found, skipping"
+  fi
 done
 
 if [ ${#EXISTING_SCRIPTS[@]} -eq 0 ]; then
-    echo "No standardization scripts found. Exiting."
-    exit 1
+  echo "No standardization scripts found. Exiting."
+  exit 1
 fi
 
 # Create consolidated script header
-cat > "$TARGET_SCRIPT" << 'EOF'
+cat >"$TARGET_SCRIPT" <<'EOF'
 #!/bin/bash
 #
 # Consolidated Standardization Script
@@ -161,7 +161,7 @@ log() {
     local level="$1"
     local message="$2"
     local color="$RESET"
-    
+
     case "$level" in
         "INFO")
             color="$BLUE"
@@ -176,11 +176,11 @@ log() {
             color="$RED"
             ;;
     esac
-    
+
     if [[ "$level" == "DEBUG" && "$VERBOSE" != "true" ]]; then
         return
     fi
-    
+
     echo -e "${color}[$level] $message${RESET}"
 }
 
@@ -188,12 +188,12 @@ log() {
 backup_file() {
     local file="$1"
     local backup="${file}.bak.$(date +%Y%m%d%H%M%S)"
-    
+
     if [ "$DRY_RUN" = "true" ]; then
         log "DEBUG" "Would backup $file to $backup"
         return
     fi
-    
+
     cp "$file" "$backup"
     log "DEBUG" "Backed up $file to $backup"
 }
@@ -212,48 +212,48 @@ EOF
 
 # Define a function to extract functions from standardization scripts
 extract_standardization_functions() {
-    local file="$1"
-    local output="$2"
-    
-    if [ ! -f "$file" ]; then
-        echo "Warning: File $file does not exist"
-        return 1
-    fi
-    
-    echo "# Functions from $file" >> "$output"
-    echo "# $(date)" >> "$output"
-    echo "" >> "$output"
-    
-    # Extract all function definitions
-    grep -n "^[[:space:]]*\(function[[:space:]]\+\)\?[a-zA-Z0-9_]\+[[:space:]]*()[[:space:]]*{" "$file" | \
-    while IFS=":" read -r line_num pattern; do
-        local func_name=$(echo "$pattern" | sed -E 's/^[[:space:]]*(function[[:space:]]+)?([a-zA-Z0-9_]+)[[:space:]]*\(\).*$/\2/')
-        echo "Extracting function: $func_name from $file"
-        
-        # Find the end of the function
-        local start_line=$line_num
-        local end_line=$(tail -n +$start_line "$file" | grep -n "^[[:space:]]*}[[:space:]]*$" | head -1 | cut -d: -f1)
-        end_line=$((start_line + end_line))
-        
-        # Extract the function with a header comment
-        echo "# Function: $func_name from $file" >> "$output"
-        sed -n "${start_line},${end_line}p" "$file" >> "$output"
-        echo "" >> "$output"
+  local file="$1"
+  local output="$2"
+
+  if [ ! -f "$file" ]; then
+    echo "Warning: File $file does not exist"
+    return 1
+  fi
+
+  echo "# Functions from $file" >>"$output"
+  echo "# $(date)" >>"$output"
+  echo "" >>"$output"
+
+  # Extract all function definitions
+  grep -n "^[[:space:]]*\(function[[:space:]]\+\)\?[a-zA-Z0-9_]\+[[:space:]]*()[[:space:]]*{" "$file" \
+    | while IFS=":" read -r line_num pattern; do
+      local func_name=$(echo "$pattern" | sed -E 's/^[[:space:]]*(function[[:space:]]+)?([a-zA-Z0-9_]+)[[:space:]]*\(\).*$/\2/')
+      echo "Extracting function: $func_name from $file"
+
+      # Find the end of the function
+      local start_line=$line_num
+      local end_line=$(tail -n +$start_line "$file" | grep -n "^[[:space:]]*}[[:space:]]*$" | head -1 | cut -d: -f1)
+      end_line=$((start_line + end_line))
+
+      # Extract the function with a header comment
+      echo "# Function: $func_name from $file" >>"$output"
+      sed -n "${start_line},${end_line}p" "$file" >>"$output"
+      echo "" >>"$output"
     done
 }
 
 # Extract functions from each standardization script
 for script in "${EXISTING_SCRIPTS[@]}"; do
-    extract_standardization_functions "$script" "$TARGET_SCRIPT"
+  extract_standardization_functions "$script" "$TARGET_SCRIPT"
 done
 
 # Add mode-specific execution functions
-cat >> "$TARGET_SCRIPT" << 'EOF'
+cat >>"$TARGET_SCRIPT" <<'EOF'
 
 # Function for script organization mode
 run_organize_mode() {
     log "INFO" "Running script organization..."
-    
+
     # Create standard directory structure if it doesn't exist
     local standard_dirs=(
         "$TARGET_DIR/core"
@@ -266,7 +266,7 @@ run_organize_mode() {
         "$TARGET_DIR/validator"
         "$TARGET_DIR/testing"
     )
-    
+
     for dir in "${standard_dirs[@]}"; do
         if [ ! -d "$dir" ]; then
             if [ "$DRY_RUN" = "true" ]; then
@@ -277,14 +277,14 @@ run_organize_mode() {
             fi
         fi
     done
-    
+
     # Find all shell scripts in the target directory
     local scripts=$(find "$TARGET_DIR" -maxdepth 1 -name "*.sh" -type f)
-    
+
     for script in $scripts; do
         local script_name=$(basename "$script")
         local target_subdir=""
-        
+
         # Determine the appropriate subdirectory based on filename pattern or content
         if grep -q "validator\|key" "$script"; then
             target_subdir="validator"
@@ -301,10 +301,10 @@ run_organize_mode() {
         elif grep -q "test\|check" "$script"; then
             target_subdir="testing"
         fi
-        
+
         # Skip if no appropriate directory found
         [ -z "$target_subdir" ] && continue
-        
+
         # Move the script to the appropriate directory
         if [ "$DRY_RUN" = "true" ]; then
             log "DEBUG" "Would move $script to $TARGET_DIR/$target_subdir/$script_name"
@@ -326,28 +326,28 @@ run_organize_mode() {
             fi
         fi
     done
-    
+
     log "SUCCESS" "Script organization completed"
 }
 
 # Function for script standardization mode
 run_standardize_mode() {
     log "INFO" "Running script standardization..."
-    
+
     # Find all shell scripts in the target directory and subdirectories
     local scripts=$(find "$TARGET_DIR" -name "*.sh" -type f)
-    
+
     for script in $scripts; do
         log "INFO" "Standardizing $script"
-        
+
         if [ "$DRY_RUN" = "true" ]; then
             log "DEBUG" "Would standardize $script"
             continue
         fi
-        
+
         # Backup the file before modification
         backup_file "$script"
-        
+
         # Apply standard header if missing
         if ! grep -q "#!/bin/bash\|#!/usr/bin/env bash" "$script"; then
             local temp_file=$(mktemp)
@@ -364,35 +364,35 @@ run_standardize_mode() {
             mv "$temp_file" "$script"
             log "SUCCESS" "Added standard header to $script"
         fi
-        
+
         # Fix common shell script issues
         sed -i 's/\r$//' "$script"  # Remove Windows line endings
         chmod +x "$script"  # Make script executable
-        
+
         log "SUCCESS" "Standardized $script"
     done
-    
+
     log "SUCCESS" "Script standardization completed"
 }
 
 # Function for README update mode
 run_readme_mode() {
     log "INFO" "Running README updates..."
-    
+
     # Find all directories that should have README files
     local dirs=$(find "$TARGET_DIR" -type d)
-    
+
     for dir in $dirs; do
         local readme_file="$dir/README.md"
-        
+
         # Skip if README already exists
         [ -f "$readme_file" ] && continue
-        
+
         if [ "$DRY_RUN" = "true" ]; then
             log "DEBUG" "Would create README file for $dir"
             continue
         fi
-        
+
         # Create a basic README file
         local dir_name=$(basename "$dir")
         cat > "$readme_file" << EOT
@@ -412,17 +412,17 @@ done)
 
 Please refer to individual script files for specific usage instructions.
 EOT
-        
+
         log "SUCCESS" "Created README file for $dir"
     done
-    
+
     log "SUCCESS" "README updates completed"
 }
 
 # Function for repository-wide standardization
 run_repo_mode() {
     log "INFO" "Running repository-wide standardization..."
-    
+
     # Fix file permissions
     if [ "$DRY_RUN" = "true" ]; then
         log "DEBUG" "Would fix file permissions"
@@ -430,7 +430,7 @@ run_repo_mode() {
         find "$PROJECT_ROOT" -name "*.sh" -type f -exec chmod +x {} \;
         log "SUCCESS" "Fixed permissions for shell scripts"
     fi
-    
+
     # Standardize line endings
     if [ "$DRY_RUN" = "true" ]; then
         log "DEBUG" "Would standardize line endings"
@@ -440,10 +440,10 @@ run_repo_mode() {
         find "$PROJECT_ROOT" -name "*.md" -type f -exec sed -i 's/\r$//' {} \;
         log "SUCCESS" "Standardized line endings"
     fi
-    
+
     # Run additional repo-wide standardization tasks here
     # ...
-    
+
     log "SUCCESS" "Repository-wide standardization completed"
 }
 
@@ -470,7 +470,7 @@ EOF
 # Make the consolidated script executable
 chmod +x "$TARGET_SCRIPT"
 
-echo 
+echo
 echo "Created consolidated standardization script: $TARGET_SCRIPT"
 echo "Original scripts backed up to $BACKUP_DIR"
 echo
@@ -478,4 +478,4 @@ echo "Next steps:"
 echo "1. Review the consolidated script"
 echo "2. Test it with --dry-run option: $TARGET_SCRIPT --dry-run"
 echo "3. Test individual modes: $TARGET_SCRIPT --mode organize/standardize/readme/repo"
-echo "4. After verifying everything works, you can remove the original scripts" 
+echo "4. After verifying everything works, you can remove the original scripts"

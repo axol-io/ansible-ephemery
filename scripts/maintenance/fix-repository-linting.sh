@@ -28,7 +28,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 if [[ -f "${REPO_ROOT}/scripts/utilities/common.sh" ]]; then
   # shellcheck source=/dev/null
-  source "${REPO_ROOT}/scripts/utilities/common.sh"
+  source "${PROJECT_ROOT}/scripts/lib/common_consolidated.sh"
 fi
 
 # Default configuration

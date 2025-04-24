@@ -1,5 +1,0 @@
----
-# Firewall rules for Geth (execution client) and Lodestar
-# (consensus client) combination
-- name: Set firewall ports for geth-lodestar
-  ansible.builtin.set_fact:
